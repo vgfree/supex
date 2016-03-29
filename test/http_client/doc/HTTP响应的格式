@@ -1,0 +1,150 @@
+HTTP响应的格式类似于请求的格式，主要由，响应行，响应头，响应体组成，其格式如下所示
+响应行\r\n
+响应头\r\n
+响应头\r\n
+...
+
+响应体
+
+ 
+
+<-------------------------------------------------------------------------------------------------------------->
+
+　　响应行：标识服务器端对客户端请求的处理结果，主要由响应状态信息，响应状态码，服务器协议
+
+　　　　HTTP协议：参考请求头当中对协议的描述
+
+　　　　HTTP状态码：
+
+ 
+
+　　　　100 继续
+　　　　101 分组交换协
+　　　　200 OK
+　　　　201 被创建
+　　　　202 被采纳
+　　　　203 非授权信息
+　　　　204 无内容
+　　　　205 重置内容
+　　　　206 部分内容
+　　　　300 多选项
+　　　　301 永久地传送
+　　　　302 找到
+　　　　303 参见其他
+　　　　304 未改动
+　　　　305 使用代理
+　　　　307 暂时重定向
+　　　　400 错误请求
+　　　　401 未授权
+　　　　402 要求付费
+　　　　403 禁止
+　　　　404 未找到
+　　　　405 不允许的方法
+　　　　406 不被采纳
+　　　　407 要求代理授权
+　　　　408 请求超时
+　　　　409 冲突
+　　　　410 过期的
+　　　　411 要求的长度
+　　　　412 前提不成立
+　　　　413 请求实例太大
+　　　　414 请求URI太大
+　　　　415 不支持的媒体类型
+　　　　416 无法满足的请求范围
+　　　　417 失败的预期
+　　　　500 内部服务器错误
+　　　　501 未被使用
+　　　　502 网关错误
+　　　　503 不可用的服务
+　　　　504 网关超时
+　　　　505 HTTP版本未被支持
+
+ 
+
+　　响应状态信息：参照状态码
+
+ 
+
+<---------------------------------------------------------------------------------------------------------------------------------->
+
+ 
+
+　　响应头：类似于请求头的key：value形式，常用响应头如下所示
+
+ 
+
+Allow 服务器支持哪些请求方法（如GET、POST等）。
+Content-Encoding 文档的编码（Encode）方法。只有在解码之后才可以得到Content-Type头指定的内容类型。利用gzip压缩文档能够显著地减少HTML文档的下载时间。Java的GZIPOutputStream可以很方便地进行gzip压缩，但只有Unix上的Netscape和Windows上的IE 4、IE 5才支持它。因此，Servlet应该通过查看Accept-Encoding头（即request.getHeader("Accept-Encoding")）检查浏览器是否支持gzip，为支持gzip的浏览器返回经gzip压缩的HTML页面，为其他浏览器返回普通页面。
+Content-Length 表示内容长度。只有当浏览器使用持久HTTP连接时才需要这个数据。如果你想要利用持久连接的优势，可以把输出文档写入ByteArrayOutputStram，完成后查看其大小，然后把该值放入Content-Length头，最后通过byteArrayStream.writeTo(response.getOutputStream()发送内容。
+Content-Type 表示后面的文档属于什么MIME类型。Servlet默认为text/plain，但通常需要显式地指定为text/html。由于经常要设置Content-Type，因此HttpServletResponse提供了一个专用的方法setContentTyep。
+Date 当前的GMT时间。你可以用setDateHeader来设置这个头以避免转换时间格式的麻烦。
+Expires 应该在什么时候认为文档已经过期，从而不再缓存它？
+Last-Modified 文档的最后改动时间。客户可以通过If-Modified-Since请求头提供一个日期，该请求将被视为一个条件GET，只有改动时间迟于指定时间的文档才会返回，否则返回一个304（Not Modified）状态。Last-Modified也可用setDateHeader方法来设置。
+Location 表示客户应当到哪里去提取文档。Location通常不是直接设置的，而是通过HttpServletResponse的sendRedirect方法，该方法同时设置状态代码为302。
+Refresh 表示浏览器应该在多少时间之后刷新文档，以秒计。除了刷新当前文档之外，你还可以通过setHeader("Refresh", "5; URL=http://host/path")让浏览器读取指定的页面。
+注意这种功能通常是通过设置HTML页面HEAD区的＜META HTTP-EQUIV="Refresh" CONTENT="5;URL=http://host/path"＞实现，这是因为，自动刷新或重定向对于那些不能使用CGI或Servlet的HTML编写者十分重要。但是，对于Servlet来说，直接设置Refresh头更加方便。
+注意Refresh的意义是“N秒之后刷新本页面或访问指定页面”，而不是“每隔N秒刷新本页面或访问指定页面”。因此，连续刷新要求每次都发送一个Refresh头，而发送204状态代码则可以阻止浏览器继续刷新，不管是使用Refresh头还是＜META HTTP-EQUIV="Refresh" ...＞。
+注意Refresh头不属于HTTP 1.1正式规范的一部分，而是一个扩展，但Netscape和IE都支持它。
+Server 服务器名字。Servlet一般不设置这个值，而是由Web服务器自己设置。
+Set-Cookie 设置和页面关联的Cookie。Servlet不应使用response.setHeader("Set-Cookie", ...)，而是应使用HttpServletResponse提供的专用方法addCookie。参见下文有关Cookie设置的讨论。
+WWW-Authenticate 客户应该在Authorization头中提供什么类型的授权信息？在包含401（Unauthorized）状态行的应答中这个头是必需的。例如，response.setHeader("WWW-Authenticate", "BASIC realm=＼"executives＼"")。
+注意Servlet一般不进行这方面的处理，而是让Web服务器的专门机制来控制受密码保护页面的访问
+
+Http请求分析
+
+一个Http请求一般始于如下几种方式：
+
+ 
+　　1.在浏览器中输入一个URL地址
+
+
+　　2.网页中的一个超链接
+
+
+　　3.Response.Redirect("http://www.sohu.com")在后台进行重定向
+
+ 
+
+
+　　4.Form表单提交
+
+　　前三种方式都是以Get方式发起请求。第四种方式可以以Get方式发起请求，也可以以Post方式发起请求，只需要设置<form action="" method="Get/Post"></form>的method属性即可，默认该属性值为Get.
+
+ 
+
+　　当客户端发起一个Http请求到服务端时，会传输一个Http请求消息给服务端，标准的Http请求消息格式如下：
+
+
+ 　　　　请求行(request-line)——请求行的格式为：请求方式_资源路径_http版本号(Get http://www.sohu.com/Default.aspx HTTP/1.1)
+
+ 
+ 　　　　消息头(headers)——说明服务器要使用的附加信息(ContentType:application/json Content_Length:18 等等其他头信息)
+
+ 
+ 　　　　回车换行(CRLF)——表明头部信息结束
+
+ 　　　　主体数据(request-body)——需要传输到服务端的数据内容，以Post方式请求时才会有该项数据。(username=tom&age=21)
+
+ 　　　　回车换行(CRLF)——表明主体数据信息结束
+
+ 
+
+ 
+　　需要说明的是：
+　　　　1.当一个Http请求时Get方式的请求时，请求消息中只有前三项，而没有主体数据。当以Post方式请求时，会包含上述五项信息。
+
+
+　　　　2.无论是Get请求还是Post请求，请求行中的资源路径必须是application/x-www-form-urlencoded方式编码。 Get请求时，浏览器会自动对其进行UrlEncode。Post请求时，浏览器不会自动进行UrlEncode，所有需要手动对资源路径进行 UrlEncode.
+
+
+　　　　3.Post请求时，请求消息中存在主体数据，主体数据的编码方式由消息头中的ContentType属性来设置，主体数据的长度由 Content_Length来设置。故在进行一些异步的Post请求时，需要设置ContentType属性。如果使用form表单进行Post请求时，只需要设置form元素的encType属性即可，浏览器会在请求消息的消息头中加入ContentType属性，并且值encType的值。如果没有设置encType属性值，默认会将ContentType设置为application/x-www-form-urlencoded。
+
+ 
+
+ 
+　　　　4.form元素进行请求时，如果是Get方式进行请求，action标签属性中如果存在"?子句"，GET方式将会忽略这个子句。浏览器会自动将表单域的元素的name和value组成键值对放在请求的Url后面，如http://localhost/Default.aspx?age=21。如果以Post方式进行请求，action标签属性中存在"?子句",Post方式会保留这个子句，服务端也可以获得这个子句。
+
+ 
+
+ 
+　　　　5.如果form元素进行请求时，form内含有文件上传控件，需要上传文件数据是，encType要设置成"multipart/form-data"。

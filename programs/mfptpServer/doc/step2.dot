@@ -1,0 +1,221 @@
+digraph G {
+	rankdir = LR;
+	compound = true;
+
+	subgraph cluster9 {
+		node [style=filled, color=blue];
+		style = filled;
+		color = green;
+		label = "外部系统";
+		/*外部接口*/
+		other [label="外部调用"];
+	}
+	/******************************************************************************/
+	subgraph cluster7 {
+		node [shape=box, style=filled, color=blue];
+		style = filled;
+		color = green;
+		label = "群1\n内部通道";
+		/*单消息*/
+		alone_msg_1 [label="路由表+单消息推送器"];
+	}
+	subgraph cluster6 {
+		node [shape=box, style=filled, color=blue];
+		style = filled;
+		color = green;
+		label = "通用\n外部通道";
+		/*单消息*/
+		alone_msg_2 [label="路由表+单消息推送器"];
+	}
+	subgraph cluster2 {
+		node [shape=box, style=filled, color=blue];
+		style = filled;
+		color = green;
+		label = "共享\nngxapi";
+		/*ngxapi*/
+		ngxapi1 [label="单消息"];
+		ngxapi2 [label="群消息"];
+		ngxapi3 [label="改配置"];
+		ngxapi3 -> other [dir=back, color=cyan];
+		ngxapi2 -> other [dir=back, color=pink];
+		ngxapi1 -> other [dir=back, color=red];
+	}
+/*
+	subgraph cluster13 {
+		node [shape=box, style=filled, color=blue];
+		style = filled;
+		color = green;
+		label = "共享";
+	}
+*/
+	subgraph cluster8 {
+		node [shape=record, style=filled, color=blue];
+		style = filled;
+		color = green;
+		label = "共享\n跨群组跨机房广播";
+		/*群消息*/
+		whole_msg [label="<g1> 群消息 1|<g2> 群消息 2"];
+		/*配置*/
+		config_msg [label="广播给所有集群的每台下行mfptpServer"];
+		/*mysql*/
+		mysql_1 [label="mysql\n用户配置信息"];
+		/*路由表*/
+		router [label="路由表"];
+	}
+
+
+	/******************************************************************************/
+	subgraph cluster1 {
+		node [shape=box, style=filled, color=blue];
+		style = filled;
+		color = green;
+		label = "群1\n上行|下行负载均衡";
+		/*上行*/
+		p_u1_1 [shape=point];
+		p_u1_2 [shape=point];
+		p_u1_3 [shape=point];
+		mf_u1_1 [label="mfptpServer 1"];
+		mf_u1_2 [label="mfptpServer 2"];
+		mf_u1_3 [label="mfptpServer 3"];
+		p_u1_1 -> mf_u1_1;
+		p_u1_2 -> mf_u1_2;
+		p_u1_3 -> mf_u1_3;
+		/*下行*/
+		node [shape=box, style=filled, color=skyblue];
+		p_d1_1 [shape=point];
+		p_d1_2 [shape=point];
+		mf_d1_1 [label="mfptpServer 1"];
+		mf_d1_2 [label="mfptpServer 2"];
+		p_d1_1 -> mf_d1_1 [dir=back];
+		p_d1_2 -> mf_d1_2 [dir=back];
+		mf_d1_1 -> router [color=gold, fontcolor=gold, label="1.登入通知路由映射表"];
+		mf_d1_1 -> mysql_1 [dir=both, color=cyan, fontcolor=cyan, label="2.拉取用户配置信息"];
+		router -> alone_msg_1 [dir=both, color=gold, fontcolor=gold, label="同步/分发"];
+		router -> alone_msg_2 [dir=both, color=gold, fontcolor=gold, label="同步/分发"];
+	}
+	subgraph cluster5 {
+		node [shape=box, style=filled, color=blue];
+		style = filled;
+		color = green;
+		label = "群1\ntransit负载均衡";
+		/*transit*/
+		transit1 [label="transit 1"];
+		transit2 [label="transit 2"];
+		transit3 [label="transit 3"];
+		transit4 [label="transit 4"];
+		transit5 [label="transit 5"];
+		transit6 [label="transit 6"];
+		p_transit_1 [shape=point];
+		p_transit_2 [shape=point];
+		p_transit_3 [shape=point];
+		p_transit_1 -> transit1;
+		p_transit_1 -> transit2;
+		p_transit_2 -> transit3;
+		p_transit_2 -> transit4;
+		p_transit_3 -> transit5;
+		p_transit_3 -> transit6;
+
+		mf_u1_1 -> p_transit_1 [dir=none];
+		mf_u1_2 -> p_transit_2 [dir=none];
+		mf_u1_3 -> p_transit_3 [dir=none];
+	}
+	subgraph cluster3 {
+		node [shape=box, style=filled, color=blue];
+		style = filled;
+		color = green;
+		label = "群1\ndamS负载均衡";
+		/*damS*/
+		dams1 [label="damS 1"];
+		dams2 [label="damS 2"];
+		dams3 [label="damS 3"];
+		p_dams_1 [shape=point];
+		p_dams_2 [shape=point];
+		p_dams_3 [shape=point];
+		transit1 -> p_dams_1 [dir=none];
+		transit2 -> p_dams_1 [dir=none];
+		transit3 -> p_dams_2 [dir=none];
+		transit4 -> p_dams_2 [dir=none];
+		transit5 -> p_dams_3 [dir=none];
+		transit6 -> p_dams_3 [dir=none];
+
+		p_dams_1 -> dams1;
+		p_dams_2 -> dams2;
+		p_dams_3 -> dams3;
+	}
+	subgraph cluster4 {
+		node [shape=record, style=filled, color=blue];
+		style = filled;
+		color = green;
+		label = "群1\n业务";
+		/*driview|mdds|roadrank*/
+		dmr1 [label="{<d1> driview 1|<d2> driview 2}|{<m1> mdds 1|<m2> mdds 2}|{<r1> roadrank 1}"];
+		dmr2 [label="{<d1> driview 1|<d2> driview 2}|{<m1> mdds 1|<m2> mdds 2}|{<r1> roadrank 1}"];
+		dmr3 [label="{<d1> driview 1|<d2> driview 2}|{<m1> mdds 1|<m2> mdds 2}|{<r1> roadrank 1}"];
+		dams1 -> dmr1:d1;
+		dams1 -> dmr1:m1;
+		dams1 -> dmr1:r1;
+		dams2 -> dmr2:d1;
+		dams2 -> dmr2:m1;
+		dams2 -> dmr2:r1;
+		dams3 -> dmr3:d1;
+		dams3 -> dmr3:m1;
+		dams3 -> dmr3:r1;
+	}
+
+
+
+
+	/******************************************************************************/
+	subgraph cluster0 {
+		node [style=filled,color=red];
+		style = filled;
+		color = green;
+		label = "config\n调度中心";
+		/*群1*/
+		g1 [label="群1", color=yellow, shape=polygon, sides=3, orientation=90];
+		u1 [label="上行"];
+		d1 [label="下行"];
+		u1_1 [label="上流IP1", color=blue];
+		u1_2 [label="上流IP2", color=blue];
+		u1_3 [label="上流IP3", color=blue];
+		d1_1 [label="下流IP1", color=skyblue];
+		d1_2 [label="下流IP2", color=skyblue];
+		g1 -> u1 [dir = none];
+		g1 -> d1 [dir = none];
+		u1 -> u1_1;
+		u1 -> u1_2;
+		u1 -> u1_3;
+		d1 -> d1_1;
+		d1 -> d1_2;
+		/*群2*/
+		g2 [label="群2", color=yellow, shape=polygon, sides=3, orientation=90];
+		u2 [label="上行"];
+		d2 [label="下行"];
+		u2_1 [label="上流IP1", color=blue];
+		u2_2 [label="上流IP2", color=blue];
+		u2_3 [label="上流IP3", color=blue];
+		d2_1 [label="下流IP1", color=skyblue];
+		d2_2 [label="下流IP2", color=skyblue];
+		g2 -> u2 [dir = none];
+		g2 -> d2 [dir = none];
+		u2 -> u2_1;
+		u2 -> u2_2;
+		u2 -> u2_3;
+		d2 -> d2_1;
+		d2 -> d2_2;
+	}
+	//{rank = same; mf_u1_1; mf_u1_2; mf_u1_3; mf_d1_1; mf_d1_2};
+	//{rank = same; p_u1_1; p_u1_2; p_u1_3; p_d1_1; p_d1_2};
+	alone_msg_1:e -> dmr3:se [lhead=cluster4, color=red, dir=back];
+	whole_msg:g2 -> ngxapi2 [color=pink, dir=back];
+	whole_msg:g1:e -> transit6:se [lhead=cluster5, color=pink, dir=back];
+	config_msg -> ngxapi3 [color=cyan, dir=back, fontcolor=cyan, label="2.推送至延缓区"];
+	mysql_1 -> ngxapi3 [color=cyan, dir=back, fontcolor=cyan, label="1.先固化记录"];
+	alone_msg_2 -> ngxapi1 [dir=back, color=red];
+	mf_d1_1 -> whole_msg [color=pink, dir=back];
+	mf_d1_2 -> whole_msg [color=pink, dir=back];
+	mf_d1_2 -> alone_msg_1 [color=red, dir=back];
+	mf_d1_1 -> alone_msg_2 [color=red, dir=back];
+	mf_d1_1 -> config_msg [color=cyan, dir=back];
+	mf_d1_2 -> config_msg [color=cyan, dir=back];
+}

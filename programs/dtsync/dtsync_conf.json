@@ -1,0 +1,34 @@
+{
+	"swift_port":4102 ,
+	"swift_worker_counts": 1,
+	"swift_protocol": "http",
+	"max_req_size": 32768,
+	"sniff_worker_counts": 1,
+	"sharer_counts": 64,
+	"log_path": "./logs/",
+	"log_file": "dtsync",
+	"log_level": 0,
+
+
+	"api_apply": "/publicentry",
+	"api_fetch": "/dtsyncFetch.json",
+	"api_merge": "/dtsyncMerge.json",
+	"appKey": "1111111111",
+	"secret": "D33D613665B352AB62E4B6806638EB1E951E76E4",
+	"map_server_host": "192.168.1.16",
+	"map_server_port": 8585,
+	"links":
+	[
+		{
+			"serv": "redis-1",
+			"host": "127.0.0.1",
+			"port": 6000
+		},{
+			"serv": "redis-2",
+			"host": "172.16.21.205",
+			"port": 4120
+		}
+		
+
+	]
+}

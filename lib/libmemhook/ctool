@@ -1,0 +1,196 @@
+#!/bin/bash
+
+OLD=`pwd`
+MAKE_TEMPLATE="func.mk"
+MAKESPEC_FILE="Make.spec"
+BUILD_FILE_SUFFIXES=(".c" ".cc" ".cpp")
+
+CreateEnv()
+{
+	case $BUILD_HOST in
+		linux*)
+			DYLIB_FLAGS="-shared"
+			DYLIB_SUFFIXES=".so"
+			;;
+		darwin*)
+			if (test -n "`echo $ADDIN_DYLIB_FLAG|grep bundle`") then
+				DYLIB_FLAGS="-bundle -undefined dynamic_lookup"
+				DYLIB_SUFFIXES=".so"
+			else
+				DYLIB_FLAGS="-dynamiclib"
+				DYLIB_SUFFIXES=".dylib"
+			fi
+			;;
+	esac
+
+	if (test -z "$BUILD_SUFFIXES") then
+		BUILD_SUFFIXES = ".o"
+	fi
+	if (test ! -f "$MAKE_TEMPLATE") then
+		echo "ERROR : MAKE TEMPLATE NOT EXIST"
+		return 1
+	fi
+
+	mkdir -p $BUILD_OBJS
+	mkdir -p $BUILD_BIN
+	mkdir -p $BUILD_LIB
+
+	return 0
+}
+
+RecurBuild()
+{
+	if (test "$#" -ne 1) then
+		echo "ERROR: NOT BUILD ACTION"
+		return 1
+	fi
+
+	if (test ! -d "$BUILD_SRCDIR") then
+		echo "ERROR: NOT EXIST DIR FOR BUILD "
+		return 1
+	fi
+
+	find $BUILD_SRCDIR -name "Make.spec" -type f | while read LINE 
+	do 
+		 cd `dirname $LINE`
+
+		 case "$1" in
+		  	build )
+				for SUFFIXES in ${BUILD_FILE_SUFFIXES[@]}
+				 do
+				 	#有 BUG 当文件名（不包括后缀）中含有.c时，
+				 	local objs=`find . -name "*""$SUFFIXES" -maxdepth 1 -type f -print0|xargs -0 -I {} basename {}|tr '\n' ' '`
+				 	
+				 	if (test -n "$objs") then
+				 		objs=${objs//$SUFFIXES/$BUILD_SUFFIXES}
+				 		make -f $OLD"/"$MAKE_TEMPLATE build OBJS=$objs
+			 			if (test "$?" -ne 0) then
+			 				make -f $OLD"/"$MAKE_TEMPLATE cleanobjs
+			 				return 1
+			 			fi
+				 	fi
+				 	# find . -name "*""$SUFFIXES" -type f| while read obj
+				 	# do
+				 	# 	local objs=`basename ${obj/%$SUFFIXES/$BUILD_SUFFIXES}`
+				 	# 	make -f $OLD"/"$MAKE_TEMPLATE build OBJS=$objs
+				 	# 	if (test "$?" -ne 0) then
+				 	# 		make -f $OLD"/"$MAKE_TEMPLATE cleanobjs
+				 	# 		return 1
+				 	# 	fi
+				 	# done
+				 done
+		  		;;
+		  	clean )
+				local objs=`find . -name "*""$BUILD_SUFFIXES" -maxdepth 1 -type f -print0|xargs -0 -I {} basename {}|tr '\n' ' '`
+				if (test -n "$objs") then
+					make -f $OLD"/"$MAKE_TEMPLATE clean OBJS=$objs
+					if (test "$?" -ne 0) then
+			 			return 1
+			 		fi
+			 	fi
+				;;
+		  esac 
+	done
+}
+
+SingleBuild()
+{
+	if (test "$#" -lt 1) then
+		echo "ERROR: NEED BUILD ACTION"
+		return 1
+	fi
+
+	if (test "$1" = "lib" || test "$1" = "bin") then
+
+		if (test -z "$2") then
+			echo "ERROR : NEED A NAME FOR CREATE $1"
+			return 1
+		fi
+		local objs=$(find . -name "*""$BUILD_SUFFIXES" -print0|xargs -0 echo)
+		
+		if (test -n "$objs") then
+			make -f $OLD"/"$MAKE_TEMPLATE $1 OBJS="$objs" TARGET="$2"
+			return "$?"
+		else
+			echo "ERROR : NOT EXIST FILE FOR SETUP, RUN MAKE BY BUILD FIRST, AND TRY AGAIN."
+		fi
+	elif (test "$1" = "cleanobjs") then
+		#statements
+		make -f $OLD"/"$MAKE_TEMPLATE "$1"
+		return "$?"
+	else
+		if (test -z "$2") then
+			echo "ERROR : NEED A NAME FOR CLEAN $1"
+			return 1
+		fi
+		make -f $OLD"/"$MAKE_TEMPLATE "$1" TARGET="$2"
+		return "$?"
+	fi
+}
+
+Main()
+{
+	if (test "$#" -lt 1) then
+		echo "ERROR: NEED BUILD ACTION"
+		return 1
+	fi
+
+	CreateEnv
+
+	if (test "$?" -ne 0) then
+		return 1
+	fi
+
+	local _action
+
+	case "$1" in
+		build)
+			cd $BUILD_SRCDIR
+			RecurBuild $1
+			return "$?"
+		;;
+		bin)
+			cd $BUILD_OBJS
+			SingleBuild "$1" "$2"
+			return "$?"
+		;;
+		lib)
+			cd $BUILD_OBJS
+			SingleBuild "$1" "$2"
+			return "$?"
+		;;
+		clean)
+			RecurBuild "$1"
+			return "$?"
+		;;
+		cleanobjs)
+			cd $BUILD_OBJS
+			SingleBuild "$1"
+			return "$?"
+		;;
+		cleanlib)
+			cd $BUILD_LIB
+			SingleBuild "$1" "$2"
+			return "$?"
+		;;
+		cleanbin)
+			cd $BUILD_BIN
+			SingleBuild "$1" "$2"
+			return "$?"
+		;;
+		*)
+			echo "UNKOWN ACTION"
+			return 1
+		;;
+	esac
+}
+
+
+
+if (test "$#" -gt "0") then
+	Main "$@"
+else
+	Main
+fi
+
+cd "$OLD"

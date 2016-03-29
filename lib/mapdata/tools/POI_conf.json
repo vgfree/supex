@@ -1,0 +1,19 @@
+{
+	"map_poi": {
+		"host": "192.168.71.200",
+		"port": 3306,
+		"username": "mapdatauser",
+		"password": "abcd1234",
+		"database": "mapData",
+		"poi_table": "poi_allcountry",
+		"sg_table": "SGID20151213",
+		"load_once":10000,
+		"max_sg_id":10932724,
+		"max_poi_id":3043805,
+		"file_name_poi":"mappoi_poi_file.data",
+		"file_name_sg":"mappoi_sg_file.data",
+	}
+
+}
+
+

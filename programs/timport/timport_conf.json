@@ -1,0 +1,166 @@
+{
+    "max_req_size": 33554432, 
+    "log_path": "./var/logs", 
+    "log_file": "timport", 
+    "log_level": 1, 
+    "delay_time": 7200,
+    "zk_disabled": 0,
+    "zk_servers": "192.168.1.14:2181", 
+    "zk_rnode": "/tsdb", 
+    "backup_path": "./var/backup", 
+    "start_time_file": "./var/start_time.txt", 
+    "redis": [
+        {       
+            "host": "192.168.1.12",
+            "port": 9001
+        },      
+        {       
+            "host": "192.168.1.12",
+            "port": 9002
+        },      
+        {       
+            "host": "192.168.1.12",
+            "port": 9003
+        },      
+        {       
+            "host": "192.168.1.12",
+            "port": 9004
+        },      
+        {       
+            "host": "192.168.1.12",
+            "port": 9005
+        },      
+        {       
+            "host": "192.168.1.12",
+            "port": 9006
+        },      
+        {       
+            "host": "192.168.1.12",
+            "port": 9007
+        },      
+        {       
+            "host": "192.168.1.12",
+            "port": 9008
+        },      
+        {       
+            "host": "192.168.1.12",
+            "port": 9009
+        },      
+        {       
+            "host": "192.168.1.12",
+            "port": 9010
+        }
+    ],
+    "tsdb": [
+        {
+            "key_set": [0, 2048],
+            "data_set": [
+                {
+                    "host": "192.168.1.15",
+                    "port": 7000
+                }
+            ]
+        },
+        {
+            "key_set": [2048, 4096],
+            "data_set": [
+                {
+                    "host": "192.168.1.15",
+                    "port": 7010
+                }
+            ]
+        },
+        {
+            "key_set": [4096, 6144],
+            "data_set": [
+                {
+                    "host": "192.168.1.15",
+                    "port": 7020
+                }
+            ]
+        },
+        {
+            "key_set": [6144, 8192],
+            "data_set": [
+                {
+                    "host": "192.168.1.15",
+                    "port": 7030
+                }
+            ]
+        }
+    ],
+    "statistics": {
+        "host": "127.0.0.1",
+        "port": 6329,
+        "keys": [
+            {
+                "key": "gps",
+                "mode": "INCR",
+            },
+            {
+                "key": "url",
+                "mode": "INCR",
+            },
+            {
+                "key": "activeuserCount",
+                "mode": "SET",
+            }
+        ]
+    },
+    "timport": [
+        {
+            "key": "ACTIVEUSER", 
+            "type": "WHOLE_INDEX", 
+            "interval": "TEN_MIN", 
+            "expire_time": 7200,
+            "statistics": "activeuserCount",
+            "child": [
+                {
+                    "key": "GPS", 
+                    "type": "SET_VAL", 
+                    "param_cnt": 2, 
+                    "param_tm_pos": 1, 
+                    "hash_filter": "imei_hash_filter",
+                    "statistics": "gps"
+                }, 
+                {
+                    "key": "URL", 
+                    "type": "SET_VAL", 
+                    "param_cnt": 2, 
+                    "param_tm_pos": 1, 
+                    "hash_filter": "imei_hash_filter",
+                    "ignore_error": 1, 
+                    "tsdb_in_cfg": 1,
+                    "statistics": "url"
+                }
+            ]
+        }, 
+        {
+            "key": "RACTIVEUSER", 
+            "type": "WHOLE_INDEX", 
+            "interval": "TEN_MIN", 
+            "expire_time": 7200, 
+            "child": [
+                {
+                    "key": "RGPS", 
+                    "type": "SET_VAL", 
+                    "param_cnt": 2, 
+                    "param_tm_pos": 1, 
+                    "result_filter": "unique_result_filter", 
+                    "hash_filter": "imei_hash_filter",
+                    "statistics": "gps"
+                },
+                {
+                    "key": "URL", 
+                    "type": "SET_VAL", 
+                    "param_cnt": 2, 
+                    "param_tm_pos": 1, 
+                    "hash_filter": "imei_hash_filter",
+                    "ignore_error": 1, 
+                    "tsdb_in_cfg": 1,
+                    "statistics": "url"
+                }
+            ]
+        }
+    ]
+}

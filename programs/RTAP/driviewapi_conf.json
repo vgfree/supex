@@ -1,0 +1,17 @@
+{
+	"service_port": 7777,
+	"hander_counts": 1,
+	"smart_worker_counts": 1,
+	"tasker_counts": 32,
+	"smart_protocol": "http",
+	"max_req_size": 32768,
+
+
+	"log_path": "./logs/",
+	"log_file": "driviewapi",
+	"log_level": 0,
+	
+	"api_fetch": "/driviewapiFetch.json",
+	"api_merge": "/driviewapiMerge.json",
+	"api_custom": ["/x_test", "/api_data_forwarding"]
+}

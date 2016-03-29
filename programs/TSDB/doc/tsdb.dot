@@ -1,0 +1,22 @@
+digraph G {
+        rankdir=LR
+        subgraph cluster0 {
+                node[style = filled];
+                //style = filled;
+                //color = lightgrey;
+                redis_protocol [label="redis protocol"];
+                redis_protocol->leveldb;
+                leveldb->redis_protocol;
+                zookeeper_lib [ label="zookeeper lib"];
+                label = "TSDB"
+        }
+
+        zookeeper_cluster [label="zookeeper cluster"];
+        zookeeper_lib->zookeeper_cluster[label="注册tsdb节点"];
+
+        client [label="tsearchapi/timport"];
+        redis_protocol->client;
+        client->redis_protocol;
+        client->zookeeper_cluster[label="获取tsdb节点信息"];
+        zookeeper_cluster->client[label="通知tsdb节点信息变化"];
+}

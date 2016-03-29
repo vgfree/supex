@@ -1,0 +1,36 @@
+{
+	"map_line": {
+		"host": "192.168.71.200",
+		"port": 3306,
+		"username": "mapdatauser",
+		"password": "abcd1234",
+		"database": "qpp",
+        	"table": "line_info",
+		"min_id":1,
+            "max_id":291348,
+        	"load_line_once":10000
+	},
+
+	"map_grid": {
+		"host": "192.168.71.200",
+		"port": 3306,
+		"username": "mapdatauser",
+		"password": "abcd1234",
+		"database": "qpp",
+       		"count_table": "gridcount",
+       		"line_table": "gridline",
+       		"load_grid_once":10000,
+       		"max_gridcount_id":24034,
+       		"max_gridline_id":414721,
+       		"min_lon":120.850,
+       		"min_lat":30.690,
+       		"max_lon":121.980,
+       		"max_lat":31.870
+	},
+
+	"mappmr": {
+		"map_line_file":"map_line.data",
+		"map_grid_count_file":"map_grid_count.data",
+		"map_grid_line_file":"map_grid_line.data"
+	}
+}

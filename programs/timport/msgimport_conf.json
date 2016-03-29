@@ -1,0 +1,216 @@
+{
+    "max_req_size": 33554432, 
+    "log_path": "./var/logs", 
+    "log_file": "msgimport", 
+    "log_level": 1, 
+    "delay_time": 3600, 
+    "zk_disabled": 0, 
+    "zk_servers": "192.168.1.14:2181", 
+    "zk_rnode": "/msg", 
+    "backup_path": "./var/backup", 
+    "start_time_file": "./var/start_time.txt", 
+    "redis": [
+        {
+            "host": "192.168.21.71", 
+            "port": 6379
+        }
+    ], 
+    "timport": [
+        {
+            "key": "sendMessage", 
+            "type": "WHOLE_INDEX", 
+            "interval": "TEN_MIN", 
+            "expire_time": 3600, 
+            "child": [
+                {
+                    "key": "sendMessage", 
+                    "type": "ALONE_INDEX", 
+                    "param_cnt": 2, 
+                    "param_tm_pos": 1,
+                    "hash_filter": "account_hash_filter",
+                    "child": [
+                        {
+                            "key": "sendInfo", 
+                            "type": "STRING_VAL",
+                            "param_cnt": 1,
+                            "key_filter": "timestamp_key_filter",
+                            "redis_filter": "key_redis_filter",
+                            "hash_filter": "key_hash_filter"
+                        }, 
+                        {
+                            "key": "fileLocation", 
+                            "type": "STRING_VAL", 
+                            "param_cnt": 1,
+                            "key_filter": "timestamp_key_filter",
+                            "redis_filter": "key_redis_filter",
+                            "hash_filter": "key_hash_filter"
+                        }
+                    ]
+                }
+            ]
+        }, 
+        {
+            "key": "voice", 
+            "type": "WHOLE_INDEX", 
+            "interval": "TEN_MIN", 
+            "expire_time": 3600, 
+            "child": [
+                {
+                    "key": "voice", 
+                    "type": "SET_VAL", 
+                    "param_cnt": 2, 
+                    "param_tm_pos": 1,
+                    "hash_filter": "account_hash_filter"
+                }
+            ]
+        }, 
+        {
+            "key": "replyVoice", 
+            "type": "WHOLE_INDEX", 
+            "interval": "TEN_MIN", 
+            "expire_time": 3600, 
+            "child": [
+                {
+                    "key": "replyVoice", 
+                    "type": "SET_VAL", 
+                    "param_cnt": 2, 
+                    "param_tm_pos": 1,
+                    "hash_filter": "common_hash_filter"
+                }
+            ]
+        }, 
+        {
+            "key": "GEOtoMessage", 
+            "type": "WHOLE_INDEX", 
+            "interval": "TEN_MIN", 
+            "expire_time": 3600, 
+            "child": [
+                {
+                    "key": "GEOtoMessage", 
+                    "type": "SET_VAL", 
+                    "param_cnt": 2, 
+                    "param_tm_pos": 1,
+                    "hash_filter": "geo_hash_filter"
+                }
+            ]
+        }, 
+        {
+            "key": "releaseMessage", 
+            "type": "WHOLE_INDEX", 
+            "interval": "TEN_MIN", 
+            "expire_time": 3600, 
+            "child": [
+                {
+                    "key": "releaseMessage", 
+                    "type": "ALONE_INDEX", 
+                    "param_cnt": 2, 
+                    "param_tm_pos": 1,
+                    "hash_filter": "account_hash_filter",
+                    "child": [
+                        {
+                            "key": "releaseMessageInfo", 
+                            "type": "SET_VAL", 
+                            "param_cnt": 2, 
+                            "param_tm_pos": 1,
+                            "key_filter": "timestamp_key_filter",
+                            "redis_filter": "key_redis_filter",
+                            "hash_filter": "key_hash_filter"
+                        }
+                    ]
+                }
+            ]
+        }, 
+        {
+            "key": "releaseAdTalk", 
+            "type": "WHOLE_INDEX", 
+            "interval": "TEN_MIN", 
+            "expire_time": 3600, 
+            "child": [
+                {
+                    "key": "releaseAdTalk", 
+                    "type": "SET_VAL", 
+                    "param_cnt": 2, 
+                    "param_tm_pos": 1,
+                    "hash_filter": "account_hash_filter"
+                }
+            ]
+        }, 
+        {
+            "key": "readMessage", 
+            "type": "WHOLE_INDEX", 
+            "interval": "TEN_MIN", 
+            "expire_time": 3600, 
+            "child": [
+                {
+                    "key": "readMessage", 
+                    "type": "ALONE_INDEX", 
+                    "param_cnt": 2, 
+                    "param_tm_pos": 1, 
+                    "hash_filter": "common_hash_filter", 
+                    "child": [
+                        {
+                            "key": "readMessageInfo", 
+                            "type": "SET_VAL", 
+                            "param_cnt": 2, 
+                            "param_tm_pos": 1,
+                            "key_filter": "timestamp_key_filter",
+                            "hash_filter": "key_hash_filter"
+                        }, 
+                        {
+                            "key": "newstatusInfo", 
+                            "type": "SET_VAL", 
+                            "param_cnt": 2, 
+                            "param_tm_pos": 1,
+                            "key_filter": "timestamp_key_filter",
+                            "hash_filter": "key_hash_filter"
+                        }
+                    ]
+                }
+            ]
+        }, 
+        {
+            "key": "feedbackInfo", 
+            "type": "WHOLE_INDEX", 
+            "interval": "TEN_MIN", 
+            "expire_time": 3600, 
+            "child": [
+                {
+                    "key": "feedbackInfo", 
+                    "type": "SET_VAL", 
+                    "param_cnt": 2, 
+                    "param_tm_pos": 1,
+                    "hash_filter": "common_hash_filter"
+                }
+            ]
+        }, 
+        {
+            "key": "cityMessage", 
+            "type": "WHOLE_INDEX", 
+            "interval": "TEN_MIN", 
+            "expire_time": 3600, 
+            "child": [
+                {
+                    "key": "cityMessageInfo", 
+                    "type": "STRING_VAL", 
+                    "param_cnt": 1, 
+                    "hash_filter": "common_hash_filter"
+                }
+            ]
+        }, 
+        {
+            "key": "cityCode", 
+            "type": "WHOLE_INDEX", 
+            "interval": "TEN_MIN", 
+            "expire_time": 3600, 
+            "child": [
+                {
+                    "key": "cityCodeMessage", 
+                    "type": "SET_VAL", 
+                    "param_cnt": 2, 
+                    "param_tm_pos": 1,
+                    "hash_filter": "common_hash_filter"
+                }
+            ]
+        }
+    ]
+}

@@ -1,0 +1,32 @@
+{
+	"swift_port": 8222,
+	"swift_worker_counts": 2,
+	"swift_protocol": "http",
+	"max_req_size": 32768,
+	"sniff_worker_counts": 4,
+	"sharer_counts": 64,
+	"log_path": "./logs/",
+	"log_file": "gdgive",
+	"log_level": 0,
+
+	"api_apply": "/publicentry",
+	"api_fetch": "/gdgiveFetch.json",
+	"api_merge": "/gdgiveMerge.json",
+	"links":
+	[
+		{
+			"serv": "redis-1",
+			"host": "172.16.21.175",
+			"port": 4040
+		},{
+			"serv": "redis-2",
+			"host": "172.16.21.205",
+			"port": 4120
+		}
+		
+	],
+
+        "citycode":[341500,370100,370600,130200,130400,370200,370300,130100,150200,371300,110100,110200,310100,310200],
+        "gaode_host":"203.130.47.64",
+        "gaode_port":443
+}

@@ -1,0 +1,46 @@
+{
+	"service_port": 5555,
+		"hander_counts": 1,
+		"smart_worker_counts": 2,
+		"tasker_counts": 32,
+		"smart_protocol": "redis",
+		"max_req_size": 32768,
+
+
+		"log_path": "./logs/",
+		"log_file": "PMR",
+		"log_level": 0,
+
+		"mappmr": {
+			"map_line_file":"data/map_line.data",
+			"map_grid_count_file":"data/map_grid_count.data",
+			"map_grid_line_file":"data/map_grid_line.data"
+		},
+		"mapsegment" : {
+			"map_seg_file":"data/map_seg.data"
+		},
+		"map_topo":{
+			"topo_file_name":"data/map_topo.data",
+			"rrid_index_len":10000
+		},
+
+		"mlocate": {
+			"WEIGHT_NO": 0,
+			"WEIGHT_LAST_SAM": 4.5,
+			"WEIGHT_CONN_DIRECT": 4.1,
+			"WEIGHT_CONN_INDIRECT": 2.0,
+			"WEIGHT_BYROAD": 2.2,
+			"WEIGHT_NEAEST": 1.7,
+			"WEIGHT_MIN_SUB": 1,
+			"WEIGHT_SPEED": 1,
+			"WEIGHT_ALT": 1,
+			"WEIGHT_INDIRECT_IN_NODE": 2.1,
+			"GRID_EXTEND_LIMIT": 0.00025,
+			"PMR_MAX_DIST": 30,
+			"PMR_MAX_SUB_DIR": 15,
+			"TRACK_BACK_DEEP": 3,
+			"WEIGHT_DIST_LIMIT": 5,
+			"WEIGHT_DIR_LIMIT": 5,
+			"NODE_RANGE_DIST": 80
+		}
+}

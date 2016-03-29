@@ -1,0 +1,16 @@
+{
+	"map_topo": {
+		        "host": "192.168.71.200",
+			"port": 3306,
+			"username": "mapdatauser",
+			"password": "abcd1234",
+			"database": "qpp",
+			"table": "roadRelation",
+			"load_once":10000,
+			"max_id":382890,
+			"topo_file_name":"map_topo.data",
+			"rrid_index_len":10000
+		}
+}
+
+

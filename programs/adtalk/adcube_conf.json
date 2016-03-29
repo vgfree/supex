@@ -1,0 +1,19 @@
+{
+	"swift_port": 9009,
+	"swift_worker_counts": 8,
+	"swift_protocol": "http",
+
+	"max_req_size": 32768,
+
+
+	"log_path": "./logs/",
+	"log_file": "adcube",
+	"log_level": 0,
+
+	"api_apply": "/adcubeApply.json",
+	"api_fetch": "/adcubeFetch.json",
+	"api_merge": "/adcubeMerge.json",
+
+	"api_custom": ["/adcube_get","/adcube_del","/adcube_set","/adcube_cb"]
+//	"api_custom": ["/adcube_del","/adcube_set"]
+}

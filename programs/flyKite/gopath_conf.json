@@ -1,0 +1,31 @@
+{
+	"swift_port": 4070,
+	"swift_worker_counts": 1,
+	"swift_protocol": "http",
+
+	"max_req_size": 32768,
+
+	"sniff_worker_counts": 10,
+	"sharer_counts": 64,
+
+	"log_path": "./logs/",
+	"log_file": "gopath",
+	"log_level": 5,
+
+	"node_data": {
+		"host": "192.168.1.10",
+		"port": 3306,
+		"username": "observer",
+		"password": "abc123",
+		"database": "roadMap"
+	},
+	"line_data": {
+		"host": "192.168.1.10",
+		"port": 3306,
+		"username": "observer",
+		"password": "abc123",
+		"database": "roadMap"
+	},
+
+	"api_custom": ["/gopath"]
+}

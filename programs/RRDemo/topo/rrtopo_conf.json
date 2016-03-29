@@ -1,0 +1,32 @@
+{
+	"service_port": 5555,
+	"hander_counts": 2,
+	"smart_worker_counts": 4,
+	"tasker_counts": 32,
+	"smart_protocol": "http",
+	"max_req_size": 32768,
+
+
+	"log_path": "./logs/",
+	"log_file": "rrtopo",
+	"log_level": 5,
+        
+        "api_apply": "/publicentry",
+        "api_fetch": "/bdgiveFetch.json",
+        "api_merge": "/bdgiveMerge.json",
+
+	"node_data": {
+		"host": "192.168.1.16",
+		"port": 3306,
+		"username": "mttp",
+		"password": "pmttp",
+		"database": "roadMap"
+	},
+	"line_data": {
+		"host": "192.168.1.16",
+		"port": 3306,
+		"username": "mttp",
+		"password": "pmttp",
+		"database": "roadMap"
+	}
+}

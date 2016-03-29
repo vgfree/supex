@@ -1,0 +1,12 @@
+{
+	"loghub_host": "127.0.0.1",
+        "loghub_port": 5555,
+	"unique_file": "./id.pub",
+	"loghitDB_path":"./",
+	"space_usleep": 10000,
+	"follow_list":[
+		'/home/lipengwei/work/loghit/test',
+		'/home/lipengwei/work/loghit/test/test',
+		'/home/lipengwei/work/loghit/test/access.log',
+	],
+}

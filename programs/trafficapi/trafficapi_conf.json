@@ -1,0 +1,33 @@
+{
+	"service_port": 2222,
+	"hander_counts": 2,
+	"smart_worker_counts": 16,
+	"tasker_counts": 32,
+	"smart_protocol": "http",
+	"max_req_size": 32768,
+
+
+	"log_path": "./logs/",
+	"log_file": "trafficapi",
+	"log_level": 3,
+
+
+	"api_custom": ["/add_custom_point","/delete_custom_point","/publicentry","/api_get_trafficinfo_by_name","/api_iterator_get_trafficInfo","/luakv_roadRank","/api_get_hot_road_name"],
+	
+	"map_seg": {
+		"host": "192.168.71.200",
+		"port": 3306,
+		"username": "mapdatauser",
+		"password": "abcd1234",
+		"database": "wzy",
+		"table": "SGID20151213",
+		"load_sgid_once":10000,
+		"min_index":1,
+		"max_index":10932724,
+		"rrid_index_long":900,
+		"rrid_buf_long":10000,
+		"name_index_long":800,
+		"name_buf_long":10000,
+		"map_seg_file":"map_seg.data",
+	}   
+}

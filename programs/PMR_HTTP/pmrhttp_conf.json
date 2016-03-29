@@ -1,0 +1,22 @@
+{
+	"service_port": 5556,
+	"hander_counts": 2,
+	"smart_worker_counts": 16,
+	"tasker_counts": 32,
+	"smart_protocol": "http",
+	"max_req_size": 32768,
+
+
+	"log_path": "./logs/",
+	"log_file": "pmrhttp",
+	"log_level": 3,
+
+
+	"api_custom": ["/match_road"],
+	
+	"mappmr": {
+        	"map_line_file":"map_line.data",
+        	"map_grid_count_file":"map_grid_count.data",
+        	"map_grid_line_file":"map_grid_line.data"
+	}   
+}

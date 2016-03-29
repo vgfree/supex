@@ -1,0 +1,17 @@
+{
+	"service_port": 3333,
+	"hander_counts": 1,
+	"smart_worker_counts": 1,
+	"tasker_counts": 64,
+	"smart_protocol": "http",
+	"max_req_size": 70000,
+
+
+	"log_path": "./logs/",
+	"log_file": "rmsapi",
+	"log_level": 0,
+	
+	//"api_fetch": "/rmsapiFetch.json",
+	//"api_merge": "/rmsapiMerge.json",
+	"api_custom": ["/gainLive", "/gainTest"]
+}

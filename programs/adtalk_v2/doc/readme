@@ -1,0 +1,38 @@
+此项目主要有四个接口
+
+   在当前目录lua/adcube/code下
+
+   (1)adcube_set.lua    设置广告接口
+
+   (2)adcube_get.lua    获取广告接口
+
+   (3)adcube_cb.lua     广告回调接口
+
+   (4)adcube_del.lua    广告删除接口
+
+=========================================
+   如果想要再增加一些接口
+
+   则需要以下修改：
+        1.修改配置文件 adcube_conf.json
+          按照格式在   "api_custom": ["/adcube_get","/adcube_del","/adcube_set","/adcube_cb"] 添加接口名
+          例如增加 adcube_dd.lua   则改为"api_custom": ["/adcube_get","/adcube_del","/adcube_set","/adcube_cb","/adcube_dd"]
+   
+        2.修改在当前lua/adcube/list目录下的 STATUS_LIST.lua 文件
+          添加     {"adcube_dd", "open"},
+
+        3.修改在当前lua/adcube/deploy目录下的 link.lua 文件
+          添加新增文件用到的 redis  和 mysql 
+          OWN_POOL 里代表 长连接
+          OWN_DIED 里代表 短连接
+=========================================
+
+测试时 adcube_conf.json 里log_level 改为 0
+稳定时                    log_level 改为 5
+
+==========================================
+每天0时定时删除日志
+(1)终端输入  crontab -e
+
+(2)编辑输入  * 0 * * *  /bin/sh  shell删除脚本所在目录
+

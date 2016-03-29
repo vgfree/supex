@@ -1,0 +1,1 @@
+testdb.sqlite数据库中存放的有一张叫user_channel的表，表中一共有三个字段，一个是id做为表的主键，是自增加的，一个是user键，类型为INTERGER,不能为空，存放的是用户的ＩＭＥＩ，另一个是channel键，类型为text，存放的是用户的频道

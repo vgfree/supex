@@ -1,0 +1,22 @@
+{
+	"swift_port": 8008,
+	"swift_worker_counts": 8,
+	"swift_protocol": "http",
+
+	// 在执行swift相关协议的同时,是否并行执行ZeroMQ的协议入口数据;
+	// 值: yes | ye | no -> no: 代表不启用!
+	"open_zeromq_protocol": "yes",
+
+	"max_req_size": 32768,
+
+	"log_path": "./logs/",
+	"log_file": "pole-M",
+	"log_level": 1,
+
+	// 如果siwft的协议是HTTP时,下面配置才起作用;
+	"api_apply": "/pole-MApply.json",
+	"api_fetch": "/pole-MFetch.json",
+	"api_merge": "/pole-MMerge.json",
+
+	"api_custom": ["/w_xxx"]
+}

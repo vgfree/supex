@@ -1,0 +1,175 @@
+digraph G {
+	rankdir = LR;
+	compound = true;
+
+	subgraph cluster9 {
+		node [style=filled, color=blue];
+		style = filled;
+		color = green;
+		label = "外部系统";
+		/*外部接口*/
+		other [label="外部调用"];
+	}
+	/******************************************************************************/
+	subgraph cluster2 {
+		node [shape=box, style=filled, color=blue];
+		style = filled;
+		color = green;
+		label = "共享\nngxapi";
+		/*ngxapi*/
+		ngxapi1 [label="单消息"];
+		ngxapi2 [label="群消息"];
+		ngxapi3 [label="改配置"];
+		ngxapi3 -> other [dir=back, color=cyan];
+		ngxapi2 -> other [dir=back, color=pink];
+		ngxapi1 -> other [dir=back, color=red];
+	}
+	subgraph cluster8 {
+		node [shape=record, style=filled, color=blue];
+		style = filled;
+		color = green;
+		label = "共享\n跨群组跨机房广播";
+		/*群消息*/
+		whole_msg [label="<g1> 群消息 1|<g2> 群消息 2"];
+	}
+
+
+	/******************************************************************************/
+	subgraph cluster1 {
+		node [shape=box, style=filled, color=blue];
+		style = filled;
+		color = green;
+		label = "上行|下行";
+		/*上行*/
+		p_u1_1 [shape=point];
+		p_u1_2 [shape=point];
+		p_u1_3 [shape=point];
+		mf_u1_1 [label="mfptpServer 1"];
+		mf_u1_2 [label="mfptpServer 2"];
+		mf_u1_3 [label="mfptpServer 3"];
+		p_u1_1 -> mf_u1_1;
+		p_u1_2 -> mf_u1_2;
+		p_u1_3 -> mf_u1_3;
+		/*下行*/
+		node [shape=box, style=filled, color=skyblue];
+		p_d1_1 [shape=point];
+		p_d1_2 [shape=point];
+		p_d1_3 [shape=point];
+		mf_d1_1 [label="mfptpServer 1 + db"];
+		mf_d1_2 [label="mfptpServer 2 + db"];
+		mf_d1_3 [label="mfptpServer 3 + db"];
+		p_d1_1 -> mf_d1_1 [dir=back];
+		p_d1_2 -> mf_d1_2 [dir=back];
+		p_d1_3 -> mf_d1_3 [dir=back];
+	}
+	subgraph cluster5 {
+		node [shape=box, style=filled, color=blue];
+		style = filled;
+		color = green;
+		label = "transit";
+		/*transit*/
+		transit1 [label="transit 1"];
+		transit2 [label="transit 2"];
+		transit3 [label="transit 3"];
+		transit4 [label="transit 4"];
+		transit5 [label="transit 5"];
+		transit6 [label="transit 6"];
+		p_transit_1 [shape=point];
+		p_transit_2 [shape=point];
+		p_transit_3 [shape=point];
+		p_transit_1 -> transit1;
+		p_transit_1 -> transit2;
+		p_transit_2 -> transit3;
+		p_transit_2 -> transit4;
+		p_transit_3 -> transit5;
+		p_transit_3 -> transit6;
+
+		mf_u1_1 -> p_transit_1 [dir=none];
+		mf_u1_2 -> p_transit_2 [dir=none];
+		mf_u1_3 -> p_transit_3 [dir=none];
+	}
+	subgraph cluster3 {
+		node [shape=box, style=filled, color=blue];
+		style = filled;
+		color = green;
+		label = "damS";
+		/*damS*/
+		dams1 [label="damS 1"];
+		dams2 [label="damS 2"];
+		dams3 [label="damS 3"];
+		p_dams_1 [shape=point];
+		p_dams_2 [shape=point];
+		p_dams_3 [shape=point];
+		transit1 -> p_dams_1 [dir=none];
+		transit2 -> p_dams_1 [dir=none];
+		transit3 -> p_dams_2 [dir=none];
+		transit4 -> p_dams_2 [dir=none];
+		transit5 -> p_dams_3 [dir=none];
+		transit6 -> p_dams_3 [dir=none];
+
+		p_dams_1 -> dams1;
+		p_dams_2 -> dams2;
+		p_dams_3 -> dams3;
+	}
+	subgraph cluster4 {
+		node [shape=record, style=filled, color=blue];
+		style = filled;
+		color = green;
+		label = "业务";
+		/*driview|mdds|roadrank*/
+		dmr1 [label="{<d1> driview 1|<d2> driview 2}|{<m1> mdds 1|<m2> mdds 2}|{<r1> roadrank 1}"];
+		dmr2 [label="{<d1> driview 1|<d2> driview 2}|{<m1> mdds 1|<m2> mdds 2}|{<r1> roadrank 1}"];
+		dmr3 [label="{<d1> driview 1|<d2> driview 2}|{<m1> mdds 1|<m2> mdds 2}|{<r1> roadrank 1}"];
+		dams1 -> dmr1:d1;
+		dams1 -> dmr1:m1;
+		dams1 -> dmr1:r1;
+		dams2 -> dmr2:d1;
+		dams2 -> dmr2:m1;
+		dams2 -> dmr2:r1;
+		dams3 -> dmr3:d1;
+		dams3 -> dmr3:m1;
+		dams3 -> dmr3:r1;
+	}
+
+
+
+
+	/******************************************************************************/
+	subgraph cluster0 {
+		node [style=filled,color=red];
+		style = filled;
+		color = green;
+		label = "config\n调度中心";
+		/*config*/
+		g1 [label="根据imei哈希", color=yellow, shape=polygon, sides=3, orientation=90];
+		h1 [label="%3->0"];
+		h2 [label="%3->1"];
+		h3 [label="%3->2"];
+		g1 -> h1;
+		g1 -> h2;
+		g1 -> h3;
+		/*h1*/
+		u1 [label="上流IP1", color=blue];
+		d1 [label="下流IP1", color=skyblue];
+		h1 -> u1 [dir = none];
+		h1 -> d1 [dir = none];
+		/*h2*/
+		u2 [label="上流IP2", color=blue];
+		d2 [label="下流IP2", color=skyblue];
+		h2 -> u2 [dir = none];
+		h2 -> d2 [dir = none];
+		/*h3*/
+		u3 [label="上流IP3", color=blue];
+		d3 [label="下流IP3", color=skyblue];
+		h3 -> u3 [dir = none];
+		h3 -> d3 [dir = none];
+	}
+	mf_d1_2:e -> dmr3:se [lhead=cluster4, color=red, dir=back];
+	whole_msg:g2 -> ngxapi2 [color=pink, dir=back];
+	whole_msg:g1:e -> transit6:se [lhead=cluster5, color=pink, dir=back];
+	mf_d1_1 -> ngxapi3 [color=cyan, dir=back, fontcolor=cyan];
+	mf_d1_1 -> whole_msg [color=pink, dir=back];
+	mf_d1_2 -> whole_msg [color=pink, dir=back];
+	mf_d1_3 -> whole_msg [color=pink, dir=back];
+	mf_d1_1 -> ngxapi1 [color=red, dir=back];
+}

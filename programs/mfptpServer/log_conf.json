@@ -1,0 +1,21 @@
+{
+	"log_path": "./logs/",
+	"log_file": "log",
+	"log_level": 0,
+
+    "release_log":0,
+
+    "log_json_conf":1,
+    "log_init":1,
+    "log_net_conn":1,
+    "log_mfptp_auth":1,
+    "log_mfptp_parse":0,
+    "log_net_uplink":0,
+
+    "log_mfptp_pack":0,
+    "log_net_downlink":0,
+    "log_all":1,
+    "log_none":0,
+    "log_to_redis":1,
+    "log_timer":1,
+}

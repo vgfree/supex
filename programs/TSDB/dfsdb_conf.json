@@ -1,0 +1,39 @@
+{
+    "smart_hander_counts": 2,
+    "smart_worker_counts": 4,
+    "smart_tasker_counts": 32,
+    "smart_monitor_times": 30,
+    "smart_protocol": "redis",
+    "swift_worker_counts": 1,
+    "swift_protocol": "redis",
+    "max_req_size": 32768,
+
+    "log_path": "./var/logs",
+    "log_file": "dfsdb",
+    "log_level": 0,
+
+    "engine_type": "MIX",
+    "node_type": "SINGLE",
+    "mode": "RW",
+    "ds_id": 10088,
+    "key_set": [0,1024],
+    "time_range": [20120101000000, -1],
+    "zk_server": "192.168.1.14:2181",
+
+    "ip": "127.0.0.1",
+    "w_port": 7501,
+    "r_port": 7502,
+
+    "work_path": "./var",
+
+    "ldb_write_buffer_size": 67108864,
+    "ldb_block_size": 32768,
+    "ldb_cache_lru_size": 1073741824,
+    "ldb_bloom_key_size": 10,
+    "ldb_compaction_speed": 1000,
+
+    "has_slave": 0,
+    "role": "MASTER",
+    "slave_ip": "127.0.0.1",
+    "slave_wport": 7601
+}

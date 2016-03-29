@@ -1,0 +1,58 @@
+--[[local str = "|INFO |2015-10-18 23:17:28.911006|       lualog.so.008399.001|           new|||_connect()|              redis_pool_api.lu|a:  41|() : REDIS: 192.168.1.11:6349 | REC|NT: 0 |---> Tcp|||||||:connect: SUCCESS!" .. "|INFO |2015-10-18 23:17:28.912526|       lualog.so.008400.001|           new_connect()|              redis_pool_api.lua:  41|() : REDIS: 192.168.1.11:6349 | RECNT: 0 |---> Tcp:connect: SUCCESS!"  .. "|INFO |2015-10-18 23:17:28.913633|       lualog.so.008398.001|           new_connect()|              redis_pool_api.lua:  41|() : REDIS: 192.168.1.11:6349 | RECNT: 0 |---> Tcp:connect: SUCCESS!" .. "|INFO |2015-10-18 23:17:28.914799|       lualog.so.008397.001|           new_connect()|              redis_pool_api.lua:  41|() : REDIS: 192.168.1.11:6349 | RECNT: 0 |---> Tcp:connect: SUCCESS!" .. "|INFO |2015-10-18 23:17:28.914799|       lualog.so.008397.001|           new_connect()|              redis_pool_api.lua:  41|() : REDIS: 192.168.1.11:6349 | RECNT: 0 |---> Tcp:connect: SUCCESS!" .. "|INFO |2015-10-18 23:17:28.914799|       lualog.so.008397.001|           new_connect()|              redis_pool_api.lua:  41|() : REDIS: 192.168.1.11:6349 | RECNT: 0 |---> Tcp:connect: SUCCESS!" .. "|INFO |2015-10-18 23:17:28.914799|       lualog.so.008397.001|           new_connect()|              redis_pool_api.lua:  41|() : REDIS: 192.168.1.11:6349 | RECNT: 0 |---> Tcp:connect: SUCCESS!" .. "|INFO |2015-10-18 23:17:28.914799|       lualog.so.008397.001|           new_connect()|              redis_pool_api.lua:  41|() : REDIS: 192.168.1.11:6349 | RECNT: 0 |---> Tcp:connect: SUCCESS!" .. "|INFO |2015-10-18 23:17:28.914799|       lualog.so.008397.001|           new_connect()|              redis_pool_api.lua:  41|() : REDIS: 192.168.1.11:6349 | RECNT: 0 |---> Tcp:connect: SUCCESS!" .. "|INFO |2015-10-18 23:17:28.914799|       lualog.so.008397.001|           new_connect()|              redis_pool_api.lua:  41|() : REDIS: 192.168.1.11:6349 | RECNT: 0 |---> Tcp:connect: SUCCESS!" .. "|INFO |2015-10-18 23:17:28.914799|       lualog.so.008397.001|           new_connect()|              redis_pool_api.lua:  41|() : REDIS: 192.168.1.11:6349 | RECNT: 0 |---> Tcp:connect: SUCCESS!" .. "|INFO |2015-10-18 23:17:28.914799|       lualog.so.008397.001|           new_connect()|              redis_pool_api.lua:  41|() : REDIS: 192.168.1.11:6349 | RECNT: 0 |---> Tcp:connect: SUCCESS!" .. "|INFO |2015-10-18 23:17:28.914799|       lualog.so.008397.001|           new_connect()|              redis_pool_api.lua:  41|() : REDIS: 192.168.1.11:6349 | RECNT: 0 |---> Tcp:connect: SUCCESS!" .. "|INFO |2015-10-18 23:17:28.914799|       lualog.so.008397.001|           new_connect()|              redis_pool_api.lua:  41|() : REDIS: 192.168.1.11:6349 | RECNT: 0 |---> Tcp:connect: SUCCESS!" .. "|INFO |2015-10-18 23:17:28.914799|       lualog.so.008397.001|           new_connect()|              redis_pool_api.lua:  41|() : REDIS: 192.168.1.11:6349 | RECNT: 0 |---> Tcp:connect: SUCCESS!" .. "|INFO |2015-10-18 23:17:28.914799|       lualog.so.008397.001|           new_connect()|              redis_pool_api.lua:  41|() : REDIS: 192.168.1.11:6349 | RECNT: 0 |---> Tcp:connect: SUCCESS!" .. "|INFO |2015-10-18 23:17:28.914799|       lualog.so.008397.001|           new_connect()|              redis_pool_api.lua:  41|() : REDIS: 192.168.1.11:6349 | RECNT: 0 |---> Tcp:connect: SUCCESS!" .. "|INFO |2015-10-18 23:17:28.914799|       lualog.so.008397.001|           new_connect()|              redis_pool_api.lua:  41|() : REDIS: 192.168.1.11:6349 | RECNT: 0 |---> Tcp:connect: SUCCESS!" .. "|INFO |2015-10-18 23:17:28.914799|       lualog.so.008397.001|           new_connect()|              redis_pool_api.lua:  41|() : REDIS: 192.168.1.11:6349 | RECNT: 0 |---> Tcp:connect: SUCCESS!" .. "|INFO |2015-10-18 23:17:28.914799|       lualog.so.008397.001|           new_connect()|              redis_pool_api.lua:  41|() : REDIS: 192.168.1.11:6349 | RECNT: 0 |---> Tcp:connect: SUCCESS!" .. "|INFO |2015-10-18 23:17:28.914799|       lualog.so.008397.001|           new_connect()|              redis_pool_api.lua:  41|() : REDIS: 192.168.1.11:6349 | RECNT: 0 |---> Tcp:connect: SUCCESS!" .. "|INFO |2015-10-18 23:17:28.914799|       lualog.so.008397.001|           new_connect()|              redis_pool_api.lua:  41|() : REDIS: 192.168.1.11:6349 | RECNT: 0 |---> Tcp:connect: SUCCESS!" .. "|INFO |2015-10-18 23:17:28.914799|       lualog.so.008397.001|           new_connect()|              redis_pool_api.lua:  41|() : REDIS: 192.168.1.11:6349 | RECNT: 0 |---> Tcp:connect: SUCCESS!" .. "|INFO |2015-10-18 23:17:28.914799|       lualog.so.008397.001|           new_connect()|              redis_pool_api.lua:  41|() : REDIS: 192.168.1.11:6349 | RECNT: 0 |---> Tcp:connect: SUCCESS!" .. "|INFO |2015-10-18 23:17:28.914799|       lualog.so.008397.001|           new_connect()|              redis_pool_api.lua:  41|() : REDIS: 192.168.1.11:6349 | RECNT: 0 |---> Tcp:connect: SUCCESS!" .. "|INFO |2015-10-18 23:17:28.914799|       lualog.so.008397.001|           new_connect()|              redis_pool_api.lua:  41|() : REDIS: 192.168.1.11:6349 | RECNT: 0 |---> Tcp:connect: SUCCESS!" .. "|INFO |2015-10-18 23:17:28.914799|       lualog.so.008397.001|           new_connect()|              redis_pool_api.lua:  41|() : REDIS: 192.168.1.11:6349 | RECNT: 0 |---> Tcp:connect: SUCCESS!" .. "|INFO |2015-10-18 23:17:28.914799|       lualog.so.008397.001|           new_connect()|              redis_pool_api.lua:  41|() : REDIS: 192.168.1.11:6349 | RECNT: 0 |---> Tcp:connect: SUCCESS!" .. "|INFO |2015-10-18 23:17:28.914799|       lualog.so.008397.001|           new_connect()|              redis_pool_api.lua:  41|() : REDIS: 192.168.1.11:6349 | RECNT: 0 |---> Tcp:connect: SUCCESS!" .. "|INFO |2015-10-18 23:17:28.914799|       lualog.so.008397.001|           new_connect()|              redis_pool_api.lua:  41|() : REDIS: 192.168.1.11:6349 | RECNT: 0 |---> Tcp:connect: SUCCESS!" .. "|INFO |2015-10-18 23:17:28.914799|       lualog.so.008397.001|           new_connect()|              redis_pool_api.lua:  41|() : REDIS: 192.168.1.11:6349 | RECNT: 0 |---> Tcp:connect: SUCCESS!" .. "|INFO |2015-10-18 23:17:28.914799|       lualog.so.008397.001|           new_connect()|              redis_pool_api.lua:  41|() : REDIS: 192.168.1.11:6349 | RECNT: 0 |---> Tcp:connect: SUCCESS!" .. "|INFO |2015-10-18 23:17:28.914799|       lualog.so.008397.001|           new_connect()|              redis_pool_api.lua:  41|() : REDIS: 192.168.1.11:6349 | RECNT: 0 |---> Tcp:connect: SUCCESS!" .. "|INFO |2015-10-18 23:17:28.914799|       lualog.so.008397.001|           new_connect()|              redis_pool_api.lua:  41|() : REDIS: 192.168.1.11:6349 | RECNT: 0 |---> Tcp:connect: SUCCESS!" .. "|INFO |2015-10-18 23:17:28.914799|       lualog.so.008397.001|           new_connect()|              redis_pool_api.lua:  41|() : REDIS: 192.168.1.11:6349 | RECNT: 0 |---> Tcp:connect: SUCCESS!" .. "|INFO |2015-10-18 23:17:28.914799|       lualog.so.008397.001|           new_connect()|              redis_pool_api.lua:  41|() : REDIS: 192.168.1.11:6349 | RECNT: 0 |---> Tcp:connect: SUCCESS!" .. "|INFO |2015-10-18 23:17:28.914799|       lualog.so.008397.001|           new_connect()|              redis_pool_api.lua:  41|() : REDIS: 192.168.1.11:6349 | RECNT: 0 |---> Tcp:connect: SUCCESS!" .. "|INFO |2015-10-18 23:17:28.914799|       lualog.so.008397.001|           new_connect()|              redis_pool_api.lua:  41|() : REDIS: 192.168.1.11:6349 | RECNT: 0 |---> Tcp:connect: SUCCESS!" .. "|INFO |2015-10-18 23:17:28.914799|       lualog.so.008397.001|           new_connect()|              redis_pool_api.lua:  41|() : REDIS: 192.168.1.11:6349 | RECNT: 0 |---> Tcp:connect: SUCCESS!" .. "|INFO |2015-10-18 23:17:28.914799|       lualog.so.008397.001|           new_connect()|              redis_pool_api.lua:  41|() : REDIS: 192.168.1.11:6349 | RECNT: 0 |---> Tcp:connect: SUCCESS!" .. "|INFO |2015-10-18 23:17:28.914799|       lualog.so.008397.001|           new_connect()|              redis_pool_api.lua:  41|() : REDIS: 192.168.1.11:6349 | RECNT: 0 |---> Tcp:connect: SUCCESS!" .. "|INFO |2015-10-18 23:17:28.914799|       lualog.so.008397.001|           new_connect()|              redis_pool_api.lua:  41|() : REDIS: 192.168.1.11:6349 | RECNT: 0 |---> Tcp:connect: SUCCESS!" .. "|INFO |2015-10-18 23:17:28.914799|       lualog.so.008397.001|           new_connect()|              redis_pool_api.lua:  41|() : REDIS: 192.168.1.11:6349 | RECNT: 0 |---> Tcp:connect: SUCCESS!" .. "|INFO |2015-10-18 23:17:28.914799|       lualog.so.008397.001|           new_connect()|              redis_pool_api.lua:  41|() : REDIS: 192.168.1.11:6349 | RECNT: 0 |---> Tcp:connect: SUCCESS!" .. "|INFO |2015-10-18 23:17:28.914799|       lualog.so.008397.001|           new_connect()|              redis_pool_api.lua:  41|() : REDIS: 192.168.1.11:6349 | RECNT: 0 |---> Tcp:connect: SUCCESS!" .. "|INFO |2015-10-18 23:17:28.914799|       lualog.so.008397.001|           new_connect()|              redis_pool_api.lua:  41|() : REDIS: 192.168.1.11:6349 | RECNT: 0 |---> Tcp:connect:XXXXXXXXXXXXXXXXXXXXXXXXXX" .. "|INFO |2015-10-18 23:17:28.914adsfdsfdsgdsgdfsbdsbvxcbxcvbdfdsgdsgdfs799|       lualog.so.008397.001|           new_connect()|              redis_pool_api.lua:  41|() : AAAAAA|A|AA||AAA" .. "|INFO |2015-10-18"
+--]]
+--[[local find_number_tab = {}
+local strtab = {}
+local st = 0
+
+while true do
+st = string.find(str,"(%|%d+-%d+-%d+ %d+:%d+:%d+.%d+.*%|)",st+1)--XXX
+if st == nil then break end
+	table.insert(find_number_tab, st)
+end
+
+for i=1,#find_number_tab,1 do
+	if i+1 > #find_number_tab then else
+		local str = string.sub(str,find_number_tab[i]-6,find_number_tab[i+1]-7)
+		table.insert(strtab, str)
+		print(str)
+	end
+end
+	
+local str = string.sub(str,find_number_tab[#find_number_tab]-6,#str)
+print(str)--]]
+
+--[[
+local str = "22/Sep/2015:10:41:04 +0800|123.159.205.81|-|POST /newstatus?imei=887035588533905 HTTP/1.1|555|0|136|327|553|-|-|andbase-http/1.0 (http://www.418log.org/)|-|-|-|0.479|-" .. 
+"22/Sep/2015:10:41:04 +0800|123.159.205.81|-|POST /newstatus?imei=887035588533905 HTTP/1.1|555|0|136|327|553|-|-|andbase-http/1.0 (http://www.418log.org/)|-|-|-|0.479|-" .. 
+"22/Sep/2015:10:41:04 +0800|123.159.205.81|-|POST /newstatus?imei=887035588533905 HTTP/1.1|555|0|136|327|553|-|-|andbase-http/1.0 (http://www.418log.org/)|-|-|-|0.479|-" .. 
+"22/Sep/2015:10:41:04 +0800|123.159.205.81|-|POST /newstatus?imei=887035588533905 HTTP/1.1|555|0|136|327|553|-|-|andbase-http/1.0 (http://www.418log.org/)|-|-|-|0.479|-" .. 
+"22/Sep/2015:10:41:04 +0800|123.159.205.81|-|POST /newstatus?imei=887035588533905 HTTP/1.1|555|0|136|327|553|-|-|andbase-http/1.0 (http://www.418log.org/)|-|-|-|0.479|-" .. 
+"22/Sep/2015:10:41:04 +0800|123.159.205.81|-|POST /newstatus?imei=887035588533905 HTTP/1.1|555|0|136|327|553|-|-|andbase-http/1.0 (http://www.418log.org/)|-|-|-|0.479|-"
+
+local find_number_tab = {}
+local str_tab = {}
+local st = 0
+--print(str)
+while true do
+	st = string.find(str,"(%d%d%/)",st+1)--XXX
+	if st == nil then break end
+	table.insert(find_number_tab, st)
+	print(st)
+end
+
+for i=1,#find_number_tab,1 do
+	if i+1 > #find_number_tab then else
+		local str = string.sub(str,find_number_tab[i],find_number_tab[i+1]-1)
+		table.insert(str_tab, str)
+		print(str)
+	end
+end
+--]]
+--
+
+local str = "|       lualog.so.029550.001|          apply_insmod()|                       apply.lua: 141|() : install app spx_txt_to_voice"
+
+local st,ed,number = string.find(str,"%|.*%|%s+.*%|%s+(%a+.%a+:%s+%d+)")
+print(number)
+
+

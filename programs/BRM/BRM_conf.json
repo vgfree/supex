@@ -1,0 +1,122 @@
+{
+        "srchost" : {
+                "shanghai" : 
+                [
+                        {
+                                "ip" : "0.0.0.0",
+                                "port" : 10002
+                        },
+                        {
+                                "ip" : "127.0.0.1",
+                                "port" : 10001
+                        }
+                ]
+        },
+        "calhost" : 
+        [
+                {
+                        "ip" : "127.0.0.1",
+                        "port" : 10003,
+                        "proto" : "http"
+                },
+                {
+                        "ip" : "127.0.0.1",
+                        "port" : 10004,
+                        "proto" : "http"
+                }
+        ],
+        "routehost" : {
+                "driview" : 
+                [
+                        {
+                                "name" : "a",
+                                "ip" : "127.0.0.1",
+                                "port" : 10008,
+                                "proto" : "http",
+								"url":"/index/driview/host.html"
+                        },
+                        {
+                                "name" : "b",
+                                "ip" : "127.0.0.1",
+                                "port" : 10009,
+                                "proto" : "http",
+								"url":"/index/driview/host.html"
+                        }
+                ],
+                "goby" : 
+                [
+                        {
+                                "name" : "a",
+                                "ip" : "127.0.0.1",
+                                "port" : 10010,
+                                "proto" : "http",
+								"url":"/index/goby/host.html"
+                        },
+                        {
+                                "name" : "b",
+                                "ip" : "127.0.0.1",
+                                "port" : 10011,
+                                "proto" : "http",
+								"url":"/index/goby/host.html"
+                        }
+                ],
+		"ptop" :
+		[
+			{
+				"ip" : "127.0.0.1",
+				"port" : 10012,
+				"proto" : "http",
+				"url":"/index/ptop/host.html"
+			}
+		],
+                "gopath" : 
+                [
+                        {
+                                "name" : "a",
+                                "ip" : "127.0.0.1",
+                                "port" : 10013,
+                                "proto" : "http",
+				"url":"/index/gopath/host.html"
+                        }
+                ]
+        },
+        "routerule" : {
+                "power" : {
+                        "driview" : {
+                                "tag" : 0,
+                                "hash" : "HashTime33"
+                        },
+			"goby" : {
+				"tag" : 1,
+				"hash" : "HashTime33"
+			},
+			"ptop" : {
+				"tag" : 0,
+				"hash" : "HashTime33"
+			}
+                },
+                "gps" : {
+                        "driview" : {
+                                "tag" : 0,
+                                "hash" : "HashTime33"
+                        },
+			"gopath" : {
+				"tag" : 1,
+				"hash" : "HashTime33"
+			}
+                }
+        },
+        "log" : {
+                "path" : "./log",
+                "level" : 5 
+        },
+        "threads" : 5,
+        "paralleltasks" : 100,
+		"packagesize" : 1024,
+        "queue" : {
+                "size" : 1000
+        },
+		"calculate" : true,
+		"idlesleep" : 100,
+		"checksocket" : true
+}

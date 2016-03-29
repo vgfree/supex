@@ -1,0 +1,76 @@
+-------------------------------------------------------------------------------------------
+ Created by 许莉 on 16/02/24.
+ Copyright © 2016年 xuli. All rights reserved.
+-------------------------------------------------------------------------------------------
+
+数据结构：
+
+--套接字的type
+enum{
+	COMM_CONNECT = 0x01;
+	COMM_BIND;
+};
+
+--用于保存每个fd的相关数据
+struct comm_data{
+	int magic;
+	int fd;
+	DQueueT recv_list;
+	DQueueT send_list;
+	struct cache recv_buff;
+	struct cache send_buff;
+};
+
+--通信模块上下文结构体
+struct comm{
+	int		magic;
+	int		type;			//套接字的类型
+	int		epfd;			//IO复用句柄
+	int		data[EPOLL_SIZE];	//保存接收发送的相关数据
+	long		watchcnt;		//正在监听的fd的个数
+	pthread_t	ptid;			//线程id
+	struct epoll_event *events;		//监听的所有fd
+	enum{
+		COMM_STAT_NONE;
+		COMM_STAT_INIT;
+		COMM_STAT_RUN;
+		COMM_STAT_STOP;
+	}		stat;			//线程的状态
+};
+
+
+外部接口：
+1.创建一个通信结构体comm：
+struct comm* comm_ctx_create(long size);
+
+2.销毁掉通信结构体comm:
+void comm_ctx_destroy(struct comm  *commctx);
+
+3.bind或者connect端口：返回fd，-1则失败
+int comm_socket(struct comm *commctx, char *host, char *server);
+
+4.发送数据：将传进来的数据放入链表中等待合适时机发送 返回-1失败，0成功 失败的时候通过errno查看原因
+int comm_send(struct comm *commctx, int fd, const char *buff);
+
+5.接收数据:从链表中获取已经接收的数据 返回值为接收到的数据的大小，-1失败 失败的时候通过errno查看原因
+int comm_recv(struct comm *commctx, int fd, char *buff);
+
+
+6.关闭某个socket:将对应的fd关闭
+bool comm_close(struct comm *commctx, char *host, char *server);
+
+7.启动通信模块 --暂时保留
+int comm_startup(struct comm *commctx);
+
+
+内部接口:
+添加一个监视的fd 
+typedef void (*commcb)(void *usr);
+struct watcher_flag{
+	int op;		//对于监视的fd的操作 
+	int event;	//监视的fd的事件
+	int timeout;    //超时设置
+	commcb finishedcb;//所监视的fd可读可写时所调用的函数
+	commcb timeoutcb;//监视的fd超时时所调用的函数
+};
+int comm_watcher(struct comm *commctx, in fd, struct watcher_flag flag);

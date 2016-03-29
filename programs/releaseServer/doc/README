@@ -1,0 +1,25 @@
+1、releaseServer.pdf		  :里面的内容是设计原件。当前实现是将原来releaseServer框架去掉后，嫁接到supex中swift上的作品
+   JTT 809-2011 .pdf		  :809协议原件
+   before develop get c++ code.rar:开发releaseServer前从第三方公司获得的部分客户端c++代码,开发参考用
+   809 releaseServer.rtf	  :开发后整理的809协议文件，包括开发需求
+
+2、releaseServer_conf.json:配置框架信息
+
+3、etc/*  配置业务数据
+	imei.cfg	:采用配置文件加载imei数据时使用.
+	mysql.cfg	:采用从mysql加载imei数据时使用，与imei.cfg互斥.
+	jtt_business.cfg:配置厂商的ip等信息
+	user.cfg	:说明某个厂商采用那个接出线程向其发送数据
+
+4、test/* 单元测试目录
+	testServer	:简单模拟服务端，809数据接收端。能够接收登录，能够响应心跳，能够接收实时数据
+			 在高并发下，testServer存在tcp边界问题
+	testClient.sh	:简单模拟客户端，json数据发起方。
+	data.txt	:需要对其中的IMEI进行重新配置，配置依据是releaseServer中etc中的业务信息
+
+5、supex/Makefile中配置imei的加载方式:
+	$(MAKE) -C ./programs/releaseServer MAIN_APP_SERV=releaseServer DATA_LOAD_TYPE=cfg	#或mysql
+
+6、运行服务
+	./run.sh
+	或nohup ./run.sh &

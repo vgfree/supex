@@ -1,0 +1,91 @@
+{
+    "max_req_size": 33554432, 
+    "log_path": "./var/logs", 
+    "log_file": "rtimport", 
+    "log_level": 1, 
+    "delay_time": 216000,
+    "zk_disabled": 1,
+    "zk_servers": "192.168.1.14:2181", 
+    "zk_rnode": "/tsdb", 
+    "backup_path": "./var/backup", 
+    "start_time_file": "./var/start_time.txt", 
+    "redis": [
+        {
+            "host": "172.16.71.95",
+            "port": 5080
+        },
+        {
+            "host": "172.16.71.95",
+            "port": 5081
+        },
+        {
+            "host": "172.16.71.95",
+            "port": 5082
+        },
+        {
+            "host": "172.16.71.95",
+            "port": 5083
+        },
+        {
+            "host": "172.16.71.95",
+            "port": 5084
+        },
+        {
+            "host": "172.16.71.95",
+            "port": 5085
+        },
+        {
+            "host": "172.16.71.95",
+            "port": 5086
+        },
+        {
+            "host": "172.16.71.95",
+            "port": 5087
+        },
+        {
+            "host": "172.16.71.95",
+            "port": 5088
+        },
+        {
+            "host": "172.16.71.95",
+            "port": 5089
+        }
+    ],
+    "tsdb": [
+        {
+            "key_set": [0, 4096],
+            "data_set": [
+                {
+                    "host": "172.16.71.153",
+                    "port": 7801
+                }
+            ]
+        },
+        {
+            "key_set": [4096, 8192],
+            "data_set": [
+                {
+                    "host": "172.16.71.154",
+                    "port": 7801
+                }
+            ]
+        }
+    ],
+    "timport": [
+        {
+            "key": "RTTrackUser", 
+            "type": "WHOLE_INDEX", 
+            "interval": "ONE_HOUR", 
+            "expire_time": 43200,
+            "child": [
+                {
+                    "key": "RTTrack", 
+                    "type": "SET_VAL", 
+                    "param_cnt": 2, 
+                    "param_tm_pos": 1, 
+                    "hash_filter": "imei_hash_filter"
+                } 
+            ]
+        }, 
+    ]
+}

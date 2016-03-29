@@ -1,0 +1,127 @@
+v1.0.7 (2015-11-04)
+	* New features:
+	* Incompatible changes:
+	* Bug fixes:
+		- free queue have one slot can't use.(2015-11-04)
+
+v1.0.6 (2015-09-22)
+	* New feature:
+		- 使用原子操作实现高速自旋锁AO_SpinLockT，该锁可以适用于进程和线程间同步，但同步的临界区必须要短；
+		  该锁可以自动解开死锁。
+		  示例：supex/test/libmini_test/process_lock_test,supex/test/libmini_test/thread_lock_test。
+		- 在linux平台使用__NR_futex指令实现fast-user-mutex，封装为futex_wait()/futex_wake()函数，
+		  使用futex_wait()可以挂起等待指定地址内存数据的变化，futex_wake()可以唤醒系统中所有
+		  等待指定地址内存数据的进程／线程。指定地址的内存可以是运行内存／文件映射内存／共享内存。
+		  示例：supex/test/libmini_test/futex_test
+		- 使用AO_SpinLockT结合futex实现原子锁，该锁唯一不同之处可以用于同步临界区很长的情况。而且可以有自检功能。
+		  示例：supex/test/libmini_test/thread_lock_test
+		- 使用siglongjmp()实现异常处理
+	* Incompatible changes:
+	* Bug fixes:
+		- tap_api.c文件中sync_tcp_ask()使用了TRY-CATCH-FINALLY-END，当发生异常跳转时，sock值被还原，在FINALLY模块中
+		  导致不能正确关闭连接，套件字一直处于CLOSE_WAIT，直到资源耗尽，程序宕机。
+		  在使用TRY-CATCH-FINALLY-END异常模块编写代码时，所有需要在TRY中初始化，CATCH或FINALLY中清理该初始化的
+		  数值／指针auto或register局部变量必须声明为volatile类型，其他全局／静态或结构体变量不要这样做。
+		  因为一旦发生跳转auto或register变量会被复原为siglongset()前值，无法做出正确的清理。
+		  比如，在TRY中打开一个描述符，在发生异常时要在CATCH或FINALLY中进行清理：
+		  ...
+		  volatile int fd = -1;
+		  char *volatile ptr = NULL;/*指针本身的可变修饰必须放在变量名称前*/
+		  TRY
+		  {
+		  	fd = open(...);
+		  	/*一下处理发生某个异常，需要在catch中处理打开的描述符*/
+		  	other();
+		  	New(ptr);
+		  	AssertError(ptr, ENOMEM);
+		  }
+		  CATCH
+		  {
+		  	if (fd > -1) close();
+		  	fd = -1;
+		  }
+		  FINALLY
+		  {
+		  	Free(ptr);
+		  }
+		  END;
+		  ...
+v1.0.5 (2015-01-30)
+	* New features:
+	* Incompatible changes:
+		- Create drimode project.
+		- Create rtmiles project.
+		- Create PPP project.
+		- Support only.log for internal format string.
+	* Bug fixes:
+		- Fix only use static g_data_pool to support dynamic allocation.(2015-01-30)
+		- Coro add OPEN_LESS_SWITCH control.(2015-02-02)
+		- Fix bug:memory leak in lrucache.(2015-06-30)
+		- Fix pool_api_gain return value changes by no include called function head file.(2015-09-12)
+
+v1.0.4 (2014-12-30)
+	* New features:
+	* Incompatible changes:
+		- Sniff mode add evuv.
+		- Create weidb project.
+		- Fix init support spxprod run.
+		- Sniff mode add support [one queue more worker].
+	* Bug fixes:
+		- Fix hiredis bug:remove _EL_ADD_WRITE in redisAsyncSetConnectCallback
+		- Fix return value changes by same name file async.c and async.h(2015-01-07)
+		- Close ev when one request over(2015-01-07)
+
+v1.0.3 (2014-12-05)
+	* New features:
+	* Incompatible changes:
+		- Fix gopath codes,reduce peak lua-VM-memory from 11M to 5M.
+		- Add libhiredis and libzdb
+		- Add async redis api
+		- Add async http api
+		- Gopath implant topo api
+		- Gopath add function cache,promote one time compute capacity.
+		- Adjust task allocation policy,full use CPU.
+	* Bug fixes:
+		- Fix bug of stsv when tasks pile up.(2014-12-25)
+		- Fix bug:memory leak in sync_tcp_ask() c function.(2014-12-27)
+
+v1.0.2 (2014-11-12)
+	* New features:
+	* Incompatible changes:
+		- Fix damS with multichannel and use redis protocol.
+		- Point match road add : angle result.
+	* Bug fixes:
+		- Revised sync and async http api.
+
+
+v1.0.1 (2014-11-12)
+	* New features:
+	* Incompatible changes:
+		- Fix gopath from [crzptY] switch to [stsv].
+		- Update libev-4.15 to libev-4.19.(2014-11-12)
+	* Bug fixes:
+		- Fix ldb init failed when program restart.(2014-11-11)
+		- Fix async_http content_length check.(2014-11-22)
+
+
+v1.0.0 (2014-11-08)
+	* New features:
+		- Add pthread safe,function init protected.
+		- Support supply queue api from outside.
+		- Adjust the queue depths of gain event.
+		- Fix idle sleep depth and task fetch depth.
+		- Package and process of lock free queue unified interface.
+		- Optimization of ugliness and messy code.
+		- Update lib http-parser.
+		- Fix MAX_LISTEN_COUNTS from 1024 to 10240.(2014-11-10)
+		- Create stsv project.
+	* Incompatible changes:
+		- Delete some global variable.
+		- Close driview module performance log print.
+		- Fix crzptY main process works from [smart] switch to [swift].
+	* Bug fixes:
+		- Fix http api: Handle Leak and Memory Leak.(2014-11-08)
+		- Fix logfile switch by month: redesign.(2014-11-08)
+		- Reduce TIME_WAIT generate in http request.(2014-11-09)
+		- Add async http request timeout.(2014-11-11)
+

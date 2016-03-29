@@ -1,0 +1,60 @@
+{
+	"swift_port": 4100,
+	"swift_worker_counts": 1,
+	"swift_protocol": "http",
+	"max_req_size": 32768,
+	"sniff_worker_counts": 6,
+	"sharer_counts": 64,
+	"log_path": "./logs/",
+	"log_file": "roadRank",
+	"log_level": 3,
+
+	"api_apply": "/publicentry",
+	"api_fetch": "/roadRankFetch.json",
+	"api_merge": "/roadRankMerge.json",
+	"appKey": "1111111111",
+	"secret": "D33D613665B352AB62E4B6806638EB1E951E76E4",
+
+	"servers": {
+		"pmr_server": {
+			"host": "192.168.1.10",
+			"port": 5555
+		},
+		"trafficapi_server": {
+			"host": "192.168.1.12",
+			"port": 2222
+		},
+		"forward_server": {
+			"host": "192.168.1.12",
+			"port": 4100
+		}
+	},
+
+	"links": {
+		"road_traffic": {
+			"host": "127.0.0.1",
+			"port": 5080
+		},
+		"city_traffic": {
+			"host": "127.0.0.1",
+			"port": 5081
+		},
+		"county_traffic": {
+			"host": "127.0.0.1",
+			"port": 5082
+		}
+	},
+
+	"forward_imei": [
+		264712577622781,
+		237707847707887,
+		713351887826068
+	],
+
+	"save_time": 31536000,
+	"min_speed_limit": 5,
+	"road_match_limit": 2,
+	"kv_cache_count": 8,
+	"redis_conn": 2000,
+        "model_cfg_file": "model_conf.json"
+}

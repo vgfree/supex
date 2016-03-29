@@ -1,0 +1,50 @@
+digraph G {
+	rankdir = LR;
+	compound = true;
+
+	subgraph cluster {
+		style = filled;
+		color = green;
+		label = "方案";
+	/******************************************************************************/
+		node [shape=polygon, style=filled, color=cyan];
+		player1 [sides=3, orientation=90, label="player 1"];
+		node [shape=Mcircle, style=filled, color=cyan];
+		pusher [label="pusher"];
+		node [shape=polygon, style=filled, color=cyan];
+		player2 [sides=3, orientation=90, label="player 2"];
+	/******************************************************************************/
+		node [shape=box, style=filled, color=blue];
+		pusher -> EasyDSS2 [label="RTSP"];
+		player1 -> EasyDSS1 [dir=back, label="RTSP"];
+		player2 -> EasyDSS3 [dir=back, label="RTSP"];
+		EasyDSS1 [label="EasyDSS 1"];
+		EasyDSS2 [label="EasyDSS 2"];
+		EasyDSS3 [label="EasyDSS 3"];
+		EasyDSS1 -> api_point [dir=back];
+		EasyDSS2 -> api_point [dir=back];
+		EasyDSS3 -> api_point [dir=back];
+	/******************************************************************************/
+		node [shape=ellipse, style=filled, color=red];
+		api_point [shape=point];
+		api_point-> dfsapiServer1;
+		api_point-> dfsapiServer2 [label="http/redis协议", fontcolor=blueviolet];
+		api_point-> dfsapiServer3;
+		dfsapiServer1 [label="dfsapiServer 1"];
+		dfsapiServer2 [label="dfsapiServer 2"];
+		dfsapiServer3 [label="dfsapiServer 3"];
+		dfsapiServer1 -> ldb_point [dir=back];
+		dfsapiServer2 -> ldb_point [dir=back];
+		dfsapiServer3 -> ldb_point [dir=back];
+	/******************************************************************************/
+		node [shape=record, style=filled, color=darkorange];
+		ldb_point [shape=point];
+		ldb_point-> dfsldbServer1;
+		ldb_point-> dfsldbServer2;
+		ldb_point-> dfsldbServer3;
+		dfsldbServer1 [label="{<db0> 同步群组}|{<db1> dfsldbServer 1|<db2> dfsldbServer 2}"];
+		dfsldbServer2 [label="{<db0> 同步群组}|{<db1> dfsldbServer 3|<db2> dfsldbServer 4}"];
+		dfsldbServer3 [label="{<db0> 同步群组}|{<db1> dfsldbServer 5|<db2> dfsldbServer 6}"];
+	/******************************************************************************/
+	}
+}

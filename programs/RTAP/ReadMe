@@ -1,0 +1,20 @@
+ptop部署时需要注意的文件
+
+link.lua
+cfg.lua
+ptop_config.json
+
+dfsapi部署是需要注意的文件
+
+link.lua
+dfsapi_conf.json
+BYNAME_LIST.lua
+STATUS_LIST.lua
+
+dfsapi部署注意事项
+1.修改接收文件大小阀值
+	修改engine/common.h的MAX_REQ_SIZE，编译dfsapi（make libs，ccg，make dfsapi）,使用生成的执行文件dfsapi
+	dfsapi_conf.json的max_req_size
+2.打开timeout
+	修改Makefile,将注释掉的-DOPEN_TIME_OUT \打开，编译dfsapi，使用生成的执行文件dfsapi
+

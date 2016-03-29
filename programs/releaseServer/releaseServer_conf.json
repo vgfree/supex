@@ -1,0 +1,19 @@
+//log_max_files:业务层,允许日志文件的数量
+//out_thread_counts:业务线程数量
+//对于从mysql加载厂商的imei数据：以下4个update_data_xxx起作用,前3个是第一次定时更新的时间，第4个是更新周期
+{
+	"swift_port": 4170,
+	"swift_worker_counts": 8,
+	"swift_protocol": "http",
+	"out_thread_counts":3,
+	"max_req_size": 32768,
+	"log_path": "./log/",
+	"log_file": "swift",
+	"log_level": 0,
+	"log_max_files":40,
+	"update_data_hour":4,
+	"update_data_min":0,
+	"update_data_sec":0,
+	"update_data_cycle":86400,
+	"api_apply": "/releaseServerApply.json"
+}

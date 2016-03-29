@@ -1,0 +1,31 @@
+{
+	"mfptp_port": 6990,
+	"mfptp_front_port": 6991,
+	"mfptp_back_port": 6992,
+	"mfptp_usr_msg_port": 6993,
+	"mfptp_gp_msg_port": 6995,
+	"mfptp_edit_user_info_port":6997,
+	"worker_counts": 1,
+        "mfptp_redis_address":"192.168.71.71",                                                                                                                                                                                           
+        "mfptp_redis_port":6379,
+        "mfptp_user_online_status":1,
+	"max_req_size": 16777216,
+
+	"log_path": "./logs/",
+	"log_file": "mfptpServer",
+	"log_level": 4,
+
+
+	"transit": 
+	[
+		{
+			"host": "127.0.0.1",
+			"port": 8888
+		},{
+			"host": "127.0.0.1",
+			"port": 8888
+		}
+	],
+	"weibo": []
+
+}

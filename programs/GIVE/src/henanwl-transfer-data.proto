@@ -1,0 +1,14 @@
+package autonavi.traffic.fp.receiver.positionprotocol;
+message HeNanWLPosition{
+	required string id = 1; //车辆ID
+	required fixed32 lat = 2;//维度，放大1000000倍
+	required fixed32 lng = 3;//经度，放大1000000倍
+	required int32 speed = 4; //速度，放大100倍
+	required int32 angle = 5; //角度
+	required int32 gpsTime = 6;//GPS点时间,System.currentTimeMillis() / 1000
+}
+
+message HeNanWLGpsData {
+	required int32 gpsCount = 1;
+	repeated HeNanWLPosition  position = 2;
+}

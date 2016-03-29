@@ -1,0 +1,9 @@
+luajit test/PPP_client.lua &
+luajit test/PPP_client.lua &
+luajit test/PPP_client.lua &
+luajit test/PPP_client.lua &
+luajit test/PPP_client.lua &
+luajit test/PPP_client.lua &
+luajit test/PPP_client.lua &
+luajit test/PPP_client.lua &
+luajit test/PPP_client.lua &

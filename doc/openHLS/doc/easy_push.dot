@@ -1,0 +1,38 @@
+digraph G {
+	rankdir = LR;
+	compound = true;
+
+	subgraph cluster {
+		style = filled;
+		color = green;
+		label = "push方案";
+	/******************************************************************************/
+		node [shape=Mcircle, style=filled, color=cyan];
+		pusher1 [label="pusher1"];
+		pusher2 [label="pusher2"];
+	/******************************************************************************/
+		node [shape=box, style=filled, color=blue];
+		pusher1 -> EasyRMS1 [label="RTSP/RTP"];
+		pusher2 -> EasyRMS2 [label="RTSP/RTP"];
+		EasyRMS1 [label="EasyRMS 1\n内置TS分段及路由策略"];
+		EasyRMS1 -> ldb_point [dir=none];
+		EasyRMS2 [label="EasyRMS 2\n内置TS分段及路由策略"];
+		EasyRMS2 -> ldb_point [dir=none];
+	/******************************************************************************/
+		node [shape=ellipse, style=filled, color=red];
+		EasyRMS1 -> redis;
+		EasyRMS2 -> redis [label="m3u8"];
+		redis [label="redis"];
+		redis -> ldb_point [color="green"];
+	/******************************************************************************/
+		node [shape=record, style=filled, color=darkorange];
+		ldb_point [shape=point];
+		ldb_point -> dfsldbServer1;
+		ldb_point -> dfsldbServer2 [label="TS"];
+		ldb_point -> dfsldbServer3;
+		dfsldbServer1 [label="{<db0> 同步群组}|{<db1> SSDB/dfsldbServer 1|<db2> SSDB/dfsldbServer 2}"];
+		dfsldbServer2 [label="{<db0> 同步群组}|{<db1> SSDB/dfsldbServer 3|<db2> SSDB/dfsldbServer 4}"];
+		dfsldbServer3 [label="{<db0> 同步群组}|{<db1> SSDB/dfsldbServer 5|<db2> SSDB/dfsldbServer 6}"];
+	/******************************************************************************/
+	}
+}

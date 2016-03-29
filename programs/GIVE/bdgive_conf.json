@@ -1,0 +1,43 @@
+{
+	"swift_port": 8222,
+	"swift_worker_counts": 4,
+	"swift_protocol": "http",
+	"max_req_size": 32768,
+	"sniff_worker_counts": 4,
+	"sharer_counts": 64,
+	"log_path": "./logs/",
+	"log_file": "bdgive",
+	"log_level": 0,
+
+	"api_apply": "/publicentry",
+	"api_fetch": "/bdgiveFetch.json",
+	"api_merge": "/bdgiveMerge.json",
+	"links":
+	[
+		{
+			"serv": "redis-1",
+			"host": "172.16.21.175",
+			"port": 4040
+		},{
+			"serv": "redis-2",
+			"host": "172.16.21.205",
+			"port": 4120
+		}
+		
+
+	],
+
+        "synctime": 120,
+        "citycode":[370100,370600,130400,130200,341500],
+        "gaode_host":"127.0.0.1",
+        "gaode_port":6000,
+
+	"sqlhost":"192.168.11.197",
+        "sqluser":"root",
+        "sqlpass":"abc123",
+        "sqldb":"gpsDataCount",
+        "sqlstr":"",
+        "sqltab":"dataCountInfo",
+        "sqlport":"3306"
+
+}

@@ -1,0 +1,25 @@
+{
+	"recv" : {
+		"ip" : "0.0.0.0",
+		"port" : 10000,
+		"proto" : "zmq",
+		"cache" : 500
+	},
+	"send" : {
+		"ip" : "0.0.0.0",
+		"port" : 10001,
+		"proto" : "zmq",
+		"cache" : 500
+	},
+	"queue" : {
+		"type" : "file",
+		"seq" : 1,
+		"path" : "./data",
+		"capacity" : 500000,
+		"cellsize" : 1024
+	},
+	"log" : {
+		"path" : "./logs",
+		"level" : 0
+	}
+}

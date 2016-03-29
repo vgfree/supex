@@ -1,0 +1,17 @@
+{
+	"service_port": 2222,
+	"hander_counts": 1,
+	"smart_worker_counts": 1,
+	"tasker_counts": 64,
+	"smart_protocol": "http",
+	"max_req_size": 70000,
+
+
+	"log_path": "./logs/",
+	"log_file": "hlsapi",
+	"log_level": 0,
+	
+	//"api_fetch": "/hlsapiFetch.json",
+	//"api_merge": "/hlsapiMerge.json",
+	"api_custom": ["/gainTS"]
+}

@@ -1,0 +1,21 @@
+{
+	"map_seg": {
+		        "host": "192.168.71.200",
+			"port": 3306,
+			"username": "mapdatauser",
+			"password": "abcd1234",
+			"database": "wzy",
+			"table": "SGID20151116",
+			"load_sgid_once":10000,
+			"min_index":14238816,
+			"max_index":28498471,
+			"rrid_index_long":900,
+			"rrid_buf_long":10000,
+			"name_index_long":800,
+			"name_buf_long":10000,
+			"map_seg_file":"map_seg.data",
+		}
+
+}
+
+

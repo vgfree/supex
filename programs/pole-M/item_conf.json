@@ -1,0 +1,19 @@
+{
+	// Input ZeroMQ Server URI for Input Client connect and communication.
+        "input_uri": "tcp://*:8585",
+
+	// Server URI for pole-S connect and communication.
+        "bind_uri": "tcp://*:8686",
+
+	// Log Path.
+	"log_path": "./logs/item.log",
+
+	// LOG_DEBUG|LOG_INFO|LOG_WARN|LOG_ERROR|LOG_SYS|LOG_FATAL
+	"log_level": "LOG_DEBUG", 
+
+	// The Maxminum of XMQ's records.
+	"max_records": 2000000,
+
+	// 如果宏编译选择(TC_COROUTINE)服务器为协程版本时,thread_number参数生效.
+	"thread_number": 3
+}

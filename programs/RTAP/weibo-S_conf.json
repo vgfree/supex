@@ -1,0 +1,17 @@
+{
+	"service_port": 7777,
+	"hander_counts": 2,
+	"smart_worker_counts": 2,
+	"tasker_counts": 64,
+	"smart_protocol": "http",
+	"max_req_size": 32768,
+
+
+	"log_path": "./logs/",
+	"log_file": "ptop",
+	"log_level": 0,
+	
+	"api_fetch": "/ptopFetch.json",
+	"api_merge": "/ptopMerge.json",
+	"api_custom": ["/x_test", "/weibo_send_single_message", "/weibo_recv_single_message"]
+}

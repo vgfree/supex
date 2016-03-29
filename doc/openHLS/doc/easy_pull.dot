@@ -1,0 +1,40 @@
+digraph G {
+	rankdir = LR;
+	compound = true;
+
+	subgraph cluster {
+		style = filled;
+		color = green;
+		label = "pull方案";
+	/******************************************************************************/
+		node [shape=polygon, style=filled, color=cyan];
+		player1 [sides=3, orientation=90, label="player 1"];
+		player2 [sides=3, orientation=90, label="player 2"];
+	/******************************************************************************/
+		node [shape=ellipse, style=filled, color=red];
+		player1 -> dfsapiServer1 [dir=back, label="HLS"];
+		player1 -> EasyRMS [dir=both, taillabel="json", headlabel="http", labelfontcolor=blue];
+		player2 -> EasyRMS [dir=both, taillabel="json", headlabel="http", labelfontcolor=blue];
+		player2 -> dfsapiServer2 [dir=back, label="HLS"];
+		dfsapiServer1 [label="nginx/dfsapiServer 1\n内置TS缓存及路由策略"];
+		EasyRMS [label="EasyRMS/nginx"];
+		dfsapiServer2 [label="nginx/dfsapiServer 2\n内置TS缓存及路由策略"];
+		dfsapiServer1 -> ldb_point [dir=back];
+		dfsapiServer2 -> ldb_point [dir=back];
+	/******************************************************************************/
+		node [shape=box, style=filled, color=blue];
+		redis [label="redis"];
+		EasyRMS -> redis [dir=back, headlabel="m3u8"];
+		redis -> ldb_point [color="green"];
+	/******************************************************************************/
+		node [shape=record, style=filled, color=darkorange];
+		ldb_point [shape=point];
+		ldb_point -> dfsldbServer1 [dir=none];
+		ldb_point -> dfsldbServer2 [dir=none];
+		ldb_point -> dfsldbServer3 [dir=none];
+		dfsldbServer1 [label="{<db0> 同步群组}|{<db1> SSDB/dfsldbServer 1|<db2> SSDB/dfsldbServer 2}"];
+		dfsldbServer2 [label="{<db0> 同步群组}|{<db1> SSDB/dfsldbServer 3|<db2> SSDB/dfsldbServer 4}"];
+		dfsldbServer3 [label="{<db0> 同步群组}|{<db1> SSDB/dfsldbServer 5|<db2> SSDB/dfsldbServer 6}"];
+	/******************************************************************************/
+	}
+}

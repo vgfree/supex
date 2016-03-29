@@ -1,0 +1,56 @@
+{
+    "max_req_size": 33554432, 
+    "log_path": "./var/logs", 
+    "log_file": "simimport", 
+    "log_level": 1, 
+    "delay_time": 7200,
+    "zk_disabled": 1,
+    "zk_servers": "192.168.1.14:2181", 
+    "zk_rnode": "/tsdb", 
+    "backup_path": "./var/backup", 
+    "start_time_file": "./var/start_time.txt", 
+    "redis": [
+        {
+            "host": "127.0.0.1",
+            "port": 6379
+        }
+    ],
+    "tsdb": [
+        {
+            "key_set": [0, 4096],
+            "data_set": [
+                {
+                    "host": "127.0.0.1",
+                    "port": 6380
+                }
+            ]
+        },
+        {
+            "key_set": [4096, 8192],
+            "data_set": [
+                {
+                    "host": "127.0.0.1",
+                    "port": 6380
+                }
+            ]
+        }
+    ],
+    "timport": [
+        {
+            "key": "SIMflow:*", 
+            "type": "KEYS_INDEX", 
+            "interval": "ONE_HOUR", 
+            "expire_time": 79200,
+            "child": [
+                {
+                    "key": "SIMflow", 
+                    "type": "SET_VAL", 
+                    "param_cnt": 2, 
+                    "param_tm_pos": 1,
+                    "key_filter": "simflow_key_filter",
+                    "hash_filter": "key_hash_filter"
+                } 
+            ]
+        }, 
+    ]
+}

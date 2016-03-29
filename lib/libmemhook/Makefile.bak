@@ -1,0 +1,195 @@
+#每个环境变量后面不要有空格
+BUILD_PWD = 		$(shell pwd)
+BUILD_HOST =		$(shell uname | tr '[A-Z]' '[a-z]')
+#------------------------
+# 以下信息是lua的版本及文件路径
+
+#------------------------
+# 以下信息是你根据你的项目需要增加的附件
+# 头文件路径、依赖库文件路径、依赖库名称、
+# 编译标志、归档文件路径、动态库创建标志等
+# 每个要编译的文件夹中需要包含一个指示文件：Make.spec 它可以为空文件
+# 可以编译的文件后缀有：.c .cc .cpp
+# 注意文件名中不要包含.c、.cc、.cpp的这样的字符：如main.cother.c在这里是一个不合法的文件名
+
+#一下为附加选项 一定要使用绝对路径
+ADDIN_CC_CFLAGS =  -D_GNU_SOURCE \
+	-DMHOOKTRACELOG=\"./logs/memhooktrace.log\" \
+	-D_AO_CPU_NUMS=8 \
+	-DMALLOC_HOOK_MZERO
+# -DTRACE 
+# -DMALLOC_HOOK_CHECK
+# -export-dynamic -Wl,-wrap,malloc -Wl,-wrap,calloc -Wl,-wrap,realloc -Wl,-wrap,free
+ADDIN_CC_IPATH =	-I/usr/include -I$(BUILD_PWD)/src
+ADDIN_SHARE_OBJS =	-ldl
+# ADDIN_AR_OBJS = 	$(BUILD_PWD)/lib/mylib.a	
+# ADDIN_DYLIB_FLAG =	-bundle -undefined dynamic_lookup
+# 需要编译源文件的路径
+# ADDIN_BUILD_SRCDIR = 	$(BUILD_PWD)
+# ADDIN_BUILD_BIN =	$(BUILD_PWD)/..
+# ADDIN_BUILD_LIB =	$(BUILD_PWD)/..
+# 脚本文件
+SHL_FILE =
+
+# 你仅需要改变以上的选项即可编译一个库或可执行文件
+
+
+#------------------------
+# 以下信息不要随意修改
+#---- color define -----
+COLOR_NONE =		"\x1B[m"
+COLOR_GRAY =		"\x1B[0;30m"
+COLOR_RED =			"\x1B[0;31m"
+COLOR_GREEN =		"\x1B[0;32m"
+COLOR_YELLOW =		"\x1B[0;33m"
+COLOR_BLUE =		"\x1B[0;34m"
+COLOR_PURPLE =		"\x1B[0;35m"
+COLOR_CYAN =		"\x1B[0;36m"
+COLOR_WHITE =		"\x1B[0;37m"
+
+CP = 				cp
+MV =				mv
+MD =				mkdir -p
+RM = 				rm
+SH =				/bin/bash
+CTOOL = 			$(SH) ./ctool
+ifeq ($(BUILD_HOST), linux)
+ECHO = 				echo -e
+else
+ECHO = 				echo
+endif
+BUILD_SUFFIXES =	.o
+ifeq ($(BUILD_HOST), linux)
+DYLIB_SUFFIXES = 	.so
+else
+DYLIB_SUFFIXES = 	.dylib
+endif
+DYLIB_FLAGS =		-shared
+
+CC_COMPILER =		gcc
+CC_CFLAGS =			-fPIC -O3 -Wall $(ADDIN_CC_CFLAGS)
+CC_IPATH =			-I/usr/local/include $(ADDIN_CC_IPATH) 
+# -I$(LUA_INCLUDE_DIR)
+CC_LPATH =			-L/usr/local/lib $(ADDIN_CC_LPATH) 
+#-L$(LUA_CMODULE_DIR)
+SHARE_OBJS =		-lpthread $(ADDIN_SHARE_OBJS) 
+AR_OBJS =			$(ADDIN_AR_OBJS)
+ifneq ($(ADDIN_BUILD_SRCDIR), ) 
+BUILD_SRCDIR =		$(ADDIN_BUILD_SRCDIR)
+else
+BUILD_SRCDIR =		$(BUILD_PWD)/src
+endif
+ifneq ($(ADDIN_BUILD_BIN), )
+BUILD_BIN =			$(ADDIN_BUILD_BIN)
+else
+BUILD_BIN =			$(BUILD_PWD)/bin
+endif
+ifneq ($(ADDIN_BUILD_LIB), )
+BUILD_LIB =			$(ADDIN_BUILD_LIB)
+else
+BUILD_LIB =			$(BUILD_PWD)/lib
+endif
+BUILD_OBJS =		$(BUILD_PWD)/.objs
+
+INSTALL_INC_DIR =	/usr/local/include
+INSTALL_DLY_DIR =	/usr/local/lib
+INSTALL_SHL_DIR =	/usr/local/share 
+
+
+
+
+export BUILD_PWD
+export BUILD_HOST
+export CC_COMPILER
+export CC_CFLAGS
+export CC_IPATH
+export CC_LPATH
+export SHARE_OBJS
+export AR_OBJS
+export BUILD_SRCDIR
+export BUILD_OBJS
+export BUILD_BIN
+export BUILD_LIB
+export DYLIB_SUFFIXES
+export DYLIB_FLAGS
+export BUILD_SUFFIXES
+export ADDIN_DYLIB_FLAG
+
+
+all: help
+
+build: show
+	@$(ECHO) $(COLOR_CYAN)"\t* START BUILD C OR CPP SOURCE FILE"$(COLOR_NONE)
+	@$(CTOOL) "build"
+
+bin: show build
+ifeq ($(target), )
+	@$(ECHO) $(COLOR_RED)"\t* ERROR operate!!!\n\t* please use like:"
+	@$(ECHO) "\t* make -f Makefile target=binname"$(COLOR_NONE)
+else
+	@$(ECHO) $(COLOR_CYAN)"\t* START BUILD EXECUTABLE BINARY FILE"$(COLOR_NONE)
+	@$(CTOOL) "bin" "$(target)"
+endif
+
+lib: show build
+ifeq ($(target), )
+	@$(ECHO) $(COLOR_RED)"\t* ERROR operate!!!\n\t* please use like:"
+	@$(ECHO) "\t* make -f Makefile target=libname"$(COLOR_NONE)
+else
+	@$(ECHO) $(COLOR_CYAN)"\t* START BUILD DYNAMIC LIBRARY"$(COLOR_NONE)
+	@$(CTOOL) "lib" "$(target)"
+endif
+
+script: show
+	@$(ECHO) $(COLOR_CYAN)"\t* START INSTALL SCRIPT"$(COLOR_NONE)
+ifneq ($(SHL_FILE), )
+	@$(ECHO) $(COLOR_GREEN)"\t\t- CP\t===>\t$(BUILD_BIN)"$(COLOR_NONE)
+	@$(CP) $(SHL_FILE) $(BUILD_BIN)
+endif
+
+
+clean: show
+	@$(ECHO) $(COLOR_RED)"\t* START CLEAN:"$(COLOR_NONE)
+	@$(CTOOL) "cleanobjs"
+
+cleanall:
+	@$(ECHO) $(COLOR_RED)"\t* START CLEAN ALL:"$(COLOR_NONE)
+	@$(RM) -rf $(BUILD_OBJS)
+	#@$(RM) -r $(BUILD_BIN)
+	@$(RM) -rf $(BUILD_LIB)
+help:
+	@$(ECHO) $(COLOR_BLUE)
+	@$(ECHO) "-----------------------HELP-------------------------"
+	@$(ECHO) "\t Usage 'make build' to build all of C file. "
+	@$(ECHO) "\t Usage 'make clean' to clean all of O file. "
+	@$(ECHO) "\t Usage 'make lib target=<name of dynamic library>' to build dynamic library aboute all of C file. "
+	@$(ECHO) "\t Usage 'make cleanall' to build all of file that be build by this tool. "
+	@$(ECHO) "----------------------------------------------------"
+	@$(ECHO) $(COLOR_NONE)
+
+show:
+	@$(ECHO) $(COLOR_BLUE)
+	@$(ECHO) "----------------------------------------------------"
+	@$(ECHO) "\t* BUILD_HOST:\t\t"$(BUILD_HOST)
+	@$(ECHO) "\t* BUILD_PWD:\t\t"$(BUILD_PWD)
+	@$(ECHO) "\t* BUILD_SRCDIR:\t\t"$(BUILD_SRCDIR)
+	@$(ECHO) "----------------------------------------------------"
+	@$(ECHO) "\t* CC_COMPILER:\t\t"$(CC_COMPILER)
+	@$(ECHO) "\t* CC_CFLAGS:\t\t"$(CC_CFLAGS)
+	@$(ECHO) "\t* CC_IPATH:\t\t"$(CC_IPATH)
+	@$(ECHO) "\t* CC_LPATH:\t\t"$(CC_LPATH)
+	@$(ECHO) "----------------------------------------------------"
+	@$(ECHO) "\t* AR_OBJS:\t\t"$(AR_OBJS)
+	@$(ECHO) "\t* SHARE_OBJS:\t\t"$(SHARE_OBJS)
+ifneq ($(ADDIN_DYLIB_FLAG), )
+	@$(ECHO) "\t* DYLIB_FLAGS:\t\t"$(ADDIN_DYLIB_FLAG)
+else
+	@$(ECHO) "\t* DYLIB_FLAGS:\t\t"$(DYLIB_FLAGS)
+endif
+	@$(ECHO) "\t* DYLIB_SUFFIXES:\t"$(DYLIB_SUFFIXES)
+	@$(ECHO) "----------------------------------------------------"
+	@$(ECHO) $(COLOR_NONE)
+
+
+.PHONY: cleanall clean
+	

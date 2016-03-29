@@ -1,0 +1,41 @@
+HTTP请求头与应答头参数
+
+可以在request.getHeader和response.setHeader中作为参数使用。
+
+HTTP请求头
+
+    * Accept:浏览器可接受的MIME类型
+    * Accept-Charset:浏览器可接受的字符集
+    * Accept-Encoding:浏览器能够进行解码的数据编码方式，如gzip.
+    * Accept-Language:浏览器所希望的语言种类
+    * Authorization:授权信息
+    * Connection:表示是否需要持久连接
+    * Content-Length:表示请求消息正文的长度
+    * Cookie:请求头信息
+    * From:请求发送者的email地址。
+    * Host:初始URL中的主机和端口
+    * If-Modified-Since:只有当所请求的内容在指定日期之后又经过修改才返回它，否者返回Not Modified 应答
+    * Pragma:指定”no-cache”值 表示服务器必须返回一个刷新后的文档，即使他有代理服务器而且已经有叶面的本地拷贝
+    * Referer:包含一个URL,用户从该URL代表的页面出发反问当前请求的页面
+    * User-Agent:浏览器的类型
+    * UA-Pixels,UA-Color,UA-OS和UA-CPU:非标准的请求头，表示屏幕大小，颜色深度，操作系统和CPU类型等。
+
+HTTP应答头
+
+    * setContentType: 设置Content-Type头。大多数Servlet都要用到这个方法。
+    * setContentLength:设置Content-Length头。对于支持持久HTTP连接的浏览器来说，这个函数是很有用的。
+    * addCookie:设置一个Cookie
+    * Allow:服务器支持那些请求方法
+    * Content-Encoding:文档的编码方法
+    * Content-Length:
+    * Content-Type 表示后面的文档属于什么MIME类型。
+    * Date:当前的GMT时间
+    * Expired:应该在什么时候文档已经过期，从而不再缓存了。
+    * Last-Modified:文档的最后改动时间。
+    * Location:表示客户应当到哪里去提取文档。Location通常不是直接设置的 而是通过HttpServletResponse 中的 serRedirect()方法，同时设置状态码为302
+    * Refresh:表示浏览器应该在多少时间之后刷新页面。
+    * Server: 服务器名。
+    * Set-Cookie:设置和叶面相关的Cookie
+    * www-Authenticate 客户应该在Authenticate 投中应该提供什么类型的授权信息.
+
+

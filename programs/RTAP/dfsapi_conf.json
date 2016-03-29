@@ -1,0 +1,17 @@
+{
+	"service_port": 2222,
+	"hander_counts": 1,
+	"smart_worker_counts": 1,
+	"tasker_counts": 64,
+	"smart_protocol": "http",
+	"max_req_size": 700000,
+
+
+	"log_path": "./logs/",
+	"log_file": "dfsapi",
+	"log_level": 0,
+	
+	"api_fetch": "/dfsapiFetch.json",
+	"api_merge": "/dfsapiMerge.json",
+	"api_custom": ["/dfsapi/v2/saveSound","/dfsapi/v2/gainSound","/dfsapi/v2/saveVideo","/dfsapi/v2/gainVideo","/dfsapi/v2/saveImage","/dfsapi/v2/gainImage","/dfsapi/v2/savefile","/dfsapi/v2/gainfile","/dfsapi/v2/saveMultifile","/dfsapi/v2/picAppendWatermark"]
+}
