@@ -8,7 +8,7 @@ INC_DIR=-I/usr/local/include/luajit-2.0 -I../../lib/libev \
 	-I../../engine/minor -I./src -I./cpp -I./cpp/mfptp -I../../lib/sqlite-autoconf-3090200/ -I../../lib/zeromq-4.1.4/include/
 
 LIB_DIR=-L/usr/local/lib -L../../lib -L../../engine/
-LIBS=-lluajit-5.1 -lpthread -lrt -lm -ldl -lsqlite3 -lz -lssl
+LIBS=-lluajit-5.1 -lpthread -lrt -lm -ldl -lsqlite3 -lz -lssl -lstdc++
 LIBA=-ljson-c -lucmq -lzmq -lhiredis -ltopo
 
 #[=========>MARK<=========]#
