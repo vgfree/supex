@@ -45,7 +45,7 @@ local function work_redis_one( coro, usr )
 	print("send data")
 	local idle = coro.fastswitch
 	redis_api.reg( idle, coro )
-	local ok, info = redis_api.cmd('weibo', "", 'SETEX', usr.label .. ":weiboMessage", 300, usr.message)
+	local ok, info = redis_api.cmd('weibo', "", 'SETEX', usr.label .. ":weibo", 300, usr.message)
 	print(ok, info)
 	print("recv data")
 
