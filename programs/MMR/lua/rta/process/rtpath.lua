@@ -12,7 +12,6 @@ local utils 	= require('utils')
 local cfg 	= require('cfg')
 local cjson	= require('cjson')
 local rate_limit = require('rate_limit')
-
 module("rtpath", package.seeall)
 
 
@@ -124,6 +123,36 @@ local function first_setto_luakv(gps_tab,point,roadID,info,imei_key)
 		"accountID",gps_tab['accountID'],
 		"countyCode",countyCode)
 
+
+	redis.cmd('rtpath', gps_tab['IMEI'] or '', 'hmset', imei_key, 
+		'maxspeed', point['speed'], 
+		'totalspeed', point['speed'], 
+		'pointCount', 1, 
+		'oneLevelCount', one_devel,
+		'twoLevelCount',two_devel,
+		'threeLevelCount',three_devel,
+		'roadID', roadID,
+		"GPSTime",point['GPSTime'],
+		"startlongitude",point['longitude'],
+		"startlatitude",point['latitude'],
+		"endlongitude",point['longitude'],
+		"endlatitude",point['latitude'],
+		"RT",RT,
+		"RS",rate_limit.RT_speed[RT],
+		"startTime",gps_tab['startTime'],
+		"endTime",gps_tab['endTime'],
+		"tokenCode",gps_tab['tokenCode'],
+		"accountID",gps_tab['accountID'],
+		"countyCode",countyCode)
+
+	
+	--local rtpath_key = string.format('%s:%s:rtpath', gps_tab['IMEI'], gps_tab['tokenCode'])	
+	local rtpath_key = string.format('%s:rtpath', gps_tab['IMEI'])
+	local ok,_ = redis.cmd('rtpath',gps_tab['IMEI'] or '','zadd','ZSETKEY',point['GPSTime'],rtpath_key)
+	if not ok then
+		only.log('E',"redis zadd error")
+	end
+
 end
 
 
@@ -136,40 +165,61 @@ local function data_to_redis(table,ret)
 	only.log('D',"data_to_redis1" .. scan.dump(table))
 	only.log('D',"data_to_redis2" .. scan.dump(ret))
 
-	local rtpath_key = string.format('%s:%s:%s:rtpath', table['IMEI'], ret['roadID'], os.date('%Y%m%d', ret['GPSTime']))	
+	--local rtpath_key = string.format('%s:%s:%s:rtpath', table['IMEI'], ret['roadID'], os.date('%Y%m%d', ret['GPSTime']))	
+	local rtpath_key = string.format('%s:%s:rtpath', table['IMEI'], ret['tokenCode'])	
 	local avgspeed = math.floor(tonumber(ret['totalspeed'])/tonumber(ret['pointCount']))
 	
 	only.log('D',"rtpath_key" .. rtpath_key)
 	only.log('D',"avgspeed" .. avgspeed)
 
 	--道路信息存入redis
-	local ok,_ = redis.cmd('rtpath', table['IMEI'] or '', 'hmset', rtpath_key, 
-		'maxspeed', ret['maxspeed'], 
-		'avgspeed', avgspeed, 
-		'pointCount', ret['pointCount'], 
-		'oneLevelCount', ret['oneLevelCount'],
-		'twoLevelCount', ret['twoLevelCount'],
-		'threeLevelCount', ret['threeLevelCount'],
-		"startlongitude",ret['startlongitude'],
-		"startlatitude",ret['startlatitude'],
-		"endlongitude",ret['endlongitude'],
-		"endlatitude",ret['endlatitude'],
-		"RT",ret['RT'],
-		"RS",ret['RS'],
-		"startTime",ret['startTime'],
-		"endTime",ret['endTime'],
-		"tokenCode",ret['tokenCode'],
-		"accountID",ret['accountID'],
-		"countyCode",ret['countyCode'])
+--	local ok,_ = redis.cmd('rtpath', table['IMEI'] or '', 'hmset', rtpath_key, 
+--		'maxspeed', ret['maxspeed'], 
+--		'avgspeed', avgspeed, 
+--		'pointCount', ret['pointCount'], 
+--		'oneLevelCount', ret['oneLevelCount'],
+--		'twoLevelCount', ret['twoLevelCount'],
+--		'threeLevelCount', ret['threeLevelCount'],
+--		"startlongitude",ret['startlongitude'],
+--		"startlatitude",ret['startlatitude'],
+--		"endlongitude",ret['endlongitude'],
+--		"endlatitude",ret['endlatitude'],
+--		"RT",ret['RT'],
+--		"RS",ret['RS'],
+--		"startTime",ret['startTime'],
+--		"endTime",ret['endTime'],
+--		"tokenCode",ret['tokenCode'],
+--		"accountID",ret['accountID'],
+--		"countyCode",ret['countyCode'])
+	local rangeValue = string.format("%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s",
+						ret['roadID'],
+						ret['maxspeed'],
+						avgspeed,
+						ret['pointCount'],
+						ret['oneLevelCount'],
+						ret['twoLevelCount'],
+						ret['threeLevelCount'],
+				--		ret['startlongitude'],
+				--		ret['startlatitude'],
+				--		ret['endlongitude'],
+				--		ret['endlatitude'],
+				--		ret['RT'],
+				--		ret['RS'],
+						ret['startTime'],
+						ret['endTime'],
+						ret['accountID'],
+						ret['countyCode'])
+	local ok,_ = redis.cmd('rtpath',table['IMEI'] or '','zadd',rtpath_key,ret['GPSTime'],rangeValue)
 	if not ok then
 		only.log('E',"redis hmset error")
 	end
 
-	DATE = os.date('%Y-%m-%d', ret['GPSTime'])
-	local ok,_ = redis.cmd('rtpath',table['IMEI'] or '','sadd',DATE,rtpath_key)
+	local ok,_ = redis.cmd('rtpath',table['IMEI'] or '','sadd','SETKEY',rtpath_key)
 	if not ok then
 		only.log('E',"redis sadd error")
 	end
+	
+	
 
 end
 
@@ -225,6 +275,11 @@ local function handle_zero_speed(point,table)
 	end
 
 
+	local rtpath_key = string.format('%s:%s:rtpath', table['IMEI'], table['tokenCode'])	
+	local ok,_ = redis.cmd('rtpath',table['IMEI'] or '','zadd','ZSETKEY',point['GPSTime'],rtpath_key)
+	if not ok then
+		only.log('E',"redis zadd error")
+	end
 
 end
 
@@ -239,7 +294,7 @@ local function calculate_overspeed(table)
 	for k, v in ipairs(table.points) do
 	repeat	
 		if v['direction'] == -1 or v['speed'] == 0 then
-			handle_zero_speed(v,table)
+			--handle_zero_speed(v,table)
 		else
 			only.log('D',"source_data" .. scan.dump(v))
 			local ok, info = redis.cmd('match_road', '', 'hmget', 'LOCATE', v['longitude'], v['latitude'], v['direction'])
@@ -253,7 +308,7 @@ local function calculate_overspeed(table)
 				info[k] = tonumber(info[k])
 			end
 	
-			local roadID = string.format('%d:%03d', info[1], info[2])
+			local roadID = string.format('%d|%03d', info[1], info[2])
 			local imei_key = string.format('%s:rtpath', table['IMEI'])
 			--only.log('D',"roadID " .. roadID)
 			--only.log('D',"imei_key " .. imei_key)
@@ -293,54 +348,81 @@ local function calculate_overspeed(table)
 			end
 	
 			only.log('D',"first_results" .. scan.dump(ret))
+			if ret['tokenCode'] == table['tokenCode'] then	--判断和上一个tokeCode是否相同
+				if ret['roadID'] == roadID then		--未驶出道路，结果保存到luakv
+					pointCount = ret['pointCount'] + 1
+					totalspeed = ret['totalspeed'] + v['speed']
+					maxspeed = calculate_maxspeed(ret['maxspeed'], v['speed'])
+					if limit_speed(info[5], v['speed']) then
+						local flag = limit_speed(info[5], v['speed'])
+						if flag == 1 then
+							ret['oneLevelCount'] = ret['oneLevelCount'] + 1
+						elseif flag == 2 then
+							ret['twoLevelCount'] = ret['twoLevelCount'] + 1
+						elseif flag == 3 then
+							ret['threeLevelCount'] = ret['threeLevelCount'] + 1
+						end
 	
-			if ret['roadID'] == roadID then		--未驶出道路，结果保存到luakv
-				pointCount = ret['pointCount'] + 1
-				totalspeed = ret['totalspeed'] + v['speed']
-				maxspeed = calculate_maxspeed(ret['maxspeed'], v['speed'])
-				if limit_speed(info[5], v['speed']) then
-					local flag = limit_speed(info[5], v['speed'])
-					if flag == 1 then
-						ret['oneLevelCount'] = ret['oneLevelCount'] + 1
-					elseif flag == 2 then
-						ret['twoLevelCount'] = ret['twoLevelCount'] + 1
-					elseif flag == 3 then
-						ret['threeLevelCount'] = ret['threeLevelCount'] + 1
 					end
 	
+	
+					local ok,_ = luakv.cmd('luakv', '', 'hmset', imei_key, 
+					'maxspeed', maxspeed, 
+					'totalspeed', totalspeed, 
+					'pointCount', pointCount, 
+					'oneLevelCount', ret['oneLevelCount'], 
+					'twoLevelCount', ret['twoLevelCount'], 
+					'threeLevelCount', ret['threeLevelCount'], 
+					'roadID', roadID,
+					"GPSTime",v['GPSTime'],
+					"endlongitude",v['longitude'],
+					"endlatitude",v['latitude'],
+					"RT",info[5],
+					"RS",rate_limit.RT_speed[info[5]],
+					"endTime",table['endTime'],
+					"tokenCode",table['tokenCode'],
+					"accountID",table['accountID'],
+					"countyCode",info[4])
+
+					local ok,_ = redis.cmd('rtpath', table['IMEI'] or '', 'hmset', imei_key, 
+					'maxspeed', maxspeed, 
+					'totalspeed', totalspeed, 
+					'pointCount', pointCount, 
+					'oneLevelCount', ret['oneLevelCount'], 
+					'twoLevelCount', ret['twoLevelCount'], 
+					'threeLevelCount', ret['threeLevelCount'], 
+					'roadID', roadID,
+					"GPSTime",v['GPSTime'],
+					"endlongitude",v['longitude'],
+					"endlatitude",v['latitude'],
+					"RT",info[5],
+					"RS",rate_limit.RT_speed[info[5]],
+					"endTime",table['endTime'],
+					"tokenCode",table['tokenCode'],
+					"accountID",table['accountID'],
+					"countyCode",info[4])
+					
+					if not ok then
+						only.log('E',"luakv roadID1 error")
+						break
+					end
+
+					local ok,_ = redis.cmd('rtpath',table['IMEI'] or '','zadd','ZSETKEY',v['GPSTime'],imei_key)
+					if not ok then
+						only.log('E',"redis zadd error")
+					end
+	
+				else					--驶出道路，结果存入redis
+					only.log('D',"+++++++++++++++++" .. scan.dump(ret))
+	
+					first_setto_luakv(table,v,roadID,info,imei_key)	
+					data_to_redis(table,ret)
+	
 				end
-	
-	
-				local ok,_ = luakv.cmd('luakv', '', 'hmset', imei_key, 
-				'maxspeed', maxspeed, 
-				'totalspeed', totalspeed, 
-				'pointCount', pointCount, 
-				'oneLevelCount', ret['oneLevelCount'], 
-				'twoLevelCount', ret['twoLevelCount'], 
-				'threeLevelCount', ret['threeLevelCount'], 
-				'roadID', roadID,
-				"GPSTime",v['GPSTime'],
-				"endlongitude",v['longitude'],
-				"endlatitude",v['latitude'],
-				"RT",info[5],
-				"RS",rate_limit.RT_speed[info[5]],
-				"endTime",table['endTime'],
-				"tokenCode",table['tokenCode'],
-				"accountID",table['accountID'],
-				"countyCode",info[4])
-				
-				if not ok then
-					only.log('E',"luakv roadID1 error")
-					break
-				end
-	
-			else					--驶出道路，结果存入redis
-				only.log('D',"+++++++++++++++++" .. scan.dump(ret))
-	
+			else
 				first_setto_luakv(table,v,roadID,info,imei_key)	
 				data_to_redis(table,ret)
-	
-			end
+			end--if tokenCode
 		end --if
 	until true
 	end
