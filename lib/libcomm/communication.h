@@ -25,7 +25,7 @@ struct comm{
 	int		listenfd;		//如果类型为COMM_BIND此变量会被赋值
 	int		data[EPOLL_SIZE];	//保存接收发送的相关数据
 	long		watchcnt;		//正在监听的fd的个数
-	struct cbinfo	pthreadcb;		//新线程回调函数的相关信息
+	pthread_t	ptid;			//新线程的pid
 	struct cbinfo	timeoutcb;		//超时回调函数的相关信息
 	struct epoll_event *events;		//监听的所有fd
 	enum{
@@ -39,10 +39,7 @@ struct comm{
 
 //回调函数的相关信息
 struct cbinfo{
-	union {
-		int		timeout;	//超时回调信息，超时时间
-		pthread_t	ptid;		//新线程用户的回调信息， 新线程id
-	}			data;
+	int			timeout;
 	CommCB			callback;	//相关的回调函数
 	void*			usr;		//用户的参数
 };
@@ -68,7 +65,7 @@ struct comm_data{
 
 
 //创建一个通信上下文的结构体 epollsize:
-struct comm* comm_ctx_create(int epollsize, CommCB callback, void *usr);
+struct comm* comm_ctx_create(int epollsize);
 
 //销毁一个通信上下文的结构体
 void comm_ctx_destroy(struct comm* commctx);

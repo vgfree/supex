@@ -15,7 +15,7 @@
 
 static void * _start_new_pthread(void* usr);
 
-struct comm* comm_ctx_create(int epollsize, CommCB callback, void *usr)
+struct comm* comm_ctx_create(int epollsize)
 {
 	int		retval = -1
 	struct comm*	commctx = NULL;
@@ -31,12 +31,8 @@ struct comm* comm_ctx_create(int epollsize, CommCB callback, void *usr)
 		Free(commctx);
 		return commctx;
 	}
-
-	commctx->pthreadcb.callback = callback;
-	commctx->pthreadcd.usr = usr;
 	commctx->listenfd = -1;
-
-	retval = pthread_create(&commctx->pthreadcb.data.ptid, NULL,  _start_new_pthread, (void *)commctx);
+	retval = pthread_create(&commctx->ptid, NULL,  _start_new_pthread, (void *)commctx);
 	if( unlikely(retval != 0) ){
 		close(commctx->epfd);
 		Free(commctx);
@@ -51,6 +47,9 @@ void comm_ctx_destroy(struct comm* commctx)
 {
 	int fd = 0;
 	if( likely(commctx) ){
+		//原子设置线程的状态
+		ATOMIC_SET(&commctx->stat, COMM_STAT_STOP);
+		futex_cond_wait(&commctx->stat, COMM_STAT_NONE, -1);
 		while(commctx->watchcnt){
 			if( likely(commctx->data[fd ]) ){
 				comm_close(commctx, fd);
@@ -58,7 +57,7 @@ void comm_ctx_destroy(struct comm* commctx)
 			fd ++;
 		}
 		close(commctx->epfd);
-		pthread_join(commctx->pthreadcb.data.ptid, NULL);
+		pthread_join(commctx->ptid, NULL);
 		Free(commctx);
 	}
 }
@@ -74,7 +73,7 @@ int comm_socket(struct comm *commctx, char *host, char *server, struct cbinfo fi
 
 	if(type == COMM_BIND){
 		flag = EPOLLIN; //监听读事件
-		fd = socket_queueen(host, server)
+		fd = socket_queuen(host, server)
 		commctx->listenfd = fd;
 	}else{
 		flag =  EPOLLOUT; //监听写事件
@@ -97,6 +96,7 @@ int comm_socket(struct comm *commctx, char *host, char *server, struct cbinfo fi
 		return -1;
 	}
 	commctx->data[fd ] = commdata;
+	ATOMIC_SET(&commctx->stat, COMM_STAT_RUN);
 
 	return fd;
 }
@@ -136,7 +136,7 @@ int comm_recv(struct comm *commctx, int fd, char *buff)
 //设置epoll_wait的超时时间以及超时时的回调函数
 void comm_settimeout(struct comm *commctx, int timeout, CommCB callback, void *usr)
 {
-	commctx->timeoutcb.data.timeout = timeout;
+	commctx->timeoutcb.timeout = timeout;
 	commctx->timeoutcb.callback  = callback;
 	commctx->timeoutcb.usr = usr;
 }
@@ -300,7 +300,7 @@ static int  _epoll_wait(struct comm *commctx)
 	bool			retval = false;
 	struct epoll_event	events[EPOLL_SIZE] = {};
 
-	nfds = epoll_wait(commctx->epfd, events, commctx->watchcnt, commctx->timeoutcb.data.timeout);
+	nfds = epoll_wait(commctx->epfd, events, commctx->watchcnt, commctx->timeoutcb.timeout);
 	if( likely(nfds > 0)){
 		for (n = 0; n < nfds; ++n){
 			if( unlikely(events[n].data.fd < -1)){
@@ -424,12 +424,14 @@ static void * _start_new_pthread(void* usr)
 		return NULL;
 	}
 
-	futex_cond_wait(commctx->stat, COMM_STAT_INIT, -1);
-	commctx->stat = COMM_STAT_RUN;
+	futex_cond_wait(&commctx->stat, COMM_STAT_RUN, -1);
 	while(1){
-		commctx->pthreadcb.callback(commctx, -1, commctx->pthreadcb.usr);
-		if(commctx->timeout <= 0){ //用户没有设置epoll_wait超时，则使用默认超时时间
-			commctx->timeoutcb.data.timeout = TIMEOUTED;
+		//线程状态为STOP的时候则，将状态设置为NONE，返回真，则代表设置成功，退出循环
+		if( unlikely(ATOMIC_CASB(&commctx->stat, COMM_STAT_STOP, COMM_STAT_NONE)) ){
+			break;
+		}
+		if(commctx->timeoutcb.timeout <= 0){ //用户没有设置epoll_wait超时，则使用默认超时时间
+			commctx->timeoutcb.timeout = TIMEOUTED;
 		}
 		retval = _epoll_wait(commctx);
 	}
