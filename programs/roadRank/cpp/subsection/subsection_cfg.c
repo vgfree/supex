@@ -53,6 +53,7 @@ bool fill_subsec_model(struct json_object *obj, char *obj_name, struct subsec_cf
         struct json_object *sub_obj = NULL;
         struct json_object *roadcount_obj = NULL;
         struct json_object *countlimit_obj = NULL;
+        struct json_object *replace_limit_h_obj = NULL;
         struct json_object *kvcount_obj = NULL;
         struct json_object *expire_obj = NULL;
         struct json_object *merged_obj = NULL;
@@ -66,7 +67,10 @@ bool fill_subsec_model(struct json_object *obj, char *obj_name, struct subsec_cf
         if (!json_object_object_get_ex(sub_obj, "road_match_limit", &roadcount_obj))
                 goto fill_fail;
 
-        if (!json_object_object_get_ex(sub_obj, "replace_limit", &countlimit_obj))
+        if (!json_object_object_get_ex(sub_obj, "replace_limit_l", &countlimit_obj))
+                goto fill_fail;
+
+        if (!json_object_object_get_ex(sub_obj, "replace_limit_h", &replace_limit_h_obj))
                 goto fill_fail;
         
         if (!json_object_object_get_ex(sub_obj, "kv_cache_count", &kvcount_obj))
@@ -83,13 +87,15 @@ bool fill_subsec_model(struct json_object *obj, char *obj_name, struct subsec_cf
 
         unsigned short roadcount_limit = (short)json_object_get_int(roadcount_obj);
         unsigned short replace_limit = (short)json_object_get_int(countlimit_obj);
+        unsigned short replace_limit_h = (short)json_object_get_int(replace_limit_h_obj);
         unsigned short kv_cache_count = (short)json_object_get_int(kvcount_obj);
         unsigned short expire_time    = (short)json_object_get_int(expire_obj);
         unsigned short merged_speed_l   = (short)json_object_get_int(merged_obj);
         unsigned short merged_speed_h   = (short)json_object_get_int(merged_2obj);
         
         p_link->road_match_limit = roadcount_limit;
-        p_link->replace_limit = replace_limit;
+        p_link->replace_limit_l = replace_limit;
+        p_link->replace_limit_h = replace_limit_h;
         p_link->kv_cache_count = kv_cache_count;
         p_link->expire_time    = expire_time;
         p_link->merged_speed_l   = merged_speed_l;

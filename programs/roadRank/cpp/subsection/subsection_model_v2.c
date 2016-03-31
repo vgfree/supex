@@ -482,6 +482,10 @@ int subsec_calculate( struct ev_loop * p_loop, gps_info_t *gps_info, road_info_t
         SECKV_ROAD      *kv_road = NULL;
         KV_IMEI         kv_IMEI = { 0 };
 
+        unsigned short replace_limit = subsec->subsec_cfg.replace_limit_l;
+        if( road_info->rt == HIGHWAY || road_info->rt == EXPRESSWAY )
+                replace_limit = subsec->subsec_cfg.replace_limit_h;
+
         int ok  = get_IMEI_from_kv(atoll( gps_info->IMEI), &kv_IMEI );
         int ret = roadsec_info_get( road_info->new_roadID, &kv_road );
 #if 0
@@ -538,7 +542,7 @@ int subsec_calculate( struct ev_loop * p_loop, gps_info_t *gps_info, road_info_t
 
                         AO_SpinLock(&kv_road->locker);
                         //set_CURRENTROAD_data(&kv_road, gps_info, road_info, subsec->subsec_cfg.merged_speed, subsec->subsec_cfg.replace_limit);
-                        subsec->update_roadsec(kv_road, gps_info, road_info, subsec->subsec_cfg.merged_speed_l, subsec->subsec_cfg.merged_speed_h, subsec->subsec_cfg.replace_limit, subsec->subsec_cfg.expire_time);
+                        subsec->update_roadsec(kv_road, gps_info, road_info, subsec->subsec_cfg.merged_speed_l, subsec->subsec_cfg.merged_speed_h, replace_limit, subsec->subsec_cfg.expire_time);
                         //roadsec_info_save(kv_road);
                         if( kv_road->sec_num > 1 )
                                 subsec->section_update(kv_road, subsec->subsec_cfg.expire_time, p_loop);
