@@ -30,6 +30,9 @@ endif
 ifeq ($(MAIN_APP_SERV), gomile)
 HANDLE_MODEL = LINE
 endif
+ifeq ($(MAIN_APP_SERV), kkb)
+HANDLE_MODEL = LINE
+endif
 #<------------------------>#
 -include $(HOME_PATH)/programs/link.mk
 -include $(HOME_PATH)/share.mk
@@ -76,6 +79,8 @@ clean:
 	rm -rf gopath
 	rm -rf ./bin_gomile
 	rm -rf gomile
+	rm -rf ./bin_kkb
+	rm -rf kkb
 	rm -f $(CLEANFILES)
 	@-if [ ! -d ./logs ];then mkdir logs; fi
 
