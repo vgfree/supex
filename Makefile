@@ -274,6 +274,10 @@ gomile:
 	$(MAKE) -C ./programs/flyKite MAIN_APP_SERV=gomile
 	@echo -e $(GREEN)"【"$(YELLOW) $@ $(GREEN)"】"$(RED)"\n-->OK!\n"$(NONE)
 
+kkb:
+	$(MAKE) -C ./programs/flyKite MAIN_APP_SERV=kkb
+	@echo -e $(GREEN)"【"$(YELLOW) $@ $(GREEN)"】"$(RED)"\n-->OK!\n"$(NONE)
+
 ashman:
 	$(MAKE) -C ./programs/ashman MAIN_APP_SERV=ashman
 	@echo -e $(GREEN)"【"$(YELLOW) $@ $(GREEN)"】"$(RED)"\n-->OK!\n"$(NONE)

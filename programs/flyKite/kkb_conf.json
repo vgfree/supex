@@ -1,0 +1,15 @@
+{
+	"swift_port": 4070,
+	"swift_worker_counts": 1,
+	"swift_protocol": "http",
+
+	"max_req_size": 32768,
+
+	"sniff_worker_counts": 10,
+	"sharer_counts": 64,
+
+	"log_path": "./logs/",
+	"log_file": "kkb",
+	"log_level": 0,
+	"api_custom": ["/kkb"]
+}
