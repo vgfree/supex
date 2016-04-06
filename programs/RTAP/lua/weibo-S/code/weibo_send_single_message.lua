@@ -9,14 +9,12 @@ module('weibo_send_single_message', package.seeall)
 
 local function self_cycle_idle( coro, idleable )
 	if not idleable then 
-		print("\x1B[1;35m".."IDLE~~~~".."\x1B[m")
+		only.log("D", "IDLE~~~~")
 	else
 		if coro:isactive() then
-			--print("\x1B[1;35m".."LOOP~~~~".."\x1B[m")
-			--coro:fastswitch()lua_default_switch, supex["__TASKER_SCHEME__"],txt)
 			lua_default_switch(supex["__TASKER_SCHEME__"])
 		else
-			print("\x1B[1;33m".."coro:stop()".."\x1B[m")
+			only.log("D", "coro:stop()")
 			coro:stop()
 			return
 		end
@@ -26,28 +24,24 @@ end
 
 local function work_redis_two( coro, usr )
         assert(usr)
-        print(string.format("ID %d start ...", usr.id))
 
-	print("send data")
+	only.log("D", "send data")
 	local idle = coro.fastswitch
 	redis_api.reg( idle, coro )
 	local ok, info = redis_api.cmd('weibo', "", 'ZADD', usr.UID .. ":weiboPriority", usr.level, usr.label)
-	print(ok, info)
-	print("recv data")
+	only.log("D", "recv data")
 
         return ok
 end
 
 local function work_redis_one( coro, usr )
         assert(usr)
-        print(string.format("ID %d start ...", usr.id))
 
-	print("send data")
+	only.log("D", "send data")
 	local idle = coro.fastswitch
 	redis_api.reg( idle, coro )
 	local ok, info = redis_api.cmd('weibo', "", 'SETEX', usr.label .. ":weibo", 300, usr.message)
-	print(ok, info)
-	print("recv data")
+	only.log("D", "recv data")
 
         return ok
 end
@@ -62,9 +56,9 @@ local function forward_task_redis( tasks )
 	coro:addtask(work_redis_two, coro, tasks[2])
 
         if coro:startup(self_cycle_idle, coro, true) then
-                print("\x1B[1;32m".."Tasks execute success.".."\x1B[m")
+                only.log("D", "Tasks execute success.")
         else
-                print("\x1B[1;32m".."Tasks execute failure.".."\x1B[m")
+                only.log("D", "Tasks execute failure.")
         end
         coro:close()
 end
