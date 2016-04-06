@@ -10,7 +10,7 @@
 
 	"log_path": "./logs/",
 	"log_file": "weibo-G",
-	"log_level": 0,
+	"log_level": 3,
 
 	"api_custom": ["/x_test", "/weibo_set_group", "/weibo_get_group","/weibo_send_group_message"]
 }

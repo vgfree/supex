@@ -2,10 +2,15 @@ module("link")
 
 OWN_POOL = {
 	redis = {
-                weibo = {
-			host = '127.0.0.1',
-			port = 6379,
+		weibo = {
+			host = 'weibo.redis.daoke.com',
+			port = 6329,
 		},
+		statistic = {
+			host = 'statistic.redis.daoke.com',
+			port = 6339,
+		},
+
 	},
 	lhttp = {
 	},
