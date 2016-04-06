@@ -6,4 +6,4 @@ index_name = "index"
 group_domain = "m9demo.daoke.me"
 player_url = "http://g3.tweet.daoke.me/player/player.html"
 
-LOGLV = 0
+LOGLV = 3

@@ -354,8 +354,8 @@ mkdir -p $TAGNAME/var/data $TAGNAME/var/logs
 		cp -r $NEWTREE/programs/weibo-G/sniff_lua/core		$TAGNAME/sniff_lua
 		cp -r $NEWTREE/programs/weibo-G/sniff_lua/weibo-G	$TAGNAME/sniff_lua
 		cp -r $NEWTREE/open/lib/lua-coro/ring.lua		$TAGNAME/sniff_lua/core
-		cp -r $NEWTREE/open/lib/lua-coro/coro.lua		$TAGNAME
-		mv $TAGNAME/sniff_lua/$PROJECT/deploy/link.lua			$TAGNAME
+		cp -r $NEWTREE/open/lib/lua-coro/coro.lua		$TAGNAME/open
+		mv $TAGNAME/sniff_lua/$PROJECT/deploy/link.lua		$TAGNAME
 		cp  $NEWTREE/programs/weibo-G/$PROJECT"_conf.json" 	$TAGNAME
 		cp  $NEWTREE/programs/weibo-G/sniff_lua/weibo-G/deploy/cfg.lua		$TAGNAME
 		cp  $NEWTREE/programs/weibo-G/$PROJECT			$TAGNAME

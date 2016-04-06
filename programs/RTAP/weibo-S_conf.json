@@ -8,8 +8,8 @@
 
 
 	"log_path": "./logs/",
-	"log_file": "ptop",
-	"log_level": 0,
+	"log_file": "weibo-S",
+	"log_level": 3,
 	
 	"api_fetch": "/ptopFetch.json",
 	"api_merge": "/ptopMerge.json",
