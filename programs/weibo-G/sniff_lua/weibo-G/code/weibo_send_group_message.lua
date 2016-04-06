@@ -13,11 +13,9 @@ local function self_cycle_idle( coro, idleable )
 		only.log('E',"IDLE~~~~")
 	else
 		if coro:isactive() then
-			--print("\x1B[1;35m".."LOOP~~~~".."\x1B[m")
-			--coro:fastswitch()lua_default_switch, supex["__TASKER_SCHEME__"],txt)
 			lua_default_switch(supex["__TASKER_SCHEME__"])
 		else
-			only.log('I',"coro:stop()")
+			only.log('D',"coro:stop()")
 			coro:stop()
 			return
 		end
@@ -66,7 +64,7 @@ local function forward_task_redis(users,tasks)
 		end
 
 		if coro:startup(self_cycle_idle, coro, true) then
-			only.log('I',"Tasks execute success.")
+			only.log('D',"Tasks execute success.")
 		else
 			only.log('E',"Tasks execute failure.")
 		end
@@ -83,7 +81,6 @@ function handle()
 		if #users == 0 then
 			ok, users = redis_api.cmd('statistic',GID, 'smembers', (GID or '') .. ':channelOnlineUser')
 			if not ok then only.log('E','weibo redis error') end
-			--luakv_api.cmd("owner", GID, "SADD", GID)
 		end
 		if ok and #users ~= 0 then
 			local tasks = {
