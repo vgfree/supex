@@ -1,51 +1,44 @@
-//#include "../../lib/libcomm/communication.h"
+#include "message_dispatch.h"
 #include "loger.h"
+#include "communication.h"
+#include "fd_manager.h"
+
 #include <stdlib.h>
 
-void finished(struct commctx* commctx, int fd, void* usr)
+void io_notify_logic_thread(struct commctx* commctx, int fd,
+							struct message_notify *msg_notify)
 {
-	printf("%d fd have action, data is: %s", fd, (char*)usr);
+	switch (msg_notify->cmd) {
+		// TO DO.
+	case APPEND:
+	  append_router_object(msg_obj, fd);	
+	}
 }
 
 int main(int argc, char* argv[])
 {
     struct CSLog* g_imlog = CSLog_create(MODULE_NAME, WATCH_DELAY_TIME);
-	int i = 0;
-	int retval = -1;
-	char *data[5] = {"usr data one", "usr data two", "usr data three", "usr data four", "usr data five"};
-
 	if( unlikely(argc < 3) ){
 		printf("usage: %s <ipaddr> <port>", argv[0]);
 		return -1;
 	}
 
 	struct comm *commctx = NULL;
-	commctx = comm_ctx_create(EPOLLSIZE);
+	commctx = comm_ctx_create(EPOLL_SIZE);
 	if( unlikely(!commctx) ){
-		return retval;
+		return -1;
 	}
-
 	struct cbinfo  finishedcb = {};
-	finishedcb.callback = finished;
-	finishedcb.usr = data[0];
+	finishedcb.callback = io_notify_logic_thread;
 
-	retval = comm_socket(commctx, argv[1], argv[2], finishedcb, COMM_BIND);
+	int retval = comm_socket(commctx, argv[1], argv[2], finishedcb, COMM_BIND);
 	if(retval == -1){
+		error("can't bind socket.");
 		return retval;
 	}
 
 	while( 1 ){
-		char buff[128] = "nothing is improtant\r\m\t";
-		retval = comm_recv(commctx, fd, buff, strlen(buff));
-		if( unlikely(retval < 0) ){
-			return retval;
-		}
-		retval = comm_send(commctx, fd, data[i], strlen(data[i]));
-		if( unlikely(retval < 0) )
-		{
-			return retval;
-		}
-		i = (i+1)%5;
+		message_dispatch();
 	}
 	CSLog_free(g_imlog);
 }

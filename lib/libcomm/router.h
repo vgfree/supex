@@ -1,9 +1,13 @@
+#ifndef _ROUTER_H_
+#define _ROUTER_H_
+
 #include <stdlib.h>
 #include <stdint.h>
 
 enum router_object {
 	CLIENT,
-	MESSAGE_GATEWAY
+	MESSAGE_GATEWAY,
+	ROUTER_SERVER
 };
 
 struct CID {
@@ -19,3 +23,15 @@ struct router_head {
 	struct CID** cid;
         uint32_t body_size;
 };
+
+struct mfptp_message {
+	char *mfptp;
+};
+
+struct message {
+	int message_fd;
+	struct router_head message_head;
+	struct mfptp_message message_body;
+};
+
+#endif

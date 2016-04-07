@@ -9,6 +9,8 @@
 #include "comm_cache.h"
 #include "comm_queue.h"
 #include "comm_tcp.h"
+#include "mq.h"
+#include "router.h"
 
 #define	EPOLL_SIZE		10000
 #define TIMEOUTED		5000
@@ -89,4 +91,12 @@ void comm_close(struct comm* commctx, int fd);
 //设置epoll_wait的超时时间
 void comm_settimeout(struct comm *commctx, int timeout, CommCB callback, void *usr);
 
+int push_message(struct message *msg)
+{
+	//To do;
+}
+int pop_message(struct message *msg)
+{
+	//To do;
+}
 #endif
