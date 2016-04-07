@@ -9,6 +9,8 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <fcntl.h>
+#include <stdint.h>
+#include <stdbool.h>
 
 
 /* 逻辑跳转优化*/
@@ -23,10 +25,10 @@
 #endif
 
 
-#undef	New
-#define New(ptr)						\
-	((ptr) = __typeof__(ptr)calloc(1, sizeof(*(ptr))),	\
-	(likely((ptr)) ? ptr :(errno = ENOMEM, NULL)))
+//#undef	New
+
+//#define New(ptr) do { (ptr) = typeof(ptr)(malloc(sizeof(*(ptr)))); \
+//	(likely((ptr)) ? ptr : NULL); }while(0);
 
 #undef	Free
 #define Free(ptr)						\
@@ -35,9 +37,9 @@
 			free((void*)(ptr));			\
 			(ptr) = (__typeof__(ptr)) 0;		\
 		}						\
-	 }while(0)
+	 }while(0);
 
-#if (GCC_VERSION >= 40100)
+//#if (GCC_VERSION >= 40100)
 
 /* 内存访问栅 */
   #define barrier()             (__sync_synchronize())
@@ -74,10 +76,10 @@
   #define ATOMIC_F_AND(ptr, value)      ((__typeof__(*(ptr)))__sync_fetch_and_and((ptr), (value)))
   #define ATOMIC_F_XOR(ptr, value)      ((__typeof__(*(ptr)))__sync_fetch_and_xor((ptr), (value)))
 
-#else
+//#else
 
-  #error "can not supported atomic operate by gcc(v4.0.1+) buildin function."
-#endif	/* if (GCC_VERSION >= 40100) */
+//  #error "can not supported atomic operate by gcc(v4.0.1+) buildin function."
+//#endif	/* if (GCC_VERSION >= 40100) */
 
 #define ATOMIC_INC(ptr)                 ((void)ATOMIC_ADD_F((ptr), 1))
 #define ATOMIC_DEC(ptr)                 ((void)ATOMIC_SUB_F((ptr), 1))

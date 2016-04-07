@@ -2,17 +2,6 @@
 #include "loger.h"
 #include <stdlib.h>
 
-int main(int argc, char* argv[]) {
-    struct CSLog* g_imlog = CSLog_create(MODULE_NAME, WATCH_DELAY_TIME);
-	trace("trace");
-	debug("debug");
-    log("error.");
-	warn("warnning");
-	error("error");
-	fatal("fatal");
-	return 0;
-}
-/*
 void finished(struct commctx* commctx, int fd, void* usr)
 {
 	printf("%d fd have action, data is: %s", fd, (char*)usr);
@@ -20,6 +9,7 @@ void finished(struct commctx* commctx, int fd, void* usr)
 
 int main(int argc, char* argv[])
 {
+    struct CSLog* g_imlog = CSLog_create(MODULE_NAME, WATCH_DELAY_TIME);
 	int i = 0;
 	int retval = -1;
 	char *data[5] = {"usr data one", "usr data two", "usr data three", "usr data four", "usr data five"};
@@ -57,4 +47,5 @@ int main(int argc, char* argv[])
 		}
 		i = (i+1)%5;
 	}
-}*/
+	CSLog_free(g_imlog);
+}

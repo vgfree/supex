@@ -10,32 +10,21 @@
 #include "comm_queue.h"
 #include "comm_tcp.h"
 
+#define	EPOLL_SIZE		10000
+#define TIMEOUTED		5000
+#define IPADDR_MAXSIZE		128
+#define	CACHE_SIZE		1024
+#define QUEUE_CAPACITY		50000
+
 //套接字的类型
-enum{
-	COMM_CONNECT = 0x01;
-	COMM_BIND;
-	COMM_ACCETP;
+enum {
+	COMM_CONNECT = 0x01,
+	COMM_BIND,
+	COMM_ACCEPT
 };
 
 //回调函数的原型: fd参数:对于超时和线程回调函数无用，主要用于finished回调函数
 typedef void (*CommCB)(struct comm* commctx, int fd, void* usr);
-
-struct comm{
-	int		epfd;			//IO复用句柄
-	int		listenfd;		//如果类型为COMM_BIND此变量会被赋值
-	int		data[EPOLL_SIZE];	//保存接收发送的相关数据
-	long		watchcnt;		//正在监听的fd的个数
-	pthread_t	ptid;			//新线程的pid
-	struct cbinfo	timeoutcb;		//超时回调函数的相关信息
-	struct epoll_event *events;		//监听的所有fd
-	enum{
-		COMM_STAT_NONE;
-		COMM_STAT_INIT;
-		COMM_STAT_RUN;
-		COMM_STAT_STOP;
-	}		stat;			//线程的状态
-};
-
 
 //回调函数的相关信息
 struct cbinfo{
@@ -45,7 +34,7 @@ struct cbinfo{
 };
 
 //端口的相关信息
-struct portinfo{
+struct portinfo {
 	int		fd;			//套接字描述符
 	int		type;			//套接字的类型
 	uint16_t	port;			//本地端口
@@ -63,6 +52,21 @@ struct comm_data{
 	struct portinfo		portinfo;	//端口的相关信息
 };
 
+struct comm {
+	int		epfd;			//IO复用句柄
+	int		listenfd;		//如果类型为COMM_BIND此变量会被赋值
+        struct comm_data* data[EPOLL_SIZE];	//保存接收发送的相关数据
+	long		watchcnt;		//正在监听的fd的个数
+	pthread_t	ptid;			//新线程的pid
+	struct cbinfo	timeoutcb;		//超时回调函数的相关信息
+	struct epoll_event *events;		//监听的所有fd
+	enum {
+		COMM_STAT_NONE,
+		COMM_STAT_INIT,
+		COMM_STAT_RUN,
+		COMM_STAT_STOP,
+	}		stat;			//线程的状态
+};
 
 //创建一个通信上下文的结构体 epollsize:
 struct comm* comm_ctx_create(int epollsize);
@@ -84,3 +88,5 @@ void comm_close(struct comm* commctx, int fd);
 
 //设置epoll_wait的超时时间
 void comm_settimeout(struct comm *commctx, int timeout, CommCB callback, void *usr);
+
+#endif
