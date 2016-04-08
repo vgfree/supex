@@ -160,7 +160,7 @@ end
 --功能：将一段sgid的结果存入redis
 --参数：table 数据包，ret 该段sgid的信息
 --返回值：无
-local function data_to_redis(table,ret)
+local function data_to_redis(table,ret,tokeFlag)
 
 	only.log('D',"data_to_redis1" .. scan.dump(table))
 	only.log('D',"data_to_redis2" .. scan.dump(ret))
@@ -214,11 +214,12 @@ local function data_to_redis(table,ret)
 		only.log('E',"redis hmset error")
 	end
 
-	local ok,_ = redis.cmd('rtpath',table['IMEI'] or '','sadd','SETKEY',rtpath_key)
-	if not ok then
-		only.log('E',"redis sadd error")
+	if tokeFlag then
+		local ok,_ = redis.cmd('rtpath',table['IMEI'] or '','sadd','SETKEY',rtpath_key)
+		if not ok then
+			only.log('E',"redis sadd error")
+		end
 	end
-	
 	
 
 end
@@ -414,14 +415,16 @@ local function calculate_overspeed(table)
 	
 				else					--驶出道路，结果存入redis
 					only.log('D',"+++++++++++++++++" .. scan.dump(ret))
-	
+					
+					local tokeFlag = false
 					first_setto_luakv(table,v,roadID,info,imei_key)	
-					data_to_redis(table,ret)
+					data_to_redis(table,ret,tokeFlag)
 	
 				end
 			else
+				local tokeFlag = true
 				first_setto_luakv(table,v,roadID,info,imei_key)	
-				data_to_redis(table,ret)
+				data_to_redis(table,ret,tokeFlag)
 			end--if tokenCode
 		end --if
 	until true
