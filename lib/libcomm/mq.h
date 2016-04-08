@@ -6,10 +6,6 @@
 #include <stdlib.h>
 #include <stdint.h>
 
-struct mfptp_message {
-	char *mfptp;
-};
-
 struct message_queue;
 
 struct message_queue * mq_create();

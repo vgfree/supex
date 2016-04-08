@@ -1,4 +1,7 @@
-#include "slog_api.h"
+#ifndef _LOGER_H
+#define _LOGER_H
+
+#include "./log_system/slog/slog_api.h"
 
 #include "string.h"
 
@@ -15,4 +18,4 @@ extern struct CSLog* g_imlog;
 #define error(fmt, args...) Error(g_imlog, "<%s>|<%d>|<%s>," fmt, __FILENAME__, __LINE__, __FUNCTION__, ##args)
 #define fatal(fmt, args...) Fatal(g_imlog, "<%s>|<%d>|<%s>," fmt, __FILENAME__, __LINE__, __FUNCTION__, ##args)
 
-
+#endif
