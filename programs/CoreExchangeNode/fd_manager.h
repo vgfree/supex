@@ -67,7 +67,4 @@ int array_fill_fd(const int fd, const struct fd_descriptor &des);
 int array_remove_fd(const int fd);
 int array_at_fd(const int fd, struct fd_descriptor &des);
 
-int find_router_object(enum router_object obj);
-int append_router_object(enum router_object obj, int fd);
-
 #endif
