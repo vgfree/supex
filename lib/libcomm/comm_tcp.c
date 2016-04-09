@@ -4,7 +4,7 @@
 /*********************************************************************************************/
 #include "comm_tcp.h"
 
-#define  LISTENQ  1024 //能够监听的描述符的个数
+#define  LISTENQ  1024	/* 能够监听的描述符的个数 */
 
 int get_address(int fd, char *paddr, size_t plen)
 {
@@ -16,7 +16,7 @@ int get_address(int fd, char *paddr, size_t plen)
 	struct sockaddr sockaddr = {};
 
 	retval = getsockname(fd, &sockaddr, &len);
-	if( unlikely(retval == -1) ){
+	if (unlikely(retval == -1)) {
 		return retval;
 	}
 
@@ -56,7 +56,7 @@ uint16_t get_port(int fd)
 	struct sockaddr sockaddr = {};
 
 	retval = getsockname(fd, &sockaddr, &len);
-	if( unlikely(retval == -1) ){
+	if (unlikely(retval == -1)) {
 		return retval;
 	}
 
@@ -92,13 +92,13 @@ int socket_listen(const char* host, const char* server)
 	hints.ai_family = AF_UNSPEC;
 	hints.ai_socktype = SOCK_STREAM;
 
-	while(1){
+	while (1) {
 		retval = getaddrinfo(host, server, &hints, &ai);
-		if( likely(retval == 0)){
+		if (likely(retval == 0)) {
 			break ;
-		}else if( likely(retval == EAI_AGAIN) ){
+		} else if (likely(retval == EAI_AGAIN)) {
 			continue ;
-		}else{
+		} else {
 			return -1;
 		}
 	}
@@ -107,27 +107,29 @@ int socket_listen(const char* host, const char* server)
 		if ( unlikely(fd < 0) ) {
 			continue;
 		}
-				 
-		if( unlikely(setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &optval, (socklen_t)sizeof(int)) == -1) ){  //允许地址的立即重用
+		/* 允许地址的立即重用 */
+		if (unlikely(setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &optval, (socklen_t)sizeof(int)) == -1)) {
 			close(fd);
 			fd = -1;
 			break;
 		}
 
 		retval = bind(fd, aiptr->ai_addr, aiptr->ai_addrlen);
-		if ( likely(retval == 0) ) {	//绑定成功
-			if( unlikely(listen(fd, LISTENQ) == -1) ){
+		if (likely(retval == 0)) {
+			/* 绑定成功 */
+			if (unlikely(listen(fd, LISTENQ) == -1)) {
 				close(fd);
 				fd = -1;
 				break;
 			}
-			if( unlikely(!fd_setopt(fd, O_NONBLOCK)) ){	//将套接字设置为非阻塞模式
+			/* 将套接字设置为非阻塞模式 */
+			if (unlikely(!fd_setopt(fd, O_NONBLOCK))) {	
 				close(fd);
 				fd = -1;
 			}
 			break;
 		}
-		close(fd); //绑定失败，忽略此描述符
+		close(fd); /* 绑定失败，忽略此描述符 */
 		fd = -1;
 	}
 	freeaddrinfo(&ai);
@@ -148,13 +150,13 @@ int socket_connect(const char* host, const char* server)
 	hints.ai_family = AF_UNSPEC;
 	hints.ai_socktype = SOCK_STREAM;
 
-	while(1){
+	while (1) {
 		retval = getaddrinfo(host, server, &hints, &ai);
-		if( likely(retval == 0)){
+		if (likely(retval == 0)) {
 			break ;
-		}else if( likely(retval == EAI_AGAIN) ){
+		} else if (likely(retval == EAI_AGAIN)) {
 			continue ;
-		}else{
+		} else {
 			return -1;
 		}
 	}
@@ -166,7 +168,8 @@ int socket_connect(const char* host, const char* server)
 
 		retval = connect(fd, aiptr->ai_addr, aiptr->ai_addrlen);
 		if (likely(retval == 0)) {
-			if( unlikely(!fd_setopt(fd, O_NONBLOCK)) ){ //设置套接字为非阻塞状态
+			/* 设置套接字为非阻塞状态 */
+			if (unlikely(!fd_setopt(fd, O_NONBLOCK))) {
 				close(fd);
 				fd = -1;
 			}

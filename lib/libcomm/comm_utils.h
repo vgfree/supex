@@ -2,22 +2,34 @@
 /************************	Created by 许莉 on 16/03/15.	******************************/
 /*********	 Copyright © 2016年 xuli. All rights reserved.	******************************/
 /*********************************************************************************************/
-#ifndef _COMM_UTILS_H_
-#define _COMM_UTILS_H_
+#ifndef __COMM_UTILS_H__
+#define __COMM_UTILS_H__
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <fcntl.h>
-#include <stdint.h>
-#include <stdbool.h>
+#include <wtypes.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+/* MSVC doesn't define _Bool or bool in C, but does have BOOL */
+/* Note this doesn't pass autoconf's test because (bool) 0.5 != true */
+typedef BOOL _Bool;
+
+#define bool _Bool
+#define true 1
+#define false 0
+
+#define __bool_true_false_are_defined 1
 
 /* 逻辑跳转优化*/
 #if GCC_VERSION
-/*条件大多数为真，与if配合使用，直接执行if中语句*/
+/* 条件大多数为真，与if配合使用，直接执行if中语句 */
   #define likely(x)     __builtin_expect(!!(x), 1)
-/*条件大多数为假，与if配合使用，直接执行else中语句*/
+/* 条件大多数为假，与if配合使用，直接执行else中语句 */
   #define unlikely(x)   __builtin_expect(!!(x), 0)
 #else
   #define likely(x)     (!!(x))
@@ -25,10 +37,10 @@
 #endif
 
 
-//#undef	New
-
-//#define New(ptr) do { (ptr) = typeof(ptr)(malloc(sizeof(*(ptr)))); \
-//	(likely((ptr)) ? ptr : NULL); }while(0);
+#undef	New
+#define New(ptr)						\
+	((ptr) = __typeof__(ptr)calloc(1, sizeof(*(ptr))),	\
+	(likely((ptr)) ? ptr :(errno = ENOMEM, NULL)))
 
 #undef	Free
 #define Free(ptr)						\
@@ -37,9 +49,9 @@
 			free((void*)(ptr));			\
 			(ptr) = (__typeof__(ptr)) 0;		\
 		}						\
-	 }while(0);
+	 }while(0)
 
-//#if (GCC_VERSION >= 40100)
+#if (GCC_VERSION >= 40100)
 
 /* 内存访问栅 */
   #define barrier()             (__sync_synchronize())
@@ -76,17 +88,17 @@
   #define ATOMIC_F_AND(ptr, value)      ((__typeof__(*(ptr)))__sync_fetch_and_and((ptr), (value)))
   #define ATOMIC_F_XOR(ptr, value)      ((__typeof__(*(ptr)))__sync_fetch_and_xor((ptr), (value)))
 
-//#else
+#else
 
-//  #error "can not supported atomic operate by gcc(v4.0.1+) buildin function."
-//#endif	/* if (GCC_VERSION >= 40100) */
+  #error "can not supported atomic operate by gcc(v4.0.1+) buildin function."
+#endif	/* if (GCC_VERSION >= 40100) */
 
 #define ATOMIC_INC(ptr)                 ((void)ATOMIC_ADD_F((ptr), 1))
 #define ATOMIC_DEC(ptr)                 ((void)ATOMIC_SUB_F((ptr), 1))
 #define ATOMIC_ADD(ptr, val)            ((void)ATOMIC_ADD_F((ptr), (val)))
 #define ATOMIC_SUB(ptr, val)            ((void)ATOMIC_SUB_F((ptr), (val)))
 	
-/*设置指定描述符的标志*/
+/* 设置指定描述符的标志 */
 static inline bool set_fdopt(int fd, int flag)
 {
 	int retval = -1;
@@ -102,5 +114,11 @@ static inline bool set_fdopt(int fd, int flag)
 	return true;
 }
 
-#endif
+
+
+#ifdef __cplusplus
+	}
+#endif 
+
+#endif /* ifndef __COMM_UTILS_H__ */
 
