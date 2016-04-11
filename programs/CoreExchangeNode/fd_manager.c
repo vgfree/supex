@@ -12,7 +12,7 @@ int list_init()
 {
   for (int i = 0; i < FD_MAX_CLASSIFICATION; i++) {
     g_list.head[i].size = 0;
-	g_list.head[i].next = NULL;
+    g_list.head[i].next = NULL;
   }
   return SUCCESS;
 }
@@ -21,38 +21,38 @@ int list_destroy()
 {
   for (int i = 0; i < FD_MAX_CLASSIFICATION; i++) {
     struct fd_node *curr;
-	struct fd_node *next;
-	curr = g_list.head[i].next;
-	while (curr){
+    struct fd_node *next;
+    curr = g_list.head[i].next;
+    while (curr){
       next = curr->next;
       free(curr);
       curr = next;
-	}
-	g_list.head[i].next = NULL;
+    }
+    g_list.head[i].next = NULL;
   }
   return SUCCESS;
 }
 
 int list_remove(const enum router_object obj,
-				const int fd)
+                const int fd)
 {
   struct fd_node **curr = &g_list.head[obj].next;
   while (*curr) {
     struct fd_node *entry = *curr;
-	if (entry->fd == fd) {
+    if (entry->fd == fd) {
       *curr = entry->next;
-	  free(entry);
-	  return SUCCESS;
-	}
-	else {
+      free(entry);
+      return SUCCESS;
+    }
+    else {
       curr = &entry->next;
-	}
+    }
   }
   return FAILED;
 }
 
 int list_push_back(const enum router_object obj,
-				   const struct fd_node *node)
+                   const struct fd_node *node)
 {
   struct fd_node *curr = g_list.head[obj].next;
   while (curr->next) {
@@ -66,7 +66,7 @@ int list_push_back(const enum router_object obj,
 }
 
 int list_front(const enum router_object obj,
-			   struct fd_node *node)
+               struct fd_node *node)
 {
   if (g_list.head[obj].next) {
     *node = *g_list.head[obj].next;
@@ -89,7 +89,7 @@ int array_init()
 int array_destroy()
 {
   if (g_array.dsp_array == NULL) {
-	  return FAILED;
+    return FAILED;
   }
   free(g_array.dsp_array);
   g_array.max_fd = 0;
@@ -107,7 +107,7 @@ int array_fill_fd(const int fd, const struct fd_descriptor *des)
 
   g_array.dsp_array[fd] = *des;
   if (g_array.max_fd < fd) {
-    g_array.max_fd = fd;	
+    g_array.max_fd = fd;
   }
   else {
     warn("max_fd >fd ?");
