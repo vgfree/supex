@@ -2,9 +2,11 @@
 #define _FD_MANAGER_H_
 
 #include "router.h"
-#include "communication.h"
+//#include "communication.h"
 
 #define FD_MAX_CLASSIFICATION 3
+#define SUCCESS 0
+#define FAILED -1
 
 /*    fd_head
  *    ---------         ---------         ---------
@@ -36,16 +38,16 @@ struct fd_head {
 };
 
 struct fd_list {
-  struct fd_head [FD_MAX_CLASSIFICATION];
+  struct fd_head head[FD_MAX_CLASSIFICATION];
 };
 
 int list_init();
 int list_destroy();
 int list_remove(const enum router_object obj, const int fd);
 int list_push_back(const enum router_object obj,
-		   const struct fd_node &node);
+		   const struct fd_node *node);
 int list_front(const enum router_object obj,
-	       struct fd_node &node);
+	       struct fd_node *node);
 
 
 struct fd_descriptor {
@@ -63,8 +65,8 @@ struct fd_array {
 
 int array_init();
 int array_destroy();
-int array_fill_fd(const int fd, const struct fd_descriptor &des);
+int array_fill_fd(const int fd, const struct fd_descriptor *des);
 int array_remove_fd(const int fd);
-int array_at_fd(const int fd, struct fd_descriptor &des);
+int array_at_fd(const int fd, struct fd_descriptor *des);
 
 #endif
