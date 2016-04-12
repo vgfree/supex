@@ -5,7 +5,9 @@
 #ifndef __COMM_LOCK_H__
 #define __COMM_LOCK_H__
 
+#include "comm_utils.h"
 #include <pthread.h>
+#include <sys/time.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -35,8 +37,10 @@ bool commlock_unlock(struct comm_lock *commlock);
 
 bool commlock_wait_cond(struct comm_lock *commlock, int cond, int timeout);
 
+bool commlock_wait(struct comm_lock *commlock, int *addr,  int value, int timeout);
+
 /* 销毁锁 */
-void commlock_destroy(struct comm_lock *commlock);
+bool commlock_destroy(struct comm_lock *commlock);
 
 
      

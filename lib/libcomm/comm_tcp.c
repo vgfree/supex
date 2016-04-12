@@ -22,20 +22,24 @@ int get_address(int fd, char *paddr, size_t plen)
 
 	switch (sockaddr.sa_family)
 	{
-		case AF_INET:
-			ptr = inet_ntop(AF_INET, &((struct sockaddr_in)sockaddr).sin_addr,
-					paddr, plen);
-			break;
+		case AF_INET: {
+				struct sockaddr_in *inaddr = (struct sockaddr_in*)&sockaddr;
+				ptr = inet_ntop(AF_INET, &inaddr->sin_addr, paddr, plen);
+			      }
+				break;
 
-		case AF_INET6:
-			ptr = inet_ntop(AF_INET6, &((struct sockaddr_in6)sockaddr).sin6_addr,
-					paddr, plen);
-			break;
+		case AF_INET6: {
+				struct sockaddr_in6 *inaddr6 = (struct sockaddr_in6*)&sockaddr;
+				ptr = inet_ntop(AF_INET6, &inaddr6->sin6_addr, paddr, plen);
+			       }
+				break;
 
-		case AF_UNIX:
-			snprintf(paddr, plen, "%s", ((struct sockaddr_un)sockaddr).sun_path);
-			ptr = paddr;
-			break;
+		case AF_UNIX: {
+				struct sockaddr_un *unaddr = (struct sockaddr_un*)&sockaddr;
+				snprintf(paddr, plen, "%s", unaddr->sun_path);
+				ptr = paddr;
+			      }
+				break;
 
 		default:
 			break;
@@ -62,13 +66,17 @@ uint16_t get_port(int fd)
 
 	switch (sockaddr.sa_family)
 	{
-		case AF_INET:
-			port = ((struct sockaddr_in)sockaddr).sin_port;
-			break;
+		case AF_INET: {
+				struct sockaddr_in *inaddr = (struct sockaddr_in*)&sockaddr;
+				port = inaddr->sin_port;
+			      }
+				break;
 
-		case AF_INET6:
-			port = ((struct sockaddr_in6)sockaddr).sin6_port;
-			break;
+		case AF_INET6: {
+				struct sockaddr_in6 *inaddr6 = (struct sockaddr_in6*)&sockaddr;
+				port = inaddr6->sin6_port;
+			       }
+				break;
 
 		default:
 			break;
@@ -132,7 +140,7 @@ int socket_listen(const char* host, const char* server)
 		close(fd); /* 绑定失败，忽略此描述符 */
 		fd = -1;
 	}
-	freeaddrinfo(&ai);
+	freeaddrinfo(ai);
 	return fd;
 }
 
@@ -178,6 +186,6 @@ int socket_connect(const char* host, const char* server)
 		close(fd);
 		fd = -1;
 	}
-	freeaddrinfo(&ai);
+	freeaddrinfo(ai);
 	return fd;
 }

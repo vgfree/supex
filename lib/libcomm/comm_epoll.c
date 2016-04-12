@@ -5,9 +5,7 @@
 
 #include "comm_epoll.h"
 
-#define EPOLLSIZE	1024
-
-inline int create_epoll(int epollsize)
+inline int  create_epoll(int epollsize)
 {
 	return epoll_create(epollsize > 0 ? epollsize : EPOLLSIZE);
 }
@@ -19,17 +17,17 @@ inline bool add_epoll(int epfd, int fd, unsigned int flag)
 
 	event.data.fd = fd;
 	event.events = flag;
-	retval = epoll_ctl(commctx->epfd, EPOLL_CTL_ADD, fd, &event);
+	retval = epoll_ctl(epfd, EPOLL_CTL_ADD, fd, &event);
 	return retval == 0; 
 }
 
-inline bool  mod_epoll(int epfd, int fd, unsigned int flag)
+inline bool mod_epoll(int epfd, int fd, unsigned int flag)
 {
 	int			retval = 0;
 	struct epoll_event	event = {};
 	event.data.fd = fd;
 	event.events = flag;
-	retval = epoll_ctl(commctx->epfd, EPOLL_CTL_MOD, fd, &event);
+	retval = epoll_ctl(epfd, EPOLL_CTL_MOD, fd, &event);
 	return retval == 0;
 }
 
@@ -39,7 +37,7 @@ inline bool  del_epoll(int epfd, int fd, unsigned int flag)
 	struct epoll_event	event = {};
 	event.data.fd = fd;
 	event.events = EPOLLIN;
-	retval = epoll_ctl(commctx->epfd, EPOLL_CTL_DEL, fd, &event);
+	retval = epoll_ctl(epfd, EPOLL_CTL_DEL, fd, &event);
 	return retval == 0;
 }
 

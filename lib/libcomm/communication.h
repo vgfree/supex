@@ -9,39 +9,30 @@
 #include "comm_cache.h"
 #include "comm_queue.h"
 #include "comm_tcp.h"
+#include "comm_epoll.h"
+#include "comm_lock.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
+#define	EPOLL_SIZE		10000
+#define TIMEOUTED		5000
+#define IPADDR_MAXSIZE		128
+#define	CACHE_SIZE		1024
+#define QUEUE_CAPACITY		50000
 
-
-/* 套接字的类型 */
-enum {
-	COMM_CONNECT = 0x01;
-	COMM_BIND;
-	COMM_ACCETP;
-};
+struct comm ;
 
 /* 回调函数的原型: fd参数:对于超时和线程回调函数无用，主要用于finished回调函数 */
 typedef void (*CommCB)(struct comm* commctx, int fd, void* usr);
 
-struct comm {
-	int			epfd;			/* IO复用句柄 */
-	int			listenfd;		/* 如果类型为COMM_BIND此变量会被赋值 */
-	int			data[EPOLL_SIZE];	/* 保存接收发送的相关数据 */
-	long			watchcnt;		/* 正在监听的fd的个数 */
-	pthread_t		ptid;			/* 新线程的pid */
-	struct cbinfo		timeoutcb;		/* 超时回调函数的相关信息 */
-	struct comm_queue	recv_queue;		/* 存放已经接收到并解析好的数据 */
-	enum {
-		COMM_STAT_NONE;
-		COMM_STAT_INIT;
-		COMM_STAT_RUN;
-		COMM_STAT_STOP;
-	}		stat;			/* 线程的状态 */
+/* 套接字的类型 */
+enum {
+	COMM_CONNECT = 0x01,
+	COMM_BIND,
+	COMM_ACCEPT
 };
-
 
 /* 回调函数的相关信息 */
 struct cbinfo {
@@ -70,6 +61,24 @@ struct comm_data{
 	int			parsepct;	/* 解析数据百分比[根据此值来决定什么时候调用解析函数] */
 	int			packpct;	/* 打包数据百分比[根据此值来决定什么时候调用打包函数]*/
 };
+struct comm {
+	int			epfd;			/* IO复用句柄 */
+	int			listenfd;		/* 如果类型为COMM_BIND此变量会被赋值 */
+	intptr_t		data[EPOLL_SIZE];	/* 保存接收发送的相关数据 */
+	long			watchcnt;		/* 正在监听的fd的个数 */
+	pthread_t		ptid;			/* 新线程的pid */
+	struct cbinfo		timeoutcb;		/* 超时回调函数的相关信息 */
+	struct comm_queue	recv_queue;		/* 存放已经接收到并解析好的数据 */
+	struct comm_lock	commlock;		/* 用来同步stat的状态 */
+	enum {
+		COMM_STAT_NONE,
+		COMM_STAT_INIT,
+		COMM_STAT_RUN,
+		COMM_STAT_STOP
+	}		stat;			/* 线程的状态 */
+};
+
+
 
 
 /* 创建一个通信上下文的结构体 */
@@ -79,7 +88,7 @@ struct comm* comm_ctx_create(int epollsize);
 void comm_ctx_destroy(struct comm* commctx);
 
 /* bind或者connect某个指定的地址端口 */
-int comm_socket(struct comm *commctx, char *host, char *server, struct cbinfo finishedcb, int type);
+int comm_socket(struct comm *commctx, char *host, char *server, struct cbinfo* finishedcb, int type);
 
 /* 发送数据 */
 int comm_send(struct comm *commctx, int fd, const char *buff, int size);
@@ -97,7 +106,6 @@ void comm_settimeout(struct comm *commctx, int timeout, CommCB callback, void *u
 
 #ifdef __cplusplus
 	}
-#endif 
-
+#endif
 
 #endif /* ifndef __COMMUNICATION_H__ */

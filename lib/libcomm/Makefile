@@ -23,7 +23,7 @@ TOBJ_MINOR ?= 		0
 
 TOBJ_ARNAME =		$(TOBJ).a
 
-SOBJ_DIR =		.objs
+SOBJ_DIR =		objs
 TOBJ_DIR =		lib
 
 #######
@@ -80,6 +80,7 @@ SOBJ = $(addprefix $(SOBJ_DIR)/, \
 	comm_cache.o \
 	comm_queue.o \
 	comm_lock.o \
+	comm_epoll.o \
 	communication.o \
 	)
 

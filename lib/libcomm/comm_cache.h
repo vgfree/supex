@@ -34,7 +34,7 @@ void commcache_deccnt(struct comm_cache* comm_cache, int size);
 void commcache_clean(struct comm_cache* comm_cache);
 
 /* 释放cache */
-void commcache_free(struct comm_cahce* comm_cache);
+void commcache_free(struct comm_cache* comm_cache);
 
 
      

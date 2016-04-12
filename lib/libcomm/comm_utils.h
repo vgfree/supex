@@ -9,21 +9,18 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <fcntl.h>
-#include <wtypes.h>
+#include <errno.h>
+#include <stdbool.h>
+#include <string.h>
+#include <assert.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-/* MSVC doesn't define _Bool or bool in C, but does have BOOL */
-/* Note this doesn't pass autoconf's test because (bool) 0.5 != true */
-typedef BOOL _Bool;
-
-#define bool _Bool
-#define true 1
-#define false 0
-
-#define __bool_true_false_are_defined 1
+/* 编译器版本 */
+/* gcc version. for example : v4.1.2 is 40102, v3.4.6 is 30406 */
+#define GCC_VERSION (__GNUC__ * 10000 + __GNUC_MINOR__ * 100 + __GNUC_PATCHLEVEL__)
 
 /* 逻辑跳转优化*/
 #if GCC_VERSION
@@ -39,12 +36,13 @@ typedef BOOL _Bool;
 
 #undef	New
 #define New(ptr)						\
-	((ptr) = __typeof__(ptr)calloc(1, sizeof(*(ptr))),	\
-	(likely((ptr)) ? ptr :(errno = ENOMEM, NULL)))
+	((ptr) = (__typeof__(ptr))calloc(1, sizeof(*(ptr))),	\
+	(likely((ptr)) ? (ptr) :(errno = ENOMEM, NULL)))
+	
 
 #undef	Free
 #define Free(ptr)						\
-	 do{						\
+	 do{							\
 		if( likely((ptr))){				\
 			free((void*)(ptr));			\
 			(ptr) = (__typeof__(ptr)) 0;		\
@@ -89,6 +87,7 @@ typedef BOOL _Bool;
   #define ATOMIC_F_XOR(ptr, value)      ((__typeof__(*(ptr)))__sync_fetch_and_xor((ptr), (value)))
 
 #else
+	printf("%d", GCC_VERSION);
 
   #error "can not supported atomic operate by gcc(v4.0.1+) buildin function."
 #endif	/* if (GCC_VERSION >= 40100) */
@@ -99,7 +98,7 @@ typedef BOOL _Bool;
 #define ATOMIC_SUB(ptr, val)            ((void)ATOMIC_SUB_F((ptr), (val)))
 	
 /* 设置指定描述符的标志 */
-static inline bool set_fdopt(int fd, int flag)
+static inline bool fd_setopt(int fd, int flag)
 {
 	int retval = -1;
 	retval = fcntl(fd, F_GETFL, NULL);
