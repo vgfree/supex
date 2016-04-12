@@ -8,6 +8,8 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <arpa/inet.h>
+#include <sys/un.h>
+#include <netdb.h>
 #include "comm_utils.h"
 
 #ifdef __cplusplus

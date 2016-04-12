@@ -2,6 +2,9 @@
 /************************	Created by 许莉 on 16/04/08.	******************************/
 /*********	 Copyright © 2016年 xuli. All rights reserved.	******************************/
 /*********************************************************************************************/
+#include "comm_lock.h"
+
+static void _fill_absolute_time(struct timespec *tmspec, long value);
 
 bool commlock_init(struct comm_lock *commlock)
 {
@@ -12,7 +15,6 @@ bool commlock_init(struct comm_lock *commlock)
 	pthread_condattr_t attr;
 	pthread_condattr_init(&attr);
 	pthread_condattr_setclock(&attr, CLOCK_MONOTONIC); /* 防止pthread_cond_timewait()出现意外 */
-	pthread_cond_init(&tc->condition, &attr);
 	if ((retval = pthread_cond_init(&commlock->cond, &attr)) != 0) {
 		pthread_condattr_destroy(&attr);
 		pthread_mutex_destroy(&commlock->mutex);
@@ -41,15 +43,16 @@ bool commlock_unlock(struct comm_lock *commlock)
 	return pthread_mutex_unlock(&commlock->mutex) == 0;
 }
 
-void commlock_destroy(struct comm_lock *commlock)
+bool  commlock_destroy(struct comm_lock *commlock)
 {
 	if ( commlock->available == false || commlock->waiters > 0) {
-		return EBUSY;
+		return false;
 	}
 	commlock->waiters = 0;
 	commlock->available = true;
 	pthread_mutex_destroy(&commlock->mutex);
-	pthread_cond_destroy(&commlock->mutex);
+	pthread_cond_destroy(&commlock->cond);
+	return true;
 }
 
 
@@ -66,7 +69,7 @@ bool commlock_wait(struct comm_lock *commlock, int *addr,  int value, int timeou
 			if (timeout > 0) {
 				struct timespec tm = {};
 				_fill_absolute_time(&tm, timeout);
-				pthread_cond_timewait(&commlock->cond, &commlock->mutex, &tm);
+				pthread_cond_timedwait(&commlock->cond, &commlock->mutex, &tm);
 			} else {
 				pthread_cond_wait(&commlock->cond, &commlock->mutex);
 			}
@@ -93,6 +96,7 @@ bool commlock_wake(struct comm_lock *commlock)
 		pthread_cond_broadcast(&commlock->cond);
 		pthread_mutex_unlock(&commlock->mutex);
 	}
+	return retval != -1;
 }
 
 

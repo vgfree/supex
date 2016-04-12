@@ -9,11 +9,13 @@
 extern "C" {
 #endif
 
-
+#include "comm_utils.h"
 #include <sys/epoll.h>
 
+#define EPOLLSIZE	1024
+
 /* epoll_wait 发生的事件类型 */
-enum epoll_event {
+enum epoll_events {
 	EPOLL_WRITE = 0x01,	/* 发生读事件 */
 	EPOLL_READ,		/* 发生写事件 */
 	EPOLL_ACCEPTED,		/* 发生新用户连接事件 */
@@ -28,19 +30,21 @@ struct epoll_args {
 };
 
 /* 创建一个epoll */
-inline int  create_epoll(int epollsize);
+int  create_epoll(int epollsize);
 
 /* 往epfd里面添加一个需要监控的fd */
-inline bool add_epoll(int epfd, int fd, unsigned int flag);
+bool add_epoll(int epfd, int fd, unsigned int flag);
 
 /* 修改一个epfd里面的已经监控的fd事件 */
-inline bool mod_epoll(int epfd, int fd, unsigned int flag);
+bool mod_epoll(int epfd, int fd, unsigned int flag);
 
 /* 从epfd里面删除一个已经监控的fd */
-inline bool del_epoll(int epfd, int fd, unsigned int flag);
+bool del_epoll(int epfd, int fd, unsigned int flag);
 
 /* epoll等待事件的发生 */
-inline int  wait_epoll(int epfd, struct epoll_args args, enum epoll_event *event);
+int  wait_epoll(int epfd, struct epoll_event* events, int watchcnt, int timeout);
+
+//inline int  wait_epoll(int epfd, struct epoll_args args, enum epoll_events *event);
 
      
 #ifdef __cplusplus
