@@ -14,7 +14,7 @@ ssize_t tcp_read(struct tcp_socket *tcp)
 	AssertError(tcp->type == TCP_TYPE_CONN, ENOTCONN);
 	ssize_t nbytes = -1;
 	ssize_t miou = -1;
-	miou = unlikely(tcp->miou <= 0) ? TCP_MIOU : tcp->miou;
+	miou = unlikely(tcp->miou < 1) ? TCP_MIOU : tcp->miou;
 	/*increment `miou` size of space for cache*/
 	miou = cache_incrmem(&tcp->cache, (int)miou);
 	return_val_if_fail(miou > 0, -1);
@@ -39,7 +39,7 @@ ssize_t tcp_write(struct tcp_socket *tcp)
 	return_val_if_fail(nbytes > 0, 0);
 
 	ssize_t miou = -1;
-	miou = unlikely(tcp->miou <= 0) ? TCP_MIOU : tcp->miou;
+	miou = unlikely(tcp->miou < 1) ? TCP_MIOU : tcp->miou;
 	miou = MIN(miou, nbytes);
 
 	nbytes = write(tcp->fd, cache_data_address(&tcp->cache), miou);
@@ -116,7 +116,7 @@ ssize_t tcp_send(struct tcp_socket *tcp, tcp_idle_cb idle, void *usr)
 			}
 		} else {
 			/*出错*/
-			//			tcp->timeout -= remain;
+			//tcp->timeout -= remain;
 			return -1;
 		}
 	}
@@ -207,7 +207,7 @@ ssize_t tcp_recv(struct tcp_socket *tcp, tcp_parse_cb parse, tcp_idle_cb idle, v
 			}
 		} else {
 			/*出错*/
-			//			tcp->timeout -= remain;
+			//tcp->timeout -= remain;
 			return -1;
 		}
 	}

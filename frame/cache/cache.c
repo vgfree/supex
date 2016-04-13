@@ -29,7 +29,11 @@ ssize_t cache_incrmem(struct cache *cache, int size)
 		errno = ENOMEM;
 		return -1;
 	}
-
+	/*can't allocate more space*/
+	if (unlikely(cache->size == cache->maxsize)) {
+		return remain;
+	}
+	
 	/*must be less than virtual size of remain space*/
 	need = MIN(need, (cache->maxsize - cache->end));
 	/*calculate size of space what will be need*/
@@ -37,29 +41,23 @@ ssize_t cache_incrmem(struct cache *cache, int size)
 	/*must be less than size of max*/
 	ssize_t total = MIN(cache->size + incsize, cache->maxsize);
 
-	/*request size may be zero*/
-	if (likely(cache->size < total)) {
-		char *ptr = NULL;
+	char *ptr = NULL;
+	ptr = realloc(cache->buff, total);
+	
+	if (unlikely(!ptr)) {
+		/*allocate number of need*/
+		total = cache->size + need;
 		ptr = realloc(cache->buff, total);
-
+		
 		if (unlikely(!ptr)) {
-			/*allocate number of need*/
-			total = cache->size + need;
-			ptr = realloc(cache->buff, total);
-
-			if (unlikely(!ptr)) {
-				x_printf(W, "no more space, realloc() failed.");
-				errno = ENOMEM;
-				return -1;
-			}
+			x_printf(W, "no more space, realloc() failed.");
+			errno = ENOMEM;
+			return -1;
 		}
-
-		cache->buff = ptr;
-		cache->size = (unsigned)total;
-	} else {
-		/*return remain size of space*/
-		need = remain;
 	}
+	
+	cache->buff = ptr;
+	cache->size = (unsigned)total;
 
 	return need;
 }
@@ -85,7 +83,27 @@ ssize_t cache_append(struct cache *cache, const char *data, int size)
 		return -1;
 	}
 
-	memcpy(&cache->buff[cache->end], data, size);
+	//fixed :
+#if 1
+	if (size == (int)sizeof(uint8_t)) {
+		*(uint8_t*)&cache->buff[cache->end] = *(uint8_t*)data;
+	} else if (size == (int)sizeof(uint16_t)) {
+		*(uint16_t*)&cache->buff[cache->end] = *(uint16_t*)data;
+	} else if (size == (int)sizeof(uint32_t)) {
+		*(uint32_t*)&cache->buff[cache->end] = *(uint32_t*)data;
+	} else if (size == (int)sizeof(uint64_t)) {
+		*(uint64_t*)&cache->buff[cache->end] = *(uint64_t*)data;
+	} else if (size < 8) {
+		int i = 0;
+		for (i = 0; i < size; i++) {
+			*(uint8_t*)&cache->buff[cache->end + i] = *(uint8_t*)&data[i];
+		}
+	} else {
+#else
+	{
+#endif
+		memcpy(&cache->buff[cache->end], data, size);
+	}
 	cache->end += size;
 
 	return size;
@@ -191,7 +209,26 @@ ssize_t cache_insert(struct cache *cache, const char *data, int size)
 	}
 
 	/*copy data*/
-	memcpy(&cache->buff[cache->start], data, size);
+#if 1
+	if (size == (int)sizeof(uint8_t)) {
+		*(uint8_t*)&cache->buff[cache->start] = *(uint8_t*)data;
+	} else if (size == (int)sizeof(uint16_t)) {
+		*(uint16_t*)&cache->buff[cache->start] = *(uint16_t*)data;
+	} else if (size == (int)sizeof(uint32_t)) {
+		*(uint32_t*)&cache->buff[cache->start] = *(uint32_t*)data;
+	} else if (size == (int)sizeof(uint64_t)) {
+		*(uint64_t*)&cache->buff[cache->start] = *(uint64_t*)data;
+	} else if (size < 8) {
+		int i = 0;
+		for (i = 0; i < size; i++) {
+			*(uint8_t*)&cache->buff[cache->start + i] = *(uint8_t*)&data[i];
+		}
+	} else {
+#else
+	{
+#endif
+		memcpy(&cache->buff[cache->start], data, size);
+	}
 	cache->end += size;
 
 	return size;
