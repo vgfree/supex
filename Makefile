@@ -124,6 +124,7 @@ all:$(SRV)
 	@echo -e $(foreach bin,$^,$(BLUE)$(bin) $(GREEN)✔)$(RED)"\n-->OVER!\n"$(NONE)
 
 
+
 releaseServer:#DATA_LOAD_TYPE=cfg or mysql
 	$(MAKE) -C ./programs/releaseServer MAIN_APP_SERV=releaseServer DATA_LOAD_TYPE=cfg
 	@echo -e $(GREEN)"【"$(YELLOW) $@ $(GREEN)"】"$(RED)"\n-->OK!\n"$(NONE)
