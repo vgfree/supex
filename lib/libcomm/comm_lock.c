@@ -87,15 +87,21 @@ bool commlock_wait(struct comm_lock *commlock, int *addr,  int value, int timeou
 	return flag;
 }
 
-/* 唤醒条件等待的线程 */
-bool commlock_wake(struct comm_lock *commlock)
+/* 设置@*addr的值并唤醒条件等待的线程 */
+bool commlock_wake(struct comm_lock *commlock, int *addr,  int value)
 {
 	int retval = -1;
+	int old =  -1;
 	retval = pthread_mutex_lock(&commlock->mutex);
-	if (retval != -1) {
-		pthread_cond_broadcast(&commlock->cond);
-		pthread_mutex_unlock(&commlock->mutex);
+	if (retval == -1) {
+		return false;
 	}
+	old = ATOMIC_SWAP(addr, value);
+	if (likely(old != value)) { /* 返回的值不等于新值，说明设置成功 */
+		pthread_cond_broadcast(&commlock->cond);
+		retval = -1;
+	}
+	pthread_mutex_unlock(&commlock->mutex);
 	return retval != -1;
 }
 

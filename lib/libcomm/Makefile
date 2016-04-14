@@ -27,7 +27,7 @@ SOBJ_DIR =		objs
 TOBJ_DIR =		lib
 
 #######
-BUILD_CFLAGS =		-fPIC -Wall -Wno-unused-function -Wno-unused-variable
+BUILD_CFLAGS =		-fPIC -Wall -Wno-unused-function -Wno-unused-variable -g
 BUILD_LIBS =		-lpthread -lm
 BUILD_INC_DIR = 	-I/usr/include -I/usr/local/include
 BUILD_LIB_DIR =		-L/usr/local/lib -L/usr/lib -L/usr/libexec
@@ -68,7 +68,11 @@ define compile_obj
 	$(CC) -c $(1) -o $(2)
 endef
 
-all: prepare $(TOBJ)
+ALL:
+	gcc $(BUILD_CFLAGS) -L$(BUILD_PWD)/lib -lcomm $(BUILD_PWD)/test/server.c -o server
+	gcc $(BUILD_CFLAGS) -L$(BUILD_PWD)/lib -lcomm $(BUILD_PWD)/test/client.c -o client
+
+lib: prepare $(TOBJ)
 
 prepare:
 	@-if [ ! -d $(SOBJ_DIR) ];then mkdir $(SOBJ_DIR); fi
@@ -81,6 +85,7 @@ SOBJ = $(addprefix $(SOBJ_DIR)/, \
 	comm_queue.o \
 	comm_lock.o \
 	comm_epoll.o \
+	comm_structure.o\
 	communication.o \
 	)
 
@@ -122,6 +127,8 @@ clean :
 distclean : clean
 	@-rm -rf $(TOBJ_DIR)
 	@-rm -rf $(INSTALL_HEAD_DIR)
+	@-rm -rf client
+	@-rm -rf server
 	$(ECHO) $(COLOR_TXT)"\n\tCLEAN\t >>> "$(COLOR_RED)"$@"$(COLOR_TXT)" <<< COMPLETE"$(COLOR_NONE)
 
 install : $(TOBJ)
