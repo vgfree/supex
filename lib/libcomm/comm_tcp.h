@@ -25,10 +25,10 @@ int get_address(int fd, char *paddr, size_t plen);
 uint16_t get_port(int fd);
 
 /* 绑定监听一个指定地址端口号 */
-int socket_listen(const char* host, const char* server);
+int socket_listen(const char* host, const char* service);
 
 /* 连接一个指定的地址端口号 */
-int socket_connect(const char* host, const char* server);
+int socket_connect(const char* host, const char* service);
 
 
 #ifdef __cplusplus

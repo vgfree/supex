@@ -12,8 +12,8 @@ int get_address(int fd, char *paddr, size_t plen)
 
 	int		retval = -1;
 	char*		ptr = NULL;
-	socklen_t	len = 0;
 	struct sockaddr sockaddr = {};
+	socklen_t	len = sizeof(sockaddr);
 
 	retval = getsockname(fd, &sockaddr, &len);
 	if (unlikely(retval == -1)) {
@@ -56,8 +56,8 @@ uint16_t get_port(int fd)
 {
 	int		retval = -1;
 	uint16_t	port = 0;
-	socklen_t	len = 0;
 	struct sockaddr sockaddr = {};
+	socklen_t	len = sizeof(sockaddr);
 
 	retval = getsockname(fd, &sockaddr, &len);
 	if (unlikely(retval == -1)) {
@@ -85,9 +85,9 @@ uint16_t get_port(int fd)
 	return ntohs(port);
 }
 
-int socket_listen(const char* host, const char* server)
+int socket_listen(const char* host, const char* service)
 {
-	assert(host && server);
+	assert(host && service);
 
 	int			fd = -1;
 	int			optval = 1;
@@ -101,8 +101,9 @@ int socket_listen(const char* host, const char* server)
 	hints.ai_socktype = SOCK_STREAM;
 
 	while (1) {
-		retval = getaddrinfo(host, server, &hints, &ai);
+		retval = getaddrinfo(host, service, &hints, &ai);
 		if (likely(retval == 0)) {
+			/* 函数成功返回 */
 			break ;
 		} else if (likely(retval == EAI_AGAIN)) {
 			continue ;
@@ -142,11 +143,11 @@ int socket_listen(const char* host, const char* server)
 	}
 	freeaddrinfo(ai);
 	return fd;
-}
 
-int socket_connect(const char* host, const char* server)
+
+int socket_connect(const char* host, const char* service)
 {
-	assert(host && server);
+	assert(host && service);
 
 	int			fd = -1;
 	int			retval = -1;
@@ -159,7 +160,7 @@ int socket_connect(const char* host, const char* server)
 	hints.ai_socktype = SOCK_STREAM;
 
 	while (1) {
-		retval = getaddrinfo(host, server, &hints, &ai);
+		retval = getaddrinfo(host, service, &hints, &ai);
 		if (likely(retval == 0)) {
 			break ;
 		} else if (likely(retval == EAI_AGAIN)) {

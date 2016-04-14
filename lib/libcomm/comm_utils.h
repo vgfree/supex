@@ -18,10 +18,17 @@
 extern "C" {
 #endif
 
+
+#define log(fmt, ...) fprintf(stdout, "FILENAME:%s | LINE:%d | FUNCTION:%s | MASSAGE: "  fmt , __FILE__, __LINE__, __FUNCTION__, ##__VA_ARGS__)
+
+
+
+
+
 /* 编译器版本 */
-/* gcc version. for example : v4.1.2 is 40102, v3.4.6 is 30406 */
 #define GCC_VERSION (__GNUC__ * 10000 + __GNUC_MINOR__ * 100 + __GNUC_PATCHLEVEL__)
 
+/* gcc version. for example : v4.1.2 is 40102, v3.4.6 is 30406 */
 /* 逻辑跳转优化*/
 #if GCC_VERSION
 /* 条件大多数为真，与if配合使用，直接执行if中语句 */
@@ -33,12 +40,15 @@ extern "C" {
   #define unlikely(x)   (!!(x))
 #endif
 
-
 #undef	New
 #define New(ptr)						\
 	((ptr) = (__typeof__(ptr))calloc(1, sizeof(*(ptr))),	\
 	(likely((ptr)) ? (ptr) :(errno = ENOMEM, NULL)))
 	
+#undef	NewArray
+#define NewArray(ptr, size)						\
+	((ptr) = (__typeof__(ptr))calloc(size, sizeof(*(ptr))),	\
+	(likely((ptr)) ? (ptr) :(errno = ENOMEM, NULL)))
 
 #undef	Free
 #define Free(ptr)						\
@@ -101,12 +111,12 @@ extern "C" {
 static inline bool fd_setopt(int fd, int flag)
 {
 	int retval = -1;
-	retval = fcntl(fd, F_GETFL, NULL);
+	retval = fcntl(fd, F_GETFD, NULL);
 	if( unlikely(retval == -1) ){
 		return false;
 	}
 	retval |= flag;
-	retval = fcntl(fd, F_SETFL, retval);
+	retval = fcntl(fd, F_SETFD, retval);
 	if( unlikely(retval == -1) ){
 		return false;
 	}

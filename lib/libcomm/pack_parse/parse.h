@@ -71,3 +71,10 @@ int judge_package_all(int size,int offset,char *src);
 void free_malloc(struct mfptp_parse * p);
 
 struct mfptp_parse *  parse_data(int size,char *buf,struct mfptp_parse *p_info);
+
+
+struct mfptp_parse {
+	int		body_size;	/* body长度 */
+	int		body_offset;	/* body偏移 */
+	char* const	*buff;		/* 待解析数据的起始地址 */
+};

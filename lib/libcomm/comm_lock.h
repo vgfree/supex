@@ -39,6 +39,7 @@ bool commlock_wait_cond(struct comm_lock *commlock, int cond, int timeout);
 
 bool commlock_wait(struct comm_lock *commlock, int *addr,  int value, int timeout);
 
+bool commlock_wake(struct comm_lock *commlock, int *addr,  int value);
 /* 销毁锁 */
 bool commlock_destroy(struct comm_lock *commlock);
 
