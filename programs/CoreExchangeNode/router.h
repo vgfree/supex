@@ -5,7 +5,7 @@
 #include <stdint.h>
 
 enum router_object {
-  CLIENT,
+  CLIENT = 0,
   MESSAGE_GATEWAY,
   ROUTER_SERVER
 };
@@ -16,7 +16,6 @@ struct CID {
 };
 
 struct router_head {
-  uint8_t head_size;
   enum router_object message_from;
   enum router_object message_to;
   uint16_t CID_number;
@@ -33,5 +32,8 @@ struct message {
   struct router_head message_head;
   struct mfptp_message message_body;
 };
+
+struct router_head *parse(char *data, uint32_t size);
+char *pack(char *data, uint32_t *size, const struct router_head *head);
 
 #endif
