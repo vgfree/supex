@@ -89,19 +89,24 @@ int main(int argc, char* argv[])
 		char content[1024] = {};
 		struct comm_message recvmsg = {};
 		recvmsg.content = content;
-		retval = comm_recv(commctx, &recvmsg);
-		if( unlikely(retval < 0) ){
-			log("comm_recv failed, probably becasue don't have any data\n");
-			//return retval;
-			while(1) {
-			} ;
+		while (1) {
+			retval = comm_recv(commctx, &recvmsg);
+			if( unlikely(retval < 0) ){
+				log("comm_recv failed, probably becasue don't have any data\n");
+			} else {
+				log("comm_recv success, message:%s\n", recvmsg.content);
+				break ;
+			}
 		}
 		struct comm_message sendmsg = {recvmsg.fd, -1, -1, recvmsg.size, buff};
 		
 		retval = comm_send(commctx, &sendmsg);
 		if( unlikely(retval < 0) )
 		{
+			log("comm_send failed\n");
 			return retval;
+		} else {
+			log("comm_send data successed, message:%s\n", sendmsg.content);
 		}
 		i = (i+1)%5;
 	}

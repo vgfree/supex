@@ -143,6 +143,7 @@ int socket_listen(const char* host, const char* service)
 	}
 	freeaddrinfo(ai);
 	return fd;
+}
 
 
 int socket_connect(const char* host, const char* service)

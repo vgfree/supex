@@ -111,12 +111,12 @@ extern "C" {
 static inline bool fd_setopt(int fd, int flag)
 {
 	int retval = -1;
-	retval = fcntl(fd, F_GETFD, NULL);
+	retval = fcntl(fd, F_GETFL, NULL);
 	if( unlikely(retval == -1) ){
 		return false;
 	}
 	retval |= flag;
-	retval = fcntl(fd, F_SETFD, retval);
+	retval = fcntl(fd, F_SETFL, retval);
 	if( unlikely(retval == -1) ){
 		return false;
 	}

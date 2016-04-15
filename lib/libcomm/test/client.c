@@ -89,19 +89,22 @@ int main(int argc, char* argv[])
 		char content[1024] = {};
 
 		struct comm_message sendmsg = {fd, -1, -1, strlen(buff), buff};
+		sleep(3);
 		
 		retval = comm_send(commctx, &sendmsg);
 		if( unlikely(retval < 0) ) {
 			log("clinet comm_send failed\n");
 			return retval;
 		}
-		log("clinet comm_send successed\n");
+		log("clinet comm_send successed, message:%s\n", sendmsg.content);
 		struct comm_message recvmsg = {};
 		recvmsg.content = content;
 		retval = comm_recv(commctx, &recvmsg);
 		if( unlikely(retval < 0) ){
+			log("client recv_data failed\n");
 			return retval;
 		}
+		log("client recv_data successed, message:%s\n", recvmsg.content);
 		i = (i+1)%5;
 	}
 }

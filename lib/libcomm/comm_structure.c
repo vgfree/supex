@@ -42,6 +42,7 @@ struct comm_data*  commdata_init(struct comm_context* commctx, struct portinfo* 
 		} else {
 			flag = EPOLLIN | EPOLLOUT | EPOLLET;
 		}
+		/* 监听套接字的时间太晚，可能会出现事件已发生，但是epoll却没监听到 */
 		retval = add_epoll(commctx->epfd, portinfo->fd, flag);
 		if( unlikely(!retval) ){
 			goto error;
