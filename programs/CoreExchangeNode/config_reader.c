@@ -71,7 +71,7 @@ int set_config_value(struct config_reader *config,
 static void _load_file(struct config_reader *config,
                        const char* filename)
 {
-  memset(config->m_config_file, MAX_STRING_SIZE, 0);
+  memset(config->m_config_file, 0, MAX_STRING_SIZE);
   strcpy(config->m_config_file, filename);
   FILE* fp = fopen(filename, "r");
   if (!fp) {

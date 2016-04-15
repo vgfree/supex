@@ -2,6 +2,10 @@
 
 #include <string.h>
 #include <stdio.h>
+#include <lua.h>
+#include <lualib.h>
+#include <lauxlib.h>
+#include <luasocket.h>
 
 char expect_value[25] = {0x04, 0x17, 0x52, 0x4f, 0x55, 0x54, 0x49, 0x0d, 0x0a,
   0x01, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x07, 0x00, 0x02, 0x00, 0x00, 0x00, 0x00, 0x02
@@ -62,6 +66,8 @@ int test_pack_function() {
 		  break;
 	  }
   }
+  free(head.cid);
+  free(package);
   return exp_value;
 }
 int main(int argc, char *argv[])
@@ -79,5 +85,13 @@ int main(int argc, char *argv[])
   else {
     printf("\n -----parse error -----\n");
   }
+  struct lua_state *L = NULL;
+  L = lua_open();
+  luaL_openlibs(L);
+  luaopen_socket_core(L);
+  luaL_dofile(L, "./test.lua");
+  lua_getglobal(L, "client");
+  lua_pcall(L, 0, 0, 0);
+  lua_close(L);
   return 0;
 }
