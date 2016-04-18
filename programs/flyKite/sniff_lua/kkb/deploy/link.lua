@@ -22,6 +22,10 @@ OWN_POOL = {
 			host = '192.168.1.10',
 			port = 4060,
 		},  
+		kkb_redis = {
+			host = '192.168.1.12',
+			port = 5555,
+		},
 		--[[
 		roadRelation = {
 		host = '192.168.1.14',
@@ -44,6 +48,10 @@ OWN_POOL = {
 			host = '192.168.1.10',
 			port = 5531,    
 		},  
+		county_100_redis = { 
+			host = '192.168.71.66',
+			port = 6007,    
+		}, 
 	},
 	mysql = {
 		app_mirrtalk___config = {
@@ -53,6 +61,23 @@ OWN_POOL = {
 			user = 'observer',
 			password ='abc123',
 		},
+--[[
+	kkb_sql = {
+			host = '192.168.1.17',
+			port = 3306,
+			database = 'dataCenter',
+			user = 'observer',
+			password ='abc123',
+		},
+--]]
+	kkb_sql = {
+			host = '192.168.61.11',
+			port = 3306,
+			database = 'bak_pingan',
+			user = 'sa',
+			password ='123456',
+		},
+
 	},
 }
 
@@ -66,11 +91,15 @@ OWN_DIED = {
 			host = '192.168.1.11',
 			port = 6379,
 		},
+		kkb_redis = {
+			host = '192.168.1.12',
+			port = 5555,
+		},
 	},
 	mysql = {},
 	http = {
 		["tsearchapi/v2/getgps"]={
-			host = 'tsdb.mirrtalk.com',
+			host = '123.159.205.72',
 			port = 80,
 		},
 		["DataCore/autoGraph/addTravelRoadInfo"] = {
