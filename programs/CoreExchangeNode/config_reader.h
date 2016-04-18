@@ -28,6 +28,8 @@ struct config_reader
   char m_config_file[MAX_STRING_SIZE];
 };
 
+int get_ip(const char *src, char *dest);
+
 struct config_reader* init_config_reader(const char *filename);
 void destroy_config_reader(struct config_reader *config);
 

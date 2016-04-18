@@ -16,6 +16,6 @@ function client()
   while l and l ~= "" and not e do
     assert(c:send(l .. "\n"))
     l = io.read()
-  end
+  end 
 end
 client();

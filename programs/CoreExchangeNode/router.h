@@ -11,7 +11,7 @@ enum router_object {
 };
 
 struct CID {
-  uint32_t IP;
+  char IP[4];
   int fd;
 };
 
@@ -23,17 +23,7 @@ struct router_head {
   uint32_t body_size;
 };
 
-struct mfptp_message {
-  char *mfptp;
-};
-
-struct message {
-  int message_fd;
-  struct router_head message_head;
-  struct mfptp_message message_body;
-};
-
-struct router_head *parse(char *data, uint32_t size);
-char *pack(char *data, uint32_t *size, const struct router_head *head);
+struct router_head *parse_router(char *data, uint32_t size);
+char *pack_router(char *data, uint32_t *size, const struct router_head *head);
 
 #endif

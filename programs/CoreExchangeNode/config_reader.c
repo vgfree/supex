@@ -4,9 +4,33 @@
 #include <assert.h>
 #include <malloc.h>
 #include <stdio.h>
+#include <stdint.h>
 #include <string.h>
 
 #define MAP_CAPCITY 50
+
+// 解析十进制IP 为四字节, 比如: 127.0.0.1 = {0x7f, 0x00, 0x00, 0x01}
+int get_ip(const char *src, char *dest)
+{
+  assert(src && dest);
+  uint8_t value = 0;
+  int pos = 0;
+  for (int i = 0; i < 3; i++) {
+    while (src[pos] != '.') {
+      value = (src[pos] - '0') + value * 10;
+      pos++;
+    }
+    dest[i] = value;
+	value = 0;
+	pos++;
+  }
+  while (src[pos] != '\0') {
+    value = (src[pos] - '0') + value * 10;
+	pos++;
+  }
+  dest[3] = value;
+  return 0;
+}
 
 struct config_reader* init_config_reader(const char* filename)
 {

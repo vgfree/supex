@@ -6,7 +6,7 @@
 
 char route_sign[7] = {0x52, 0x4f, 0x55, 0x54, 0x49, 0x0d, 0x0a}; /* route\r\n*/
 
-struct router_head *parse(char *data, uint32_t size)
+struct router_head *parse_router(char *data, uint32_t size)
 {
   assert(data && size >= 17);
   struct router_head *head =
@@ -40,7 +40,7 @@ struct router_head *parse(char *data, uint32_t size)
   return head;
 }
 
-char *pack(char *data, uint32_t *size,
+char *pack_router(char *data, uint32_t *size,
            const struct router_head *head)
 {
   uint32_t headsz = 8 + (head->CID_number) * 6 + 8; // route\r\n + 2 + router_head
@@ -84,8 +84,7 @@ char *pack(char *data, uint32_t *size,
   i += 7;
   package[i++] = head->message_from;
   package[i++] = head->message_to;
-  package[i++] = head->CID_number;
-  package[i++] = head->CID_number >> 8;
+  package[i++] = head->CID_number; package[i++] = head->CID_number >> 8;
   memcpy(&package[i], head->cid, head->CID_number * 6);
   i += head->CID_number * 6;
   package[i++] = head->body_size;

@@ -11,6 +11,7 @@
 #define LISTEN_IP "ListenIP"
 #define LISTEN_PORT "ListenPort"
 #define SERVER_FILE "CoreExchangeNode.pid"
+#define PACKAGE_SIZE "PackageSize"
 
 enum command {
   FD_CONNECTED,
@@ -44,7 +45,8 @@ static int init() {
     init_config_reader(CONFIG);
   char *IP = get_config_name(config, LISTEN_IP);
   char *port = get_config_name(config, LISTEN_PORT);
-  log("ListenIp = %s, ListenPort = %s.", IP, port);
+  char *package_sz = get_config_name(config, PACKAGE_SIZE);
+  log("ListenIp = %s, ListenPort = %s, pcakge size = %s", IP, port, package_sz);
   
 
   struct comm *commctx = NULL;
@@ -60,6 +62,16 @@ static int init() {
     error("can't bind socket.");
     return retval;
   }
+  log("IP:%s", IP);
+  get_ip(IP, g_serv_info.ip);
+  g_serv_info.port = atoi(port);
+  g_serv_info.package_size = package_sz;
+  g_serv_info.commctx = commctx;
+  for (int i = 0; i < 4; i++) {
+    log("%d", g_serv_info.ip[i]);
+  }
+  log("port:%d", g_serv_info.port);
+  destroy_config_reader(config);
   return 0;
 }
 
@@ -67,15 +79,16 @@ int main(int argc, char* argv[])
 {
   signal(SIGPIPE, SIG_IGN);
   if (daemon_init(SERVER_FILE) == 1) {
-	  printf("Server is running.");
+    printf("Server is running.");
   }
   if (init() == -1) {
     error("server init failed.");
-	return -1;
+    return -1;
   }
+  log("");
   
   while (1) {
-	sleep(1);
+    sleep(1);
     log("message loop");
     message_dispatch();
   }
