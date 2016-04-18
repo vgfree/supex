@@ -1,0 +1,1052 @@
+194   |INFO |2016-03-23 13:47:47.770524|       lualog.so.019536.001|           new_connect()|              redis_pool_api.lua:  48|() : REDIS: 192.168.1.11:6319 | RECNT: 1 |---> Tcp:connect: SUCCESS!
+194   |INFO |2016-03-23 13:47:47.770560|       lualog.so.019535.001|           new_connect()|              redis_pool_api.lua:  48|() : REDIS: 192.168.1.11:6319 | RECNT: 1 |---> Tcp:connect: SUCCESS!
+195   |INFO |2016-03-23 13:47:47.771710|       lualog.so.019536.001|           new_connect()|              redis_pool_api.lua:  48|() : REDIS: 192.168.71.56:4210 | RECNT: 1 |---> Tcp:connect: SUCCESS!
+195   |INFO |2016-03-23 13:47:47.772092|       lualog.so.019535.001|           new_connect()|              redis_pool_api.lua:  48|() : REDIS: 192.168.71.56:4210 | RECNT: 1 |---> Tcp:connect: SUCCESS!
+194   |INFO |2016-03-23 13:47:47.772308|       lualog.so.019536.001|           new_connect()|              redis_pool_api.lua:  48|() : REDIS: 192.168.1.12:8000 | RECNT: 1 |---> Tcp:connect: SUCCESS!
+194   |INFO |2016-03-23 13:47:47.772610|       lualog.so.019535.001|           new_connect()|              redis_pool_api.lua:  48|() : REDIS: 192.168.1.12:8000 | RECNT: 1 |---> Tcp:connect: SUCCESS!
+194   |INFO |2016-03-23 13:47:47.772767|       lualog.so.019536.001|           new_connect()|              redis_pool_api.lua:  48|() : REDIS: 192.168.1.12:8001 | RECNT: 1 |---> Tcp:connect: SUCCESS!
+194   |INFO |2016-03-23 13:47:47.773178|       lualog.so.019536.001|           new_connect()|              redis_pool_api.lua:  48|() : REDIS: 192.168.1.12:8002 | RECNT: 1 |---> Tcp:connect: SUCCESS!
+194   |INFO |2016-03-23 13:47:47.773278|       lualog.so.019535.001|           new_connect()|              redis_pool_api.lua:  48|() : REDIS: 192.168.1.12:8001 | RECNT: 1 |---> Tcp:connect: SUCCESS!
+194   |INFO |2016-03-23 13:47:47.773602|       lualog.so.019536.001|           new_connect()|              redis_pool_api.lua:  48|() : REDIS: 192.168.1.12:8003 | RECNT: 1 |---> Tcp:connect: SUCCESS!
+194   |INFO |2016-03-23 13:47:47.773960|       lualog.so.019536.001|           new_connect()|              redis_pool_api.lua:  48|() : REDIS: 192.168.1.12:8004 | RECNT: 1 |---> Tcp:connect: SUCCESS!
+194   |INFO |2016-03-23 13:47:47.774030|       lualog.so.019535.001|           new_connect()|              redis_pool_api.lua:  48|() : REDIS: 192.168.1.12:8002 | RECNT: 1 |---> Tcp:connect: SUCCESS!
+194   |INFO |2016-03-23 13:47:47.774321|       lualog.so.019536.001|           new_connect()|              redis_pool_api.lua:  48|() : REDIS: 192.168.1.12:8000 | RECNT: 1 |---> Tcp:connect: SUCCESS!
+194   |INFO |2016-03-23 13:47:47.774653|       lualog.so.019536.001|           new_connect()|              redis_pool_api.lua:  48|() : REDIS: 192.168.1.12:8001 | RECNT: 1 |---> Tcp:connect: SUCCESS!
+194   |INFO |2016-03-23 13:47:47.774680|       lualog.so.019535.001|           new_connect()|              redis_pool_api.lua:  48|() : REDIS: 192.168.1.12:8003 | RECNT: 1 |---> Tcp:connect: SUCCESS!
+194   |INFO |2016-03-23 13:47:47.775089|       lualog.so.019536.001|           new_connect()|              redis_pool_api.lua:  48|() : REDIS: 192.168.1.12:8002 | RECNT: 1 |---> Tcp:connect: SUCCESS!
+194   |INFO |2016-03-23 13:47:47.775386|       lualog.so.019535.001|           new_connect()|              redis_pool_api.lua:  48|() : REDIS: 192.168.1.12:8004 | RECNT: 1 |---> Tcp:connect: SUCCESS!
+194   |INFO |2016-03-23 13:47:47.775604|       lualog.so.019536.001|           new_connect()|              redis_pool_api.lua:  48|() : REDIS: 192.168.1.12:8003 | RECNT: 1 |---> Tcp:connect: SUCCESS!
+194   |INFO |2016-03-23 13:47:47.775921|       lualog.so.019536.001|           new_connect()|              redis_pool_api.lua:  48|() : REDIS: 192.168.1.12:8004 | RECNT: 1 |---> Tcp:connect: SUCCESS!
+194   |INFO |2016-03-23 13:47:47.775965|       lualog.so.019535.001|           new_connect()|              redis_pool_api.lua:  48|() : REDIS: 192.168.1.12:8000 | RECNT: 1 |---> Tcp:connect: SUCCESS!
+194   |INFO |2016-03-23 13:47:47.776331|       lualog.so.019536.001|           new_connect()|              redis_pool_api.lua:  48|() : REDIS: 192.168.1.11:6319 | RECNT: 1 |---> Tcp:connect: SUCCESS!
+194   |INFO |2016-03-23 13:47:47.776439|       lualog.so.019535.001|           new_connect()|              redis_pool_api.lua:  48|() : REDIS: 192.168.1.12:8001 | RECNT: 1 |---> Tcp:connect: SUCCESS!
+194   |INFO |2016-03-23 13:47:47.776811|       lualog.so.019535.001|           new_connect()|              redis_pool_api.lua:  48|() : REDIS: 192.168.1.12:8002 | RECNT: 1 |---> Tcp:connect: SUCCESS!
+194   |INFO |2016-03-23 13:47:47.776868|       lualog.so.019536.001|           new_connect()|              redis_pool_api.lua:  48|() : REDIS: 192.168.1.11:6339 | RECNT: 1 |---> Tcp:connect: SUCCESS!
+194   |INFO |2016-03-23 13:47:47.777157|       lualog.so.019535.001|           new_connect()|              redis_pool_api.lua:  48|() : REDIS: 192.168.1.12:8003 | RECNT: 1 |---> Tcp:connect: SUCCESS!
+194   |INFO |2016-03-23 13:47:47.777632|       lualog.so.019535.001|           new_connect()|              redis_pool_api.lua:  48|() : REDIS: 192.168.1.12:8004 | RECNT: 1 |---> Tcp:connect: SUCCESS!
+194   |INFO |2016-03-23 13:47:47.777636|       lualog.so.019536.001|           new_connect()|              redis_pool_api.lua:  48|() : REDIS: 192.168.1.12:7776 | RECNT: 1 |---> Tcp:connect: SUCCESS!
+194   |INFO |2016-03-23 13:47:47.778084|       lualog.so.019536.001|           new_connect()|              redis_pool_api.lua:  48|() : REDIS: 192.168.1.12:7777 | RECNT: 1 |---> Tcp:connect: SUCCESS!
+194   |INFO |2016-03-23 13:47:47.778115|       lualog.so.019535.001|           new_connect()|              redis_pool_api.lua:  48|() : REDIS: 192.168.1.11:6319 | RECNT: 1 |---> Tcp:connect: SUCCESS!
+194   |INFO |2016-03-23 13:47:47.778531|       lualog.so.019535.001|           new_connect()|              redis_pool_api.lua:  48|() : REDIS: 192.168.1.11:6339 | RECNT: 1 |---> Tcp:connect: SUCCESS!
+194   |INFO |2016-03-23 13:47:47.778781|       lualog.so.019536.001|           new_connect()|              redis_pool_api.lua:  48|() : REDIS: 192.168.1.12:7778 | RECNT: 1 |---> Tcp:connect: SUCCESS!
+194   |INFO |2016-03-23 13:47:47.779141|       lualog.so.019535.001|           new_connect()|              redis_pool_api.lua:  48|() : REDIS: 192.168.1.12:7776 | RECNT: 1 |---> Tcp:connect: SUCCESS!
+194   |INFO |2016-03-23 13:47:47.779221|       lualog.so.019536.001|           new_connect()|              redis_pool_api.lua:  48|() : REDIS: 192.168.1.12:7779 | RECNT: 1 |---> Tcp:connect: SUCCESS!
+194   |INFO |2016-03-23 13:47:47.779638|       lualog.so.019535.001|           new_connect()|              redis_pool_api.lua:  48|() : REDIS: 192.168.1.12:7777 | RECNT: 1 |---> Tcp:connect: SUCCESS!
+194   |INFO |2016-03-23 13:47:47.779889|       lualog.so.019536.001|           new_connect()|              redis_pool_api.lua:  48|() : REDIS: 192.168.1.12:7776 | RECNT: 1 |---> Tcp:connect: SUCCESS!
+194   |INFO |2016-03-23 13:47:47.780139|       lualog.so.019535.001|           new_connect()|              redis_pool_api.lua:  48|() : REDIS: 192.168.1.12:7778 | RECNT: 1 |---> Tcp:connect: SUCCESS!
+194   |INFO |2016-03-23 13:47:47.780415|       lualog.so.019536.001|           new_connect()|              redis_pool_api.lua:  48|() : REDIS: 192.168.1.12:7777 | RECNT: 1 |---> Tcp:connect: SUCCESS!
+194   |INFO |2016-03-23 13:47:47.780620|       lualog.so.019535.001|           new_connect()|              redis_pool_api.lua:  48|() : REDIS: 192.168.1.12:7779 | RECNT: 1 |---> Tcp:connect: SUCCESS!
+194   |INFO |2016-03-23 13:47:47.780988|       lualog.so.019536.001|           new_connect()|              redis_pool_api.lua:  48|() : REDIS: 192.168.1.12:7778 | RECNT: 1 |---> Tcp:connect: SUCCESS!
+194   |INFO |2016-03-23 13:47:47.781027|       lualog.so.019535.001|           new_connect()|              redis_pool_api.lua:  48|() : REDIS: 192.168.1.12:7776 | RECNT: 1 |---> Tcp:connect: SUCCESS!
+194   |INFO |2016-03-23 13:47:47.781511|       lualog.so.019535.001|           new_connect()|              redis_pool_api.lua:  48|() : REDIS: 192.168.1.12:7777 | RECNT: 1 |---> Tcp:connect: SUCCESS!
+194   |INFO |2016-03-23 13:47:47.781518|       lualog.so.019536.001|           new_connect()|              redis_pool_api.lua:  48|() : REDIS: 192.168.1.12:7779 | RECNT: 1 |---> Tcp:connect: SUCCESS!
+194   |INFO |2016-03-23 13:47:47.782061|       lualog.so.019536.001|           new_connect()|              redis_pool_api.lua:  48|() : REDIS: 192.168.1.12:7776 | RECNT: 1 |---> Tcp:connect: SUCCESS!
+194   |INFO |2016-03-23 13:47:47.782125|       lualog.so.019535.001|           new_connect()|              redis_pool_api.lua:  48|() : REDIS: 192.168.1.12:7778 | RECNT: 1 |---> Tcp:connect: SUCCESS!
+194   |INFO |2016-03-23 13:47:47.782513|       lualog.so.019536.001|           new_connect()|              redis_pool_api.lua:  48|() : REDIS: 192.168.1.12:7777 | RECNT: 1 |---> Tcp:connect: SUCCESS!
+194   |INFO |2016-03-23 13:47:47.782574|       lualog.so.019535.001|           new_connect()|              redis_pool_api.lua:  48|() : REDIS: 192.168.1.12:7779 | RECNT: 1 |---> Tcp:connect: SUCCESS!
+194   |INFO |2016-03-23 13:47:47.782944|       lualog.so.019535.001|           new_connect()|              redis_pool_api.lua:  48|() : REDIS: 192.168.1.12:7776 | RECNT: 1 |---> Tcp:connect: SUCCESS!
+194   |INFO |2016-03-23 13:47:47.782957|       lualog.so.019536.001|           new_connect()|              redis_pool_api.lua:  48|() : REDIS: 192.168.1.11:6339 | RECNT: 1 |---> Tcp:connect: SUCCESS!
+194   |INFO |2016-03-23 13:47:47.783342|       lualog.so.019535.001|           new_connect()|              redis_pool_api.lua:  48|() : REDIS: 192.168.1.12:7777 | RECNT: 1 |---> Tcp:connect: SUCCESS!
+194   |INFO |2016-03-23 13:47:47.783568|       lualog.so.019536.001|           new_connect()|              redis_pool_api.lua:  48|() : REDIS: 192.168.1.12:6379 | RECNT: 1 |---> Tcp:connect: SUCCESS!
+194   |INFO |2016-03-23 13:47:47.783991|       lualog.so.019536.001|           new_connect()|              redis_pool_api.lua:  48|() : REDIS: 192.168.1.12:6379 | RECNT: 1 |---> Tcp:connect: SUCCESS!
+194   |INFO |2016-03-23 13:47:47.784235|       lualog.so.019535.001|           new_connect()|              redis_pool_api.lua:  48|() : REDIS: 192.168.1.11:6339 | RECNT: 1 |---> Tcp:connect: SUCCESS!
+194   |INFO |2016-03-23 13:47:47.784574|       lualog.so.019535.001|           new_connect()|              redis_pool_api.lua:  48|() : REDIS: 192.168.1.12:6379 | RECNT: 1 |---> Tcp:connect: SUCCESS!
+194   |INFO |2016-03-23 13:47:47.784581|       lualog.so.019536.001|           new_connect()|              redis_pool_api.lua:  48|() : REDIS: 192.168.1.12:6379 | RECNT: 1 |---> Tcp:connect: SUCCESS!
+194   |INFO |2016-03-23 13:47:47.785014|       lualog.so.019535.001|           new_connect()|              redis_pool_api.lua:  48|() : REDIS: 192.168.1.12:6379 | RECNT: 1 |---> Tcp:connect: SUCCESS!
+194   |INFO |2016-03-23 13:47:47.785257|       lualog.so.019536.001|           new_connect()|              redis_pool_api.lua:  48|() : REDIS: 192.168.1.12:6379 | RECNT: 1 |---> Tcp:connect: SUCCESS!
+194   |INFO |2016-03-23 13:47:47.785739|       lualog.so.019536.001|           new_connect()|              redis_pool_api.lua:  48|() : REDIS: 192.168.1.11:6349 | RECNT: 1 |---> Tcp:connect: SUCCESS!
+194   |INFO |2016-03-23 13:47:47.786041|       lualog.so.019535.001|           new_connect()|              redis_pool_api.lua:  48|() : REDIS: 192.168.1.12:6379 | RECNT: 1 |---> Tcp:connect: SUCCESS!
+194   |INFO |2016-03-23 13:47:47.786512|       lualog.so.019535.001|           new_connect()|              redis_pool_api.lua:  48|() : REDIS: 192.168.1.12:6379 | RECNT: 1 |---> Tcp:connect: SUCCESS!
+194   |INFO |2016-03-23 13:47:47.786918|       lualog.so.019535.001|           new_connect()|              redis_pool_api.lua:  48|() : REDIS: 192.168.1.11:6349 | RECNT: 1 |---> Tcp:connect: SUCCESS!
+4143  |SYS  |2016-03-23 13:47:47.787123|       lualog.so.019536.001|                  init()|              redis_pool_api.lua: 361|() : [OWN_REDIS_POOLS:{
+	["read_private"] = {
+		[1] = {
+			["host"] = "192.168.1.11",
+			["vnode"] = 0,
+			["mark"] = "",
+			["mode"] = "M",
+			["port"] = 6319,
+		},
+	},
+	["damServer"] = {
+		[1] = {
+			["host"] = "192.168.71.56",
+			["vnode"] = 0,
+			["mark"] = "",
+			["mode"] = "M",
+			["port"] = 4210,
+		},
+	},
+	["url_hash"] = {
+		[1] = {
+			["host"] = "192.168.1.12",
+			["vnode"] = 30,
+			["mark"] = "a0",
+			["mode"] = "M",
+			["port"] = 8000,
+		},
+		[2] = {
+			["host"] = "192.168.1.12",
+			["vnode"] = 30,
+			["mark"] = "a1",
+			["mode"] = "M",
+			["port"] = 8001,
+		},
+		[3] = {
+			["host"] = "192.168.1.12",
+			["vnode"] = 30,
+			["mark"] = "a2",
+			["mode"] = "M",
+			["port"] = 8002,
+		},
+		[4] = {
+			["host"] = "192.168.1.12",
+			["vnode"] = 30,
+			["mark"] = "a3",
+			["mode"] = "M",
+			["port"] = 8003,
+		},
+		[5] = {
+			["host"] = "192.168.1.12",
+			["vnode"] = 30,
+			["mark"] = "a4",
+			["mode"] = "M",
+			["port"] = 8004,
+		},
+		[6] = {
+			["host"] = "192.168.1.12",
+			["vnode"] = 30,
+			["mark"] = "a5",
+			["mode"] = "M",
+			["port"] = 8000,
+		},
+		[7] = {
+			["host"] = "192.168.1.12",
+			["vnode"] = 30,
+			["mark"] = "a6",
+			["mode"] = "M",
+			["port"] = 8001,
+		},
+		[8] = {
+			["host"] = "192.168.1.12",
+			["vnode"] = 30,
+			["mark"] = "a7",
+			["mode"] = "M",
+			["port"] = 8002,
+		},
+		[9] = {
+			["host"] = "192.168.1.12",
+			["vnode"] = 30,
+			["mark"] = "a8",
+			["mode"] = "M",
+			["port"] = 8003,
+		},
+		[10] = {
+			["host"] = "192.168.1.12",
+			["vnode"] = 30,
+			["mark"] = "a9",
+			["mode"] = "M",
+			["port"] = 8004,
+		},
+		["hash"] = function: 0x406bf588,
+	},
+	["private"] = {
+		[1] = {
+			["host"] = "192.168.1.11",
+			["vnode"] = 0,
+			["mark"] = "",
+			["mode"] = "M",
+			["port"] = 6319,
+		},
+	},
+	["saveTokencode"] = {
+		[1] = {
+			["host"] = "192.168.1.11",
+			["vnode"] = 0,
+			["mark"] = "",
+			["mode"] = "M",
+			["port"] = 6339,
+		},
+	},
+	["tsdb_hash"] = {
+		[1] = {
+			["host"] = "192.168.1.12",
+			["vnode"] = 30,
+			["mark"] = "a0",
+			["mode"] = "M",
+			["port"] = 7776,
+		},
+		[2] = {
+			["host"] = "192.168.1.12",
+			["vnode"] = 30,
+			["mark"] = "a1",
+			["mode"] = "M",
+			["port"] = 7777,
+		},
+		[3] = {
+			["host"] = "192.168.1.12",
+			["vnode"] = 30,
+			["mark"] = "a2",
+			["mode"] = "M",
+			["port"] = 7778,
+		},
+		[4] = {
+			["host"] = "192.168.1.12",
+			["vnode"] = 30,
+			["mark"] = "a3",
+			["mode"] = "M",
+			["port"] = 7779,
+		},
+		[5] = {
+			["host"] = "192.168.1.12",
+			["vnode"] = 30,
+			["mark"] = "a4",
+			["mode"] = "M",
+			["port"] = 7776,
+		},
+		[6] = {
+			["host"] = "192.168.1.12",
+			["vnode"] = 30,
+			["mark"] = "a5",
+			["mode"] = "M",
+			["port"] = 7777,
+		},
+		[7] = {
+			["host"] = "192.168.1.12",
+			["vnode"] = 30,
+			["mark"] = "a6",
+			["mode"] = "M",
+			["port"] = 7778,
+		},
+		[8] = {
+			["host"] = "192.168.1.12",
+			["vnode"] = 30,
+			["mark"] = "a7",
+			["mode"] = "M",
+			["port"] = 7779,
+		},
+		[9] = {
+			["host"] = "192.168.1.12",
+			["vnode"] = 30,
+			["mark"] = "a8",
+			["mode"] = "M",
+			["port"] = 7776,
+		},
+		[10] = {
+			["host"] = "192.168.1.12",
+			["vnode"] = 30,
+			["mark"] = "a9",
+			["mode"] = "M",
+			["port"] = 7777,
+		},
+		["hash"] = function: 0x418dd1c0,
+	},
+	["statistic"] = {
+		[1] = {
+			["host"] = "192.168.1.11",
+			["vnode"] = 0,
+			["mark"] = "",
+			["mode"] = "M",
+			["port"] = 6339,
+		},
+	},
+	["message_hash"] = {
+		[1] = {
+			["host"] = "192.168.1.12",
+			["vnode"] = 30,
+			["mark"] = "b0",
+			["mode"] = "M",
+			["port"] = 6379,
+		},
+		[2] = {
+			["host"] = "192.168.1.12",
+			["vnode"] = 30,
+			["mark"] = "b1",
+			["mode"] = "M",
+			["port"] = 6379,
+		},
+		[3] = {
+			["host"] = "192.168.1.12",
+			["vnode"] = 30,
+			["mark"] = "b2",
+			["mode"] = "M",
+			["port"] = 6379,
+		},
+		[4] = {
+			["host"] = "192.168.1.12",
+			["vnode"] = 30,
+			["mark"] = "b3",
+			["mode"] = "M",
+			["port"] = 6379,
+		},
+		["hash"] = function: 0x400a3af0,
+	},
+	["public"] = {
+		[1] = {
+			["host"] = "192.168.1.11",
+			["vnode"] = 0,
+			["mark"] = "",
+			["mode"] = "M",
+			["port"] = 6349,
+		},
+	},
+}]
+4143  |SYS  |2016-03-23 13:47:47.787881|       lualog.so.019535.001|                  init()|              redis_pool_api.lua: 361|() : [OWN_REDIS_POOLS:{
+	["read_private"] = {
+		[1] = {
+			["host"] = "192.168.1.11",
+			["vnode"] = 0,
+			["mark"] = "",
+			["mode"] = "M",
+			["port"] = 6319,
+		},
+	},
+	["damServer"] = {
+		[1] = {
+			["host"] = "192.168.71.56",
+			["vnode"] = 0,
+			["mark"] = "",
+			["mode"] = "M",
+			["port"] = 4210,
+		},
+	},
+	["url_hash"] = {
+		[1] = {
+			["host"] = "192.168.1.12",
+			["vnode"] = 30,
+			["mark"] = "a0",
+			["mode"] = "M",
+			["port"] = 8000,
+		},
+		[2] = {
+			["host"] = "192.168.1.12",
+			["vnode"] = 30,
+			["mark"] = "a1",
+			["mode"] = "M",
+			["port"] = 8001,
+		},
+		[3] = {
+			["host"] = "192.168.1.12",
+			["vnode"] = 30,
+			["mark"] = "a2",
+			["mode"] = "M",
+			["port"] = 8002,
+		},
+		[4] = {
+			["host"] = "192.168.1.12",
+			["vnode"] = 30,
+			["mark"] = "a3",
+			["mode"] = "M",
+			["port"] = 8003,
+		},
+		[5] = {
+			["host"] = "192.168.1.12",
+			["vnode"] = 30,
+			["mark"] = "a4",
+			["mode"] = "M",
+			["port"] = 8004,
+		},
+		[6] = {
+			["host"] = "192.168.1.12",
+			["vnode"] = 30,
+			["mark"] = "a5",
+			["mode"] = "M",
+			["port"] = 8000,
+		},
+		[7] = {
+			["host"] = "192.168.1.12",
+			["vnode"] = 30,
+			["mark"] = "a6",
+			["mode"] = "M",
+			["port"] = 8001,
+		},
+		[8] = {
+			["host"] = "192.168.1.12",
+			["vnode"] = 30,
+			["mark"] = "a7",
+			["mode"] = "M",
+			["port"] = 8002,
+		},
+		[9] = {
+			["host"] = "192.168.1.12",
+			["vnode"] = 30,
+			["mark"] = "a8",
+			["mode"] = "M",
+			["port"] = 8003,
+		},
+		[10] = {
+			["host"] = "192.168.1.12",
+			["vnode"] = 30,
+			["mark"] = "a9",
+			["mode"] = "M",
+			["port"] = 8004,
+		},
+		["hash"] = function: 0x403ac5d8,
+	},
+	["private"] = {
+		[1] = {
+			["host"] = "192.168.1.11",
+			["vnode"] = 0,
+			["mark"] = "",
+			["mode"] = "M",
+			["port"] = 6319,
+		},
+	},
+	["saveTokencode"] = {
+		[1] = {
+			["host"] = "192.168.1.11",
+			["vnode"] = 0,
+			["mark"] = "",
+			["mode"] = "M",
+			["port"] = 6339,
+		},
+	},
+	["tsdb_hash"] = {
+		[1] = {
+			["host"] = "192.168.1.12",
+			["vnode"] = 30,
+			["mark"] = "a0",
+			["mode"] = "M",
+			["port"] = 7776,
+		},
+		[2] = {
+			["host"] = "192.168.1.12",
+			["vnode"] = 30,
+			["mark"] = "a1",
+			["mode"] = "M",
+			["port"] = 7777,
+		},
+		[3] = {
+			["host"] = "192.168.1.12",
+			["vnode"] = 30,
+			["mark"] = "a2",
+			["mode"] = "M",
+			["port"] = 7778,
+		},
+		[4] = {
+			["host"] = "192.168.1.12",
+			["vnode"] = 30,
+			["mark"] = "a3",
+			["mode"] = "M",
+			["port"] = 7779,
+		},
+		[5] = {
+			["host"] = "192.168.1.12",
+			["vnode"] = 30,
+			["mark"] = "a4",
+			["mode"] = "M",
+			["port"] = 7776,
+		},
+		[6] = {
+			["host"] = "192.168.1.12",
+			["vnode"] = 30,
+			["mark"] = "a5",
+			["mode"] = "M",
+			["port"] = 7777,
+		},
+		[7] = {
+			["host"] = "192.168.1.12",
+			["vnode"] = 30,
+			["mark"] = "a6",
+			["mode"] = "M",
+			["port"] = 7778,
+		},
+		[8] = {
+			["host"] = "192.168.1.12",
+			["vnode"] = 30,
+			["mark"] = "a7",
+			["mode"] = "M",
+			["port"] = 7779,
+		},
+		[9] = {
+			["host"] = "192.168.1.12",
+			["vnode"] = 30,
+			["mark"] = "a8",
+			["mode"] = "M",
+			["port"] = 7776,
+		},
+		[10] = {
+			["host"] = "192.168.1.12",
+			["vnode"] = 30,
+			["mark"] = "a9",
+			["mode"] = "M",
+			["port"] = 7777,
+		},
+		["hash"] = function: 0x4039a870,
+	},
+	["statistic"] = {
+		[1] = {
+			["host"] = "192.168.1.11",
+			["vnode"] = 0,
+			["mark"] = "",
+			["mode"] = "M",
+			["port"] = 6339,
+		},
+	},
+	["message_hash"] = {
+		[1] = {
+			["host"] = "192.168.1.12",
+			["vnode"] = 30,
+			["mark"] = "b0",
+			["mode"] = "M",
+			["port"] = 6379,
+		},
+		[2] = {
+			["host"] = "192.168.1.12",
+			["vnode"] = 30,
+			["mark"] = "b1",
+			["mode"] = "M",
+			["port"] = 6379,
+		},
+		[3] = {
+			["host"] = "192.168.1.12",
+			["vnode"] = 30,
+			["mark"] = "b2",
+			["mode"] = "M",
+			["port"] = 6379,
+		},
+		[4] = {
+			["host"] = "192.168.1.12",
+			["vnode"] = 30,
+			["mark"] = "b3",
+			["mode"] = "M",
+			["port"] = 6379,
+		},
+		["hash"] = function: 0x40399158,
+	},
+	["public"] = {
+		[1] = {
+			["host"] = "192.168.1.11",
+			["vnode"] = 0,
+			["mark"] = "",
+			["mode"] = "M",
+			["port"] = 6349,
+		},
+	},
+}]
+194   |INFO |2016-03-23 14:14:26.980822|       lualog.so.019849.001|           new_connect()|              redis_pool_api.lua:  48|() : REDIS: 192.168.1.11:6319 | RECNT: 1 |---> Tcp:connect: SUCCESS!
+194   |INFO |2016-03-23 14:14:26.981289|       lualog.so.019850.001|           new_connect()|              redis_pool_api.lua:  48|() : REDIS: 192.168.1.11:6319 | RECNT: 1 |---> Tcp:connect: SUCCESS!
+195   |INFO |2016-03-23 14:14:26.982831|       lualog.so.019849.001|           new_connect()|              redis_pool_api.lua:  48|() : REDIS: 192.168.71.56:4210 | RECNT: 1 |---> Tcp:connect: SUCCESS!
+195   |INFO |2016-03-23 14:14:26.983222|       lualog.so.019850.001|           new_connect()|              redis_pool_api.lua:  48|() : REDIS: 192.168.71.56:4210 | RECNT: 1 |---> Tcp:connect: SUCCESS!
+194   |INFO |2016-03-23 14:14:26.983420|       lualog.so.019849.001|           new_connect()|              redis_pool_api.lua:  48|() : REDIS: 192.168.1.12:8000 | RECNT: 1 |---> Tcp:connect: SUCCESS!
+194   |INFO |2016-03-23 14:14:26.983780|       lualog.so.019850.001|           new_connect()|              redis_pool_api.lua:  48|() : REDIS: 192.168.1.12:8000 | RECNT: 1 |---> Tcp:connect: SUCCESS!
+194   |INFO |2016-03-23 14:14:26.983884|       lualog.so.019849.001|           new_connect()|              redis_pool_api.lua:  48|() : REDIS: 192.168.1.12:8001 | RECNT: 1 |---> Tcp:connect: SUCCESS!
+194   |INFO |2016-03-23 14:14:26.984336|       lualog.so.019849.001|           new_connect()|              redis_pool_api.lua:  48|() : REDIS: 192.168.1.12:8002 | RECNT: 1 |---> Tcp:connect: SUCCESS!
+194   |INFO |2016-03-23 14:14:26.984381|       lualog.so.019850.001|           new_connect()|              redis_pool_api.lua:  48|() : REDIS: 192.168.1.12:8001 | RECNT: 1 |---> Tcp:connect: SUCCESS!
+194   |INFO |2016-03-23 14:14:26.984698|       lualog.so.019849.001|           new_connect()|              redis_pool_api.lua:  48|() : REDIS: 192.168.1.12:8003 | RECNT: 1 |---> Tcp:connect: SUCCESS!
+194   |INFO |2016-03-23 14:14:26.984978|       lualog.so.019850.001|           new_connect()|              redis_pool_api.lua:  48|() : REDIS: 192.168.1.12:8002 | RECNT: 1 |---> Tcp:connect: SUCCESS!
+194   |INFO |2016-03-23 14:14:26.985115|       lualog.so.019849.001|           new_connect()|              redis_pool_api.lua:  48|() : REDIS: 192.168.1.12:8004 | RECNT: 1 |---> Tcp:connect: SUCCESS!
+194   |INFO |2016-03-23 14:14:26.985437|       lualog.so.019849.001|           new_connect()|              redis_pool_api.lua:  48|() : REDIS: 192.168.1.12:8000 | RECNT: 1 |---> Tcp:connect: SUCCESS!
+194   |INFO |2016-03-23 14:14:26.985437|       lualog.so.019850.001|           new_connect()|              redis_pool_api.lua:  48|() : REDIS: 192.168.1.12:8003 | RECNT: 1 |---> Tcp:connect: SUCCESS!
+194   |INFO |2016-03-23 14:14:26.985834|       lualog.so.019849.001|           new_connect()|              redis_pool_api.lua:  48|() : REDIS: 192.168.1.12:8001 | RECNT: 1 |---> Tcp:connect: SUCCESS!
+194   |INFO |2016-03-23 14:14:26.986090|       lualog.so.019850.001|           new_connect()|              redis_pool_api.lua:  48|() : REDIS: 192.168.1.12:8004 | RECNT: 1 |---> Tcp:connect: SUCCESS!
+194   |INFO |2016-03-23 14:14:26.986261|       lualog.so.019849.001|           new_connect()|              redis_pool_api.lua:  48|() : REDIS: 192.168.1.12:8002 | RECNT: 1 |---> Tcp:connect: SUCCESS!
+194   |INFO |2016-03-23 14:14:26.986637|       lualog.so.019849.001|           new_connect()|              redis_pool_api.lua:  48|() : REDIS: 192.168.1.12:8003 | RECNT: 1 |---> Tcp:connect: SUCCESS!
+194   |INFO |2016-03-23 14:14:26.986656|       lualog.so.019850.001|           new_connect()|              redis_pool_api.lua:  48|() : REDIS: 192.168.1.12:8000 | RECNT: 1 |---> Tcp:connect: SUCCESS!
+194   |INFO |2016-03-23 14:14:26.987128|       lualog.so.019849.001|           new_connect()|              redis_pool_api.lua:  48|() : REDIS: 192.168.1.12:8004 | RECNT: 1 |---> Tcp:connect: SUCCESS!
+194   |INFO |2016-03-23 14:14:26.987362|       lualog.so.019850.001|           new_connect()|              redis_pool_api.lua:  48|() : REDIS: 192.168.1.12:8001 | RECNT: 1 |---> Tcp:connect: SUCCESS!
+194   |INFO |2016-03-23 14:14:26.987500|       lualog.so.019849.001|           new_connect()|              redis_pool_api.lua:  48|() : REDIS: 192.168.1.11:6319 | RECNT: 1 |---> Tcp:connect: SUCCESS!
+194   |INFO |2016-03-23 14:14:26.987817|       lualog.so.019849.001|           new_connect()|              redis_pool_api.lua:  48|() : REDIS: 192.168.1.11:6339 | RECNT: 1 |---> Tcp:connect: SUCCESS!
+194   |INFO |2016-03-23 14:14:26.987845|       lualog.so.019850.001|           new_connect()|              redis_pool_api.lua:  48|() : REDIS: 192.168.1.12:8002 | RECNT: 1 |---> Tcp:connect: SUCCESS!
+194   |INFO |2016-03-23 14:14:26.988345|       lualog.so.019849.001|           new_connect()|              redis_pool_api.lua:  48|() : REDIS: 192.168.1.12:7776 | RECNT: 1 |---> Tcp:connect: SUCCESS!
+194   |INFO |2016-03-23 14:14:26.988595|       lualog.so.019850.001|           new_connect()|              redis_pool_api.lua:  48|() : REDIS: 192.168.1.12:8003 | RECNT: 1 |---> Tcp:connect: SUCCESS!
+194   |INFO |2016-03-23 14:14:26.988766|       lualog.so.019849.001|           new_connect()|              redis_pool_api.lua:  48|() : REDIS: 192.168.1.12:7777 | RECNT: 1 |---> Tcp:connect: SUCCESS!
+194   |INFO |2016-03-23 14:14:26.989161|       lualog.so.019849.001|           new_connect()|              redis_pool_api.lua:  48|() : REDIS: 192.168.1.12:7778 | RECNT: 1 |---> Tcp:connect: SUCCESS!
+194   |INFO |2016-03-23 14:14:26.989205|       lualog.so.019850.001|           new_connect()|              redis_pool_api.lua:  48|() : REDIS: 192.168.1.12:8004 | RECNT: 1 |---> Tcp:connect: SUCCESS!
+194   |INFO |2016-03-23 14:14:26.989723|       lualog.so.019849.001|           new_connect()|              redis_pool_api.lua:  48|() : REDIS: 192.168.1.12:7779 | RECNT: 1 |---> Tcp:connect: SUCCESS!
+194   |INFO |2016-03-23 14:14:26.989766|       lualog.so.019850.001|           new_connect()|              redis_pool_api.lua:  48|() : REDIS: 192.168.1.11:6319 | RECNT: 1 |---> Tcp:connect: SUCCESS!
+194   |INFO |2016-03-23 14:14:26.990183|       lualog.so.019849.001|           new_connect()|              redis_pool_api.lua:  48|() : REDIS: 192.168.1.12:7776 | RECNT: 1 |---> Tcp:connect: SUCCESS!
+194   |INFO |2016-03-23 14:14:26.990601|       lualog.so.019850.001|           new_connect()|              redis_pool_api.lua:  48|() : REDIS: 192.168.1.11:6339 | RECNT: 1 |---> Tcp:connect: SUCCESS!
+194   |INFO |2016-03-23 14:14:26.990649|       lualog.so.019849.001|           new_connect()|              redis_pool_api.lua:  48|() : REDIS: 192.168.1.12:7777 | RECNT: 1 |---> Tcp:connect: SUCCESS!
+194   |INFO |2016-03-23 14:14:26.991082|       lualog.so.019849.001|           new_connect()|              redis_pool_api.lua:  48|() : REDIS: 192.168.1.12:7778 | RECNT: 1 |---> Tcp:connect: SUCCESS!
+194   |INFO |2016-03-23 14:14:26.991106|       lualog.so.019850.001|           new_connect()|              redis_pool_api.lua:  48|() : REDIS: 192.168.1.12:7776 | RECNT: 1 |---> Tcp:connect: SUCCESS!
+194   |INFO |2016-03-23 14:14:26.991549|       lualog.so.019849.001|           new_connect()|              redis_pool_api.lua:  48|() : REDIS: 192.168.1.12:7779 | RECNT: 1 |---> Tcp:connect: SUCCESS!
+194   |INFO |2016-03-23 14:14:26.991557|       lualog.so.019850.001|           new_connect()|              redis_pool_api.lua:  48|() : REDIS: 192.168.1.12:7777 | RECNT: 1 |---> Tcp:connect: SUCCESS!
+194   |INFO |2016-03-23 14:14:26.991918|       lualog.so.019849.001|           new_connect()|              redis_pool_api.lua:  48|() : REDIS: 192.168.1.12:7776 | RECNT: 1 |---> Tcp:connect: SUCCESS!
+194   |INFO |2016-03-23 14:14:26.992263|       lualog.so.019849.001|           new_connect()|              redis_pool_api.lua:  48|() : REDIS: 192.168.1.12:7777 | RECNT: 1 |---> Tcp:connect: SUCCESS!
+194   |INFO |2016-03-23 14:14:26.992246|       lualog.so.019850.001|           new_connect()|              redis_pool_api.lua:  48|() : REDIS: 192.168.1.12:7778 | RECNT: 1 |---> Tcp:connect: SUCCESS!
+194   |INFO |2016-03-23 14:14:26.992657|       lualog.so.019849.001|           new_connect()|              redis_pool_api.lua:  48|() : REDIS: 192.168.1.11:6339 | RECNT: 1 |---> Tcp:connect: SUCCESS!
+194   |INFO |2016-03-23 14:14:26.992915|       lualog.so.019850.001|           new_connect()|              redis_pool_api.lua:  48|() : REDIS: 192.168.1.12:7779 | RECNT: 1 |---> Tcp:connect: SUCCESS!
+194   |INFO |2016-03-23 14:14:26.993108|       lualog.so.019849.001|           new_connect()|              redis_pool_api.lua:  48|() : REDIS: 192.168.1.12:6379 | RECNT: 1 |---> Tcp:connect: SUCCESS!
+194   |INFO |2016-03-23 14:14:26.993587|       lualog.so.019850.001|           new_connect()|              redis_pool_api.lua:  48|() : REDIS: 192.168.1.12:7776 | RECNT: 1 |---> Tcp:connect: SUCCESS!
+194   |INFO |2016-03-23 14:14:26.993817|       lualog.so.019849.001|           new_connect()|              redis_pool_api.lua:  48|() : REDIS: 192.168.1.12:6379 | RECNT: 1 |---> Tcp:connect: SUCCESS!
+194   |INFO |2016-03-23 14:14:26.994269|       lualog.so.019849.001|           new_connect()|              redis_pool_api.lua:  48|() : REDIS: 192.168.1.12:6379 | RECNT: 1 |---> Tcp:connect: SUCCESS!
+194   |INFO |2016-03-23 14:14:26.994560|       lualog.so.019850.001|           new_connect()|              redis_pool_api.lua:  48|() : REDIS: 192.168.1.12:7777 | RECNT: 1 |---> Tcp:connect: SUCCESS!
+194   |INFO |2016-03-23 14:14:26.994760|       lualog.so.019849.001|           new_connect()|              redis_pool_api.lua:  48|() : REDIS: 192.168.1.12:6379 | RECNT: 1 |---> Tcp:connect: SUCCESS!
+194   |INFO |2016-03-23 14:14:26.995131|       lualog.so.019849.001|           new_connect()|              redis_pool_api.lua:  48|() : REDIS: 192.168.1.11:6349 | RECNT: 1 |---> Tcp:connect: SUCCESS!
+194   |INFO |2016-03-23 14:14:26.995179|       lualog.so.019850.001|           new_connect()|              redis_pool_api.lua:  48|() : REDIS: 192.168.1.12:7778 | RECNT: 1 |---> Tcp:connect: SUCCESS!
+194   |INFO |2016-03-23 14:14:26.995686|       lualog.so.019850.001|           new_connect()|              redis_pool_api.lua:  48|() : REDIS: 192.168.1.12:7779 | RECNT: 1 |---> Tcp:connect: SUCCESS!
+4143  |SYS  |2016-03-23 14:14:26.996013|       lualog.so.019849.001|                  init()|              redis_pool_api.lua: 361|() : [OWN_REDIS_POOLS:{
+	["read_private"] = {
+		[1] = {
+			["host"] = "192.168.1.11",
+			["vnode"] = 0,
+			["mark"] = "",
+			["mode"] = "M",
+			["port"] = 6319,
+		},
+	},
+	["damServer"] = {
+		[1] = {
+			["host"] = "192.168.71.56",
+			["vnode"] = 0,
+			["mark"] = "",
+			["mode"] = "M",
+			["port"] = 4210,
+		},
+	},
+	["url_hash"] = {
+		[1] = {
+			["host"] = "192.168.1.12",
+			["vnode"] = 30,
+			["mark"] = "a0",
+			["mode"] = "M",
+			["port"] = 8000,
+		},
+		[2] = {
+			["host"] = "192.168.1.12",
+			["vnode"] = 30,
+			["mark"] = "a1",
+			["mode"] = "M",
+			["port"] = 8001,
+		},
+		[3] = {
+			["host"] = "192.168.1.12",
+			["vnode"] = 30,
+			["mark"] = "a2",
+			["mode"] = "M",
+			["port"] = 8002,
+		},
+		[4] = {
+			["host"] = "192.168.1.12",
+			["vnode"] = 30,
+			["mark"] = "a3",
+			["mode"] = "M",
+			["port"] = 8003,
+		},
+		[5] = {
+			["host"] = "192.168.1.12",
+			["vnode"] = 30,
+			["mark"] = "a4",
+			["mode"] = "M",
+			["port"] = 8004,
+		},
+		[6] = {
+			["host"] = "192.168.1.12",
+			["vnode"] = 30,
+			["mark"] = "a5",
+			["mode"] = "M",
+			["port"] = 8000,
+		},
+		[7] = {
+			["host"] = "192.168.1.12",
+			["vnode"] = 30,
+			["mark"] = "a6",
+			["mode"] = "M",
+			["port"] = 8001,
+		},
+		[8] = {
+			["host"] = "192.168.1.12",
+			["vnode"] = 30,
+			["mark"] = "a7",
+			["mode"] = "M",
+			["port"] = 8002,
+		},
+		[9] = {
+			["host"] = "192.168.1.12",
+			["vnode"] = 30,
+			["mark"] = "a8",
+			["mode"] = "M",
+			["port"] = 8003,
+		},
+		[10] = {
+			["host"] = "192.168.1.12",
+			["vnode"] = 30,
+			["mark"] = "a9",
+			["mode"] = "M",
+			["port"] = 8004,
+		},
+		["hash"] = function: 0x4043f2b8,
+	},
+	["private"] = {
+		[1] = {
+			["host"] = "192.168.1.11",
+			["vnode"] = 0,
+			["mark"] = "",
+			["mode"] = "M",
+			["port"] = 6319,
+		},
+	},
+	["saveTokencode"] = {
+		[1] = {
+			["host"] = "192.168.1.11",
+			["vnode"] = 0,
+			["mark"] = "",
+			["mode"] = "M",
+			["port"] = 6339,
+		},
+	},
+	["tsdb_hash"] = {
+		[1] = {
+			["host"] = "192.168.1.12",
+			["vnode"] = 30,
+			["mark"] = "a0",
+			["mode"] = "M",
+			["port"] = 7776,
+		},
+		[2] = {
+			["host"] = "192.168.1.12",
+			["vnode"] = 30,
+			["mark"] = "a1",
+			["mode"] = "M",
+			["port"] = 7777,
+		},
+		[3] = {
+			["host"] = "192.168.1.12",
+			["vnode"] = 30,
+			["mark"] = "a2",
+			["mode"] = "M",
+			["port"] = 7778,
+		},
+		[4] = {
+			["host"] = "192.168.1.12",
+			["vnode"] = 30,
+			["mark"] = "a3",
+			["mode"] = "M",
+			["port"] = 7779,
+		},
+		[5] = {
+			["host"] = "192.168.1.12",
+			["vnode"] = 30,
+			["mark"] = "a4",
+			["mode"] = "M",
+			["port"] = 7776,
+		},
+		[6] = {
+			["host"] = "192.168.1.12",
+			["vnode"] = 30,
+			["mark"] = "a5",
+			["mode"] = "M",
+			["port"] = 7777,
+		},
+		[7] = {
+			["host"] = "192.168.1.12",
+			["vnode"] = 30,
+			["mark"] = "a6",
+			["mode"] = "M",
+			["port"] = 7778,
+		},
+		[8] = {
+			["host"] = "192.168.1.12",
+			["vnode"] = 30,
+			["mark"] = "a7",
+			["mode"] = "M",
+			["port"] = 7779,
+		},
+		[9] = {
+			["host"] = "192.168.1.12",
+			["vnode"] = 30,
+			["mark"] = "a8",
+			["mode"] = "M",
+			["port"] = 7776,
+		},
+		[10] = {
+			["host"] = "192.168.1.12",
+			["vnode"] = 30,
+			["mark"] = "a9",
+			["mode"] = "M",
+			["port"] = 7777,
+		},
+		["hash"] = function: 0x40e7a9c0,
+	},
+	["statistic"] = {
+		[1] = {
+			["host"] = "192.168.1.11",
+			["vnode"] = 0,
+			["mark"] = "",
+			["mode"] = "M",
+			["port"] = 6339,
+		},
+	},
+	["message_hash"] = {
+		[1] = {
+			["host"] = "192.168.1.12",
+			["vnode"] = 30,
+			["mark"] = "b0",
+			["mode"] = "M",
+			["port"] = 6379,
+		},
+		[2] = {
+			["host"] = "192.168.1.12",
+			["vnode"] = 30,
+			["mark"] = "b1",
+			["mode"] = "M",
+			["port"] = 6379,
+		},
+		[3] = {
+			["host"] = "192.168.1.12",
+			["vnode"] = 30,
+			["mark"] = "b2",
+			["mode"] = "M",
+			["port"] = 6379,
+		},
+		[4] = {
+			["host"] = "192.168.1.12",
+			["vnode"] = 30,
+			["mark"] = "b3",
+			["mode"] = "M",
+			["port"] = 6379,
+		},
+		["hash"] = function: 0x42001ab0,
+	},
+	["public"] = {
+		[1] = {
+			["host"] = "192.168.1.11",
+			["vnode"] = 0,
+			["mark"] = "",
+			["mode"] = "M",
+			["port"] = 6349,
+		},
+	},
+}]
+194   |INFO |2016-03-23 14:14:26.996122|       lualog.so.019850.001|           new_connect()|              redis_pool_api.lua:  48|() : REDIS: 192.168.1.12:7776 | RECNT: 1 |---> Tcp:connect: SUCCESS!
+194   |INFO |2016-03-23 14:14:26.996556|       lualog.so.019850.001|           new_connect()|              redis_pool_api.lua:  48|() : REDIS: 192.168.1.12:7777 | RECNT: 1 |---> Tcp:connect: SUCCESS!
+194   |INFO |2016-03-23 14:14:26.996907|       lualog.so.019850.001|           new_connect()|              redis_pool_api.lua:  48|() : REDIS: 192.168.1.11:6339 | RECNT: 1 |---> Tcp:connect: SUCCESS!
+194   |INFO |2016-03-23 14:14:26.997327|       lualog.so.019850.001|           new_connect()|              redis_pool_api.lua:  48|() : REDIS: 192.168.1.12:6379 | RECNT: 1 |---> Tcp:connect: SUCCESS!
+194   |INFO |2016-03-23 14:14:26.997691|       lualog.so.019850.001|           new_connect()|              redis_pool_api.lua:  48|() : REDIS: 192.168.1.12:6379 | RECNT: 1 |---> Tcp:connect: SUCCESS!
+194   |INFO |2016-03-23 14:14:26.998100|       lualog.so.019850.001|           new_connect()|              redis_pool_api.lua:  48|() : REDIS: 192.168.1.12:6379 | RECNT: 1 |---> Tcp:connect: SUCCESS!
+194   |INFO |2016-03-23 14:14:26.998586|       lualog.so.019850.001|           new_connect()|              redis_pool_api.lua:  48|() : REDIS: 192.168.1.12:6379 | RECNT: 1 |---> Tcp:connect: SUCCESS!
+194   |INFO |2016-03-23 14:14:26.999014|       lualog.so.019850.001|           new_connect()|              redis_pool_api.lua:  48|() : REDIS: 192.168.1.11:6349 | RECNT: 1 |---> Tcp:connect: SUCCESS!
+4143  |SYS  |2016-03-23 14:14:27.000028|       lualog.so.019850.001|                  init()|              redis_pool_api.lua: 361|() : [OWN_REDIS_POOLS:{
+	["read_private"] = {
+		[1] = {
+			["host"] = "192.168.1.11",
+			["vnode"] = 0,
+			["mark"] = "",
+			["mode"] = "M",
+			["port"] = 6319,
+		},
+	},
+	["damServer"] = {
+		[1] = {
+			["host"] = "192.168.71.56",
+			["vnode"] = 0,
+			["mark"] = "",
+			["mode"] = "M",
+			["port"] = 4210,
+		},
+	},
+	["url_hash"] = {
+		[1] = {
+			["host"] = "192.168.1.12",
+			["vnode"] = 30,
+			["mark"] = "a0",
+			["mode"] = "M",
+			["port"] = 8000,
+		},
+		[2] = {
+			["host"] = "192.168.1.12",
+			["vnode"] = 30,
+			["mark"] = "a1",
+			["mode"] = "M",
+			["port"] = 8001,
+		},
+		[3] = {
+			["host"] = "192.168.1.12",
+			["vnode"] = 30,
+			["mark"] = "a2",
+			["mode"] = "M",
+			["port"] = 8002,
+		},
+		[4] = {
+			["host"] = "192.168.1.12",
+			["vnode"] = 30,
+			["mark"] = "a3",
+			["mode"] = "M",
+			["port"] = 8003,
+		},
+		[5] = {
+			["host"] = "192.168.1.12",
+			["vnode"] = 30,
+			["mark"] = "a4",
+			["mode"] = "M",
+			["port"] = 8004,
+		},
+		[6] = {
+			["host"] = "192.168.1.12",
+			["vnode"] = 30,
+			["mark"] = "a5",
+			["mode"] = "M",
+			["port"] = 8000,
+		},
+		[7] = {
+			["host"] = "192.168.1.12",
+			["vnode"] = 30,
+			["mark"] = "a6",
+			["mode"] = "M",
+			["port"] = 8001,
+		},
+		[8] = {
+			["host"] = "192.168.1.12",
+			["vnode"] = 30,
+			["mark"] = "a7",
+			["mode"] = "M",
+			["port"] = 8002,
+		},
+		[9] = {
+			["host"] = "192.168.1.12",
+			["vnode"] = 30,
+			["mark"] = "a8",
+			["mode"] = "M",
+			["port"] = 8003,
+		},
+		[10] = {
+			["host"] = "192.168.1.12",
+			["vnode"] = 30,
+			["mark"] = "a9",
+			["mode"] = "M",
+			["port"] = 8004,
+		},
+		["hash"] = function: 0x40493288,
+	},
+	["private"] = {
+		[1] = {
+			["host"] = "192.168.1.11",
+			["vnode"] = 0,
+			["mark"] = "",
+			["mode"] = "M",
+			["port"] = 6319,
+		},
+	},
+	["saveTokencode"] = {
+		[1] = {
+			["host"] = "192.168.1.11",
+			["vnode"] = 0,
+			["mark"] = "",
+			["mode"] = "M",
+			["port"] = 6339,
+		},
+	},
+	["tsdb_hash"] = {
+		[1] = {
+			["host"] = "192.168.1.12",
+			["vnode"] = 30,
+			["mark"] = "a0",
+			["mode"] = "M",
+			["port"] = 7776,
+		},
+		[2] = {
+			["host"] = "192.168.1.12",
+			["vnode"] = 30,
+			["mark"] = "a1",
+			["mode"] = "M",
+			["port"] = 7777,
+		},
+		[3] = {
+			["host"] = "192.168.1.12",
+			["vnode"] = 30,
+			["mark"] = "a2",
+			["mode"] = "M",
+			["port"] = 7778,
+		},
+		[4] = {
+			["host"] = "192.168.1.12",
+			["vnode"] = 30,
+			["mark"] = "a3",
+			["mode"] = "M",
+			["port"] = 7779,
+		},
+		[5] = {
+			["host"] = "192.168.1.12",
+			["vnode"] = 30,
+			["mark"] = "a4",
+			["mode"] = "M",
+			["port"] = 7776,
+		},
+		[6] = {
+			["host"] = "192.168.1.12",
+			["vnode"] = 30,
+			["mark"] = "a5",
+			["mode"] = "M",
+			["port"] = 7777,
+		},
+		[7] = {
+			["host"] = "192.168.1.12",
+			["vnode"] = 30,
+			["mark"] = "a6",
+			["mode"] = "M",
+			["port"] = 7778,
+		},
+		[8] = {
+			["host"] = "192.168.1.12",
+			["vnode"] = 30,
+			["mark"] = "a7",
+			["mode"] = "M",
+			["port"] = 7779,
+		},
+		[9] = {
+			["host"] = "192.168.1.12",
+			["vnode"] = 30,
+			["mark"] = "a8",
+			["mode"] = "M",
+			["port"] = 7776,
+		},
+		[10] = {
+			["host"] = "192.168.1.12",
+			["vnode"] = 30,
+			["mark"] = "a9",
+			["mode"] = "M",
+			["port"] = 7777,
+		},
+		["hash"] = function: 0x40481520,
+	},
+	["statistic"] = {
+		[1] = {
+			["host"] = "192.168.1.11",
+			["vnode"] = 0,
+			["mark"] = "",
+			["mode"] = "M",
+			["port"] = 6339,
+		},
+	},
+	["message_hash"] = {
+		[1] = {
+			["host"] = "192.168.1.12",
+			["vnode"] = 30,
+			["mark"] = "b0",
+			["mode"] = "M",
+			["port"] = 6379,
+		},
+		[2] = {
+			["host"] = "192.168.1.12",
+			["vnode"] = 30,
+			["mark"] = "b1",
+			["mode"] = "M",
+			["port"] = 6379,
+		},
+		[3] = {
+			["host"] = "192.168.1.12",
+			["vnode"] = 30,
+			["mark"] = "b2",
+			["mode"] = "M",
+			["port"] = 6379,
+		},
+		[4] = {
+			["host"] = "192.168.1.12",
+			["vnode"] = 30,
+			["mark"] = "b3",
+			["mode"] = "M",
+			["port"] = 6379,
+		},
+		["hash"] = function: 0x404866d0,
+	},
+	["public"] = {
+		[1] = {
+			["host"] = "192.168.1.11",
+			["vnode"] = 0,
+			["mark"] = "",
+			["mode"] = "M",
+			["port"] = 6349,
+		},
+	},
+}]

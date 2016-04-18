@@ -1,0 +1,62 @@
+#include <stdio.h>
+#include <zmq.h>
+#include <sys/uio.h>
+#include <string.h>
+
+static const char data[] = {"keyvalue\r\nnt=0&mt=21776&Accountid=111111111111111&gps=221215102957,11444.98295E,4045.92141N,262,18,746;221215102958,11444.97898E,4045.92095N,262,19,746;221215102959,11444.97479E,4045.92069N,263,20,746;221215103000,11444.97046E,4045.92029N,262,20,746;221215103001,11444.96605E,4045.91999N,262,21,746&tokencode=0al15UMqpo&imsi=460022211427272&imei=752795632561713&mod=SG900"};
+
+#define MAX_SPILL_DEPTH 512
+
+struct skt_device
+{
+        int             idx;
+        void            *skt;
+        struct iovec    ibuffer[MAX_SPILL_DEPTH];
+};
+
+int main() {
+   static void *g_ctx = NULL;
+   void *socket = NULL;
+   int ret = 0;
+   struct skt_device devc;
+
+   memset(devc.ibuffer, 0, MAX_SPILL_DEPTH);
+   memcpy(devc.ibuffer, data, sizeof(data));
+
+   g_ctx = zmq_ctx_new();
+   
+   devc.skt = zmq_socket(g_ctx, ZMQ_PUSH);
+   //socket = zmq_socket(g_ctx, ZMQ_PUSH);
+   //  Assign the pathname "/tmp/feeds/0"
+   /*
+   ret = zmq_bind(devc.skt, "ipc://../my-sault.ipc");
+   if (ret) {
+     printf("zmq bind failed\n");
+   }
+   else {
+     printf("zmq bind success\n");
+   }
+   */
+   //  Connect to the pathname "/tmp/feeds/0"
+   ret = zmq_bind(devc.skt, "tcp://*:5555");
+   //ret = zmq_connect(socket, "tcp://*:5555");
+   if (ret) {
+     printf("zmq bind failed\n");
+   }
+   else {
+     printf("zmq bind success\n");
+   }
+
+   //ret = zmq_sendiov(devc.skt, devc.ibuffer, sizeof(devc.ibuffer), 1);
+   //ret = zmq_send(data);
+   ret =  zmq_send (devc.skt, devc.ibuffer, sizeof(data), 0);
+   //ret =  zmq_send (socket, data, sizeof(data), ZMQ_SNDMORE);
+   if (ret == -1) {
+     printf("zmq send failed\n");
+   }
+   else {
+     printf("zmq send success, ret = %d\n", ret);
+   }
+   sleep(1);
+   return 0;
+}
