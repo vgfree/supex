@@ -12,6 +12,9 @@ static char expect_value[25] = {0x04, 0x17, 0x52, 0x4f, 0x55, 0x54, 0x49, 0x0d, 
   0x01, 0x00, 0x01, 0x00, 0x7f, 0x00, 0x00, 0x01, 0x07, 0x00, 0x02, 0x00, 0x00, 0x00, 0x00, 0x02
 };
 
+static char login_authentication_package[17] = {0x00, 0x11, 0x52, 0x4f, 0x55, 0x54, 0x49, 0x0d, 0x0a,
+  0x01, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+};
 
 int test_simulate_gateway()
 {
@@ -20,7 +23,7 @@ int test_simulate_gateway()
   char server_ip[50] = "127.0.0.1\0";
   int socket_fd = socket(AF_INET, SOCK_STREAM, 0);
   if (socket_fd < 0) {
-    printf("client: create socket error\n");
+    printf("message_gateway: create socket error\n");
 	return -1;
   }
   memset(&server_addr, 0, sizeof(server_addr));
@@ -29,15 +32,18 @@ int test_simulate_gateway()
   inet_pton(AF_INET, server_ip, &server_addr.sin_addr);
   err = connect(socket_fd, (struct sockaddr *)&server_addr, sizeof(struct sockaddr));
   if (err == 0) {
-    printf("client: connect to server success.\n");
-	write(socket_fd, expect_value, 25);
+    printf("message_gateway: connect to server success.\n start to send login login_authentication_package------------\n");
+    write(socket_fd, login_authentication_package, 17);
+    sleep(4);
+    printf("start to send data. \n");
+    write(socket_fd, expect_value, 25);
   }
   else {
     printf("client: connect error\n");
     close(socket_fd);
-	return -1;
+    return -1;
   }
-  sleep(5);
+  sleep(1);
   close(socket_fd);
   return 0;
 }

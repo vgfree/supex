@@ -55,6 +55,7 @@ void io_notify_logic_thread(struct comm_context* commctx, int fd,
         head.body_size = 0;
         uint32_t size;
         char *content = pack_router(NULL, &size, &head);
+        free(head.cid);
         struct comm_message msg;
         msg.content = content;
         msg.size = size;
@@ -115,6 +116,7 @@ int main(int argc, char* argv[])
   signal(SIGPIPE, SIG_IGN);
   if (daemon_init(SERVER_FILE) == 1) {
     printf("Server is running.");
+    return -1;
   }
   if (init() == -1) {
     error("server init failed.");

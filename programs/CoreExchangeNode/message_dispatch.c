@@ -140,6 +140,9 @@ void message_dispatch()
       error("msg head data (message_from :%d) is not right.",
             oldhead->message_from);
     }
+    if (oldhead->cid) {
+      free(oldhead->cid);
+    }
     free(oldhead);
   }
   else {

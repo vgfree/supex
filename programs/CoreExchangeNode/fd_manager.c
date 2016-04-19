@@ -54,13 +54,20 @@ int list_remove(const enum router_object obj,
 int list_push_back(const enum router_object obj,
                    const struct fd_node *node)
 {
+  if (g_list.head[obj].next == NULL) {
+    g_list.head[obj].next = (struct fd_node *)malloc(sizeof(struct fd_node));
+    g_list.head[obj].next->fd = node->fd;
+    g_list.head[obj].next->status = node->status;
+    g_list.head[obj].next->next = NULL;
+    return SUCCESS;
+  }
   struct fd_node *curr = g_list.head[obj].next;
   while (curr->next) {
     curr = curr->next;
   }
   curr->next = (struct fd_node *)malloc(sizeof(struct fd_node));
   curr->next->fd = node->fd;
-  curr->next->status = node->fd;
+  curr->next->status = node->status;
   curr->next->next = NULL;
   return SUCCESS;
 }
