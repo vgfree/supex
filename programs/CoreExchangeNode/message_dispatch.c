@@ -32,7 +32,7 @@ static void compose_new_packet(const struct router_head *head,
   free(cid);
 }
 
-static void find_best_gateway(int *fd)
+void find_best_gateway(int *fd)
 {
   struct fd_node node;
   if (list_front(MESSAGE_GATEWAY, &node) == FAILED) {

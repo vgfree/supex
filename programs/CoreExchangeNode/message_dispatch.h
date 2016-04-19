@@ -12,6 +12,8 @@ struct server_info{
 };
 
 extern struct server_info g_serv_info;
+
+void find_best_gateway(int *fd);
 void message_dispatch();
 
 #endif

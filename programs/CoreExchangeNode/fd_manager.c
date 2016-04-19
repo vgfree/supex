@@ -118,7 +118,7 @@ int array_fill_fd(const int fd, const struct fd_descriptor *des)
 int array_remove_fd(const int fd)
 {
   g_array.dsp_array[fd].status = 2;
-  return FAILED;
+  return SUCCESS;
 }
 
 int array_at_fd(const int fd, struct fd_descriptor *des)
