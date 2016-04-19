@@ -36,9 +36,9 @@ void destroy_config_reader(struct config_reader *config);
 char* get_config_name(struct config_reader *config, const char* name);
 int set_config_value(struct config_reader *config,
                      const char *name, const char*  value);
-static void _load_file(struct config_reader *config, const char* filename);
-static int _write_file(struct config_reader *config, const char* filename);
-static void _parse_line(struct config_reader *config, char* line);
-static char* _trim_space(char* name);
+
+
+
+
 
 #endif /* _CONFIG_READER_H_ */

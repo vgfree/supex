@@ -1,3 +1,4 @@
+#include "config_reader.h"
 #include "communication.h"
 #include "daemon.h"
 #include "message_dispatch.h"
@@ -49,7 +50,7 @@ static int init() {
   log("ListenIp = %s, ListenPort = %s, pcakge size = %s", IP, port, package_sz);
   
 
-  struct comm *commctx = NULL;
+  struct comm_context *commctx = NULL;
   commctx = comm_ctx_create(EPOLL_SIZE);
   if (unlikely(!commctx)) {
     return -1;
@@ -65,7 +66,7 @@ static int init() {
   log("IP:%s", IP);
   get_ip(IP, g_serv_info.ip);
   g_serv_info.port = atoi(port);
-  g_serv_info.package_size = package_sz;
+  g_serv_info.package_size = atoi(package_sz);
   g_serv_info.commctx = commctx;
   for (int i = 0; i < 4; i++) {
     log("%d", g_serv_info.ip[i]);
@@ -77,6 +78,7 @@ static int init() {
 
 int main(int argc, char* argv[])
 {
+  
   signal(SIGPIPE, SIG_IGN);
   if (daemon_init(SERVER_FILE) == 1) {
     printf("Server is running.");
@@ -93,6 +95,6 @@ int main(int argc, char* argv[])
     message_dispatch();
   }
   daemon_exit(SERVER_FILE);
-  CSLog_free(g_imlog);
+  CSLog_destroy(g_imlog);
   return 0;
 }

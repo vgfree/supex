@@ -9,6 +9,15 @@
 
 #define MAP_CAPCITY 50
 
+
+static void _load_file(struct config_reader *config,
+                       const char* filename);
+static int _write_file(struct config_reader *config,
+                       const char* filename);
+static void _parse_line(struct config_reader *config, char* line);
+
+static char* _trim_space(char* name);
+
 // 解析十进制IP 为四字节, 比如: 127.0.0.1 = {0x7f, 0x00, 0x00, 0x01}
 int get_ip(const char *src, char *dest)
 {

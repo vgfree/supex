@@ -6,7 +6,7 @@
 struct server_info{
   char ip[4];
   uint16_t port;
-  struct comm *commctx;
+  struct comm_context *commctx;
   uint32_t package_size;
   int fd;
 };

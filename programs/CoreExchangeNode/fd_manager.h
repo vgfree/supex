@@ -60,7 +60,7 @@ struct fd_descriptor {
 struct fd_array {
   struct fd_descriptor *dsp_array;
   int max_fd;
-  uint32_t cap;
+  int cap;
 };
 
 int array_init();
