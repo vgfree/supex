@@ -352,6 +352,10 @@ mfptpServer:
 	$(MAKE) -C ./programs/mfptpServer MAIN_APP_SERV=mfptpServer
 	@echo -e $(GREEN)"【"$(YELLOW) $@ $(GREEN)"】"$(RED)"\n-->OK!\n"$(NONE)
 
+coreExchangeNode:
+	$(MAKE) -C ./programs/CoreExchangeNode MAIN_APP_SERV=coreExchangeNode
+	@echo -e $(GREEN)"【"$(YELLOW) $@ $(GREEN)"】"$(RED)"\n-->OK!\n"$(NONE)
+
 
 push:
 	git push origin HEAD:refs/for/devel
@@ -388,6 +392,7 @@ clean:
 	$(MAKE) -C ./programs/PMR_HTTP clean
 	$(MAKE) -C ./programs/loghub clean
 	$(MAKE) -C ./programs/mfptpServer clean
+	$(MAKE) -C ./programs/CoreExchangeNode clean
 
 distclean:
 	$(MAKE) -C ./programs/damR distclean
