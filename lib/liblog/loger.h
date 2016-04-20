@@ -1,12 +1,12 @@
 #ifndef _LOGER_H
 #define _LOGER_H
 
-#include "./log_system/slog/slog_api.h"
+#include "./slog/slog_api.h"
 
 #include "string.h"
 
 #define WATCH_DELAY_TIME  10 * 1000
-#define MODULE_NAME "CoreExchangeNode"
+//#define MODULE_NAME "CoreExchangeNode"
 
 extern struct CSLog* g_imlog;
 

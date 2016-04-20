@@ -13,6 +13,7 @@
 #define LISTEN_PORT "ListenPort"
 #define SERVER_FILE "CoreExchangeNode.pid"
 #define PACKAGE_SIZE "PackageSize"
+#define MODULE_NAME "CoreExchangeNode"
 
 struct CSLog* g_imlog = NULL;
 

@@ -29,7 +29,7 @@ TOBJ_DIR =		lib
 #######
 BUILD_CFLAGS =		-fPIC -Wall -Wno-unused-function -Wno-unused-variable -g
 BUILD_LIBS =		-lpthread -lm
-BUILD_INC_DIR = 	-I/usr/include -I/usr/local/include
+BUILD_INC_DIR = 	-I/usr/include -I/usr/local/include -I../liblog
 BUILD_LIB_DIR =		-L/usr/local/lib -L/usr/lib -L/usr/libexec
 
 #######
@@ -86,6 +86,7 @@ SOBJ = $(addprefix $(SOBJ_DIR)/, \
 	comm_lock.o \
 	comm_epoll.o \
 	comm_structure.o\
+	timer.o\
 	communication.o \
 	)
 
