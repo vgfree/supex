@@ -39,6 +39,7 @@ int destroy_timer_list(struct timer_list *list)
     free(list->timer);
   }
   free(list);
+  return 0;
 }
 
 // 返回timer 编号.
