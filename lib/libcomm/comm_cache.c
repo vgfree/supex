@@ -17,6 +17,7 @@ bool commcache_init(struct comm_cache* comm_cache, int capacity)
 	if (unlikely(!comm_cache->cache)) {
 		return false;
 	} else {
+		comm_cache->init = true;
 		return true;
 	}
 }
@@ -24,14 +25,14 @@ bool commcache_init(struct comm_cache* comm_cache, int capacity)
 
 void commcache_free(struct comm_cache* comm_cache)
 {
-	if (likely(comm_cache)) {
+	if (likely(comm_cache && comm_cache->init)) {
 		Free(comm_cache->cache);
 	}
 }
 
 bool commcache_append(struct comm_cache* comm_cache, const char* data, int datasize)
 {
-	assert(comm_cache);
+	assert(comm_cache && comm_cache->init);
 	int size = datasize > 0 ? datasize : strlen(data);
 	if (unlikely(comm_cache->end + datasize > comm_cache->capacity)) { 
 		//缓冲区容量不足， 进行扩容
@@ -50,6 +51,7 @@ bool commcache_append(struct comm_cache* comm_cache, const char* data, int datas
 
 void commcache_deccnt(struct comm_cache* comm_cache, int size)
 {
+	assert(comm_cache && comm_cache->init);
 	comm_cache->start += size;
 	comm_cache->size -= size;
 	commcache_clean(comm_cache);
@@ -57,7 +59,7 @@ void commcache_deccnt(struct comm_cache* comm_cache, int size)
 
 void commcache_clean(struct comm_cache* comm_cache)
 {
-	assert(comm_cache);
+	assert(comm_cache && comm_cache->init);
 	if (likely(comm_cache->start != 0)) {
 		if (likely( comm_cache->size > 0)) {
 			memmove(comm_cache->cache, &comm_cache->cache[comm_cache->start ], comm_cache->size);
@@ -69,7 +71,7 @@ void commcache_clean(struct comm_cache* comm_cache)
 
 static bool _cache_expend(struct comm_cache* comm_cache, int size)
 {
-	assert(comm_cache);
+	assert(comm_cache && comm_cache->init);
 	commcache_clean(comm_cache);
 	if (likely(size <= comm_cache->capacity)) {
 		return true;
@@ -85,4 +87,3 @@ static bool _cache_expend(struct comm_cache* comm_cache, int size)
 		}
 	}
 }
-

@@ -14,12 +14,15 @@ extern "C" {
 
 
 struct comm_queue{
-	int capacity;	/* 队列里面能存放节点的总数 */
-	int nodes;	/* 已存放的节点个数 */
-	int nodesize;	/* 单个节点的大小 */
-	int headidx;	/* 队列首节点的索引 */
-	int tailidx;	/* 队列尾节点的索引 */
-	char* queue;	/* 队列存储地址 */
+	bool	init;		/* 结构体是否初始化的标志 */
+	int	capacity;	/* 队列里面能存放节点的总数 */
+	int	nodes;		/* 已存放的节点个数 */
+	int	nodesize;	/* 单个节点的大小 */
+	int	headidx;	/* 队列首节点的索引 */
+	int	tailidx;	/* 队列尾节点的索引 */
+	int 	readable;	/* 队列中是否有数据可读 只有用锁的时候才启用此变量 0 不可读 1 可读 */
+	int	writeable;	/* 队列中是否有空间可写 只有用锁的时候才启用此变量 0 不可写 2 可写 */
+	char*	queue;		/* 队列存储地址 */
 };
 
 

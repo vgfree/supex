@@ -5,43 +5,85 @@
 
 #include "comm_epoll.h"
 
-inline int  create_epoll(int epollsize)
+bool commepoll_init(struct comm_epoll *commepoll, int epollsize)
 {
-	return epoll_create(epollsize > 0 ? epollsize : EPOLLSIZE);
+	assert(commepoll);
+	memset(commepoll, 0, sizeof(*commepoll));
+	if (epollsize > MAXEPOLLSIZE || epollsize < 1) {
+		commepoll->epollsize = MAXEPOLLSIZE;
+	} else {
+		commepoll->epollsize = epollsize;
+	}
+
+	commepoll->epfd = epoll_create(commepoll->epollsize);
+	if (likely(commepoll->epfd > -1)) {
+		NewArray(commepoll->events, commepoll->epollsize);
+		if (likely(commepoll->events)) {
+			commepoll->init = true;
+			return true;
+		}
+	}
+	return false;
 }
 
-inline bool add_epoll(int epfd, int fd, unsigned int flag)
+void commepoll_destroy(struct comm_epoll *commepoll)
 {
-	int			retval = 0;
-	struct epoll_event	event = {};
-
-	event.data.fd = fd;
-	event.events = flag;
-	retval = epoll_ctl(epfd, EPOLL_CTL_ADD, fd, &event);
-	return retval == 0; 
+	assert(commepoll && commepoll->init);
+	close(commepoll->epfd);
+	Free(commepoll->events);
+	commepoll->init = false;
 }
 
-inline bool mod_epoll(int epfd, int fd, unsigned int flag)
+bool commepoll_add(struct comm_epoll *commepoll, int fd, int flag)
 {
-	int			retval = 0;
-	struct epoll_event	event = {};
-	event.data.fd = fd;
-	event.events = flag;
-	retval = epoll_ctl(epfd, EPOLL_CTL_MOD, fd, &event);
-	return retval == 0;
+	assert(commepoll && commepoll->init);
+
+	if (likely(commepoll->watchcnt < commepoll->epollsize)) {
+		commepoll->events[0].data.fd = fd;
+		commepoll->events[0].events = flag;
+		if (likely(!epoll_ctl(commepoll->epfd, EPOLL_CTL_ADD, fd, &commepoll->events[0]))) {
+			commepoll->watchcnt += 1;
+			return true;
+		}
+	}
+
+	return false;
 }
 
-inline bool  del_epoll(int epfd, int fd, unsigned int flag)
+bool commepoll_del(struct comm_epoll *commepoll, int fd, int flag)
 {
-	int			retval = 0;
-	struct epoll_event	event = {};
-	event.data.fd = fd;
-	event.events = EPOLLIN;
-	retval = epoll_ctl(epfd, EPOLL_CTL_DEL, fd, &event);
-	return retval == 0;
+	assert(commepoll && commepoll->init);
+	
+	commepoll->events[0].data.fd = fd;
+	commepoll->events[0].events = EPOLLIN;
+	if (likely(!epoll_ctl(commepoll->epfd, EPOLL_CTL_DEL, fd, &commepoll->events[0]))) {
+		commepoll->watchcnt -= 1;
+		return true;
+	} else {
+		return false;
+	}
 }
 
-inline int  wait_epoll(int epfd, struct epoll_event* events, int watchcnt, int timeout)
+bool commepoll_mod(struct comm_epoll *commepoll, int fd, int flag)
 {
-	return epoll_wait(epfd, events, watchcnt, timeout);
+	assert(commepoll && commepoll->init);
+	commepoll->events[0].data.fd = fd;
+	commepoll->events[0].events = flag;
+	if (likely(!epoll_ctl(commepoll->epfd, EPOLL_CTL_MOD, fd, &commepoll->events[0]))) {
+		return true;
+	} else {
+		return false ;
+	}
+}
+
+bool commepoll_wait(struct comm_epoll *commepoll, int timeout)
+{
+	assert(commepoll && commepoll->init);
+	memset(commepoll->events, 0, (sizeof(struct epoll_event)) * commepoll->epollsize);
+	commepoll->eventcnt = epoll_wait(commepoll->epfd, commepoll->events, commepoll->watchcnt, timeout);
+	if ( likely(commepoll->eventcnt != -1)) {
+		return true;
+	} else {
+		return false;
+	}
 }

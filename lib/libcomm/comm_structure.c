@@ -10,6 +10,7 @@ struct comm_data*  commdata_init(struct comm_context* commctx, struct portinfo* 
 {
 	assert(commctx && portinfo);
 	int			nodesize = sizeof(intptr_t);
+	int			flag = 0;
 	bool			retval = false;
 	struct comm_data	*commdata = NULL;
 
@@ -34,20 +35,20 @@ struct comm_data*  commdata_init(struct comm_context* commctx, struct portinfo* 
 	if (unlikely(!retval)) {
 		goto error;
 	}
+	retval = commlock_init(&commdata->sendlock);
+	if( unlikely(!retval)) {
+		goto error;
+	}
 
-	if (likely(commctx->watchcnt < EPOLL_SIZE)) {
-		int flag = 0;
-		if (portinfo->type == COMM_BIND) {
-			flag = EPOLLIN | EPOLLET;
-		} else {
-			flag = EPOLLIN | EPOLLOUT | EPOLLET;
-		}
-		/* 监听套接字的时间太晚，可能会出现事件已发生，但是epoll却没监听到 */
-		retval = add_epoll(commctx->epfd, portinfo->fd, flag);
-		if( unlikely(!retval) ){
-			goto error;
-		}
-		commctx->watchcnt ++;
+	if (portinfo->type == COMM_BIND) {
+		flag = EPOLLIN | EPOLLET;
+	} else {
+		flag = EPOLLIN | EPOLLOUT | EPOLLET;
+	}
+	/* 监听套接字的时间太晚，可能会出现事件已发生，但是epoll却没监听到 */
+	retval = commepoll_add(&commctx->commepoll, portinfo->fd, flag);
+	if( unlikely(!retval) ){
+		goto error;
 	}
 
 	commdata->commctx = commctx;
@@ -58,8 +59,10 @@ struct comm_data*  commdata_init(struct comm_context* commctx, struct portinfo* 
 	return commdata;
 
 error:
+	commlock_destroy(&commdata->sendlock);
 	commqueue_destroy(&commdata->recv_queue);
 	commqueue_destroy(&commdata->send_queue);
+	commepoll_destroy(&commctx->commepoll);
 	
 	commcache_free(&commdata->recv_buff);
 	commcache_free(&commdata->send_buff);
@@ -71,14 +74,14 @@ error:
 void commdata_destroy(struct comm_data *commdata)
 {
 	if (likely(commdata)) {
+		commlock_destroy(&commdata->sendlock);
 		commqueue_destroy(&commdata->recv_queue);
 		commqueue_destroy(&commdata->send_queue);
 		
 		commcache_free(&commdata->recv_buff);
 		commcache_free(&commdata->send_buff);
 
-		del_epoll(commdata->commctx->epfd, commdata->portinfo.fd, 0);
-		commdata->commctx->watchcnt --;
+		commepoll_del(&commdata->commctx->commepoll, commdata->portinfo.fd, -1);
 		Free(commdata);
 	}
 

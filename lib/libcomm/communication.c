@@ -6,13 +6,10 @@
 #include <stdlib.h>
 #include "communication.h"
 
-#define MIOU	1024
 
 static void * _start_new_pthread(void* usr);
 
-static inline bool _get_portinfo(int fd, int type, struct portinfo* portinfo);
-
-static bool  _close_all_fd(int pfd);
+static inline bool _get_portinfo(int fd, int type, int status, struct portinfo* portinfo);
 
 static bool _parse_data(struct comm_data *commdata);
 
@@ -20,81 +17,111 @@ static bool _package_data(struct comm_data *commdata);
 
 static void _timeout_event(struct comm_context* commctx);
 
-static bool _accept_event(struct comm_context *commctx);
+static void _accept_event(struct comm_context *commctx);
 
-static bool _read_event(struct comm_data *commdata, int fd);
+static void _recv_event(struct comm_context *commctx, int fd);
 
-static bool _write_event(struct comm_data *commdata, int fd);
+static void  _send_event(struct comm_context *commctx, int *fda, int cnt);
+
+static bool _write_data(struct comm_data *commdata, int fd);
+
+static bool _read_data(struct comm_data *commdata, int fd);
 
 struct comm_context* comm_ctx_create(int epollsize)
 {
-	int			retval = -1;
 	struct comm_context*	commctx = NULL;
 
 	New(commctx);
 	if (unlikely(!commctx)) {
-		printf("no more memory, calloc commctx failed\n");
-		return commctx;
-	}
-
-	commctx->epfd = create_epoll(epollsize > 0 ? epollsize : EPOLL_SIZE);
-	if (unlikely(commctx->epfd < 0)) {
-		Free(commctx);
-		return commctx;
-	}
-
-	if (unlikely( !commqueue_init(&commctx->recv_queue, QUEUE_CAPACITY, sizeof(intptr_t)))) {
-		close(commctx->epfd);
-		Free(commctx);
-		return commctx;
-	}
-
-	if (unlikely(!commlock_init(&commctx->commlock))) {
-		close(commctx->epfd);
-		commqueue_destroy(&commctx->recv_queue);
-		Free(commctx);
-		return commctx;
+		goto error;
 	}
 
 	commctx->listenfd = -1;
-	retval = pthread_create(&commctx->ptid, NULL,  _start_new_pthread, (void *)commctx);
-	if (unlikely(retval != 0)) {
-		close(commctx->epfd);
-		commqueue_destroy(&commctx->recv_queue);
-		Free(commctx);
-		return commctx;
+	if (unlikely( !commqueue_init(&commctx->recv_queue, QUEUE_CAPACITY, sizeof(intptr_t)))) {
+		goto error;
+	}
+
+	if (unlikely(!commlock_init(&commctx->statlock))) {
+		goto error;
+	}
+
+	if (unlikely(!commlock_init(&commctx->recvlock))) {
+		goto error;
+	}
+
+	if (unlikely(!commpipe_init(&commctx->commpipe))) {
+		goto error;
+	}
+
+	if (unlikely(!commepoll_init(&commctx->commepoll, EPOLL_SIZE))) {
+		goto error;
+	}
+
+	if (unlikely(!commepoll_add(&commctx->commepoll, commctx->commpipe.rfd, EPOLLET | EPOLLIN))) {
+		goto error;
+	}
+
+	if (unlikely((pthread_create(&commctx->ptid, NULL, _start_new_pthread, (void*)commctx))) != 0) {
+		goto error;
 	}
 	commctx->stat = COMM_STAT_INIT; 
 
 	return commctx;
+error:
+	if (commctx) {
+		commqueue_destroy(&commctx->recv_queue);
+		commlock_destroy(&commctx->statlock);
+		commlock_destroy(&commctx->recvlock);
+		commpipe_destroy(&commctx->commpipe);
+		if (commctx->commepoll.init && commctx->commepoll.watchcnt > 0) {
+			commepoll_del(&commctx->commepoll, commctx->commpipe.rfd, -1);
+		}
+		commepoll_destroy(&commctx->commepoll);
+		Free(commctx);
+	}
+	return NULL;
 }
 
 void comm_ctx_destroy(struct comm_context* commctx)
 {
 	int fd = 0;
 	if (likely(commctx)) {
-		//原子设置线程的状态
+		log("destroy everything\n");
 		ATOMIC_SET(&commctx->stat, COMM_STAT_STOP);
-		commlock_wait(&commctx->commlock, (int *)&commctx->stat, COMM_STAT_NONE, -1);
-		while (commctx->watchcnt) {
+
+		/* 等待子线程退出然后再继续销毁数据 */
+		commlock_wait(&commctx->statlock, (int *)&commctx->stat, COMM_STAT_NONE, -1, false);
+
+		while (commctx->commepoll.watchcnt) {
 			if(likely(commctx->data[fd ])) {
 				comm_close(commctx, fd);
+				log("close fd:%d in comm_ctx_destroy\n", fd);
 			}
 			fd ++;
 		}
-		close(commctx->epfd);
+
 		commqueue_destroy(&commctx->recv_queue);
+		commlock_destroy(&commctx->statlock);
+		commlock_destroy(&commctx->recvlock);
+		commpipe_destroy(&commctx->commpipe);
+
+		if (commctx->commepoll.init && commctx->commepoll.watchcnt > 0) {
+			commepoll_del(&commctx->commepoll, commctx->commpipe.rfd, -1);
+		}
+		commepoll_destroy(&commctx->commepoll);
 		pthread_join(commctx->ptid, NULL);
 		Free(commctx);
 	}
+	return ;
 }
 
-int comm_socket(struct comm_context *commctx, char *host, char *service, struct cbinfo* finishedcb, int type)
+int comm_socket(struct comm_context *commctx, const char *host, const char *service, struct cbinfo* finishedcb, int type)
 {
 	assert(commctx && host && service);
 
 	int			fd = -1;
 	bool			retval = false;
+	struct portinfo		portinfo = {};
 	struct comm_data*	commdata = NULL;
 
 	if (type == COMM_BIND) {
@@ -108,9 +135,7 @@ int comm_socket(struct comm_context *commctx, char *host, char *service, struct 
 		return fd;
 	}
 
-	struct portinfo portinfo = {};
-
-	if (unlikely(!_get_portinfo(fd, type, &portinfo))) {
+	if (unlikely(!_get_portinfo(fd, type, FD_INIT, &portinfo))) {
 		close(fd);
 		return -1;
 	}
@@ -120,49 +145,104 @@ int comm_socket(struct comm_context *commctx, char *host, char *service, struct 
 		return -1;
 	}
 	commctx->data[fd ] = (intptr_t)commdata;
-	commlock_wake(&commctx->commlock, (int *)&commctx->stat, COMM_STAT_RUN);
+
+	/* 将状态值设置为COMM_STAT_RUN并唤醒等待的线程 */
+	commlock_wake(&commctx->statlock, (int *)&commctx->stat, COMM_STAT_RUN, false);
 	
 	return fd;
 }
 
-
-
-/* 将用户传进来的数据放入到发送队列中保存起来:返回-1失败,成功返回存入的数据的大小 */
-int comm_send(struct comm_context *commctx, const struct comm_message *message)
+int comm_send(struct comm_context *commctx, const struct comm_message *message, bool block, int timeout)
 {
 	assert(commctx && message && message->content);
 
-	struct comm_message *commmsg = NULL;
-	commmsg = new_commmsg(message->size); /* 分配一个comm_message的结构体 */
-	if (unlikely(!commmsg)) {
-		return -1;
-	}
-	copy_commmsg(commmsg, message);
-	struct comm_data *commdata = (struct comm_data*)commctx->data[message->fd];
-	if (unlikely(commdata)) {
-		if (unlikely(!commqueue_push(&commdata->send_queue, commmsg))) {
-			return -1;
+	bool			flag = false;
+	struct comm_message	*commmsg = NULL;
+	struct comm_data	*commdata = (struct comm_data *)commctx->data[message->fd];
+
+	if (likely(commdata)) {
+		commmsg = new_commmsg(message->size);
+		if (likely(commmsg)) {
+			copy_commmsg(commmsg, message);
+			commlock_lock(&commdata->sendlock);
+			while (1) {
+				if (likely(commqueue_push(&commdata->send_queue, (void*)&commmsg))) {
+					if (!commdata->send_queue.readable) {	/* 此变量为0说明有线程等待可读 */
+						commlock_wake(&commdata->sendlock, &commdata->send_queue.readable, 1, true);
+					}
+					flag = true;
+					break ;
+				} else if (block) {
+					commdata->send_queue.writeable = 0;	/* 将此变量设置为0, 让其他线程进行唤醒 */
+					/* 目前打包取数据只在写事件里面被调用，所以必须唤醒写事件才能等待才能被唤醒 */
+					commpipe_write(&commctx->commpipe, (void*)&message->fd, sizeof(message->fd));
+					if (likely(commlock_wait(&commdata->sendlock, &commdata->send_queue.writeable, 1, timeout, true))) {
+						continue ;			/* 返回值为真则说明有空间可写数据 */
+					} else {		
+						break ;				/* 返回值为假则超时唤醒没有空间可写数据 */
+					}
+				} else {
+					commdata->send_queue.writeable = 1;	/* 不进行堵塞就设置为1不需要唤醒 */
+					break ;
+				}
+			}
+
+			if (unlikely(block && commdata->send_queue.nodes == commdata->send_queue.capacity)) {
+				commdata->send_queue.writeable = 0;
+			}
+
+			commlock_unlock(&commdata->sendlock);
+			if (likely(flag)) {
+				/* 数据写入成功 往此管道写入fd 触发子线程的写事件 */
+				commpipe_write(&commctx->commpipe, (void*)&message->fd, sizeof(message->fd));
+				return message->size;
+			} else {
+				free_commmsg(commmsg);				/* push数据失败则需要释放commmsg */
+			}
 		}
 	}
-	return message->size;
+	return -1;
 }
 
-/* 将已经解析好的数据返回给用户:返回-1失败,成功返回数据的大小 */
-int comm_recv(struct comm_context *commctx, struct comm_message *message)
+int comm_recv(struct comm_context *commctx, struct comm_message *message, bool block, int timeout)
 {
 	assert(commctx && message && message->content);
 
-	struct comm_message *commmsg = NULL;
-	if (unlikely(!commqueue_pull(&commctx->recv_queue, commmsg))) {
-		return -1;
+	bool			flag = false;
+	struct comm_message	*commmsg = NULL;
+	commlock_lock(&commctx->recvlock);
+	while (1) {
+		if (likely(commqueue_pull(&commctx->recv_queue, (void*)&commmsg))) {
+			if (!commctx->recv_queue.writeable) {			/* 此变量为0说明有线程等待可写 */
+				commlock_wake(&commctx->recvlock, &commctx->recv_queue.writeable, 1, true);
+			}
+			flag = true;
+			break ;
+		} else if (block) {
+			commctx->recv_queue.readable = 0;
+			if (commlock_wait(&commctx->recvlock, &commctx->recv_queue.readable, 1, timeout, true)) {
+				continue ;					/* 返回值为真说明有数据可读 */
+			} else {
+				break ;						/* 返回值为假说明超时唤醒，无数据可读 */
+			}
+		} else {
+			commctx->recv_queue.readable = 1;			/* 不进行堵塞就设置为1不需要唤醒 */
+			break ;
+		}
 	}
-	copy_commmsg(message, commmsg);
-	free_commmsg(commmsg); /* 释放掉comm_message结构体 */
+	if (unlikely(block && commctx->recv_queue.nodes == 0)) {		/* 当节点数为0时并设置了block时设置此变量等待别人唤醒 */
+		commctx->recv_queue.readable = 0;
+	}
+	commlock_unlock(&commctx->recvlock);
 
-	return commmsg->size;
+	if (flag) {
+		copy_commmsg(message, commmsg);
+		free_commmsg(commmsg);						/* 释放掉comm_message结构体 */
+		return message->size;
+	}
+	return -1;
 }
 
-/* 设置epoll_wait的超时时间以及超时时的回调函数 */
 void comm_settimeout(struct comm_context *commctx, int timeout, CommCB callback, void *usr)
 {
 	commctx->timeoutcb.timeout = timeout;
@@ -170,7 +250,6 @@ void comm_settimeout(struct comm_context *commctx, int timeout, CommCB callback,
 	commctx->timeoutcb.usr = usr;
 }
 
-/* 关闭指定的描述符 */
 void comm_close(struct comm_context *commctx, int fd)
 {
 	if (likely(commctx)) {
@@ -183,113 +262,57 @@ void comm_close(struct comm_context *commctx, int fd)
 	return ;
 }
 
-
-static inline bool _get_portinfo(int fd, int type, struct portinfo *portinfo)
-{
-	int	retval = -1;
-
-	retval = get_address(fd,  portinfo->addr, (size_t)sizeof(portinfo->addr));
-	if (unlikely(retval == -1)) {
-		return false;
-	}
-	portinfo->port = get_port(fd);
-	if (unlikely(portinfo->port ==  -1)) {
-		return false;
-	}
-	portinfo->fd = fd;
-	portinfo->type = type;
-
-	return true;
-}
-
-
-//epoll_wait超时时的回调函数:解析和打包数据
-static void _timeout_event(struct comm_context* commctx)
-{
-	int fd = 0;
-	int counter = commctx->watchcnt;
-	while (counter) {
-		struct comm_data *commdata = (struct comm_data*)commctx->data[fd];
-		if (likely(commdata)) {
-			//接收缓冲区里面存在数据需要解析
-			if (likely(commdata->recv_buff.end - commdata->recv_buff.start > 0)) {
-
-				_parse_data(commdata);
-			}
-			//发送缓冲区里面存在数据需要打包
-			if (likely(commdata->send_buff.end - commdata->recv_buff.start > 0)) {
-				_package_data(commdata);
-			}
-			counter--;
-		}
-		fd++;
-	}
-	if (likely(commctx->timeoutcb.callback)) { //调用用户层的回调函数
-		commctx->timeoutcb.callback(commctx, -1, FD_TIMEOUT, commctx->timeoutcb.usr);
-	}
-}
-
 /* 一个新的线程开始运行 */
 static void * _start_new_pthread(void* usr)
 {
 	assert(usr);
-	bool			retval = false;
+	int			n = 0;
 	struct comm_context*	commctx = (struct comm_context*)usr;
-#if 0
-	if (unlikely(!(retval = _close_all_fd(commctx->epfd)))) {
-		return NULL;
-	}
-#endif
 
-	commlock_wait(&commctx->commlock, (int*)&commctx->stat, COMM_STAT_RUN, -1);
+	/* 等待主线程将状态设置为COMM_STAT_RUN，才被唤醒继续执行以下代码 */
+	commlock_wait(&commctx->statlock, (int*)&commctx->stat, COMM_STAT_RUN, -1, false);
+
 	while (1) {
-		//线程状态为STOP的时候则，将状态设置为NONE，返回真，则代表设置成功，退出循环
+		/* 线程状态为STOP的时候则将状态设置为NONE，返回真，则代表设置成功，退出循环 */
 		if (unlikely(ATOMIC_CASB(&commctx->stat, COMM_STAT_STOP, COMM_STAT_NONE))) {
 			break;
-		}
-		if (commctx->timeoutcb.timeout <= 0) { //用户没有设置epoll_wait超时，则使用默认超时时间
+		}					
+
+		/* 用户没有设置epoll_wait超时，则使用默认超时时间 */
+		if (commctx->timeoutcb.timeout <= 0) {
 			commctx->timeoutcb.timeout = TIMEOUTED;
 		}
-		struct epoll_event	events[EPOLL_SIZE] = {};
-		int			nfds = -1;
-		int			n = 0;
-		nfds = epoll_wait(commctx->epfd, events, commctx->watchcnt, commctx->timeoutcb.timeout);
-		if (likely(nfds > 0)) {
-			for (n = 0; n < nfds; n++) {
-				if (unlikely(events[n].data.fd < -1)) {
+
+		if (likely(commepoll_wait(&commctx->commepoll, commctx->timeoutcb.timeout))) {
+			for (n = 0; n < commctx->commepoll.eventcnt; n++) {
+				if (unlikely(commctx->commepoll.events[n].data.fd < -1)) {
 					continue ;
 				}
-				if (commctx->listenfd != -1 && events[n].data.fd == commctx->listenfd) {
-					/* 新用户连接，触发accept事件 */
-					retval = _accept_event(commctx);
-					if (likely(retval)) {
-						continue ;
+
+				if (commctx->listenfd != -1 && commctx->commepoll.events[n].data.fd == commctx->listenfd) {	/* 新用户连接，触发accept事件 */
+					 _accept_event(commctx);
+
+				} else if (commctx->commepoll.events[n].events & EPOLLIN) {					/* 有数据可读，触发读数据事件 */
+				
+					if (commctx->commepoll.events[n].data.fd == commctx->commpipe.rfd) {			/* 管道事件被触发， 开始写事件 */
+						int array[EPOLL_SIZE] = {0};
+						int cnt = commpipe_read(&commctx->commpipe, array, sizeof(int));
+						if (likely(cnt > 0)) {
+							 _send_event(commctx, array, cnt);
+						} else {
+							continue ;
+						}
 					} else {
-						/* 返回false */
-						//return NULL;
+						 _recv_event(commctx, commctx->commepoll.events[n].data.fd);
 					}
-				} else if (events[n].events & EPOLLIN) {
-					/* 有数据可读，触发读数据事件 */
-					retval = _read_event((struct comm_data*)commctx->data[events[n].data.fd], events[n].data.fd);
-					if (likely(retval)) {
-						continue ;
-					} else {
-						/* 返回false */
-					}
-				} else if (events[n].events & EPOLLOUT) {
-					/* 有数据可写， 触发写数据事件 */
-					retval = _write_event((struct comm_data*)commctx->data[events[n].data.fd], events[n].data.fd);
-					if (likely(retval)) {
-						continue ;
-					} else {
-						/* 返回false */
-					}
+				} else if (commctx->commepoll.events[n].events & EPOLLOUT) {					/* 有数据可写， 触发写数据事件 */
 					
+					int array[1] = {commctx->commepoll.events[n].data.fd};
+					 _send_event(commctx, array, 1);
 				}
 			}
-		} else {
-			//epoll_wait 超时
-			if (likely(errno == EINTR)) {
+		} else {	
+			if (likely(errno == EINTR)) {		/* epoll 超时 */
 				if(commctx->timeoutcb.timeout > 0){
 					_timeout_event(commctx);
 				}
@@ -299,11 +322,60 @@ static void * _start_new_pthread(void* usr)
 	return NULL;
 }
 
-/* 接收新用户的连接 */
-static bool _accept_event(struct comm_context *commctx)
+static inline bool _get_portinfo(int fd, int type, int status, struct portinfo *portinfo)
 {
+	assert(portinfo && portinfo->addr);
+	if (unlikely((get_address(fd, portinfo->addr, (size_t)sizeof(portinfo->addr))) == -1)) {
+		return false;
+	}
+	portinfo->port = get_port(fd);
+	if (unlikely(portinfo->port ==  -1)) {
+		return false;
+	}
+	portinfo->fd = fd;
+	portinfo->type = type;
+	portinfo->stat = status;
+
+	return true;
+}
+
+/* epoll_wait超时时的回调函数:解析和打包数据 */
+static void _timeout_event(struct comm_context* commctx)
+{
+	int fd = 0;
+	int counter = commctx->commepoll.watchcnt;
+	while (counter) {
+		struct comm_data *commdata = (struct comm_data*)commctx->data[fd];
+		if (likely(commdata)) {
+			//接收缓冲区里面存在数据需要解析
+			if (likely(commdata->recv_buff.end - commdata->recv_buff.start > 0)) {
+
+				//_parse_data(commdata);
+			}
+			//发送缓冲区里面存在数据需要打包
+			if (likely(commdata->send_buff.end - commdata->recv_buff.start > 0)) {
+				//_package_data(commdata);
+			}
+			counter--;
+		}
+		fd++;
+	}
+	if (likely(commctx->timeoutcb.callback)) { //调用用户层的回调函数
+		commctx->timeoutcb.callback(commctx, NULL, commctx->timeoutcb.usr);
+	}
+}
+
+/* 接收新用户的连接 */
+static void  _accept_event(struct comm_context *commctx)
+{
+	assert(commctx);
 	int fd = -1;
+	struct comm_data *lsnfd_commdata = (struct comm_data*)commctx->data[commctx->listenfd];
+
 	while (1) {
+
+		struct portinfo		portinfo = {};
+		struct comm_data*	commdata = NULL;
 		fd = accept(commctx->listenfd, NULL, NULL);
 		if (likely(fd > 0)) {
 			if (unlikely(!fd_setopt(fd, O_NONBLOCK))) {
@@ -311,228 +383,303 @@ static bool _accept_event(struct comm_context *commctx)
 				continue ;
 			}
 				
-			struct portinfo portinfo = {};
-			if (unlikely(!_get_portinfo(fd, COMM_ACCEPT, &portinfo))) {
+			if (unlikely(!_get_portinfo(fd, COMM_ACCEPT, FD_INIT, &portinfo))) {
 				close(fd);
 				continue ;
 			}
-			struct comm_data* commdata = NULL;
 			commdata = commdata_init(commctx, &portinfo, NULL);
-			if (unlikely(!commdata)) {
-				close(fd); //无法对此描述符进行监控，则关闭此描述符
-				 continue;
-			} else {
+			if (likely(commdata)) {
 				commctx->data[fd ] = (intptr_t)commdata;
-				struct comm_data *lsnfd_commdata = (struct comm_data*)commctx->data[commctx->listenfd];
 				if (lsnfd_commdata->finishedcb.callback) {
-					lsnfd_commdata->finishedcb.callback(lsnfd_commdata->commctx, fd, FD_ACCEPT, lsnfd_commdata->finishedcb.usr);
+					lsnfd_commdata->finishedcb.callback(lsnfd_commdata->commctx, &portinfo, lsnfd_commdata->finishedcb.usr);
 				}
-				continue ;
+			} else {
+				close(fd);
 			}
 		} else {
-			if (errno == EAGAIN || errno == EWOULDBLOCK) {
-				/* 对于连接的用户已经全部进行处理 */
-				return true;
-			} else if (likely(errno == ECONNABORTED || errno == EPROTO || errno == EINTR )) {
+			if (unlikely(errno == ECONNABORTED || errno == EPROTO || errno == EINTR )) {
+				/* 可能被打断，继续处理下一个连接 */
 				continue ;
 			} else {
+				/* 处理完毕或者出现致命错误，则直接返回 */
+				return ;
+			}
+		}
+	}
+}
+
+
+/* 有数据可以接收的时候 */
+static void _recv_event(struct comm_context *commctx, int fd)
+{
+	assert(commctx);
+	int			n = 0;
+	int			bytes = 0;
+	struct comm_data*	commdata = NULL;
+
+	/* 先处理残留下来没处理完的fd */
+	for (n = 0; n < commctx->remainfd.rcnt; n++) {
+		commdata = (struct comm_data*)commctx->data[commctx->remainfd.rfda[n]];
+		if (likely(commdata)) {
+			if (likely( _read_data(commdata, commctx->remainfd.rfda[n]))) {
+				/* 发送数据成功 */
+				commctx->remainfd.rcnt -= 1;
+				_parse_data(commdata); /* 目前暂定只要接收到数据就解析 */
+			} else {
+				/* 发送数据失败*/
+				commctx->remainfd.rfda[commctx->remainfd.rcnt-1] = commctx->remainfd.rfda[n];
+				commctx->remainfd.rcnt += 1;
+			}
+		} else {
+			commctx->remainfd.rcnt -= 1;
+		}
+	}
+
+	/* 开始处理新的fd */
+	commdata = (struct comm_data*)commctx->data[fd];
+	if (likely(commdata)) {
+		if (likely(_read_data(commdata, fd))) {
+			/* 发送数据成功 */
+			_parse_data(commdata); /* 目前暂定只要接收到数据就是解析 */
+		} else {
+			/* 数据发送失败 */
+			commctx->remainfd.rfda[commctx->remainfd.rcnt-1] = commctx->remainfd.rfda[n];
+			commctx->remainfd.rcnt += 1;
+		}
+	}
+	return ;
+}
+
+/* 有数据可以发送的时候 */
+static void  _send_event(struct comm_context *commctx, int* fda, int cnt)
+{
+	assert(commctx && fda);
+	int			n = 0;
+	int			bytes = 0;
+	struct comm_data*	commdata = NULL;
+
+	/* 先处理遗留的没有处理的fd */
+	for (n = 0; n < commctx->remainfd.wcnt; n++) {
+		commdata = (struct comm_data*)commctx->data[commctx->remainfd.wfda[n]];
+		if (likely(commdata)) {
+			if (likely(_write_data(commdata, commctx->remainfd.wfda[n]))) {
+				/* 数据发送成功 */
+				commctx->remainfd.wcnt -= 1;
+			} else {
+				/* 数据发送失败 将此未处理的fd保存起来 下次进行处理 */
+				commctx->remainfd.wfda[commctx->remainfd.wcnt-1] = commctx->remainfd.wfda[n];
+				commctx->remainfd.wcnt += 1;
+			}
+		} else {
+			commctx->remainfd.wcnt -= 1;
+		}
+	}
+
+	/* 开始处理新的fd */
+	for (n = 0; n < cnt; n++) {
+		commdata = (struct comm_data*)commctx->data[fda[n]];
+		if (likely(commdata)) {
+			if (likely(_write_data(commdata, fda[n]))) {
+				/* 数据发送成功 */
+			} else {
+				/* 数据发送失败 将此未处理的fd保存起来 下次进行处理 */
+				commctx->remainfd.wfda[commctx->remainfd.wcnt-1] = fda[n];
+				commctx->remainfd.wcnt += 1;
+			}
+		}
+	}
+	return ;
+}
+
+static  bool _write_data(struct comm_data *commdata, int fd)
+{
+	assert(commdata);
+	if (unlikely(commdata->portinfo.stat == FD_INIT)) {
+		/* 第一次触发是强制触发 直接退出 */
+		commdata->portinfo.stat = FD_WRITE;
+		return true;
+	}
+
+	int bytes = 0;
+	commdata->portinfo.stat = FD_WRITE;
+	while (1) {
+		if (likely(commdata->send_buff.size > 0)) {
+			bytes = write(fd, &commdata->send_buff.cache[commdata->send_buff.start], commdata->send_buff.size);
+			if (bytes < 0) {
+				log("write data failed fd:%d\n", fd);
+				return false;
+			} else {
+				commdata->send_buff.start += bytes;
+				commdata->send_buff.size -= bytes;
+				commcache_clean(&commdata->send_buff);
+				_package_data(commdata); /* 暂时每次写完数据之后就去打包一次 */
+				if (commdata->finishedcb.callback) {
+					commdata->finishedcb.callback(commdata->commctx, &commdata->portinfo, commdata->finishedcb.usr);
+				}
+				log("write data successed fd:%d\n", fd);
+				return true;
+			}
+		} else {
+			/* @size为0则代表cache里面没数据发送，进行打包一次，然后再次尝试读取 */
+			_package_data(commdata); 
+			continue ;
+		}
+	}
+}
+
+static  bool _read_data(struct comm_data *commdata, int fd)
+{
+	assert(commdata);
+	int bytes = 0;
+	commdata->portinfo.stat = FD_READ;
+	while (1) {
+		bytes = read(fd, &commdata->recv_buff.cache[commdata->recv_buff.end], COMM_READ_MIOU);
+		if (likely(bytes > 0)) {
+			commdata->recv_buff.size += bytes;
+			commdata->recv_buff.end += bytes;
+			if (bytes < COMM_READ_MIOU) {		/* 数据已经读取完毕 */
+				log("read data successed\n");
+				break ;
+			} else {
+				continue ;
+			}
+		} else if (bytes == 0) {			/* 对端已经关闭 */
+			commdata->portinfo.stat = FD_CLOSE;
+			break ;
+		} else {
+			if (errno == EAGAIN || errno == EWOULDBLOCK) { /* 数据已经读取完毕 */
+				log("read data successed\n");
+				break ;
+			} else {
+				log("read data failed\n");
 				return false;
 			}
 		}
 	}
+
+	if (commdata->finishedcb.callback) {
+		commdata->finishedcb.callback(commdata->commctx, &commdata->portinfo, commdata->finishedcb.usr);
+	}
+	if (commdata->portinfo.stat == FD_CLOSE) {
+		log("close fd: %d\n",commdata->portinfo.fd);
+		comm_close(commdata->commctx, fd);
+	}
+
 	return true;
 }
 
-
-/* 有数据可以读的时候 */
-static bool _read_event(struct comm_data *commdata, int fd)
-{
-	int	bytes = 0;
-	int	status = FD_READ;
-	bool	flag = false;
-
-	while (1) {
-		bytes = read(fd, &commdata->recv_buff.cache[commdata->recv_buff.end], COMM_READ_MIOU);
-		if (unlikely(bytes < 0)) {
-			if (likely(errno == EAGAIN || errno == EWOULDBLOCK)) {
-				/* 说明数据已经全部接收完毕 */
-				flag = true;
-				_parse_data(commdata);
-				break ;
-			} else if (likely(errno == EINTR)) {
-				/* 被中断打断，继续接收数据 */
-				continue ;
-			} else {
-				/* 其他错误 */
-				flag = false;
-				break ;
-			}
-		} else if (likely(bytes == 0)){
-			/* 对端已关闭 */
-			status = FD_CLOSE;
-			flag = true;
-			break ;
-		} else {
-			/* 数据接收成功 */
-			commdata->recv_buff.end += bytes;
-			if (bytes < COMM_READ_MIOU) {
-				/* 数据已经全部读完 */
-				flag = true;
-				_parse_data(commdata);
-				break ;
-			}
-		}
-	}
-
-	if (commdata->finishedcb.callback) {
-		if (unlikely(status == FD_CLOSE)) {
-			commdata->finishedcb.callback(commdata->commctx, fd, status, commdata->finishedcb.usr);
-			comm_close(commdata->commctx, fd);
-		} else {
-			commdata->finishedcb.callback(commdata->commctx, fd, status, commdata->finishedcb.usr);
-		}
-	}
-
-	return flag;
-}
-
-/* 有数据可以写的时候 */
-static bool _write_event(struct comm_data *commdata, int fd)
-{
-	int bytes = 0;
-	int flag = false;
-	int size = commdata->send_buff.size;
-	while (1) {
-		bytes = write(fd, &commdata->send_buff.cache[commdata->send_buff.start], size);
-		if (unlikely(bytes < 0)) {
-			if (likely(errno == EAGAIN || errno == EWOULDBLOCK)) {
-				/* 写缓冲区列队已满 */
-				flag = false ;
-				_package_data(commdata);
-				break ; 
-			} else if (likely(errno == EINTR)) {
-				/* 写操作被信号中断 可继续写 */
-				continue ;
-			} else {
-				/* 其他错误，退出 */
-				flag = false;
-				break ;
-			}
-
-		} else {
-			/* 数据成功发送完成 */
-			flag = true;
-			commdata->send_buff.start += bytes;
-			size -= bytes;
-			if (size == bytes) {
-				/* 发送完毕，退出循环 */
-				commcache_clean(&commdata->send_buff); /* 待定中 */
-				/* 接收完数据就打包 */
-				_package_data(commdata);
-				break ;
-			}
-		}
-	}
-	if (commdata->finishedcb.callback) {
-		commdata->finishedcb.callback(commdata->commctx, fd, FD_WRITE, commdata->finishedcb.usr);
-	}
-
-	return flag;
-}
-
 /* 模拟解析函数 返回值为解析了多少大小的数据 */
-int parse(const char* buff)
+int parse(const char* buff, int *bodyoffset)
 {
 	/* 真正的解析数据在解析结构体里面需要告知body的偏移 */
-	int size = rand()%10;
+	int size = 0;
+	size = strlen(buff);
+	*bodyoffset = 0;
+	return size;
+}
+
+/* 模拟打包数据 返回值为打包之后数据的大小 */
+int  package(const char *buff, int size, char*packbuff)
+{
+	/* 测试用，只是单纯的额将send_queue里面的数据拷贝到send_buff里面 */
+	memcpy(packbuff, buff, size);
 	return size;
 }
 
 /* 解析数据 */
 static bool _parse_data(struct comm_data *commdata)
 {
-	/* 测试用，只是单纯将recv_buff里面的数据拷贝到recv_queue中 */
+	assert(commdata);
 	bool			flag = false;
-	int			size = 0; /* 成功解析数据的字节数 */
+	bool			block = false;
+	int			bodyoffset = 0;	/* body的偏移 */
+	int			size = 0;	/* 成功解析数据的字节数 */
+	int			timeout = -1;
 	struct comm_context	*commctx = commdata->commctx;
-	struct comm_message	*message = new_commmsg(size);
+	struct comm_message	*message = NULL;
 
-	size = parse(&commdata->recv_buff.cache[commdata->recv_buff.start]);
-	if (!message) {
-		return false;
+	/* 有数据进行解析的时候才去进行解析 */
+	if (commdata->recv_buff.size > 0) {
+		size = parse(&commdata->recv_buff.cache[commdata->recv_buff.start], &bodyoffset);
+		message = new_commmsg(size);
+		if (likely(message)) {
+			memcpy(message->content, &commdata->recv_buff.cache[commdata->recv_buff.start+bodyoffset], size);
+			message->fd = commdata->portinfo.fd;
+			message->size = size;
+			commdata->recv_buff.start += size;
+			commdata->recv_buff.size -= size;
+			commlock_lock(&commctx->recvlock);
+			while (1) {
+				if (likely(commqueue_push(&commctx->recv_queue, (void*)&message))) {
+					if (unlikely(!commctx->recv_queue.readable)) {			/* 为0代表有现在在等待可读 */
+						commlock_wake(&commctx->recvlock, &commctx->recv_queue.readable, 1, true);
+					}
+					flag = true;
+					break ;
+				} else {
+					/* 解析数据的时候队列已满，默认堵塞一下等待用户取数据 */
+					commctx->recv_queue.writeable = 0;
+					if (likely(commlock_wait(&commctx->recvlock, &commctx->recv_queue.writeable, 1, timeout, true))) {
+						block = true;
+						continue ;
+					} else {
+						break ;
+					}
+				}
+			}
+			if (unlikely(block && commctx->recv_queue.nodes == commctx->recv_queue.capacity)) {
+				commctx->recv_queue.writeable = 0;
+			}
+			commlock_unlock(&commctx->recvlock);
+			commcache_clean(&commdata->recv_buff);
+		} 
 	}
-	memcpy(message->content, &commdata->recv_buff.cache[commdata->recv_buff.start], size);
-	message->fd = commdata->portinfo.fd;
-	message->size = size;
-	commdata->recv_buff.start += size;
-	commqueue_push(&commdata->recv_queue, message);
-	commcache_clean(&commdata->recv_buff);
 	return flag;
-}
-
-
-/* 模拟打包数据 返回值为打包之后数据的大小 */
-int  package(const char *buff, int size, char*packbuff)
-{
-	memcpy(packbuff, buff, size);
-	return size;
 }
 
 /* 打包数据 */
 static bool _package_data(struct comm_data *commdata)
 {
-	/* 测试用，只是单纯的额将send_queue里面的数据拷贝到send_buff里面 */
 	bool			flag = false;
-	int			 packsize = 0; /* 打包之后的数据大小 */
-	struct comm_context	*commctx = commdata->commctx;
-	struct comm_message	*message = NULL;
+	bool			block = false;
+	int			packsize = 0; /* 打包之后的数据大小 */
+	int			timeout = -1;
+	struct comm_context*	commctx = commdata->commctx;
+	struct comm_message*	message = NULL;
 
-	commqueue_pull(&commdata->send_queue, message);
-	packsize = package(message->content, message->size, &commdata->send_buff.cache[commdata->send_buff.end]);
-	commdata->send_buff.end += packsize;
-	free_commmsg(message);
-	return flag;
-}
-
-
-/*关闭父进程所有打开的文件描述符， pfd:此描述符不关闭*/
-static bool  _close_all_fd(int pfd)
-{
-	int		retval = 0;
-	int		rewind = 0;
-	int		fd = 0;
-	DIR*		dir = NULL;
-	struct dirent	*entry, _entry;
-
-	if (unlikely(!(dir = opendir("/dev/fd")))) {
-		return false;
-	}
-
+	commlock_lock(&commdata->sendlock);
 	while (1) {
-
-		retval = readdir_r(dir, &_entry, &entry);
-		if (unlikely(retval != 0)) {
-			closedir(dir);
-			return false;
-		}
-		if (entry == NULL) {
-			if (!rewind) {
-				break;
+		if (likely(commqueue_pull(&commdata->send_queue, (void*)&message))) {
+			if (!commdata->send_queue.writeable) {
+				commlock_wake(&commdata->sendlock, &commdata->send_queue.writeable, 1, true);
 			}
-			rewinddir(dir);
-			rewind = 0;
-			continue;
+			flag = true;
+			break ;
+		} else {
+#if 0 /* 无数据可打包的时候 应该直接退出 */
+			commdata->send_queue.readable = 0;
+			if (commlock_wait(&commdata->sendlock, &commdata->send_queue.readable, 1, timeout, true)) {
+				block = true;
+				continue ;
+			} else {
+				break ;
+			}
+#endif
+			break ;
 		}
-		if (entry->d_name[0] == '.') {
-			continue;
-		}
-		fd = atoi(entry->d_name);
-		if (unlikely(dirfd(dir) == fd || fd == 1 || fd == 0 ||fd == 2 || fd == pfd)) {
-			continue;
-		}
-		close(fd);
-		rewind = 1;
 	}
-	closedir(dir);
-	return true;
+
+	if (unlikely(block && commdata->send_queue.nodes == 0)) {
+		commdata->send_queue.readable = 0;
+	}
+	commlock_unlock(&commdata->sendlock);
+
+	if (likely(flag)) {
+		packsize = package(message->content, message->size, &commdata->send_buff.cache[commdata->send_buff.end]);
+		commdata->send_buff.end += packsize;
+		commdata->send_buff.size += packsize;
+		free_commmsg(message);
+	}
+
+	return flag;
 }

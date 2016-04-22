@@ -14,6 +14,7 @@ extern "C" {
 
      
 struct comm_cache{
+	bool	init;		/* 结构体是否初始化的标志 */
 	int	start;		/* 有效数据的开始下标 */
 	int	end;		/* 有效数据的结束下标 */
 	int	size;		/* 有效数据的大小 */

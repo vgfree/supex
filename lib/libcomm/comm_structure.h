@@ -11,6 +11,7 @@
 #include "comm_tcp.h"
 #include "comm_epoll.h"
 #include "comm_lock.h"
+#include "comm_pipe.h"
 
 
 #ifdef __cplusplus
@@ -18,7 +19,7 @@ extern "C" {
 #endif
 
 #define	EPOLL_SIZE		10000
-#define TIMEOUTED		5000
+#define TIMEOUTED		5000	/* 以毫秒(ms)为单位 1s = 1000ms*/
 #define IPADDR_MAXSIZE		128
 #define	CACHE_SIZE		1024
 #define QUEUE_CAPACITY		50000
@@ -26,9 +27,9 @@ extern "C" {
 #define COMM_WRITE_MIOU		1024	/* 写入数据大小[getsockopt SNDBUF] */
 
 struct comm_context ;
-
+struct portinfo	;
 /* 回调函数的原型: fd参数:对于超时和线程回调函数无用，主要用于finished回调函数 */
-typedef void (*CommCB)(struct comm_context* commctx, int fd, int status, void* usr);
+typedef void (*CommCB)(struct comm_context* commctx, struct portinfo *portinfo, void* usr);
 
 /* 套接字的类型 */
 enum {
@@ -45,35 +46,54 @@ struct cbinfo {
 };
 
 /* 端口的相关信息 */
-struct portinfo{
+struct portinfo {
 	int		fd;			/* 套接字描述符 */
 	int		type;			/* 套接字的类型 */
+	enum {
+		FD_INIT = 0x01,
+		FD_READ,
+		FD_WRITE,
+		FD_CLOSE
+	}		stat;			/* 套接字的状态 */
 	uint16_t	port;			/* 本地端口 */
 	char		addr[IPADDR_MAXSIZE];	/* 本地IP地址 */
 };
 
+/* 此结构体保存没有及时处理的fd */
+struct  remainfd{
+	int	wfda[EPOLL_SIZE/4];		/* 保存出现意外没有及时发送消息的fd */
+	int	rfda[EPOLL_SIZE/4];		/* 保存出现意外没有及时接收消息的fd */
+	int	wcnt;				/* 没有及时发送消息的fd的计数 */
+	int	rcnt;				/* 没有及时接收消息的fd的计数 */
+};
+
 /* 内部结构体, 外部无需关心 */
-struct comm_data{
+struct comm_data {
 	struct comm_queue	recv_queue;	/* 存放接收并已经解析完毕的数据 */
 	struct comm_queue	send_queue;	/* 存放用户传递但并未打包的数据 */
 	struct comm_cache	recv_buff;	/* 存放接收但并未解析的数据 */
 	struct comm_cache	send_buff;	/* 存放需要发送并已经打包的数据 */
+	struct comm_lock	sendlock;	/* send_queue的锁 */
 	struct comm_context*	commctx;	/* 通信上下文的结构体 */
 	struct cbinfo		finishedcb;	/* 此描述符监听事件发生时相应的回调函数信息 */
 	struct portinfo		portinfo;	/* 端口的相关信息 */
 	int			parsepct;	/* 解析数据百分比[根据此值来决定什么时候调用解析函数] */
 	int			packpct;	/* 打包数据百分比[根据此值来决定什么时候调用打包函数]*/
 };
+
+
 /* 通信模块的上下文环境结构体 */
 struct comm_context {
-	int			epfd;			/* IO复用句柄 */
 	int			listenfd;		/* 如果类型为COMM_BIND此变量会被赋值 */
 	intptr_t		data[EPOLL_SIZE];	/* 保存接收发送的相关数据 */
-	long			watchcnt;		/* 正在监听的fd的个数 */
 	pthread_t		ptid;			/* 新线程的pid */
 	struct cbinfo		timeoutcb;		/* 超时回调函数的相关信息 */
+	struct remainfd		remainfd;		/* 遗留下来没有及时处理的fd */
 	struct comm_queue	recv_queue;		/* 存放已经接收到并解析好的数据 */
-	struct comm_lock	commlock;		/* 用来同步stat的状态 */
+	struct comm_pipe	commpipe;		/* 关于管道的相关信息 */
+	struct comm_lock	recvlock;		/* 用来同步接收队列的锁*/
+	struct comm_lock	statlock;		/* 用来同步stat的状态 */
+	struct comm_epoll	commepoll;		/* epoll监听事件的相关信息 */
 	enum {
 		COMM_STAT_NONE,
 		COMM_STAT_INIT,

@@ -16,6 +16,7 @@ extern "C" {
 
      
 struct comm_lock{
+	bool		init;		/* 锁的初始化标志，1为已初始化 */
 	int		waiters;	/* 锁的等待者个数 */
 	bool		available;	/* 锁是否空闲可用 */
 	bool		condable;	/* 是否是条件上锁 */
@@ -27,7 +28,7 @@ struct comm_lock{
 bool commlock_init(struct comm_lock *commlock);
 
 /* 获取锁并锁住，如果锁被占用则阻塞到锁可用 */
-bool commlock_lock(struct comm_lock *commlock, bool condable);
+bool commlock_lock(struct comm_lock *commlock);
 
 /* 尝试获取锁，如果锁被占用则立即返回 */
 bool commlock_trylock(struct comm_lock *commlock);
@@ -37,9 +38,9 @@ bool commlock_unlock(struct comm_lock *commlock);
 
 bool commlock_wait_cond(struct comm_lock *commlock, int cond, int timeout);
 
-bool commlock_wait(struct comm_lock *commlock, int *addr,  int value, int timeout);
+bool commlock_wait(struct comm_lock *commlock, int *addr,  int value, int timeout, bool locked);
 
-bool commlock_wake(struct comm_lock *commlock, int *addr,  int value);
+bool commlock_wake(struct comm_lock *commlock, int *addr,  int value, bool locked);
 /* 销毁锁 */
 bool commlock_destroy(struct comm_lock *commlock);
 

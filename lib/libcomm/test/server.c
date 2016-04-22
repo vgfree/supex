@@ -4,33 +4,33 @@
 
 void close_fun()
 {
-	printf("here is close_fun()\n");
+	printf("server here is close_fun()\n");
 }
 
 void write_fun()
 {
-	printf("here is write_fun()\n");
+	printf("server here is write_fun()\n");
 }
 
 void read_fun()
 {
-	printf("here is read_fun()\n");
+	printf("server here is read_fun()\n");
 }
 
 void accept_fun()
 {
-	printf("here is accept_fun()\n");
+	printf("server here is accept_fun()\n");
 }
 
 void timeout_fun()
 {
-	printf("here is timeout_fun()\n");
+	printf("server here is timeout_fun()\n");
 }
 
 /* @status: FD_CLOSE, FD_READ, FD_WRITE, FD_ACCEPT */
-void event_fun(struct comm_context* commctx, int fd, int status, void* usr)
+void event_fun(struct comm_context* commctx, struct portinfo *portinfo, void* usr)
 {
-	switch (status)
+	switch (portinfo->stat)
 	{
 		case FD_CLOSE:
 			close_fun();
@@ -41,16 +41,16 @@ void event_fun(struct comm_context* commctx, int fd, int status, void* usr)
 		case FD_READ:
 			read_fun();
 			break;
-		case FD_ACCEPT:
-			accept_fun();
-			break;
-		case FD_TIMEOUT:
+		case FD_INIT:
+			if (portinfo->type == COMM_ACCEPT) {
+				accept_fun(); /* 当fd的类型为COMM_ACCEPT时才是accept事件 */
+			}
+			break ;
+		default:
 			timeout_fun();
 			break;
-		default:
-			break;
 	}
-	printf("%d fd have action, data is: %s", fd, (char*)usr);
+	log("server %d fd have action\n",portinfo->fd);
 }
 
 int main(int argc, char* argv[])
@@ -85,14 +85,15 @@ int main(int argc, char* argv[])
 	log("comm_socket COMM_BIND successed\n");
 
 	while( 1 ){
-		char buff[128] = "nothing is improtant\r\t";
+		char buff[128] = "everything is improtant\r\t";
 		char content[1024] = {};
 		struct comm_message recvmsg = {};
 		recvmsg.content = content;
 		while (1) {
-			retval = comm_recv(commctx, &recvmsg);
+			retval = comm_recv(commctx, &recvmsg, false, -1);
 			if( unlikely(retval < 0) ){
-				log("comm_recv failed, probably becasue don't have any data\n");
+				sleep(1);
+				log("comm_recv failed\n");
 			} else {
 				log("comm_recv success, message:%s\n", recvmsg.content);
 				break ;
@@ -100,14 +101,15 @@ int main(int argc, char* argv[])
 		}
 		struct comm_message sendmsg = {recvmsg.fd, -1, -1, recvmsg.size, buff};
 		
-		retval = comm_send(commctx, &sendmsg);
+		retval = comm_send(commctx, &sendmsg, false, -1);
 		if( unlikely(retval < 0) )
 		{
 			log("comm_send failed\n");
-			return retval;
+			continue ;
 		} else {
+			continue ;
 			log("comm_send data successed, message:%s\n", sendmsg.content);
 		}
-		i = (i+1)%5;
 	}
+	comm_ctx_destroy(commctx);
 }
