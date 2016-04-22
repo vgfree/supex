@@ -9,5 +9,5 @@ all:
 	gcc -g $(OPT) $(INC) $(LIB)  -lluajit-5.1 -lpthread -lrt zmq_test.c -lzmq  -lstdc++  -o zmqtest
 
 clean:
-	rm -rf transit
+	rm -rf zmqtest
 

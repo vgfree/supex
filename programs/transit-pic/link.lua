@@ -102,5 +102,10 @@ OWN_POOL = {
 OWN_DIED = {
 	redis = {},
 	mysql = {},
-	http = {}
+	http = {                                                              
+        	["dfsapi/v2/saveImage"] = {                 
+                	host = "192.168.71.84",                                 
+                	port = 2222,                                              
+                },
+        }
 }
