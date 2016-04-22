@@ -20,7 +20,7 @@ int test_simulate_gateway()
 {
   struct sockaddr_in server_addr;
   int err;
-  char server_ip[50] = "127.0.0.1\0";
+  char server_ip[50] = "192.168.71.140\0";
   int socket_fd = socket(AF_INET, SOCK_STREAM, 0);
   if (socket_fd < 0) {
     printf("message_gateway: create socket error\n");
@@ -34,7 +34,7 @@ int test_simulate_gateway()
   if (err == 0) {
     printf("message_gateway: connect to server success.\n start to send login login_authentication_package------------\n");
     write(socket_fd, login_authentication_package, 17);
-    sleep(4);
+    sleep(10);
     printf("start to send data. \n");
     write(socket_fd, expect_value, 25);
   }
@@ -43,7 +43,7 @@ int test_simulate_gateway()
     close(socket_fd);
     return -1;
   }
-  sleep(1);
+  sleep(10);
   close(socket_fd);
   return 0;
 }

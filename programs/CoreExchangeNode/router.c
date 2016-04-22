@@ -8,7 +8,10 @@ char route_sign[7] = {0x52, 0x4f, 0x55, 0x54, 0x49, 0x0d, 0x0a}; /* route\r\n*/
 
 struct router_head *parse_router(char *data, uint32_t size)
 {
-  assert(data && size >= 17);
+  if (data == NULL || size < 17) {
+    printf("wrong data, size :%d", size);
+    return NULL;
+  }
   struct router_head *head =
     (struct router_head*)malloc(sizeof(struct router_head));
   uint32_t nsize = 0;
@@ -92,6 +95,8 @@ char *pack_router(char *data, uint32_t *size,
   package[i++] = head->body_size >> 16;
   package[i++] = head->body_size >> 24;
 
-  memcpy(&package[i], data, head->body_size);
+  if (data != NULL) {
+    memcpy(&package[i], data, head->body_size);
+  }
   return package;
 }

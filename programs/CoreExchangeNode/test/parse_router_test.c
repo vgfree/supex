@@ -20,6 +20,10 @@ int test_parse_function() {
   exp_val.body_size = 0x02;
   struct router_head *test_head =
     parse_router(expect_value, 25);
+  if (test_head == NULL) {
+    printf("-------------------parse router failed ---------------");
+    return -1;
+  }
   printf("\nexp : from:%d, to:%d, number:%d, ip[0]:%x, fd:%d, size:%d.\n",
          exp_val.message_from, exp_val.message_to, exp_val.CID_number,
          exp_val.cid[0].IP[0], exp_val.cid[0].fd, exp_val.body_size);

@@ -3,7 +3,6 @@
 
 #include <assert.h>
 
-#define FD_CAPACITY 10000
 
 static struct fd_list g_list;
 static struct fd_array g_array;
@@ -136,4 +135,51 @@ int array_at_fd(const int fd, struct fd_descriptor *des)
   des->obj = g_array.dsp_array[fd].obj;
 
   return SUCCESS;
+}
+
+uint32_t statistic_object(const enum router_object obj)
+{
+  uint32_t count = 0;
+  switch (obj) {
+    case CLIENT:
+      {
+        for (int i = 0; i < g_array.max_fd; i++) {
+          if (g_array.dsp_array[i].obj == CLIENT &&
+              g_array.dsp_array[i].status == 1) {
+            count++;
+          }
+        }
+        break;
+      }
+    case MESSAGE_GATEWAY:
+	  {
+        struct fd_node *node = g_list.head[MESSAGE_GATEWAY].next;
+		while (node) {
+          count++;
+          node = node->next;
+		}
+        break;
+	  }
+    case ROUTER_SERVER:
+      printf("Not support statistc router server.");
+      break;
+    default:
+	  printf("statistic error.");
+      break;
+  }
+  return count;
+}
+
+uint32_t poll_client_fd(int *arr[], uint32_t *size)
+{
+  uint32_t count = 0;
+  for (int i = 0; i < g_array.max_fd; i++) {
+    if (g_array.dsp_array[i].obj == CLIENT &&
+        g_array.dsp_array[i].status == 1) {
+      (*arr)[count] = i;
+      count++;
+    }
+  }
+  *size = count;
+  return count;
 }

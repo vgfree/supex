@@ -2,8 +2,8 @@
 #define _FD_MANAGER_H_
 
 #include "router.h"
-//#include "communication.h"
 
+#define FD_CAPACITY 10000
 #define FD_MAX_CLASSIFICATION 3
 #define SUCCESS 0
 #define FAILED -1
@@ -69,4 +69,6 @@ int array_fill_fd(const int fd, const struct fd_descriptor *des);
 int array_remove_fd(const int fd);
 int array_at_fd(const int fd, struct fd_descriptor *des);
 
+uint32_t statistic_object(const enum router_object obj);
+uint32_t poll_client_fd(int *arr[], uint32_t *size);
 #endif
