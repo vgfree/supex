@@ -84,7 +84,7 @@ int main(int argc, char* argv[])
 	}
 	log("comm_socket COMM_BIND successed\n");
 
-	while( 1 ){
+	while( 1 ) {
 		char buff[128] = "everything is improtant\r\t";
 		char content[1024] = {};
 		struct comm_message recvmsg = {};
@@ -95,19 +95,17 @@ int main(int argc, char* argv[])
 				sleep(1);
 				log("comm_recv failed\n");
 			} else {
-				log("comm_recv success, message:%s\n", recvmsg.content);
+				log("comm_recv success, size: %d message:%s\n", recvmsg.size, recvmsg.content);
 				break ;
 			}
 		}
-		struct comm_message sendmsg = {recvmsg.fd, -1, -1, recvmsg.size, buff};
+		struct comm_message sendmsg = {recvmsg.fd, -1, -1, strlen(buff), buff};
 		
 		retval = comm_send(commctx, &sendmsg, false, -1);
 		if( unlikely(retval < 0) )
 		{
 			log("comm_send failed\n");
-			continue ;
 		} else {
-			continue ;
 			log("comm_send data successed, message:%s\n", sendmsg.content);
 		}
 	}

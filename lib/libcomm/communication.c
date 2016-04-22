@@ -569,11 +569,10 @@ static  bool _read_data(struct comm_data *commdata, int fd)
 }
 
 /* 模拟解析函数 返回值为解析了多少大小的数据 */
-int parse(const char* buff, int *bodyoffset)
+int parse(const char* buff, int size, int *bodyoffset)
 {
 	/* 真正的解析数据在解析结构体里面需要告知body的偏移 */
-	int size = 0;
-	size = strlen(buff);
+	//size = strlen(buff);	/*此类字符串长度不可以使用 因为非字符串会出问题	*/
 	*bodyoffset = 0;
 	return size;
 }
@@ -600,7 +599,8 @@ static bool _parse_data(struct comm_data *commdata)
 
 	/* 有数据进行解析的时候才去进行解析 */
 	if (commdata->recv_buff.size > 0) {
-		size = parse(&commdata->recv_buff.cache[commdata->recv_buff.start], &bodyoffset);
+		size = parse(&commdata->recv_buff.cache[commdata->recv_buff.start], commdata->recv_buff.size, &bodyoffset);
+		log("size: %d recv_buff.size:%d\n", size, commdata->recv_buff.size);
 		message = new_commmsg(size);
 		if (likely(message)) {
 			memcpy(message->content, &commdata->recv_buff.cache[commdata->recv_buff.start+bodyoffset], size);

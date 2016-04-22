@@ -56,6 +56,9 @@ int main(int argc, char* argv[])
 	int retval = -1;
 	int fd = -1;
 	char *data[5] = {"usr data one", "usr data two", "usr data three", "usr data four", "usr data five"};
+	char test_data[17] = {0x00, 0x11, 0x52, 0x4f, 0x55, 0x54, 0x49, 0x0d, 0x0a,
+  0x01, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+};
 
 	if( unlikely(argc < 3) ){
 		printf("usage: %s <ipaddr> <port>", argv[0]);
@@ -85,7 +88,7 @@ int main(int argc, char* argv[])
 		char buff[128] = "nothing is important\r\t";
 		char content[1024] = {};
 
-		struct comm_message sendmsg = {fd, -1, -1, strlen(buff), buff};
+		struct comm_message sendmsg = {fd, -1, -1, 17, test_data};
 		
 		retval = comm_send(commctx, &sendmsg, false, -1);
 		if( unlikely(retval < 0) ) {
@@ -101,7 +104,7 @@ int main(int argc, char* argv[])
 				sleep(1);
 				log("client recv_data failed\n");
 			} else {
-				log("client recv_data successed, message:%s\n", recvmsg.content);
+				log("client recv_data successed, size:%d,message:%s\n", retval,recvmsg.content);
 				break ;
 			}
 		}

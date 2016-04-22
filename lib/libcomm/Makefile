@@ -87,7 +87,6 @@ SOBJ = $(addprefix $(SOBJ_DIR)/, \
 	comm_epoll.o \
 	comm_pipe.o\
 	comm_structure.o\
-	timer.o\
 	communication.o \
 	)
 
