@@ -40,7 +40,8 @@ infomation_type = {
 ]]--
 --s:send_table(infomation_type)
 --s:send("xxxxxxxxxxxxx")
-s:send("picture" .. dataStr)
+s:send("Head=picture&data=" .. picStr)
+--s:send("Head=picture&data=" .. "abc")
 --[[
 local data = s:recv_table()
 for i=1,#data do

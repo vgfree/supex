@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <stdbool.h>
 #include <assert.h>
 
 #include <lua.h>
@@ -10,6 +11,8 @@
 #include "skt.h"
 
 #define SERVER_NAME "AK47"
+
+const char* picHead = {"Head=picture"};
 #define HEAD_LENGTH 7
 
 static lua_State *lua_vm_init(void)
@@ -57,59 +60,51 @@ static lua_State *lua_vm_init(void)
 	return L;
 }
 
-void __get_picture_head(void *head)
+bool __get_picture_head(void *head)
 {
-  int ret = memcmp("head", head, sizeof(HEAD_LENGTH));
-  if (ret == 0) {
-    printf("this data is a picture\n");		
+  int ret = memcmp(picHead, head, sizeof(picHead));
+  if (ret != 0) {
+    printf("the data is not a picture");
+    return false;
   }
-  else {
-    printf("this data is not a picture\n");
-  }
+
+  return true;
 }
 
 void *work_task(void *args)
 {
 	int             error = 0;
 	void            *data = NULL;
+	//char 		*ret = NULL;
 	lua_State       *L = lua_vm_init();
 
 	// printf("%d \n", args);
 	struct skt_device devc = {};
 
 	while (1) {
-		printf("before zmq_srv_fetch\n");
 		zmq_srv_fetch(&devc);
-		printf("after zmq_srv_fetch\n");
 		lua_getglobal(L, "app_call");
-		printf("after lua_getglobal\n");
 		lua_newtable(L);
-		printf("after lua_newtable\n");
-		__get_picture_head(devc.ibuffer);
 		int i = 0;
 		printf("cnt %d\n", devc.idx);
 		
 		for (i = 0; i < devc.idx; i++) {
 			data = devc.ibuffer[i].iov_base;
-                        printf("devc.ibuffer[i].iov_len = 0x%x\n", devc.ibuffer[i].iov_len);
 			lua_pushnumber(L, i + 1);
-			printf("after lua_pushnumber\n");
 			lua_pushlstring(L, data, devc.ibuffer[i].iov_len);
-			printf("after lua_pushlstring\n");
 			lua_settable(L, -3);
-			printf("after lua_settable\n");
 
 			free(data);
 		}
-                printf("data = %s", data);
+
+                if(__get_picture_head(data)) {
+		  printf("This is a picture");
+		}
+
 		error = lua_pcall(L, 1, 0, 0);
 
 		if (error) {
-			printf("lawrence hamster said error : %s\n", lua_tostring(L, -1));
 			lua_pop(L, 1);
-		}
-		else {
-			printf("lua_pcall success\n");
 		}
 	}
 }

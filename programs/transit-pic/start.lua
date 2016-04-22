@@ -3,8 +3,7 @@ local lualog		= require('lualog')
 local only		= require('only')
 local cutils		= require('cutils')
 local redis_api		= require('redis_pool_api')
-local api_dk_newstatus	= require("api_dk_newstatus")
-
+local api_pic_newstatus	= require("api_pic_newstatus")
 
 function app_init()
 	--> init first
@@ -21,7 +20,5 @@ function app_call( tab )
 	for k,v in ipairs(tab) do
 		print(k, v)
 	end
-	--only.log("lawrence said hello world")
-	--only.log('W',"tab[1] = ", tab[1])
-	api_dk_newstatus.handle( tab[1] )
+	api_pic_newstatus.handle( tab[1] )
 end
