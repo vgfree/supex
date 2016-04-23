@@ -17,42 +17,42 @@
 
 struct CSLog* g_imlog = NULL;
 
-void io_notify_logic_thread(struct comm_context* commctx, int fd,
-                            int status, void *usr)
+void io_notify_logic_thread(struct comm_context* commctx,
+                            struct portinfo *portinfo, void *usr)
 {
   if (g_serv_info.commctx != commctx) {
     error("callback commctx not equal. g_serv_info.commctx:%p, commctx:%p",
           g_serv_info.commctx, commctx);
   }
-  log("callback, fd:%d, status:%d.", fd, status);
-  switch (status) {
+  log("callback, fd:%d, status:%d.", portinfo->fd, portinfo->stat);
+  switch (portinfo->stat) {
   case 0:
     break;
   case 1:   // connected.
 	{
       struct fd_descriptor des;
       des.status = 1;
-      array_fill_fd(fd, &des);
+      array_fill_fd(portinfo->fd, &des);
 	}
     break;
-  case 2:   // closed.
+  case 4:   // closed.
     {
       struct fd_descriptor des;
-      array_at_fd(fd, &des);
+      array_at_fd(portinfo->fd, &des);
       if (des.status != 1) {
-        error("this fd:%d is not running.", fd);
+        error("this fd:%d is not running.", portinfo->fd);
         return;
       }
       if (des.obj == CLIENT){
         // 打包路由结束包发送给其他服务器。message_from 为router_server.
-        log("client closed, fd:%d.", fd);
+        log("client closed, fd:%d.", portinfo->fd);
         struct router_head head;
         head.message_from = ROUTER_SERVER;
 		head.message_to = MESSAGE_GATEWAY;
         head.CID_number = 1;
         head.cid = (struct CID*)malloc(sizeof(struct CID));
         memcpy(head.cid->IP, g_serv_info.ip, 4);
-        head.cid->fd = fd;
+        head.cid->fd = portinfo->fd;
         head.body_size = 0;
         uint32_t size;
         char *content = pack_router(NULL, &size, &head);
@@ -63,13 +63,13 @@ void io_notify_logic_thread(struct comm_context* commctx, int fd,
         int gateway_fd;
         find_best_gateway(&gateway_fd);
         msg.fd = gateway_fd;
-        comm_send(g_serv_info.commctx, &msg);
+        comm_send(g_serv_info.commctx, &msg, true, -1);
         free(msg.content);
       }
       else if (des.obj == MESSAGE_GATEWAY) {
-        list_remove(des.obj, fd);
+        list_remove(des.obj, portinfo->fd);
       }
-      array_remove_fd(fd);
+      array_remove_fd(portinfo->fd);
       break;
     }
   default:
@@ -126,7 +126,6 @@ int main(int argc, char* argv[])
   log("");
   
   while (1) {
-    sleep(1);
     log("message loop");
     message_dispatch();
   }
