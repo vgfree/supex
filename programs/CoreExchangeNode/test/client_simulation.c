@@ -20,7 +20,7 @@ int test_simulate_client()
 {
   struct sockaddr_in server_addr;
   int err;
-  char server_ip[50] = "127.0.0.1\0";
+  char server_ip[50] = "192.168.71.140\0";
   int socket_fd = socket(AF_INET, SOCK_STREAM, 0);
   if (socket_fd < 0) {
     printf("client: create socket error\n");

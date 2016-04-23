@@ -95,8 +95,8 @@ static void handle_gateway_message(const struct router_head *head,
         log("Prepare to send mesg.");
         comm_send(g_serv_info.commctx, &new_msg);
         free(new_msg.content);
-	  }
-	}
+      }
+    }
     break;
   case MESSAGE_GATEWAY:
     log("Not support message_gateway to message_gateway.");
@@ -104,11 +104,33 @@ static void handle_gateway_message(const struct router_head *head,
   case ROUTER_SERVER:
     // 每个messageGateway 连接上该路由server时，发送的第一个包应为身份验证包，
 	// 也就只包含唯一的路由帧。
-	{
+    {
       struct fd_node node;
       node.fd = msg->fd;
       list_push_back(MESSAGE_GATEWAY, &node);
-	}
+      // 将已经连接上的客户端反馈回message_gateway.
+      int arr[FD_CAPACITY] = {};
+	  uint32_t number = 0;
+      poll_client_fd((int **)&arr, &number);
+      struct router_head rhead;
+	  rhead.message_from = ROUTER_SERVER;
+	  rhead.message_to = MESSAGE_GATEWAY;
+	  rhead.CID_number = number;
+	  rhead.cid = (struct CID*)calloc(number, sizeof(struct CID*));
+      for (uint32_t i = 0; i < number; i++) {
+        memcpy(rhead.cid[i].IP, g_serv_info.ip, 4);
+        rhead.cid[i].fd = arr[i];
+      }
+	  rhead.body_size = 0;
+      struct comm_message new_msg;
+      new_msg.fd = msg->fd;
+      uint32_t size = 0;
+	  new_msg.content = pack_router(NULL, &size, &rhead);
+	  new_msg.size = size;
+	  free(rhead.cid);
+	  comm_send(g_serv_info.commctx, &new_msg);
+	  free(new_msg.content);
+    }
     break;
   default:
     break;
@@ -127,23 +149,27 @@ void message_dispatch()
     }
     struct router_head *oldhead = 
       parse_router(org_msg.content, org_msg.size);
-
-    log("head, message_from:%d, message_to:%d.", oldhead->message_from, oldhead->message_to);
-    switch (oldhead->message_from) {
-    case CLIENT:
-      handle_client_message(oldhead, &org_msg);
-      break;
-    case MESSAGE_GATEWAY:
-      handle_gateway_message(oldhead, &org_msg);
-      break;
-    default:
-      error("msg head data (message_from :%d) is not right.",
-            oldhead->message_from);
+    if (oldhead) {
+      log("head, message_from:%d, message_to:%d.", oldhead->message_from, oldhead->message_to);
+      switch (oldhead->message_from) {
+      case CLIENT:
+        handle_client_message(oldhead, &org_msg);
+        break;
+      case MESSAGE_GATEWAY:
+        handle_gateway_message(oldhead, &org_msg);
+        break;
+      default:
+        error("msg head data (message_from :%d) is not right.",
+              oldhead->message_from);
+      }
+      if (oldhead->cid) {
+        free(oldhead->cid);
+      }
+      free(oldhead);
     }
-    if (oldhead->cid) {
-      free(oldhead->cid);
+    else {
+      error("wrong data.");
     }
-    free(oldhead);
   }
   else {
     log("no message.");
