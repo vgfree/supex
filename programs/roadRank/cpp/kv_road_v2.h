@@ -25,7 +25,9 @@ typedef struct seckv_road
 {
         char            shift;
         SITE            road_sec[ROADSECNUM]; //FIXME maybe not enough
-        AO_SpinLockT            locker;;
+        //AO_SpinLockT            locker;
+        AO_LockT                locker;
+        //unsigned short  magic;
         int             sec_num;
         int             max_speed;
         int             avg_speed;

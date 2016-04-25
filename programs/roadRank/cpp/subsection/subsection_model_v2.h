@@ -11,7 +11,7 @@ typedef struct subsec_cfg_file SUBSEC_CFG;
 
 typedef int (*UPDATE_SECREDIS_CALLBACK)( SECKV_ROAD *kv_roadID, int g_save_time, struct ev_loop *loop );
 typedef void (*UPDATE_ROADSEC_CALLBACK)( SECKV_ROAD *kv_road, gps_info_t *gps_info, road_info_t *road_info, int merged_speed_limit_l, int merged_speed_limit_h, int replace_limit, int expire_time );
-typedef void (*INIT_ROADSEC_CALLBACK)(gps_info_t *gps_info, road_info_t *road_info, SECKV_ROAD *kv_road);
+typedef void (*INIT_ROADSEC_CALLBACK)(gps_info_t *gps_info, road_info_t *road_info, SECKV_ROAD *kv_road, int max_limit);
 
 struct subsec_model_t
 {
@@ -23,7 +23,7 @@ struct subsec_model_t
 
 int subsec_calculate( struct ev_loop * p_loop, gps_info_t *gps_info, road_info_t *road_info, struct subsec_model_t *subsec);
 void init_SECROAD_data(gps_info_t *gps_info, road_info_t *road_info, SECKV_ROAD *kv_road);
-void init_SECROAD_data2(gps_info_t *gps_info, road_info_t *road_info, SECKV_ROAD *kv_road);
+void init_SECROAD_data2(gps_info_t *gps_info, road_info_t *road_info, SECKV_ROAD *kv_road, int max_limit);
 //void update_roadsection( SECKV_ROAD *kv_road, gps_info_t *gps_info, road_info_t *road_info, int merged_speed_limit, int replace_limit, int expire_time );
 void update_roadsection( SECKV_ROAD *kv_road, gps_info_t *gps_info, road_info_t *road_info, int merged_speed_limit_l, int merged_speed_limit_h, int replace_limit, int expire_time );
 void set_CURRENTROAD_data( SECKV_ROAD *kv_road, gps_info_t *gps_info, road_info_t *road_info, int merged_speed_limit, int replace_limit, int expire_time );

@@ -58,6 +58,7 @@ bool fill_subsec_model(struct json_object *obj, char *obj_name, struct subsec_cf
         struct json_object *expire_obj = NULL;
         struct json_object *merged_obj = NULL;
         struct json_object *merged_2obj = NULL;
+        struct json_object *init_max_obj = NULL;
         if(!obj || !obj_name || !p_link)
                 goto fill_fail;
         
@@ -85,6 +86,9 @@ bool fill_subsec_model(struct json_object *obj, char *obj_name, struct subsec_cf
         if (!json_object_object_get_ex(sub_obj, "merged_speed_h", &merged_2obj))
                 goto fill_fail;
 
+        if (!json_object_object_get_ex(sub_obj, "init_max", &init_max_obj))
+                goto fill_fail;
+
         unsigned short roadcount_limit = (short)json_object_get_int(roadcount_obj);
         unsigned short replace_limit = (short)json_object_get_int(countlimit_obj);
         unsigned short replace_limit_h = (short)json_object_get_int(replace_limit_h_obj);
@@ -92,14 +96,16 @@ bool fill_subsec_model(struct json_object *obj, char *obj_name, struct subsec_cf
         unsigned short expire_time    = (short)json_object_get_int(expire_obj);
         unsigned short merged_speed_l   = (short)json_object_get_int(merged_obj);
         unsigned short merged_speed_h   = (short)json_object_get_int(merged_2obj);
+        unsigned short init_max   = (short)json_object_get_int(init_max_obj);
         
-        p_link->road_match_limit = roadcount_limit;
+        p_link->road_match_limit= roadcount_limit;
         p_link->replace_limit_l = replace_limit;
         p_link->replace_limit_h = replace_limit_h;
-        p_link->kv_cache_count = kv_cache_count;
-        p_link->expire_time    = expire_time;
-        p_link->merged_speed_l   = merged_speed_l;
-        p_link->merged_speed_h   = merged_speed_h;
+        p_link->kv_cache_count  = kv_cache_count;
+        p_link->expire_time     = expire_time;
+        p_link->merged_speed_l  = merged_speed_l;
+        p_link->merged_speed_h  = merged_speed_h;
+        p_link->init_max        = init_max;
         
         return true;
         

@@ -12,6 +12,7 @@ struct subsec_cfg_file
         unsigned short expire_time;
         unsigned short merged_speed_l; 
         unsigned short merged_speed_h; 
+        unsigned short init_max; 
 
 };
 

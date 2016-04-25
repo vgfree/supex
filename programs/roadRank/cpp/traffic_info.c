@@ -141,7 +141,7 @@ int subsec_update_redis(SECKV_ROAD *kv_roadID, int g_save_time, struct ev_loop *
         int     old_rr_id = kv_roadID->old_roadID / 1000;
         int     old_sg_id = kv_roadID->old_roadID % 1000;
         int     save_time = g_rr_cfg_file.save_time;
-        char    section[2048] = "";
+        char    section[4096] = "";
         show_road_section(section, kv_roadID);
                                
         //添加单条道路路况   

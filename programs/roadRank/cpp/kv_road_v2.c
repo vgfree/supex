@@ -54,7 +54,8 @@ int roadsec_info_get( long roadid, SECKV_ROAD **roadsec)
                         *roadsec = (SECKV_ROAD *)malloc(sizeof(SECKV_ROAD));
                         memset(*roadsec, 0 , sizeof(SECKV_ROAD));
                         (*roadsec)->old_roadID = roadid;
-                        AO_SpinLockInit(&(*roadsec)->locker, false);
+                        //AO_SpinLockInit(&(*roadsec)->locker, false);
+                        AO_LockInit(&(*roadsec)->locker, false);
                         //AO_SpinLock(&roadsec->locker);
                         if( roadsec_info_save(*roadsec) == -1 ) {
                                 x_printf(D, "roadsec_info_save error\n");
