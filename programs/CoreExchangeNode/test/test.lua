@@ -3,7 +3,7 @@ local socket = require("socket")
 function client()
   print("client.");
   print("socket");
-  host = "localhost"--"192.168.71.140"
+  host = "192.168.71.140"
   port = 8082
   if arg then
     host = arg[1] or host

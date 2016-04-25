@@ -56,7 +56,7 @@ static void handle_client_message(const struct router_head *head,
       int fd;
       find_best_gateway(&fd);
       new_msg.fd = fd;
-      comm_send(g_serv_info.commctx, &new_msg);
+      comm_send(g_serv_info.commctx, &new_msg, true, -1);
       free(new_msg.content);
 	}
     break;
@@ -70,7 +70,7 @@ static void handle_client_message(const struct router_head *head,
 	  int fd;
 	  find_best_gateway(&fd);
 	  new_msg.fd = fd;
-	  comm_send(g_serv_info.commctx, &new_msg);
+	  comm_send(g_serv_info.commctx, &new_msg, true, -1);
 	  free(new_msg.content);
 	}
     break;
@@ -93,7 +93,7 @@ static void handle_gateway_message(const struct router_head *head,
         log("message body start :%d", msg->size - head->body_size);
         memcpy(new_msg.content, msg->content + (msg->size - head->body_size), head->body_size);
         log("Prepare to send mesg.");
-        comm_send(g_serv_info.commctx, &new_msg);
+        comm_send(g_serv_info.commctx, &new_msg, true, -1);
         free(new_msg.content);
       }
     }
@@ -128,7 +128,7 @@ static void handle_gateway_message(const struct router_head *head,
 	  new_msg.content = pack_router(NULL, &size, &rhead);
 	  new_msg.size = size;
 	  free(rhead.cid);
-	  comm_send(g_serv_info.commctx, &new_msg);
+	  comm_send(g_serv_info.commctx, &new_msg, true, -1);
 	  free(new_msg.content);
     }
     break;
@@ -141,7 +141,7 @@ void message_dispatch()
 {
   struct comm_message org_msg; 
   org_msg.content = (char *)malloc(g_serv_info.package_size * sizeof(char));
-  comm_recv(g_serv_info.commctx, &org_msg);
+  comm_recv(g_serv_info.commctx, &org_msg, true, -1);
   if (org_msg.fd != 0) {
     log("org_msg fd:%d, size:%d", org_msg.fd, org_msg.size);
     for (int i = 0; i < org_msg.size; i++) {
