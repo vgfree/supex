@@ -298,15 +298,17 @@ local function calculate_overspeed(table)
 			--handle_zero_speed(v,table)
 		else
 			only.log('D',"source_data" .. scan.dump(v))
-			local ok, info = redis.cmd('match_road', '', 'hmget', 'LOCATE', v['longitude'], v['latitude'], v['direction'])
+			local ok, info = redis.cmd('match_road', '', 'hmget', 'MLOCATE', table['IMEI'],v['longitude'], v['latitude'], v['direction'],v['altitude'],v['speed'],table['endTime'])
 			if not ok or not next(info) then
 				--only.log('E',"match_road error")
 				break
 			end
 		
 			only.log('D',"info is " .. scan.dump(info))
-			for k,v in pairs(info) do
-				info[k] = tonumber(info[k])
+			for k,v in ipairs(info) do
+				if k < 6 then
+					info[k] = tonumber(info[k])
+				end
 			end
 	
 			local roadID = string.format('%d|%03d', info[1], info[2])
