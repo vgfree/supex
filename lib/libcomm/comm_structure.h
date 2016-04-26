@@ -59,7 +59,7 @@ struct portinfo {
 	char		addr[IPADDR_MAXSIZE];	/* 本地IP地址 */
 };
 
-/* 此结构体保存没有及时处理的fd */
+/* 此结构体保存发送接收时没成功处理完的fd */
 struct  remainfd{
 	int	wfda[EPOLL_SIZE/4];		/* 保存出现意外没有及时发送消息的fd */
 	int	rfda[EPOLL_SIZE/4];		/* 保存出现意外没有及时接收消息的fd */
@@ -77,6 +77,8 @@ struct comm_data {
 	struct comm_context*	commctx;	/* 通信上下文的结构体 */
 	struct cbinfo		finishedcb;	/* 此描述符监听事件发生时相应的回调函数信息 */
 	struct portinfo		portinfo;	/* 端口的相关信息 */
+	struct mfptp_packager_info packager;	/* 打包器相关信息 */
+	struct mfptp_parser_info parser;	/* 解析器的相关信息 */
 	int			parsepct;	/* 解析数据百分比[根据此值来决定什么时候调用解析函数] */
 	int			packpct;	/* 打包数据百分比[根据此值来决定什么时候调用打包函数]*/
 };
@@ -105,9 +107,13 @@ struct comm_context {
 /* 发送接收数据的结构体 */
 struct comm_message {
 	int	fd;					/* 消息对应的描述符 */
-	int	encrypt;				/* 消息是否加密 */
-	int	compress;				/* 消息是否压缩 */
-	int	size;					/* 消息的大小 */
+	int	dsize;					/* 消息的总大小 */
+	int	frames;					/* 消息的总帧数 */
+	int	packages;				/* 消息的总包数 */
+	int	frame_offset[FRAMES];			/* 每个帧的偏移 */
+	int	frames_of_package[FRAMES];		/* 每个包的帧数 */
+	int	encryption;				/* 消息加密格式 */
+	int	compression;				/* 消息压缩格式 */
 	char*	content;				/* 消息的内容首地址 */
 };
 

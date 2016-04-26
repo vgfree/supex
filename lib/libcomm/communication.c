@@ -611,7 +611,7 @@ static bool _parse_data(struct comm_data *commdata)
 			commlock_lock(&commctx->recvlock);
 			while (1) {
 				if (likely(commqueue_push(&commctx->recv_queue, (void*)&message))) {
-					if (unlikely(!commctx->recv_queue.readable)) {			/* 为0代表有现在在等待可读 */
+					if (unlikely(!commctx->recv_queue.readable)) {			/* 为0代表有线程在等待可读 */
 						commlock_wake(&commctx->recvlock, &commctx->recv_queue.readable, 1, true);
 					}
 					flag = true;
