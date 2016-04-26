@@ -43,7 +43,7 @@ int test_simulate_client()
     close(socket_fd);
     return -1;
   }
-  sleep(3);
+  while(1);
   close(socket_fd);
   return 0;
 }

@@ -1,7 +1,9 @@
 #include "fd_manager.h"
+#include "gid_map.h"
+#include "loger.h"
 #include "message_dispatch.h"
 #include "router.h"
-#include "loger.h"
+#include "uid_map.h"
 
 #include <assert.h>
 #include <stdint.h>
@@ -9,28 +11,6 @@
 #include <string.h>
 
 struct server_info g_serv_info = {};
-
-// 专门用于来自于客户端的数据。
-static void compose_new_packet(const struct router_head *head,
-                               const struct comm_message *oldmsg,
-                               struct comm_message *newmsg)
-{
-  struct CID *cid = (struct CID*)malloc(sizeof(struct CID));
-  struct router_head rhead;
-  memcpy(cid->IP, g_serv_info.ip, 4);
-  cid->fd = oldmsg->fd;
-  rhead.message_from = head->message_from;
-  rhead.message_to = head->message_to;
-  rhead.CID_number = 1;
-  rhead.cid = cid;
-  rhead.body_size = head->body_size;
-  char *pos = oldmsg->content + (oldmsg->size - head->body_size);
-  uint32_t size;
-  newmsg->content = pack_router(pos, &size, &rhead);
-  newmsg->size = size;
-  printf("size:%d.", size);
-  free(cid);
-}
 
 void find_best_gateway(int *fd)
 {
@@ -41,99 +21,112 @@ void find_best_gateway(int *fd)
   *fd = node.fd;
 }
 
-static void handle_client_message(const struct router_head *head,
-                                  const struct comm_message *msg)
+static void handle_cid_message(struct router_head *head,
+                               struct comm_message *msg)
 {
-  // 重新往mfptp 中添加包头，路由到指定服务器。  
-  switch (head->message_to) {
-  case CLIENT:
-    log("Not support client to client.");
-    break;
-  case MESSAGE_GATEWAY:
-    {
-      struct comm_message new_msg;
-      compose_new_packet(head, msg, &new_msg);
-      int fd;
-      find_best_gateway(&fd);
-      new_msg.fd = fd;
-      comm_send(g_serv_info.commctx, &new_msg, true, -1);
-      free(new_msg.content);
-	}
-    break;
-  case ROUTER_SERVER:
-	// 定义所有目的地为路由服务器的包为身份验证包， 即验证当前发送者.
-	// 重新打包生成CID 并告知messageGateway. 
-	// 客户端应在连接上coreChangeNode 时，发送第一个包为身份验证包。
-	{
-      struct comm_message new_msg;
-      compose_new_packet(head, msg, &new_msg);
-	  int fd;
-	  find_best_gateway(&fd);
-	  new_msg.fd = fd;
-	  comm_send(g_serv_info.commctx, &new_msg, true, -1);
-	  free(new_msg.content);
-	}
-    break;
-  default:
-    break;
-  }
+  struct comm_message new_msg;
+  new_msg.fd = head->Cid.fd;
+  new_msg.size = head->body_size;
+  new_msg.content = (char *)malloc(head->body_size * sizeof(char));
+  log("message body start :%d", msg->size - head->body_size);
+  memcpy(new_msg.content, msg->content + (msg->size - head->body_size), head->body_size);
+  log("Prepare to send mesg.");
+  comm_send(g_serv_info.commctx, &new_msg, true, -1);
+  free(new_msg.content);
 }
 
-static void handle_gateway_message(const struct router_head *head,
-                                   const struct comm_message *msg)
+static void handle_gid_message(struct router_head *head,
+                               struct comm_message *msg)
 {
-  switch (head->message_to) {
-  case CLIENT:
-    {
-      for (int i = 0; i < head->CID_number; i++) {
-        struct comm_message new_msg;
-        new_msg.fd = head->cid[i].fd;
-        new_msg.size = head->body_size;
-        new_msg.content = (char *)malloc(head->body_size * sizeof(char));
-        log("message body start :%d", msg->size - head->body_size);
-        memcpy(new_msg.content, msg->content + (msg->size - head->body_size), head->body_size);
-        log("Prepare to send mesg.");
-        comm_send(g_serv_info.commctx, &new_msg, true, -1);
-        free(new_msg.content);
-      }
-    }
-    break;
-  case MESSAGE_GATEWAY:
-    log("Not support message_gateway to message_gateway.");
-    break;
-  case ROUTER_SERVER:
-    // 每个messageGateway 连接上该路由server时，发送的第一个包应为身份验证包，
-	// 也就只包含唯一的路由帧。
-    {
+  // To do:
+}
+
+static void handle_uid_message(struct router_head *head,
+                               struct comm_message *msg)
+{
+  // To do:
+}
+
+static void handle_server_login(struct router_head *head,
+                                struct comm_message *msg)
+{
+  switch (head->message_from) {
+    case MESSAGE_GATEWAY: {
       struct fd_node node;
       node.fd = msg->fd;
       list_push_back(MESSAGE_GATEWAY, &node);
-      // 将已经连接上的客户端反馈回message_gateway.
-      int arr[FD_CAPACITY] = {};
-	  uint32_t number = 0;
-      poll_client_fd((int **)&arr, &number);
-      struct router_head rhead;
-	  rhead.message_from = ROUTER_SERVER;
-	  rhead.message_to = MESSAGE_GATEWAY;
-	  rhead.CID_number = number;
-	  rhead.cid = (struct CID*)calloc(number, sizeof(struct CID*));
-      for (uint32_t i = 0; i < number; i++) {
-        memcpy(rhead.cid[i].IP, g_serv_info.ip, 4);
-        rhead.cid[i].fd = arr[i];
-      }
-	  rhead.body_size = 0;
-      struct comm_message new_msg;
-      new_msg.fd = msg->fd;
-      uint32_t size = 0;
-	  new_msg.content = pack_router(NULL, &size, &rhead);
-	  new_msg.size = size;
-	  free(rhead.cid);
-	  comm_send(g_serv_info.commctx, &new_msg, true, -1);
-	  free(new_msg.content);
     }
     break;
-  default:
+	case ROUTER_SERVER:
+      log("Not support router_server to router_server.");
     break;
+    case FULL_DAMS:
+      // to do. map table.
+    break;
+  } 
+}
+
+static void handle_client_login(struct router_head *head,
+                                struct comm_message *msg)
+{
+  /* 即验证当前发送者.
+     重新打包生成CID 并告知messageGateway. 
+     客户端应在连接上coreChangeNode 时，发送第一个包为身份验证包。*/
+  struct comm_message new_msg;
+  // 重新组包， 并生成cid , 通知server。
+  // TO DO: 存储到redis.
+  int fd;
+  find_best_gateway(&fd);
+  new_msg.fd = fd;
+  comm_send(g_serv_info.commctx, &new_msg, true, -1);
+  free(new_msg.content);
+}
+
+static void handle_uid_map(struct router_head *head)
+{
+  assert(head);
+  if (head->body_size != 4) {
+    error("wrong body_size:%d", head->body_size);
+    return;
+  }
+  if (memcmp(g_serv_info.ip, head->body, 4) != 0) {
+    error("abandon message, this message is not belong to this core exchange node.");
+    return;
+  }
+  char uid[UID_SIZE + 1];
+  memcpy(uid, head->Uid.uid, UID_SIZE);
+  uid[UID_SIZE] = '\0';
+  int fd = head->body[5];
+  fd = fd * 256 + head->body[4];
+  if (insert_fd(uid, fd) == -1) {
+    error("insert error, uid:%s-------fd:%x.", uid, fd);
+  }
+}
+
+static void handle_gid_map(struct router_head *head)
+{
+  assert(head);
+  int cid = head->body_size / 6;
+  if (head->body_size == 0 || head->body_size % 6 != 0 ) {
+    error("wrong head->body_size:%x", head->body_size);
+  }
+  int fdlist[GROUP_SIZE];
+  int count = 0;
+  for (int i = 0; i < cid; i++) {
+    char uid[4];
+	memcpy(uid, head->body + i * 6, 4);
+	if (memcmp(g_serv_info.ip, uid, 4) != 0) {
+      continue;
+	}
+	int fd = *(head->body + i * 6 + 5);
+	fd = fd * 256 + *(head->body + i*6 + 4);
+	fdlist[count++] = fd;
+  }
+  char gid[GID_SIZE + 1];
+  memcpy(gid, head->Gid.gid, GID_SIZE);
+  gid[GID_SIZE] = '\0';
+  if (insert_fd_list(gid, fdlist, count) == -1) {
+    error("insert group fd, error.");
   }
 }
 
@@ -150,21 +143,32 @@ void message_dispatch()
     struct router_head *oldhead = 
       parse_router(org_msg.content, org_msg.size);
     if (oldhead) {
-      log("head, message_from:%d, message_to:%d.", oldhead->message_from, oldhead->message_to);
-      switch (oldhead->message_from) {
-      case CLIENT:
-        handle_client_message(oldhead, &org_msg);
-        break;
-      case MESSAGE_GATEWAY:
-        handle_gateway_message(oldhead, &org_msg);
-        break;
-      default:
-        error("msg head data (message_from :%d) is not right.",
-              oldhead->message_from);
+      switch (oldhead->type) {
+        case 0x0:
+          handle_cid_message(oldhead, &org_msg);
+          break;
+        case 0x01:
+          handle_gid_message(oldhead, &org_msg);
+          break;
+        case 0x02:
+          handle_uid_message(oldhead, &org_msg);
+          break;
+        case 0x03:
+          handle_client_login(oldhead, &org_msg);
+          break;
+        case 0x04:
+          handle_server_login(oldhead, &org_msg);
+        case 0x05:
+          handle_uid_map(oldhead);
+          break;
+        case 0x06:
+          handle_gid_map(oldhead);
+          break;
+        default:
+          break;
       }
-      if (oldhead->cid) {
-        free(oldhead->cid);
-      }
+      log("head type:%d, message_from:%d, message_to:%d.",
+          oldhead->type, oldhead->message_from, oldhead->message_to);
       free(oldhead);
     }
     else {

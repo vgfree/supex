@@ -43,7 +43,7 @@ int test_simulate_gateway()
     close(socket_fd);
     return -1;
   }
-  sleep(10);
+  while(1);
   close(socket_fd);
   return 0;
 }

@@ -45,26 +45,7 @@ void io_notify_logic_thread(struct comm_context* commctx,
       }
       if (des.obj == CLIENT){
         // 打包路由结束包发送给其他服务器。message_from 为router_server.
-        log("client closed, fd:%d.", portinfo->fd);
-        struct router_head head;
-        head.message_from = ROUTER_SERVER;
-		head.message_to = MESSAGE_GATEWAY;
-        head.CID_number = 1;
-        head.cid = (struct CID*)malloc(sizeof(struct CID));
-        memcpy(head.cid->IP, g_serv_info.ip, 4);
-        head.cid->fd = portinfo->fd;
-        head.body_size = 0;
-        uint32_t size;
-        char *content = pack_router(NULL, &size, &head);
-        free(head.cid);
-        struct comm_message msg;
-        msg.content = content;
-        msg.size = size;
-        int gateway_fd;
-        find_best_gateway(&gateway_fd);
-        msg.fd = gateway_fd;
-        comm_send(g_serv_info.commctx, &msg, true, -1);
-        free(msg.content);
+        // TO DO:  更新到redis 服务器。
       }
       else if (des.obj == MESSAGE_GATEWAY) {
         list_remove(des.obj, portinfo->fd);
