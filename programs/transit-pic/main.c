@@ -12,9 +12,6 @@
 
 #define SERVER_NAME "AK47"
 
-const char* picHead = {"Head=picture"};
-#define HEAD_LENGTH 7
-
 static lua_State *lua_vm_init(void)
 {
 	int             error = 0;
@@ -60,17 +57,6 @@ static lua_State *lua_vm_init(void)
 	return L;
 }
 
-bool __get_picture_head(void *head)
-{
-  int ret = memcmp(picHead, head, sizeof(picHead));
-  if (ret != 0) {
-    printf("the data is not a picture");
-    return false;
-  }
-
-  return true;
-}
-
 void *work_task(void *args)
 {
 	int             error = 0;
@@ -97,12 +83,7 @@ void *work_task(void *args)
 			free(data);
 		}
 
-                if(__get_picture_head(data)) {
-		  printf("This is a picture");
-		}
-
 		error = lua_pcall(L, 1, 0, 0);
-
 		if (error) {
 			lua_pop(L, 1);
 		}

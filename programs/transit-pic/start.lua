@@ -17,8 +17,11 @@ function app_init()
 end
 
 function app_call( tab )
-	for k,v in ipairs(tab) do
-		print(k, v)
-	end
-	api_pic_newstatus.handle( tab[1] )
+	--for k,v in ipairs(tab) do
+		--print(k, v)
+	--end
+	print(tab[1])
+	print(tab[2])
+	api_pic_newstatus.handle1(tab[3])
+        api_pic_newstatus.handle2(tab[4])
 end

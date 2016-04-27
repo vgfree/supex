@@ -74,7 +74,6 @@ void zmq_srv_init(char *host, int port)
 void zmq_srv_fetch(struct skt_device *devc)
 {
 	assert(devc);
-
 	if (!devc->skt) {
 		devc->skt = zmq_socket(g_ctx, ZMQ_PULL);
 #ifdef SELECT_MULTITHREAD
@@ -93,6 +92,7 @@ void zmq_srv_fetch(struct skt_device *devc)
 	memset(devc->ibuffer, 0, sizeof(devc->ibuffer));
 	size_t  count = MAX_SPILL_DEPTH;
 	printf("before zmq_recv\n");
+
 	int rc = zmq_recviov(devc->skt, devc->ibuffer, &count, 0);
 	//int rc = zmq_recv(devc->skt, devc->ibuffer, count, 0);
 	printf("after zmq_recv\n");
