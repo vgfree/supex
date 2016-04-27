@@ -26,9 +26,9 @@ extern "C" {
 
 /* MFPTP协议压缩格式 */
 enum mfptp_compression_type {
-	NO_COMPRESSION = 0x0,
-	ZIP_COMPRESSION,
-	GZIP_COMPRESSION
+	NO_COMPRESSION	= 0x00 << 4,
+	ZIP_COMPRESSION	= 0x01 << 4,
+	GZIP_COMPRESSION= 0x02 << 4
 };
 
 /* MFPTP协议加密格式 */
@@ -66,7 +66,8 @@ typedef struct mfptp_frame_info {
 
 /* MFPTP协议包的相关信息 */
 struct mfptp_package_info {
-	int			packages;			/* 一共多少包 */
+	int			packages;			/* 总包数 */
+	int			frames;				/* 总帧数 */
 	int			dsize;				/* 数据总大小 */
 	struct mfptp_frame_info frame[MFPTP_MAX_PACKAGES];	/* 包里面帧的相关信息 */
 };
