@@ -107,5 +107,9 @@ OWN_DIED = {
                 	host = "192.168.71.84",                                 
                 	port = 2222,                                              
                 },
+		["dfsapi/v2/saveSound"] = {
+		        host = "192.168.71.84",
+                        port = 2222,		
+		},
         }
 }
