@@ -53,9 +53,6 @@ enum mfptp_socket_type {
 	INVALID_METHOD
 };
 
-enum mfptp_error {
-	HEADER_LEN_INVAILD = 0x00;	/* MFPTP包头长度不合法 */
-};
 
 /* MFPTP协议帧的相关信息[一个此结构体代表的是一个包的数据] */
 typedef struct mfptp_frame_info {
@@ -74,12 +71,15 @@ struct mfptp_package_info {
 
 /* MFPTP协议的包头相关信息 */
 struct mfptp_header_info {
-	int packages;				/* 包的数量 */
-	int encryption;				/* 加密格式 */
-	int compression;			/* 压缩格式 */
-	int socket_type;			/* socket的类型 */
-	int major_version;			/* 主版本号 */
-	int minor_version;			/* 副版本号*/
+	int		packages;			/* 包的数量 */
+	int		f_size;				/* F_size的字段 */
+	unsigned char	not_end;			/* 当前帧是否是最后一帧 */
+	unsigned char	size_f_size;			/* F_size字段所占字节数 */
+	unsigned char	encryption;			/* 加密格式 */
+	unsigned char	compression;			/* 压缩格式 */
+	unsigned char	socket_type;			/* socket的类型 */
+	unsigned char	major_version;			/* 主版本号 */
+	unsigned char	minor_version;			/* 副版本号*/
 };
 
      

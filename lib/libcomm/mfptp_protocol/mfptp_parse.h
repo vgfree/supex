@@ -11,7 +11,25 @@
 extern "C" {
 #endif
 
+enum mfptp_error {
+	mfptp_head_invaild = 0x01;		/* MFPTP协议解析前6个字节“#MFPTP”出错 */
+	mfptp_
 
+};
+enum mfptp_parser_status {
+	mfptp_parser = 0x00,	/* MFPTP协议解析初始化的状态 */
+	mfptp_packager,		/* MFPTP协议打包初始化的状态 */
+	mfptp_head,		/* MFPTP协议的前6个字节"#MFPTP" */
+	mfptp_version,		/* MFPTP协议的版本号 */
+	mfptp_config,		/* MFPTP协议的压缩解密格式 */
+	mfptp_socket_type,	/* MFPTP协议socket的类型 */
+	mfptp_packages,		/* MFPTP协议携带的包数 */
+	mfptp_fp_control,	/* MFPTP协议的FP_control字段 */
+	mfptp_f_size,		/* MFPTP协议F_size字段 */
+	mfptp_frame,		/* MFPTP协议的帧 */
+	mfptp_frame_over	/* MFPTP协议解析完一包的数据 */
+
+};
 
 /* MFPTP解析器的状态 */
 struct mfptp_parser_stat {
@@ -20,7 +38,7 @@ struct mfptp_parser_stat {
 	int			step;		/* 当前解析的步进 */
 	int			dosize;		/* 当前已解析的长度 */
 	char *const*            data;		/* 被解析数据起始地址指针*/
-	int const*		size;		/* 当前数据的总长度地址*/
+	int const*		dsize;		/* 当前数据的总长度地址*/
 	enum mfptp_error	error;		/* MFPTP解析错误码 */
 };
 
@@ -32,6 +50,7 @@ struct mfptp_parser {
 
 /* MFPTP解析器的相关信息 */
 struct mfptp_parser_info {
+	bool				init;
 	struct mfptp_parser		mp;	/* MFPTP数据解析器 */
 	struct mfptp_parser_stat	ms;	/* MFPTP数据解析器状态 */
 };
@@ -41,7 +60,7 @@ struct mfptp_parser_info {
  * @data:待解析数据缓冲区地址  @size:待解析数据大小的地址
  * 返回值：true:初始化成功 false:初始化失败
 ***********************************************************************************/
-bool mfptp_parse_init(struct mfptp_parser_info *parser, char* const* data, const int *size);     
+bool mfptp_parse_init(struct mfptp_parser_info *parser, char* const *data, const int *size);     
 
 /***********************************************************************************
  * 功能：开始解析数据
