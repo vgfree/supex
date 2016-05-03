@@ -5,7 +5,6 @@
 #include <sys/uio.h>
 
 #define MAX_SPILL_DEPTH 32
-//#define MAX_SPILL_DEPTH 512
 
 struct skt_device
 {

@@ -95,7 +95,6 @@ int main(int argc, char *argv[])
 	skt_register(argv [1]);
 	//zmq_srv_init("127.0.0.1", 6992);
 	zmq_srv_init("127.0.0.1", 5556);
-
 #ifdef SELECT_MULTITHREAD
 	zmq_threadstart(work_task, 1);
 	zmq_threadstart(work_task, 2);

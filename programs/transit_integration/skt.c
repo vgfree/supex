@@ -57,7 +57,6 @@ void zmq_srv_init(char *host, int port)
 	sprintf(addr, "tcp://%s:%d", host, port);
 	int rc = zmq_connect(g_collecter, addr);
 	assert(rc == 0);
-	printf("zmq connect to localhost:6992 success\n");
 
 	g_forwarder = zmq_socket(g_ctx, ZMQ_PUSH);
 #ifdef SELECT_MULTITHREAD
@@ -68,7 +67,6 @@ void zmq_srv_init(char *host, int port)
 	rc = zmq_bind(g_forwarder, addr);
 #endif
 	assert(rc == 0);
-	printf("zmq bind my-sault.ipc success\n");
 }
 
 void zmq_srv_fetch(struct skt_device *devc)
@@ -91,11 +89,7 @@ void zmq_srv_fetch(struct skt_device *devc)
 
 	memset(devc->ibuffer, 0, sizeof(devc->ibuffer));
 	size_t  count = MAX_SPILL_DEPTH;
-	printf("before zmq_recv\n");
-
 	int rc = zmq_recviov(devc->skt, devc->ibuffer, &count, 0);
-	//int rc = zmq_recv(devc->skt, devc->ibuffer, count, 0);
-	printf("after zmq_recv\n");
 	devc->idx = count;
 }
 
