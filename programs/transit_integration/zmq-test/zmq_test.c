@@ -2,10 +2,32 @@
 #include <stdio.h>  
 #include <unistd.h>  
 #include <string.h>  
-#include <assert.h>  
+#include <assert.h>
+#include <sys/uio.h>
+
+#define MAX_SPILL_DEPTH 32
+
+struct skt_device
+{
+  int             idx;
+  void            *skt;
+  struct iovec    ibuffer[MAX_SPILL_DEPTH];
+};
+
 
 static const char first_frame_data[] = "feedback?imei=123456789123456";
-static const char second_frame_data[] = "{\"ERRORCODE\"\:\"0\",\"RESULT\":{\"accountID\":\"uRgZGyPykT\",\"content\":{\"mediaList\":[{\"format\":\"jpg\",\"index\":\"3\",\"pixels\":\"1920*1080\",\"size\":\"318215\"}]},\"imei\":\"306627488190175\",\"imsi\":\"460017204705594\",\"mod\":\"XZ001\",\"operationType\":\"3\",\"remarkMsg\":\"拍摄成功\",\"type\":\"20\"}}"; 
+//static const char second_frame_data[] = "{\"ERRORCODE\":\"0\",\"RESULT\":{\"accountID\":\"uRgZGyPykT\",\"content\":{\"mediaList\":[{\"format\":\"jpg\",\"index\":\"3\",\"pixels\":\"1920*1080\",\"size\":\"318215\"}]},\"imei\":\"306627488190175\",\"imsi\":\"460017204705594\",\"mod\":\"XZ001\",\"operationType\":\"3\",\"remarkMsg\":\"拍摄成功\",\"type\":\"20\"}}"; 
+
+static const char second_frame_data[] = "{\"ERRORCODE\":\"0\",\"RESULT\":{\"altitude\":\"20.1\",\"id\":\"1\",\"imei\":\"12312312312\",\"mediaType\":\"1\",\"otherMsg\":\"1111111111111\",\"remarkMsg\":\"拍摄成功\",\"speed\":\"30\",\"token\":\"123\",\"voiceList\":[{\"byte\":\"sdfsadfa\",\"format\":\"mp3\",\"recordTime\":\"20\",\"size\":\"123\",\"time\":\"1231212\"}],\"videoList\":[{\"byte\":\"sdfsadfa\",\"format\":\"mp3\",\"size\":\"123\",\"time\":\"1231212\",\"lngLatList\":[{\"longitude\":\"211\",\"latitude\":\"212\"}]}],\"mediaList\":[{\"byte\":\"sdfsadfa\",\"format\":\"mp3\",\"photoTime\":\"20\",\"size\":\"123\",\"longitude\":\"211\",\"latitude\":\"212\"}]}}";
+
+void recive_some_data(struct skt_device *devc)
+{
+  size_t  count = MAX_SPILL_DEPTH;
+  int rc = zmq_recviov(devc->skt, devc->ibuffer, &count, 0);
+  printf("after zmq_recv, count = %d\n", count);
+  devc->idx = count;
+}
+
 
 int main (void)  
 {
@@ -50,17 +72,27 @@ int main (void)
   memcpy (zmq_msg_data(&part3), pBuf, sizeof(pBuf));
   memcpy (zmq_msg_data(&part4), aBuf, sizeof(aBuf));
 
-  //Socket to talk to clients 
-  void *context = zmq_ctx_new ();
-  void *responder = zmq_socket (context, ZMQ_PUSH);
-  rc = zmq_bind (responder, "tcp://*:5556");
-  assert (rc == 0);
+  //Socket to talk to clients
+  struct skt_device devc = {};
+ 
+  void *context_send = zmq_ctx_new ();
+  void *sendHandle = zmq_socket(context_send, ZMQ_PUSH);
+  rc = zmq_bind(sendHandle, "tcp://*:5556");
+  assert(rc == 0);
+  
+  void *context_recv = zmq_ctx_new ();
+  devc.skt = zmq_socket(context_recv, ZMQ_PULL);
+  rc = zmq_bind(devc.skt, "tcp://*:5557");
+  assert(rc == 0);
+  rc = zmq_connect(devc.skt, "tcp://127.0.0.1:5557");
+  assert(rc == 0);
 
-  rc = zmq_sendmsg (responder, &part1, ZMQ_SNDMORE);
-  //rc = zmq_sendmsg (responder, &part2, 0);
-  rc = zmq_sendmsg (responder, &part2, ZMQ_SNDMORE);
-  rc = zmq_sendmsg (responder, &part3, ZMQ_SNDMORE);
-  rc = zmq_sendmsg (responder, &part4, 0);
+  rc = zmq_sendmsg(sendHandle, &part1, ZMQ_SNDMORE);
+  rc = zmq_sendmsg(sendHandle, &part2, ZMQ_SNDMORE);
+  rc = zmq_sendmsg(sendHandle, &part3, ZMQ_SNDMORE);
+  rc = zmq_sendmsg(sendHandle, &part4, 0);
+  
+  recive_some_data(&devc);
 
   sleep(2);
   return 0;  
