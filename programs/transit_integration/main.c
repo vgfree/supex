@@ -85,6 +85,7 @@ void *work_task(void *args)
 
 		error = lua_pcall(L, 1, 0, 0);
 		if (error) {
+			printf("%s\n", lua_tostring(L, -1));
 			lua_pop(L, 1);
 		}
 	}
