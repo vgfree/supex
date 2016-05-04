@@ -1,5 +1,5 @@
 BASE_SRC=./http_dispatch/src
-INC_DIR=-I/usr/local/include/luajit-2.0 -I../../lib/libev -I../../lib/json-c -I../../lib/http-parser -I../../lib/libscco -I../../engine -I../../engine/major -I./src 
+INC_DIR=-I/usr/local/include/luajit-2.0 -I../../lib/libev -I../../lib/json-c -I../../lib/http-parser -I../../lib/libscco -I../../engine -I../../engine/major -I./src -I./http_dispatch/src/ -I../../lib/libcomm/
 LIB_DIR=-L/usr/local/lib -L../../lib -L../../engine/
 LIBS=-lluajit-5.1 -lpthread -lrt -lm 
 LIBA=-ljson-c
@@ -28,7 +28,7 @@ SRV := $(MAIN_APP_SERV)
 JOB += $(SRV)
 CLEANFILES = mhooktrace.log
 
-MAIN_OBJ = main.c
+MAIN_OBJ = message_concentrator.c main.c
 
 all:$(JOB)
 	@echo -e $(foreach bin,$^,$(BLUE)$(bin) $(GREEN)✔)$(RED)"\n-->OVER!\n"$(NONE)
