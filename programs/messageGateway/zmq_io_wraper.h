@@ -2,8 +2,9 @@
 #define _ZMQ_IO_WRAPER_H_
 
 #include <stdlib.h>
+
 enum server {
-  CID_SERVER
+  CID_SERVER = 3
 };
 
 int init_zmq_io();

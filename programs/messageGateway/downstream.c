@@ -1,3 +1,4 @@
 #include "downstream.h"
 
-int downstream_msg();
+int downstream_msg()
+{}

@@ -14,7 +14,7 @@ int message_fountain()
 {
   while (1) {
     upstream_msg();
-    down_msg();
+    downstream_msg();
   }
   return 0;
 }
@@ -26,10 +26,9 @@ static void *_fountain_thread(void *usr)
   message_fountain();
 }
 
-int concentrator_init()
+int concentrator_init(pthread_t &ntid)
 {
   int err;
-  pthread_t ntid;
   err = pthread_create(&ntid, NULL, _fountain_thread, NULL);
   if (err != 0) {
     printf("can't create thread:%s\n", strerror(err));
