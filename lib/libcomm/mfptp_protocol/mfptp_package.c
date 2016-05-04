@@ -11,17 +11,18 @@ bool mfptp_packager_init(struct mfptp_packager_info *packager, char *buff, int *
 	memset(packager, 0, sizeof(*packager));
 	packager->ms.buff = buff;
 	packager->ms.size = size;
-	packager->header.major_version = MFPTP_MAJOR_VERSION;
-	packager->header.minor_version = MFPTP_MAINOR_VERSION;
+	packager->mp.header.major_version = MFPTP_MAJOR_VERSION;
+	packager->mp.header.minor_version = MFPTP_MINOR_VERSION;
 	packager->init = true;
+	return true;
 }
 
 int mfptp_packager(struct mfptp_packager_info *packager, const char *data, unsigned char flag, int method)
 {
-	assert(packager && packager->init);
+	assert(packager && packager->init && data);
 	packager->mp.header.packages = packager->mp.package.packages;
-	packager->mp.compression = flag & (0x0F << 4);
-	packager->mp.encryption = flag & 0x0F;
+	packager->mp.header.compression = flag & (0x0F << 4);
+	packager->mp.header.encryption = flag & 0x0F;
 	packager->mp.header.socket_type = method;
 
 	/* 赋值全部成功 开始打包 */
@@ -32,18 +33,18 @@ int mfptp_packager(struct mfptp_packager_info *packager, const char *data, unsig
 		memcpy(&packager->ms.buff[*packager->ms.size], "#MFPTP", 6);
 		*packager->ms.size += 6;
 		/* 版本号 */
-		packager->buff[*packager->ms.size] = packager->header.major_version << 4 | packager->header.minor_version;
+		packager->ms.buff[*packager->ms.size] = packager->mp.header.major_version << 4 | packager->mp.header.minor_version;
 		*packager->ms.size += 1;
 		/* 压缩加密设置 */
-		packager->ms.buff[*packager->ms.size] = packager->mp.compression << 4 | packager->mp.encryption;
+		packager->ms.buff[*packager->ms.size] = packager->mp.header.compression << 4 | packager->mp.header.encryption;
 		*packager->ms.size += 1;
 
 		/* socket工作类型 */
-		packager->ms.buff[*packager->ms.size] = packager->ms.header.socket_type;
+		packager->ms.buff[*packager->ms.size] = packager->mp.header.socket_type;
 		*packager->ms.size += 1;
 
 		/* socket包数 */
-		packager->ms.buff[*packager->ms.size] = packager->ms.header.packages;
+		packager->ms.buff[*packager->ms.size] = packager->mp.header.packages;
 		*packager->ms.size += 1;
 
 		/* 开始组装帧 */
@@ -86,11 +87,13 @@ int mfptp_packager(struct mfptp_packager_info *packager, const char *data, unsig
 			}
 			memcpy(&packager->ms.buff[*packager->ms.size], &data[packager->mp.package.frame[i].frame_offset[j]], frame_size);
 		}
-		packager->ms.header.packages -= 1;
+		packager->mp.header.packages -= 1;
 	}
+
+	return packager->mp.package.dsize;
 }
 
-bool mfptp_check_memory(int memsize, int packages, int frames, int dsize);
+bool mfptp_check_memory(int memsize, int packages, int frames, int dsize)
 {
 	int  size = 0;
 	size = packages* MFPTP_HEADER_LEN + frames * (MFPTP_FP_CONTROL_LEN + MFPTP_F_SIZE_MAXLEN) + dsize;
@@ -98,21 +101,21 @@ bool mfptp_check_memory(int memsize, int packages, int frames, int dsize);
 }
 
 
-void mfptp_fill_package(struct mfptp_package_info *packager, const int *frame_offset, const int *frames_of_pack, int packages, int frames, int dsize)
+void mfptp_fill_package(struct mfptp_packager_info *packager, const int *frame_offset, const int *frames_of_pack, int packages, int frames, int dsize)
 {
 	assert(packager && packager->init && frame_offset && frames_of_pack);
 	int i, j;
 	int k = 0;
 	for(i = 0; i < packages; i++) {
-		for(j = 0; j < frames_of_pack[i], j++, k++) {
+		for(j = 0; j < frames_of_pack[i]; j++, k++) {
 			packager->mp.package.frame[i].frame_offset[j] = frame_offset[k];
 			if (unlikely(k-1 == frames)) {
-				package->mp.package.frame[i].frame_size[j] = dsize - frame_offset[k];
+				packager->mp.package.frame[i].frame_size[j] = dsize - frame_offset[k];
 
 			} else {
-				package->mp.package.frame[i].frame_size[j] = frame_offset[k+1] - frame_offset[k];
+				packager->mp.package.frame[i].frame_size[j] = frame_offset[k+1] - frame_offset[k];
 			}
-			packager->mp.package.frame[i].frame_size[j] = frame_size[k];
+			//packager->mp.package.frame[i].frame_size[j] = frame_size[k];
 		}
 		packager->mp.package.frame[i].frames = frames_of_pack[i];
 	}

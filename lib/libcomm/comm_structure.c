@@ -109,10 +109,10 @@ inline void copy_commmsg(struct comm_message* destmsg, const struct comm_message
 {
 	assert(destmsg && srcmsg && destmsg->content && srcmsg->content);
 	destmsg->fd = srcmsg->fd;
-	destmsg->size = srcmsg->size;
-	destmsg->encrypt = srcmsg->encrypt;
-	destmsg->compress = srcmsg->compress;
-	memcpy(destmsg->content, srcmsg->content, srcmsg->size);
+	destmsg->dsize = srcmsg->dsize;
+	destmsg->encryption = srcmsg->encryption;
+	destmsg->compression = srcmsg->compression;
+	memcpy(destmsg->content, srcmsg->content, srcmsg->dsize);
 }
 
 /* 销毁comm_message的结构体 */

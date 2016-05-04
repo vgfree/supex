@@ -11,25 +11,7 @@
 extern "C" {
 #endif
 
-enum mfptp_error {
-	mfptp_head_invaild = 0x01;		/* MFPTP协议解析前6个字节“#MFPTP”出错 */
-	mfptp_
 
-};
-enum mfptp_parser_status {
-	mfptp_parser = 0x00,	/* MFPTP协议解析初始化的状态 */
-	mfptp_packager,		/* MFPTP协议打包初始化的状态 */
-	mfptp_head,		/* MFPTP协议的前6个字节"#MFPTP" */
-	mfptp_version,		/* MFPTP协议的版本号 */
-	mfptp_config,		/* MFPTP协议的压缩解密格式 */
-	mfptp_socket_type,	/* MFPTP协议socket的类型 */
-	mfptp_packages,		/* MFPTP协议携带的包数 */
-	mfptp_fp_control,	/* MFPTP协议的FP_control字段 */
-	mfptp_f_size,		/* MFPTP协议F_size字段 */
-	mfptp_frame,		/* MFPTP协议的帧 */
-	mfptp_frame_over	/* MFPTP协议解析完一包的数据 */
-
-};
 
 /* MFPTP解析器的状态 */
 struct mfptp_parser_stat {

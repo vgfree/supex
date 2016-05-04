@@ -17,44 +17,10 @@ COLOR_TXT = 	$(COLOR_GREEN)
 BUILD_PWD = 		$(shell pwd)
 BUILD_HOST =		$(shell uname | tr '[A-Z]' '[a-z]')
 
-TOBJ =			libcomm
-TOBJ_MAJOR ?= 		1
-TOBJ_MINOR ?= 		0
-
-TOBJ_ARNAME =		$(TOBJ).a
-
-SOBJ_DIR =		objs
-TOBJ_DIR =		lib
-
-#######
 BUILD_CFLAGS =		-fPIC -Wall -Wno-unused-function -Wno-unused-variable -g
 BUILD_LIBS =		-lpthread -lm
 BUILD_INC_DIR = 	-I/usr/include -I/usr/local/include -I../liblog
 BUILD_LIB_DIR =		-L/usr/local/lib -L/usr/lib -L/usr/libexec
-
-#######
-ifeq ($(BUILD_HOST), darwin)
-
-ECHO =			@echo
-TOBJ_DLSUFFIX =		dylib
-TOBJ_NAME = 		$(TOBJ).$(TOBJ_DLSUFFIX)
-TOBJ_DLNAME =		$(TOBJ_NAME)
-DYLIB_CFLAGS =		-dynamiclib
-else
-BUILD_CFLAGS += -D_GNU_SOURCE -export-dynamic
-BUILD_LIB_DIR += -L/usr/local/lib64 -L/usr/lib64
-
-ECHO =			@echo -e
-TOBJ_DLSUFFIX =		so
-TOBJ_NAME = 		$(TOBJ).$(TOBJ_DLSUFFIX)
-TOBJ_DLNAME =		$(TOBJ_NAME).$(TOBJ_MAJOR).$(TOBJ_MINOR)
-TOBJ_SONAME = 		$(TOBJ_NAME).$(TOBJ_MAJOR)
-DYLIB_CFLAGS =		-shared -Wl,-soname,$(TOBJ_SONAME)
-#BUILD_OPTIMIZE =	-fprofile-arcs
-BUILD_LIBS =		-lrt
-endif
-
-
 
 #######
 CC_COMPILER ?=		@gcc
@@ -63,79 +29,90 @@ LN = 			$(CC_COMPILER) $(BUILD_CFLAGS) $(CFLAGS) $(DYLIB_CFLAGS) $(BUILD_LIB_DIR
 AR = 			@ar -rcs
 
 #######
+TARGET =		libcomm
+TARGET_MAJOR ?=		1
+TARGET_MINOR ?= 	0
+TARGET_ARNAME =		$(TARGET).a
+
+SRC =			$(wildcard $(BUILD_PWD)/*.c) $(wildcard $(BUILD_PWD)/mfptp_protocol/*.c)
+OBJ =			$(patsubst %.c, $(OBJ_DIR)/%.o, $(notdir $(SRC))) 
+OBJ_DIR	=		objs
+TARGET_DIR =		lib
+
+vpath %.c $(BUILD_PWD)/mfptp_protocol
+
+#######
+ifeq ($(BUILD_HOST), darwin)
+
+ECHO =			@echo
+TARGET_DLSUFFIX =	dylib
+TARGET_NAME = 		$(TARGET).$(TARGET_DLSUFFIX)
+TARGET_DLNAME =		$(TARGET_NAME)
+DYLIB_CFLAGS =		-dynamiclib
+else
+BUILD_CFLAGS += -D_GNU_SOURCE -export-dynamic
+BUILD_LIB_DIR += -L/usr/local/lib64 -L/usr/lib64
+
+ECHO =			@echo -e
+TARGET_DLSUFFIX =	so
+TARGET_NAME = 		$(TARGET).$(TARGET_DLSUFFIX)
+TARGET_DLNAME =		$(TARGET_NAME).$(TARGET_MAJOR).$(TARGET_MINOR)
+TARGET_SONAME = 	$(TARGET_NAME).$(TARGET_MAJOR)
+DYLIB_CFLAGS =		-shared -Wl,-soname,$(TARGET_SONAME)
+#BUILD_OPTIMIZE =	-fprofile-arcs
+BUILD_LIBS =		-lrt
+endif
+
+#######
+ifeq ($(BUILD_HOST), linux)
+INSTALL_DYLIB_FILE = 	@-ln -sf $(TARGET_DLNAME) $(TARGET_DIR)/$(TARGET_SONAME); \
+			ln -sf $(TARGET_SONAME) $(TARGET_DIR)/$(TARGET_NAME)
+else
+INSTALL_DYLIB_FILE =	@echo $(COLOR_RED)"Not support multi-version of library"$(COLOR_NONE)
+endif
+
+#######
 define compile_obj
 	$(ECHO) $(COLOR_TXT)"\t\t- COMPILE\t===>\t"$(COLOR_OBJ)"$(1:.c=.o)"$(COLOR_NONE)
 	$(CC) -c $(1) -o $(2)
 endef
 
+#######
 ALL:
 	gcc $(BUILD_CFLAGS) -L$(BUILD_PWD)/lib -lcomm $(BUILD_PWD)/test/server.c -o server
 	gcc $(BUILD_CFLAGS) -L$(BUILD_PWD)/lib -lcomm $(BUILD_PWD)/test/client.c -o client
 
-lib: prepare $(TOBJ)
+lib: prepare  $(TARGET)
 
 prepare:
-	@-if [ ! -d $(SOBJ_DIR) ];then mkdir $(SOBJ_DIR); fi
-	@-if [ ! -d $(TOBJ_DIR) ];then mkdir $(TOBJ_DIR); fi
+	@-if [ ! -d $(OBJ_DIR) ];then mkdir $(OBJ_DIR); fi
+	@-if [ ! -d $(TARGET_DIR) ];then mkdir $(TARGET_DIR); fi
 
-#######以下是你需要修改添加的#######
-SOBJ = $(addprefix $(SOBJ_DIR)/, \
-        comm_tcp.o \
-	comm_cache.o \
-	comm_queue.o \
-	comm_lock.o \
-	comm_epoll.o \
-	comm_pipe.o\
-	comm_structure.o\
-	communication.o \
-	)
-
-
-#######
-$(SOBJ_DIR)/%.o : $(BUILD_PWD)/%.c
+$(OBJ_DIR)/%.o: %.c
+	#$(ECHO) $<
+	#$(ECHO) $@
 	$(call compile_obj, $<, $@)
 
 
-##############
-#INSTALL_HEAD_DIR = include
-#INSTALL_HEAD_FILE = 	@-rm -rf $(INSTALL_HEAD_DIR); \
-			cp -rf $(SFILE_BASE_DIR) $(INSTALL_HEAD_DIR);	\
-			find $(INSTALL_HEAD_DIR) -name "*.c" -exec rm {} \;
-
-ifeq ($(BUILD_HOST), linux)
-INSTALL_DYLIB_FILE = 	@-ln -sf $(TOBJ_DLNAME) $(TOBJ_DIR)/$(TOBJ_SONAME); \
-			ln -sf $(TOBJ_SONAME) $(TOBJ_DIR)/$(TOBJ_NAME)
-else
-INSTALL_DYLIB_FILE =	@echo $(COLOR_RED)"Not support multi-version of library"$(COLOR_NONE)
-endif
-#######以上是你需要修改添加的#######
-
-
-$(TOBJ) : $(SOBJ)
-	$(ECHO) $(COLOR_TXT)"\t\t- ARCHIVE\t===>\t"$(COLOR_TAG)"$(TOBJ_ARNAME)"$(COLOR_NONE)
-	$(AR) $(TOBJ_DIR)/$(TOBJ_ARNAME) $^
-	$(ECHO) $(COLOR_TXT)"\t\t- DYNAMIC\t===>\t"$(COLOR_TAG)"$(TOBJ_NAME)"$(COLOR_NONE)
-	$(LN) -o $(TOBJ_DIR)/$(TOBJ_DLNAME) $^ $(BUILD_LIBS)
+$(TARGET) : $(OBJ)
+	$(ECHO) $(COLOR_TXT)"\t\t- ARCHIVE\t===>\t"$(COLOR_TAG)"$(TARGET_ARNAME)"$(COLOR_NONE)
+	$(AR) $(TARGET_DIR)/$(TARGET_ARNAME) $^
+	$(ECHO) $(COLOR_TXT)"\t\t- DYNAMIC\t===>\t"$(COLOR_TAG)"$(TARGET_NAME)"$(COLOR_NONE)
+	$(LN) -o $(TARGET_DIR)/$(TARGET_DLNAME) $^ $(BUILD_LIBS)
 	$(INSTALL_HEAD_FILE)
 	$(INSTALL_DYLIB_FILE)
 	$(ECHO) $(COLOR_TXT)"\n\tBUILD\t >>> "$(COLOR_RED)"$@"$(COLOR_TXT)" <<< COMPLETE"$(COLOR_NONE)
 
-
 clean :
-	@-rm -rf $(SOBJ_DIR)
+	@-rm -rf $(OBJ_DIR)
 	$(ECHO) $(COLOR_TXT)"\n\tCLEAN\t >>> "$(COLOR_RED)"$@"$(COLOR_TXT)" <<< COMPLETE"$(COLOR_NONE)
 
 distclean : clean
-	@-rm -rf $(TOBJ_DIR)
+	@-rm -rf $(TARGET_DIR)
 	@-rm -rf $(INSTALL_HEAD_DIR)
 	@-rm -rf client
 	@-rm -rf server
 	$(ECHO) $(COLOR_TXT)"\n\tCLEAN\t >>> "$(COLOR_RED)"$@"$(COLOR_TXT)" <<< COMPLETE"$(COLOR_NONE)
 
-install : $(TOBJ)
+install : $(TARGET)
 	$(ECHO) $(COLOR_TXT)"\t\t- INSTALL\t===>\t$<"$(COLOR_NONE)
-ifeq ($(BUILD_HOST), darwin)
-	
-else
-	
-endif

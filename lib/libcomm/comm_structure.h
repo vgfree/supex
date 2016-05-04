@@ -12,6 +12,8 @@
 #include "comm_epoll.h"
 #include "comm_lock.h"
 #include "comm_pipe.h"
+#include "mfptp_protocol/mfptp_parse.h"
+#include "mfptp_protocol/mfptp_package.h"
 
 
 #ifdef __cplusplus
@@ -25,6 +27,7 @@ extern "C" {
 #define QUEUE_CAPACITY		50000
 #define COMM_READ_MIOU		1024	/* 读取数据大小[getsockopt RCVBUF] */
 #define COMM_WRITE_MIOU		1024	/* 写入数据大小[getsockopt SNDBUF] */
+#define COMM_FRAMES		13
 
 struct comm_context ;
 struct portinfo	;
@@ -77,8 +80,6 @@ struct comm_data {
 	struct comm_context*	commctx;	/* 通信上下文的结构体 */
 	struct cbinfo		finishedcb;	/* 此描述符监听事件发生时相应的回调函数信息 */
 	struct portinfo		portinfo;	/* 端口的相关信息 */
-	struct mfptp_packager_info packager;	/* 打包器相关信息 */
-	struct mfptp_parser_info parser;	/* 解析器的相关信息 */
 	int			parsepct;	/* 解析数据百分比[根据此值来决定什么时候调用解析函数] */
 	int			packpct;	/* 打包数据百分比[根据此值来决定什么时候调用打包函数]*/
 };
@@ -110,8 +111,8 @@ struct comm_message {
 	int	dsize;					/* 消息的总大小 */
 	int	frames;					/* 消息的总帧数 */
 	int	packages;				/* 消息的总包数 */
-	int	frame_offset[FRAMES];			/* 每个帧的偏移 */
-	int	frames_of_package[FRAMES];		/* 每个包的帧数 */
+	int	frame_offset[COMM_FRAMES];		/* 每个帧的偏移 */
+	int	frames_of_package[COMM_FRAMES];		/* 每个包的帧数 */
 	int	encryption;				/* 消息加密格式 */
 	int	compression;				/* 消息压缩格式 */
 	char*	content;				/* 消息的内容首地址 */

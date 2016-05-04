@@ -53,9 +53,32 @@ enum mfptp_socket_type {
 	INVALID_METHOD
 };
 
+/* MFPTP协议错误码 */
+enum mfptp_error {
+	MFPTP_PARSER_OK = 0x00,		/* MFPTP解析的时候没发生错误，进行下一步的解析 */
+	MFPTP_PARSER_OVER,		/* MFPTP解析成功的完成 */
+	MFPTP_HEAD_INVAILD,		/* MFPTP协议解析前6个字节“#MFPTP”出错 */
+
+};
+
+/* MFPTP协议的状态码 */
+enum mfptp_status {
+	MFPTP_PARSE_INIT = 0x00,/* MFPTP协议解析初始化的状态 */
+	MFPTP_PACKAGE_INIT,	/* MFPTP协议打包初始化的状态 */
+	MFPTP_HEAD,		/* MFPTP协议的前6个字节"#MFPTP" */
+	MFPTP_VERSION,		/* MFPTP协议的版本号 */
+	MFPTP_CONFIG,		/* MFPTP协议的压缩解密格式 */
+	MFPTP_SOCKET_TYPE,	/* MFPTP协议socket的类型 */
+	MFPTP_PACKAGES,		/* MFPTP协议携带的包数 */
+	MFPTP_FP_CONTROL,	/* MFPTP协议的FP_control字段 */
+	MFPTP_F_SIZE,		/* MFPTP协议F_size字段 */
+	MFPTP_FRAME,		/* MFPTP协议的帧 */
+	MFPTP_FRAME_OVER,	/* MFPTP协议解析完一包的数据 */
+	MFPTP_PACKAGE_OVER	/* MFPTP协议解析完 */
+};
 
 /* MFPTP协议帧的相关信息[一个此结构体代表的是一个包的数据] */
-typedef struct mfptp_frame_info {
+struct mfptp_frame_info {
 	int frames;				/* 一共有多少帧 */
 	int frame_size[MFPTP_MAX_FRAMES];	/* 每一帧的数据大小 */
 	int frame_offset[MFPTP_MAX_FRAMES];	/* 每帧的偏移 */
@@ -63,6 +86,7 @@ typedef struct mfptp_frame_info {
 
 /* MFPTP协议包的相关信息 */
 struct mfptp_package_info {
+	bool			init;
 	int			packages;			/* 总包数 */
 	int			frames;				/* 总帧数 */
 	int			dsize;				/* 数据总大小 */

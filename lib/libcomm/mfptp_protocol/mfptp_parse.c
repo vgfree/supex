@@ -2,87 +2,89 @@
 /************************	Created by 许莉 on 16/04/28.	******************************/
 /*********	 Copyright © 2016年 xuli. All rights reserved.	******************************/
 /*********************************************************************************************/
+#include "mfptp_parse.h"
 
 bool mfptp_parse_init(struct mfptp_parser_info *parser, char* const *data, const int *size)
 {
 	assert(parser && *data && data && size);
 	memset(parser, 0, sizeof(*parser));
 	parser->ms.data = data;
-	parser->ms.size = size;
-	parser->ms.step = mfptp_init;
+	parser->ms.dsize = size;
+	parser->ms.step = MFPTP_PARSE_INIT;
 	parser->init = true;
 	return true;
 }
 
 int mfptp_parse(struct mfptp_parser_info* parser)
 {
-	assert(parser);
+	assert(parser && parser->init);
 	int	i = 0;
-	const int dsize = *parser->ms.size;	/* 待解析数据的大小 */
-	const unsigned char* data = *parser->ms.data;	/* 待解析的数据缓冲区 */
+	int dsize = *(parser->ms.dsize);	/* 待解析数据的大小 */
+	const unsigned char* data = *(parser->ms.data);	/* 待解析的数据缓冲区 */
 	while (dsize) {
 		switch (parser->ms.step) {
-			case mfptp_init:
-			case mfptp_mfptp:
-				if (likely(!strncmp(parser, &data[parser->ms.dosize], "#MFPTP", 6))) {
-					parser->ms.step = mfptp_major_version;
+			case MFPTP_PARSE_INIT:
+			case MFPTP_HEAD:
+				if (likely(!strncmp(&data[parser->ms.dosize], "#MFPTP", 6))) {
+					parser->ms.step = MFPTP_VERSION;
 				} else {
-					parser->ms.error = mfptp_head_invaild;
+					parser->ms.error = MFPTP_HEAD_INVAILD;
 				}
 				break;
-			case mfptp_version:
+			case MFPTP_VERSION:
 				parser->mp.header.major_version = data[parser->ms.dosize] & 0xF0;
 				parser->mp.header.minor_version = data[parser->ms.dosize] & 0x0F;
-				parser->ms.step = mfptp_config;
+				parser->ms.step = MFPTP_CONFIG;
 				break;
-			case mfptp_config:
+			case MFPTP_CONFIG:
 				parser->mp.header.compression = data[parser->ms.dosize] & 0xF0;
 				parser->mp.header.encryption = data[parser->ms.dosize] & 0x0F;
-				parser->ms.step = mfptp_socket_type;
+				parser->ms.step = MFPTP_SOCKET_TYPE;
 				break ;
-			case mfptp_socket_type:
+			case MFPTP_SOCKET_TYPE:
 				parser->mp.header.socket_type = data[parser->ms.dosize];
-				parser->ms.step = mfptp_packages;
+				parser->ms.step = MFPTP_PACKAGES;
 				break ;
-			case mfptp_packages:
+			case MFPTP_PACKAGES:
 				parser->mp.header.packages = data[parser->ms.dosize];
-				parser->ms.step = mfptp_fp_control;
+				parser->ms.step = MFPTP_FP_CONTROL;
 				break ;
-			case mfptp_fp_control:
+			case MFPTP_FP_CONTROL:
 				parser->mp.header.not_end = data[parser->ms.dosize] & 0x0C;
 				parser->mp.header.size_f_size = data[parser->ms.dosize] & 0x03;
-				parser->ms.step = mfptp_f_size;
+				parser->ms.step = MFPTP_F_SIZE;
 				break;
-			case mfptp_f_size:
+			case MFPTP_F_SIZE:
 				for(i = 0; i < parser->mp.header.size_f_size; i++) {
-					parser->mp.header.f_size = parser->mp.header.f_size + data[parser->ms.dosize] << i*8 ;
+					parser->mp.header.f_size = parser->mp.header.f_size + (data[parser->ms.dosize] << i*8) ;
 				}
 				break ;
-			case mfptp_frame:
+			case MFPTP_FRAME:
 				parser->mp.package.frame[parser->mp.package.packages].frame_size[parser->mp.package.frame[parser->mp.package.packages].frames] = parser->mp.header.f_size;
-				parser->package.frame[parser->mp.package.packages].frame_offset[parser->mp.package.frame[parser->mp.package.packages].frames]= parser->ms.dosize; 
-				parser->package.frame[parser->mp.package.packages].frames ++;
+				parser->mp.package.frame[parser->mp.package.packages].frame_offset[parser->mp.package.frame[parser->mp.package.packages].frames]= parser->ms.dosize; 
+				parser->mp.package.frame[parser->mp.package.packages].frames ++;
 				if (parser->mp.header.not_end) {
-					parser->ms.step = mfptp_fp_control;
+					parser->ms.step = MFPTP_FP_CONTROL;
 
 				} else {
-					parser->ms.step = mfptp_frame_over;
+					parser->ms.step = MFPTP_FRAME_OVER;
 				};
 				break ;
-			case mfptp_frame_over:
+			case MFPTP_FRAME_OVER:
 				parser->mp.package.packages ++;
-				parser->ms.step = mfptp_parser;
+				parser->ms.step = MFPTP_PARSE_INIT;
 				if (parser->mp.header.packages  == 0) {
-					parser->ms.step = mfptp_package_over;
+					parser->ms.step = MFPTP_PACKAGE_OVER;
 				}
 				break ;
-			case mfptp_package_over:
-				paser->ms.error = PARSER_OK;
+			case MFPTP_PACKAGE_OVER:
+				parser->ms.error = MFPTP_PARSER_OVER;
 				break ;
 		}
 		dsize --;
 		parser->ms.dosize++;
-		if (parser->ms.error == PARSER_OK) {
+		if (parser->ms.error != MFPTP_PARSER_OK || parser->ms.error == MFPTP_PARSER_OVER) {
+			parser->ms.step = MFPTP_PARSE_INIT;
 			break ;
 		}
 	}

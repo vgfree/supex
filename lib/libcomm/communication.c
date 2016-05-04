@@ -161,7 +161,7 @@ int comm_send(struct comm_context *commctx, const struct comm_message *message, 
 	struct comm_data	*commdata = (struct comm_data *)commctx->data[message->fd];
 
 	if (likely(commdata)) {
-		commmsg = new_commmsg(message->size);
+		commmsg = new_commmsg(message->dsize);
 		if (likely(commmsg)) {
 			copy_commmsg(commmsg, message);
 			commlock_lock(&commdata->sendlock);
@@ -195,7 +195,7 @@ int comm_send(struct comm_context *commctx, const struct comm_message *message, 
 			if (likely(flag)) {
 				/* 数据写入成功 往此管道写入fd 触发子线程的写事件 */
 				commpipe_write(&commctx->commpipe, (void*)&message->fd, sizeof(message->fd));
-				return message->size;
+				return message->dsize;
 			} else {
 				free_commmsg(commmsg);				/* push数据失败则需要释放commmsg */
 			}
@@ -238,7 +238,7 @@ int comm_recv(struct comm_context *commctx, struct comm_message *message, bool b
 	if (flag) {
 		copy_commmsg(message, commmsg);
 		free_commmsg(commmsg);						/* 释放掉comm_message结构体 */
-		return message->size;
+		return message->dsize;
 	}
 	return -1;
 }
@@ -605,7 +605,7 @@ static bool _parse_data(struct comm_data *commdata)
 		if (likely(message)) {
 			memcpy(message->content, &commdata->recv_buff.cache[commdata->recv_buff.start+bodyoffset], size);
 			message->fd = commdata->portinfo.fd;
-			message->size = size;
+			message->dsize = size;
 			commdata->recv_buff.start += size;
 			commdata->recv_buff.size -= size;
 			commlock_lock(&commctx->recvlock);
@@ -675,7 +675,7 @@ static bool _package_data(struct comm_data *commdata)
 	commlock_unlock(&commdata->sendlock);
 
 	if (likely(flag)) {
-		packsize = package(message->content, message->size, &commdata->send_buff.cache[commdata->send_buff.end]);
+		packsize = package(message->content, message->dsize, &commdata->send_buff.cache[commdata->send_buff.end]);
 		commdata->send_buff.end += packsize;
 		commdata->send_buff.size += packsize;
 		free_commmsg(message);

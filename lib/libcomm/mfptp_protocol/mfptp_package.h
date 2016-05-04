@@ -5,10 +5,12 @@
 #ifndef __MFPTP_PACKAGE_H__
 #define __MFPTP_PACKAGE_H__
 
+#include "mfptp_utils.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
 
 
 /* MFPTP打包器的状态 */
@@ -30,7 +32,6 @@ struct mfptp_packager_info {
 	struct mfptp_packager	mp;		/* 打包器的相关信息 */
 	struct mfptp_pack_stat  ms;		/* 打包器的状态 */
 };
-
 
 /***********************************************************************************
  * 功能：初始化打包器结构体
@@ -55,12 +56,12 @@ int mfptp_packager (struct mfptp_packager_info *packager, const char* data, unsi
 bool mfptp_check_memory(int memsize, int packages, int frames, int dsize);
 
 /***********************************************************************************
- * 功能：填充struct mfptp_package_info结构体的数据
+ * 功能：填充struct mfptp_packager_info结构体的数据
  * @packages:待打包的包数 @dsize:待打包数据的总大小
  * @frmoffset:待打包数据帧的偏移数组 @frames_of_pack:每包中的帧数
  * 返回值：总是成功
 ***********************************************************************************/
-void mfptp_fill_package(struct mfptp_package_info *packager, const int *frame_offset, const int *frames_of_pack, int packages, int frames, int dsize);
+void mfptp_fill_package(struct mfptp_packager_info *packager, const int *frame_offset, const int *frames_of_pack, int packages, int frames, int dsize);
 
 #ifdef __cplusplus
 	}
