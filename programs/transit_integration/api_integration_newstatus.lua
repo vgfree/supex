@@ -14,17 +14,6 @@ local Head = {
 	timestamp       = '1445625467',
 }
 
-local Body = {
-	longitude = '',
-	latitude  = '',
-	direction = 95,
-	GPSTime	  = 1460536084,
-	url	  = '',
-	mediatype = '',
-	speed	  = '',
-	altitude  = '',
-	model	  = 'V141224_64',
-}
 
 local hello = {
 	longitude = '121.351609',
@@ -38,7 +27,18 @@ local hello = {
 	model	  = 'V141224_64',
 }
 
-function full_table_withType(str, mediaUrl, mediaType)
+local function full_table_withType(str, mediaUrl, mediaType)
+	local Body = {
+		longitude = '',
+		latitude  = '',
+		direction = 95,
+		GPSTime	  = 1460536084,
+		url	  = '',
+		mediatype = '',
+		speed	  = '',
+		altitude  = '',
+		model	  = 'V141224_64',
+	}
 	local ok , tab_info = pcall(cjson.decode, str)
         if not ok then
                 print("cjson decode failed")
@@ -63,18 +63,19 @@ function full_table_withType(str, mediaUrl, mediaType)
         Body.mediatype = mediaType
 	Body.speed = tab_info['RESULT']['speed']
         Body.altitude = tab_info['RESULT']['altitude']
-	only.log('D',scan.dump(Body))
+	only.log('D', scan.dump(Body))
 	for k,v in pairs(Body) do
 		print(v)
 	end
+	return Body
 end
 
-function trafii_save_request()
+local function trafii_save_request( data )
 	--Head['Content-Type'] = 'application/x-www-form-urlencoded;charset=utf-8'
 	--Head['User-Agent'] = 'curl/7.40.0'
 	--Head['Accept'] =  '*/*'
 	local trafiiServer = link["OWN_DIED"]["http"]["saveRtrPicBySgid"]
-	local req_data = utils.compose_http_json_request({host = "mapapi.daoke.me"}, "rtrTraffic/saveRtrPicBySgid", Head, hello)
+	local req_data = utils.compose_http_json_request({host = "mapapi.daoke.me"}, "rtrTraffic/saveRtrPicBySgid", Head, data)
 	print(req_data)
         --local ret = libhttps.https("mapapi.daoke.me", 443, req_data, string.len(req_data))
         local ret = http_api.http(trafiiServer, req_data , true)
@@ -83,8 +84,8 @@ function trafii_save_request()
 end
 
 function traffi_gson_save(str, mediaUrl, mediaType)
-	full_table_withType(str, mediaUrl, mediaType)
-	trafii_save_request()
+	local data = full_table_withType(str, mediaUrl, mediaType)
+	trafii_save_request( data )
 end
 
 function dfs_image_save(str)
@@ -153,6 +154,7 @@ function dfs_sound_save(str)
 end
 
 function handle_gson(str, mediaUrl, mediaType)
+	print(imageURL)
 	return traffi_gson_save(str, mediaUrl, mediaType)
 end
  
