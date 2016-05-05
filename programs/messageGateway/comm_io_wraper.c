@@ -1,10 +1,12 @@
 #include "comm_io_wraper.h"
 #include "config_reader.h"
+#include "loger.h"
+
+#include "stdio.h"
 
 #define CONFIG "messageGateway.conf"
-#define NODE_IP "CoreExchangeNodeIp"
+#define NODE_IP "CoreExchangeNodeIP"
 #define NODE_PORT "CoreExchangeNodePort"
-#define EPOLL_SIZE 1024
 
 static void core_exchange_node_cb(struct comm_context *commctx,
                                   struct portinfo *portinfo,
@@ -13,13 +15,14 @@ static void core_exchange_node_cb(struct comm_context *commctx,
 
 }
 
-static comm_context *g_commctx = NULL;
+static struct comm_context *g_commctx = NULL;
 int init_comm_io()
 {
   struct config_reader *config =
     init_config_reader(CONFIG);
   char *ip = get_config_name(config, NODE_IP);
   char *port = get_config_name(config, NODE_PORT);
+  log("ip:%s. port:%s.", ip, port);
   g_commctx = comm_ctx_create(EPOLL_SIZE);
   if (!g_commctx) {
     return -1;
@@ -41,14 +44,14 @@ int init_comm_io()
 	char ipbuf[20];
 	char portbuf[10];
 	int j = 0;
-	while (ipptr != ';') {
+	while (*ipptr != ';') {
       ipbuf[j] = *ipptr;
 	  ipptr ++;
 	  j++;
 	}
 	ipbuf[j] = '\0';
     j = 0;
-	while (portptr != ';') {
+	while (*portptr != ';') {
       portbuf[j] = *portptr;
       portptr ++;
       j++;

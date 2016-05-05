@@ -3,6 +3,7 @@
 
 #include <string.h>
 
+static kv_handler_t *g_gid_map = NULL;
 
 void init_gid_map()
 {
@@ -26,8 +27,8 @@ int find_fd_list(char *gid, int fd_list[])
   iter = kv_answer_get_iter(ans, ANSWER_HEAD);
   kv_answer_rewind_iter(ans, iter);
   while ((value = kv_answer_next(iter)) != NULL) {
-    fd_list[i] = ((char*)value->ptr)[0];
-	fd_list[i] = fd_list[i] + ((char*)value->ptr)[1];
+    fd_list[i] = ((char*)value->ptr)[1];
+    fd_list[i] = fd_list[i] * 256 + ((char*)value->ptr)[0];
 	i++;
   }
   kv_answer_release_iter(iter);
@@ -40,11 +41,11 @@ int insert_fd_list(char *gid, int fd_list[], int size)
   strcat(cmd, gid);
   for (int i = 0; i < size; i++) {
     char buf[4];
-	buf[0] = 32;
-	buf[1] = fd_list[i] % 256;
-	buf[2] = fd_list[i] / 256;
-	buf[3] = '\0';
-	strcat(cmd, buf);
+    buf[0] = 32;
+    buf[1] = fd_list[i] % 256;
+    buf[2] = fd_list[i] / 256;
+    buf[3] = '\0';
+    strcat(cmd, buf);
   }
   kv_answer_t *ans = kv_ask(g_gid_map, cmd, strlen(cmd));
   if (ans->errnum != ERR_NONE) {
@@ -63,7 +64,7 @@ int remove_fd_list(char *gid, int fd_list[], int size)
     buf[0] = 32;
     buf[1] = fd_list[i] % 256;
     buf[2] = fd_list[i] / 256;
-	buf[3] = '\0';
+    buf[3] = '\0';
     strcat(cmd, buf);
   }
   kv_answer_t *ans = kv_ask(g_gid_map, cmd, strlen(cmd));

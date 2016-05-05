@@ -2,6 +2,7 @@
 #include <string.h>
 #include <assert.h>
 
+#include "loger.h"
 #include "load_swift_cfg.h"
 #include "json.h"
 
@@ -91,7 +92,7 @@ void load_cfg_file(struct swift_cfg_file *p_cfg, char *name)
 	return;
 
 fail:
-	x_printf(D, "invalid config file :%s\n", name);
+	error("invalid config file :%s", name);
 	exit(EXIT_FAILURE);
 }
 

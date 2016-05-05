@@ -1,5 +1,4 @@
 #include "config_reader.h"
-#include "zmq.h"
 #include "zmq_io_wraper.h"
 
 #include <assert.h>
@@ -31,7 +30,7 @@ void zmq_srv_exit()
   zmq_ctx_destroy(g_ctx);
 }
 
-int zmq_send(enum server srv, zmq_msg_t *msg, int flags)
+int zmq_io_send(enum server srv, zmq_msg_t *msg, int flags)
 {
   return zmq_sendmsg(g_server[srv], msg, flags);
 }
@@ -44,6 +43,8 @@ int init_zmq_io()
   char *port = get_config_name(config, CID_PORT);
   assert(!g_ctx);
   g_ctx = zmq_ctx_new();
-  zmq_srv_init(ip, port, CID_SERVER);
+  int intport = atoi(port);
+  zmq_srv_init(ip, intport, CID_SERVER);
+  destroy_config_reader(config);
   return 0;
 }

@@ -4,7 +4,6 @@
 #include "stdint.h"
 #include "libkv.h"
 
-kv_handler_t *g_uid_map;
 
 void init_uid_map();
 
