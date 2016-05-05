@@ -17,7 +17,7 @@ int upstream_msg()
     sz = msg.dsize;
   }
   else {
-    sz = frame_offset[1] - frame_offset[0];
+    sz = msg.frame_offset[1] - msg.frame_offset[0];
   }
   struct router_head *hd = parse_router(msg.content, sz);
   assert(hd);
@@ -27,11 +27,11 @@ int upstream_msg()
     assert(rc == 0);
     memcpy(zmq_msg_data(&msg_frame), msg.content + msg.frame_offset[i],
            msg.frame_offset[i + 1] - msg.frame_offset[i]);
-	if (i < msg.frames - 1) {
-      zmq_send(hd->message_to, &msg_frame, ZMQ_SNDMORE);
+    if (i < msg.frames - 1) {
+      zmq_io_send(hd->message_to, &msg_frame, ZMQ_SNDMORE);
     }
-	else {
-      zmq_send(hd->message_to, &msg_frame, 0);
-	}
+    else {
+      zmq_io_send(hd->message_to, &msg_frame, 0);
+    }
   } 
 }

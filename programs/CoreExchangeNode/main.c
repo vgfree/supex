@@ -1,9 +1,11 @@
 #include "config_reader.h"
 #include "communication.h"
 #include "daemon.h"
+#include "fd_manager.h"
+#include "gid_map.h"
 #include "message_dispatch.h"
 #include "loger.h"
-#include "fd_manager.h"
+#include "uid_map.h"
 
 #include <signal.h>
 #include <stdlib.h>
@@ -90,6 +92,8 @@ static int init() {
   g_serv_info.commctx = commctx;
   log("port:%d", g_serv_info.port);
   destroy_config_reader(config);
+  init_uid_map();
+  init_gid_map();
   return 0;
 }
 
@@ -112,7 +116,9 @@ int main(int argc, char* argv[])
   }
   array_destroy();
   list_destroy();
-  daemon_exit(SERVER_FILE);
+  destroy_uid_map();
+  destroy_gid_map();
   CSLog_destroy(g_imlog);
+  daemon_exit(SERVER_FILE);
   return 0;
 }

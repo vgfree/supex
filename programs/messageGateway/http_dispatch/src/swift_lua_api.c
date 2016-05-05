@@ -1,5 +1,6 @@
 #include <assert.h>
 
+#include "loger.h"
 #include "match.h"
 #include "swift_api.h"
 #include "swift_lua_api.h"
@@ -48,7 +49,7 @@ static int _vms_cntl(lua_State **L, int last, struct swift_task_node *task)
 			break;
 
 		default:
-			x_printf(S, "Error msmq opt!\n");
+			log("Error msmq opt!\n");
 			return 0;
 	}
 	return lua_pcall(*L, 3, 0, 0);
@@ -114,7 +115,7 @@ static lua_State *_vms_new(void)
 static int _vms_init(lua_State **L, int last, struct swift_task_node *task)
 {
 	if (*L != NULL) {
-		x_printf(S, "No need to init LUA VM!\n");
+		log("No need to init LUA VM!\n");
 		return 0;
 	}
 
@@ -145,7 +146,7 @@ static int _vms_exit(lua_State **L, int last, struct swift_task_node *task)
 	error = lua_pcall(*L, 0, 0, 0);
 
 	if (error) {
-		x_printf(E, "%s\n", lua_tostring(*L, -1));
+		log("%s", lua_tostring(*L, -1));
 		lua_pop(*L, 1);
 	}
 
@@ -158,7 +159,7 @@ int swift_vms_exit(void *W)
 {
 	int error = swift_for_alone_vm(W, _vms_exit);
 
-	x_printf(S, "exit one alone LUA!\n");
+	log("exit one alone LUA!");
 	return error;
 }
 

@@ -3,6 +3,8 @@
 
 #include <string.h>
 
+static kv_handler_t *g_uid_map = NULL;
+
 void init_uid_map()
 {
   g_uid_map = kv_create(NULL);

@@ -24,12 +24,17 @@ void find_best_gateway(int *fd)
 static void handle_cid_message(struct router_head *head,
                                struct comm_message *msg)
 {
+// 去掉第一帧重新打包。
   struct comm_message new_msg;
   new_msg.fd = head->Cid.fd;
-  new_msg.size = head->body_size;
-  new_msg.content = (char *)malloc(head->body_size * sizeof(char));
-  log("message body start :%d", msg->size - head->body_size);
-  memcpy(new_msg.content, msg->content + (msg->size - head->body_size), head->body_size);
+  new_msg.dsize = msg->dsize - msg->frame_offset[0];
+  new_msg.frames = msg->frames - 1;
+  for (int i = 0; i < new_msg.frames; i++) {
+    new_msg.frame_offset[i] = msg->frame_offset[i+1];
+  }
+  new_msg.content = (char *)malloc(new_msg.dsize * sizeof(char));
+  log("message body start :%d", msg->dsize - head->body_size);
+  memcpy(new_msg.content, msg->content + msg->frame_offset[1], new_msg.dsize);
   log("Prepare to send mesg.");
   comm_send(g_serv_info.commctx, &new_msg, true, -1);
   free(new_msg.content);
@@ -114,13 +119,13 @@ static void handle_gid_map(struct router_head *head)
   int count = 0;
   for (int i = 0; i < cid; i++) {
     char uid[4];
-	memcpy(uid, head->body + i * 6, 4);
-	if (memcmp(g_serv_info.ip, uid, 4) != 0) {
+    memcpy(uid, head->body + i * 6, 4);
+    if (memcmp(g_serv_info.ip, uid, 4) != 0) {
       continue;
-	}
-	int fd = *(head->body + i * 6 + 5);
-	fd = fd * 256 + *(head->body + i*6 + 4);
-	fdlist[count++] = fd;
+    }
+    int fd = *(head->body + i * 6 + 5);
+    fd = fd * 256 + *(head->body + i*6 + 4);
+    fdlist[count++] = fd;
   }
   char gid[GID_SIZE + 1];
   memcpy(gid, head->Gid.gid, GID_SIZE);
@@ -136,12 +141,9 @@ void message_dispatch()
   org_msg.content = (char *)malloc(g_serv_info.package_size * sizeof(char));
   comm_recv(g_serv_info.commctx, &org_msg, true, -1);
   if (org_msg.fd != 0) {
-    log("org_msg fd:%d, size:%d", org_msg.fd, org_msg.size);
-    for (int i = 0; i < org_msg.size; i++) {
-      log("%x,", org_msg.content[i]);
-    }
+    log("org_msg fd:%d, size:%d", org_msg.fd, org_msg.dsize);
     struct router_head *oldhead = 
-      parse_router(org_msg.content, org_msg.size);
+      parse_router(org_msg.content, org_msg.frame_offset[1]);
     if (oldhead) {
       switch (oldhead->type) {
         case 0x0:

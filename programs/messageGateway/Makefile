@@ -1,8 +1,11 @@
 BASE_SRC=./http_dispatch/src
-INC_DIR=-I/usr/local/include/luajit-2.0 -I../../lib/libev -I../../lib/json-c -I../../lib/http-parser -I../../lib/libscco -I../../engine -I../../engine/major -I./src -I./http_dispatch/src/ -I../../lib/libcomm/ -I../../lib/utils
-LIB_DIR=-L/usr/local/lib -L../../lib -L../../engine/
-LIBS=-lluajit-5.1 -lpthread -lrt -lm 
+INC_DIR=-I/usr/local/include/luajit-2.0 -I../../lib/libev -I../../lib/json-c -I../../lib/http-parser -I../../lib/libscco -I../../engine -I../../engine/major -I./src -I./http_dispatch/src/ -I../../lib/libcomm/ -I../../lib/utils -I../../lib/zeromq-4.1.4/include/ -I../../lib/liblog -I../../lib/libmini/include -I../../lib/libevcoro/include
+LIB_DIR=-L/usr/local/lib -L../../lib -L../../engine/  -L../../lib/liblog/slog/lib -llog4cxx -lslog -lstdc++
+
+LIBS=-lluajit-5.1 -lpthread -lrt -ldl -lm
 LIBA=-ljson-c
+
+INC_LIBS=../../lib/utils/lib/libutils.a ../../lib/libcomm/lib/libcomm.a ../../lib/libzmq.a
 
 #[=========>MARK<=========]#
 MAIN_APP_SERV ?= messageGateway
@@ -28,14 +31,19 @@ SRV := $(MAIN_APP_SERV)
 JOB += $(SRV)
 CLEANFILES = mhooktrace.log
 
-MAIN_OBJ = message_concentrator.c main.c
+MAIN_OBJ = comm_io_wraper.c \
+	   zmq_io_wraper.c \
+	   upstream.c \
+	   downstream.c \
+	   message_concentrator.c \
+	   main.c
 
 all:$(JOB)
 	@echo -e $(foreach bin,$^,$(BLUE)$(bin) $(GREEN)✔)$(RED)"\n-->OVER!\n"$(NONE)
 
 
 $(SRV):$(OBJ)
-	gcc $(CFLAGS) $^ $(INC_DIR) $(LIB_DIR) $(LIBA) $(LIBS) $(MAIN_OBJ) -o $@
+	gcc $(CFLAGS) $^ $(INC_DIR) $(LIB_DIR) $(LIBA) $(LIBS) $(MAIN_OBJ) $(INC_LIBS) -o $@
 #	@-if [ ! -d ./logs ];then mkdir logs; fi
 	@echo -e $(GREEN)"【"$(YELLOW) $@ $(GREEN)"】"$(RED)"\n-->OK!\n"$(NONE)
 
@@ -56,4 +64,4 @@ clean:
 distclean:
 	make clean
 	rm -rf ./logs/*.log
-
+	

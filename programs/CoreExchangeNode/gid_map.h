@@ -6,7 +6,6 @@
 
 #define GROUP_SIZE 1000
 
-kv_handler_t *g_gid_map;
 
 void init_gid_map();
 
