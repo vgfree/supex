@@ -1,4 +1,19 @@
 module("link")
+OWN_POOL = {
+     redis = {
+         public = {
+             host = '192.168.1.11',
+             port = 6349, 
+         },
+	 privatel = {
+             host = '192.168.71.71',
+             port = 6379,
+	 },
+     },
+     mysql = {},
+}
+
+
 OWN_DIED = {
     redis = {
         public = {

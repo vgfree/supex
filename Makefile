@@ -356,6 +356,9 @@ coreExchangeNode:
 	$(MAKE) -C ./programs/CoreExchangeNode MAIN_APP_SERV=coreExchangeNode
 	@echo -e $(GREEN)"【"$(YELLOW) $@ $(GREEN)"】"$(RED)"\n-->OK!\n"$(NONE)
 
+messageGateway:
+	$(MAKE) -C ./programs/messageGateway MAIN_APP_SERV=messageGateway
+	@echo -e $(GREEN)"【"$(YELLOW) $@ $(GREEN)"】"$(RED)"\n-->OK!\n"$(NONE)
 
 push:
 	git push origin HEAD:refs/for/devel

@@ -25,7 +25,7 @@ void zmq_srv_exit()
   for (int i = 0; i < SERVER_SIZE; i++) {
     if (g_server[i]) {
       zmq_close(g_server[i]);
-	} 
+    } 
   }
   zmq_ctx_destroy(g_ctx);
 }

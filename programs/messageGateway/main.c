@@ -19,13 +19,10 @@ int main(int argc, char *argv[])
   }
   g_imlog = CSLog_create(MODULE_NAME, WATCH_DELAY_TIME);
   pthread_t tid;
-  printf("start init\n");
   if (concentrator_init(&tid) != 0) {
     printf("concentrator not init.");
-	return -1;
+    return -1;
   }
-  printf("http start run.\n");
-  while(1);
   http_run(argc, argv);
   void *status;
   pthread_join(tid, &status);
