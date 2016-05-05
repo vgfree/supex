@@ -3,26 +3,39 @@ local only      = require('only')
 local cjson     = require('cjson')
 local redis_api = require('redis_pool_api')
 local http_api  = require('http_short_api')
+local libhttps  = require("libhttps")
 
-module("api_pic_newstatus", package.seeall)
+module("api_integration_newstatus", package.seeall)
 
 local Head = {
-	appkey		= '',
-	accountid	= '',
-	timestamp	= '',
-	sign		= '',
+	appkey		= '2582535051',
+	sign            = '4480DC5A12F77ECCC0E52D9A94374EAFC46ADAE2',
+	accountId	= 'xxxxxxxxxx',
+	timestamp       = '1445625467',
 }
 
 local Body = {
-	longitude	= '',
-	latitude	= '',
-	direction	= '',
-	GPSTime		= '',
-	url		= '',
-	mediatype	= '',
-	speed		= '',
-	altitude	= '',
-	model		= '',
+	longitude = '',
+	latitude  = '',
+	direction = 95,
+	GPSTime	  = 1460536084,
+	url	  = '',
+	mediatype = '',
+	speed	  = '',
+	altitude  = '',
+	model	  = 'V141224_64',
+}
+
+local hello = {
+	longitude = '121.351609',
+	latitude  = '31.220259',
+	direction = 95,
+	GPSTime   = 1460536084,
+	url	  = 'http://image.xinmin.cn/2016/04/13/20160413084847727.jpg',
+	mediatype = 'jpg',
+	speed	  = 30,
+	altitude  = '20.1',
+	model	  = 'V141224_64',
 }
 
 function full_table_withType(str, mediaUrl, mediaType)
@@ -40,28 +53,38 @@ function full_table_withType(str, mediaUrl, mediaType)
 
 	if mediaType == 'jpg' then
 		Body.longitude = tab_info['RESULT']['mediaList'][1]['longitude']
-		print(Body.longitude)
 		Body.latitude = tab_info['RESULT']['mediaList'][1]['latitude']
-		print(Body.latitude)
 	end
 	if mediaType == 'amr' then
 		Body.longitude = tab_info['RESULT']['videoList'][1]['lngLatList'][1]['longitude']
-                print(Body.longitude)
                 Body.latitude = tab_info['RESULT']['videoList'][1]['lngLatList'][1]['latitude']
-		print(Body.latitude)
 	end
 	Body.url = mediaUrl
-	print(Body.url)
         Body.mediatype = mediaType
-	print(Body.mediatype)
 	Body.speed = tab_info['RESULT']['speed']
-	print(Body.speed)
         Body.altitude = tab_info['RESULT']['altitude']
-	print(Body.altitude)
+	only.log('D',scan.dump(Body))
+	for k,v in pairs(Body) do
+		print(v)
+	end
+end
+
+function trafii_save_request()
+	--Head['Content-Type'] = 'application/x-www-form-urlencoded;charset=utf-8'
+	--Head['User-Agent'] = 'curl/7.40.0'
+	--Head['Accept'] =  '*/*'
+	local trafiiServer = link["OWN_DIED"]["http"]["saveRtrPicBySgid"]
+	local req_data = utils.compose_http_json_request({host = "mapapi.daoke.me"}, "rtrTraffic/saveRtrPicBySgid", Head, hello)
+	print(req_data)
+        --local ret = libhttps.https("mapapi.daoke.me", 443, req_data, string.len(req_data))
+        local ret = http_api.http(trafiiServer, req_data , true)
+        --local ok, ret = supex_http_api('mapapi.daoke.me', '80', data, #data)
+	print(ret)	
 end
 
 function traffi_gson_save(str, mediaUrl, mediaType)
 	full_table_withType(str, mediaUrl, mediaType)
+	trafii_save_request()
 end
 
 function dfs_image_save(str)

@@ -3,7 +3,7 @@ local lualog		= require('lualog')
 local only		= require('only')
 local cutils		= require('cutils')
 local redis_api		= require('redis_pool_api')
-local api_pic_newstatus	= require("api_pic_newstatus")
+local api_integration_newstatus	= require("api_integration_newstatus")
 
 require("zmq")
 
@@ -29,8 +29,8 @@ function app_call( tab )
 	s:send_table(tab)
 
 	--print(tab[1])
-	local imageURL = api_pic_newstatus.handle_image(tab[3])
-	api_pic_newstatus.handle_gson(tab[2], imageURL, 'jpg')
-	--api_pic_newstatus.handle_image(tab[3])
-        --api_pic_newstatus.handle_audio(tab[4])
+	local imageURL = api_integration_newstatus.handle_image(tab[3])
+	api_integration_newstatus.handle_gson(tab[2], imageURL, 'jpg')
+	--api_integration_newstatus.handle_image(tab[3])
+        --api_integration_newstatus.handle_audio(tab[4])
 end

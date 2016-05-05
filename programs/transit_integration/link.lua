@@ -111,5 +111,9 @@ OWN_DIED = {
 		        host = "192.168.71.84",
                         port = 2222,		
 		},
+		["saveRtrPicBySgid"] = {
+			host = "mapapi.daoke.me",
+			port = 80,
+		},
         }
 }
