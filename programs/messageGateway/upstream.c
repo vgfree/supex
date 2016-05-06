@@ -34,4 +34,5 @@ int upstream_msg()
       zmq_io_send(hd->message_to, &msg_frame, 0);
     }
   } 
+  return 0;
 }

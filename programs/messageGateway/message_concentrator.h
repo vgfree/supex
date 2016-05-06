@@ -6,6 +6,7 @@
 int message_fountain();
 
 int concentrator_init();
+void concentrator_destroy();
 int router_msg();
 int switch_msg();
 #endif

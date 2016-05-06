@@ -15,7 +15,7 @@ int message_fountain()
   while (1) {
     printf("message_fountain.\n");
     upstream_msg();
-    downstream_msg();
+//    downstream_msg();
   }
   return 0;
 }
@@ -26,6 +26,7 @@ static void *_fountain_thread(void *usr)
   assert(init_comm_io() == 0);
   assert(init_zmq_io() == 0);
   message_fountain();
+  return NULL;
 }
 
 int concentrator_init(pthread_t *ntid)
@@ -36,4 +37,9 @@ int concentrator_init(pthread_t *ntid)
     printf("can't create thread:%s\n", strerror(err));
   }
   return err;
+}
+
+void concentrator_destroy()
+{
+  destroy_comm_io(); 
 }

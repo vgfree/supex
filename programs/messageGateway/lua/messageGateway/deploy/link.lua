@@ -30,11 +30,11 @@ OWN_DIED = {
         ["dfsapi/v2/txt2voice"] = {
             host = "api.daoke.io",
             port = 80,
-        },  
+        },
        IFQueryDistrictInfo = {
             host = 'api.daoke.io',
             port = 80,
-      },
+       },
     },
 }
 

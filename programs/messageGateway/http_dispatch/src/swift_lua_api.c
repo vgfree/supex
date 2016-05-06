@@ -1,5 +1,7 @@
 #include <assert.h>
 
+#include "communication.h"
+#include "../../downstream.h"
 #include "loger.h"
 #include "match.h"
 #include "swift_api.h"
@@ -16,6 +18,51 @@ extern int app_lua_get_path_data(lua_State *L);
 extern int app_lua_get_uri_args(lua_State *L);
 
 extern int app_lua_add_send_data(lua_State *L);
+
+static int comm_io_send(lua_State *L)
+{
+  struct comm_message msg;
+/*  lua_pushstring(L, "fd");
+  lua_gettable(L, 1);
+  msg.fd = lua_tointeger(L, -1);
+  lua_pop(L, 1);
+*/
+  lua_pushstring(L, "dsize");
+  lua_gettable(L, 1);
+  msg.dsize = lua_tointeger(L, -1);
+  lua_pop(L, 1);
+
+  lua_pushstring(L, "frames");
+  lua_gettable(L, 1);
+  msg.frames = lua_tointeger(L, -1);
+  lua_pop(L, 1);
+
+  lua_pushstring(L, "frame_offset");
+  lua_gettable(L, 1);
+  for (int i = 0; i < msg.frames; i++) {
+    lua_pushnumber(L, i + 1);
+    lua_gettable(L, -2);
+	msg.frame_offset[i] = lua_tointeger(L, -1);
+	lua_pop(L, 1);
+  }
+  lua_pop(L, 1);
+
+  lua_pushstring(L, "encryption");
+  lua_gettable(L, 1);
+  msg.encryption = lua_tointeger(L, -1);
+  lua_pop(L, 1);
+
+  lua_pushstring(L, "compression");
+  lua_gettable(L, 1);
+  msg.compression = lua_tointeger(L, -1);
+  lua_pop(L, 1);
+
+  lua_pushstring(L, "content");
+  lua_gettable(L, 1);
+  msg.content = lua_touserdata(L, -1);
+  downstream_msg(&msg);
+  lua_pop(L, 1);
+}
 
 static int _vms_cntl(lua_State **L, int last, struct swift_task_node *task)
 {
@@ -80,6 +127,7 @@ static lua_State *_vms_new(void)
 	lua_register(L, "app_lua_reverse", app_lua_reverse);
 	lua_register(L, "app_lua_ifmatch", app_lua_ifmatch);
 	lua_register(L, "search_kvhandle", search_kvhandle);
+	lua_register(L, "comm_io_send", comm_io_send);
 	/*lua init*/
 	{
 		extern struct swift_cfg_list g_swift_cfg_list;
