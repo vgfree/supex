@@ -31,6 +31,9 @@ bool commcache_append(struct comm_cache* comm_cache,  const char* data,  int dat
 /* 减少cache有效数据的计数  @size:解析的数据的多少 */
 void commcache_deccnt(struct comm_cache* comm_cache, int size);
 
+/* 扩展cache的内存， @size：需要增加内存的大小，-1则使用默认值 */
+bool commcache_expend(struct comm_cache* comm_cache, int size);
+
 /* 清除cache里面的无效数据 */
 void commcache_clean(struct comm_cache* comm_cache);
 

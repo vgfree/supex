@@ -80,6 +80,8 @@ struct comm_data {
 	struct comm_context*	commctx;	/* 通信上下文的结构体 */
 	struct cbinfo		finishedcb;	/* 此描述符监听事件发生时相应的回调函数信息 */
 	struct portinfo		portinfo;	/* 端口的相关信息 */
+	struct mfptp_parser	parser;		/* 解析器 */
+	struct mfptp_packager	packager;	/* 打包器 */
 	int			parsepct;	/* 解析数据百分比[根据此值来决定什么时候调用解析函数] */
 	int			packpct;	/* 打包数据百分比[根据此值来决定什么时候调用打包函数]*/
 };
@@ -115,6 +117,7 @@ struct comm_message {
 	int	frames_of_package[COMM_FRAMES];		/* 每个包的帧数 */
 	int	encryption;				/* 消息加密格式 */
 	int	compression;				/* 消息压缩格式 */
+	int	socket_type;				/* 消息套接字的类型 */
 	char*	content;				/* 消息的内容首地址 */
 };
 

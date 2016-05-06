@@ -89,8 +89,6 @@ prepare:
 	@-if [ ! -d $(TARGET_DIR) ];then mkdir $(TARGET_DIR); fi
 
 $(OBJ_DIR)/%.o: %.c
-	#$(ECHO) $<
-	#$(ECHO) $@
 	$(call compile_obj, $<, $@)
 
 

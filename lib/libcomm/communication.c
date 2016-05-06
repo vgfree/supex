@@ -390,7 +390,7 @@ static void  _accept_event(struct comm_context *commctx)
 				close(fd);
 				continue ;
 			}
-			commdata = commdata_init(commctx, &portinfo, NULL);
+			commdata = commdata_init(commctx, &portinfo, &lsnfd_commdata->finishedcb);
 			if (likely(commdata)) {
 				commctx->data[fd ] = (intptr_t)commdata;
 				if (lsnfd_commdata->finishedcb.callback) {
@@ -604,7 +604,8 @@ static bool _parse_data(struct comm_data *commdata)
 
 	/* 有数据进行解析的时候才去进行解析 */
 	if (commdata->recv_buff.size > 0) {
-		size = parse(&commdata->recv_buff.cache[commdata->recv_buff.start], commdata->recv_buff.size, &bodyoffset);
+		//size = parse(&commdata->recv_buff.cache[commdata->recv_buff.start], commdata->recv_buff.size, &bodyoffset);
+		size = mfptp_parse(&commdata->parser);
 		log("size: %d recv_buff.size:%d\n", size, commdata->recv_buff.size);
 		message = new_commmsg(size);
 		if (likely(message)) {
@@ -680,7 +681,19 @@ static bool _package_data(struct comm_data *commdata)
 	commlock_unlock(&commdata->sendlock);
 
 	if (likely(flag)) {
-		packsize = package(message->content, message->dsize, &commdata->send_buff.cache[commdata->send_buff.end]);
+		//packsize = package(message->content, message->dsize, &commdata->send_buff.cache[commdata->send_buff.end]);
+		int size = 0;
+		size = mfptp_check_memory(commdata->send_buff.size, message->packages, message->frames, message->dsize);
+		if (size > 0) {
+			/* 检测到内存不够 则增加内存*/
+			if (unlikely(!commcache_expend(&commdata->send_buff, size))) {
+				/* 增加内存失败 */
+			} else {
+				/* 增加内存成功 */
+			}
+		}
+		mfptp_fill_package(&commdata->packager, message->frame_offset, message->frames_of_package, message->packages, message->frames, message->dsize);
+		packsize = mfptp_package(&commdata->packager, message->content, message->compression | message->encryption, message->socket_type);
 		commdata->send_buff.end += packsize;
 		commdata->send_buff.size += packsize;
 		free_commmsg(message);

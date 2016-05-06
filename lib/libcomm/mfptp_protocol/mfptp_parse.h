@@ -6,12 +6,16 @@
 #define __MFPTP_PARSE_H__
 
 #include "mfptp_utils.h"
+#include "../comm_cache.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-
+/* 解压和解密回调函数 */
+/* @dest:用于保存解密解压之后的数据 @src：需要进行解密解压的数据 @返回值：为解密解压之后的数据的大小 */
+typedef int (*Decompression_CallBack)(char *dest, const char *src, int d_len, int s_len);
+typedef int (*Decryption_CallBack)(char *dest, const char *src, int d_len, int s_len);
 
 /* MFPTP解析器的状态 */
 struct mfptp_parser_stat {
@@ -21,20 +25,18 @@ struct mfptp_parser_stat {
 	int			dosize;		/* 当前已解析的长度 */
 	char *const*            data;		/* 被解析数据起始地址指针*/
 	int const*		dsize;		/* 当前数据的总长度地址*/
+	struct comm_cache	cache;		/* 用来保存解压解密之后的数据 */
 	enum mfptp_error	error;		/* MFPTP解析错误码 */
 };
 
-/* MFPTP解析器[解析之后相关数据信息] */
-struct mfptp_parser {
-	struct mfptp_header_info	header;	/* MFPTP头的相关信息 */
-	struct mfptp_package_info	package;/* 每个包的相关信息 */
-};
-
 /* MFPTP解析器的相关信息 */
-struct mfptp_parser_info {
+struct mfptp_parser {
 	bool				init;
-	struct mfptp_parser		mp;	/* MFPTP数据解析器 */
-	struct mfptp_parser_stat	ms;	/* MFPTP数据解析器状态 */
+	struct mfptp_header_info	header;		/* MFPTP头的相关信息 */
+	struct mfptp_package_info	package;	/* 每个包的相关信息 */
+	Decompression_CallBack		decompresscb;	/* 解压回调函数 */
+	Decryption_CallBack		decryptcb;	/* 解密的回调函数 */
+	struct mfptp_parser_stat	ms;		/* MFPTP数据解析器状态 */
 };
 
 /***********************************************************************************
@@ -42,13 +44,13 @@ struct mfptp_parser_info {
  * @data:待解析数据缓冲区地址  @size:待解析数据大小的地址
  * 返回值：true:初始化成功 false:初始化失败
 ***********************************************************************************/
-bool mfptp_parse_init(struct mfptp_parser_info *parser, char* const *data, const int *size);     
+void mfptp_parse_init(struct mfptp_parser *parser, char* const *data, const int *size);     
 
 /***********************************************************************************
  * 功能：开始解析数据
  * 返回值：已解析数据的字节数
 ***********************************************************************************/
-int mfptp_parse(struct mfptp_parser_info* parser);
+int mfptp_parse(struct mfptp_parser *parser);
 #ifdef __cplusplus
 	}
 #endif 

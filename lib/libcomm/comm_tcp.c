@@ -11,7 +11,7 @@ int get_address(int fd, char *paddr, size_t plen)
 	assert(paddr && plen);
 
 	int		retval = -1;
-	char*		ptr = NULL;
+	const char*	ptr = NULL;
 	struct sockaddr sockaddr = {};
 	socklen_t	len = sizeof(sockaddr);
 

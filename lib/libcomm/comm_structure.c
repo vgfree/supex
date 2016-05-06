@@ -45,11 +45,16 @@ struct comm_data*  commdata_init(struct comm_context* commctx, struct portinfo* 
 	} else {
 		flag = EPOLLIN | EPOLLOUT | EPOLLET;
 	}
+
+
 	/* 监听套接字的时间太晚，可能会出现事件已发生，但是epoll却没监听到 */
 	retval = commepoll_add(&commctx->commepoll, portinfo->fd, flag);
 	if( unlikely(!retval) ){
 		goto error;
 	}
+
+	mfptp_parse_init(&commdata->parser, &commdata->recv_buff.cache, &commdata->recv_buff.size);
+	mfptp_package_init(&commdata->packager, commdata->send_buff.cache, &commdata->send_buff.size);
 
 	commdata->commctx = commctx;
 	memcpy(&commdata->portinfo, portinfo, sizeof(*portinfo));
