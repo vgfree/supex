@@ -4,6 +4,8 @@
 /*********************************************************************************************/
 #include <dirent.h>
 #include <stdlib.h>
+
+#include "loger.h"
 #include "communication.h"
 
 
@@ -372,6 +374,7 @@ static void  _accept_event(struct comm_context *commctx)
 	int fd = -1;
 	struct comm_data *lsnfd_commdata = (struct comm_data*)commctx->data[commctx->listenfd];
 
+	log("");
 	while (1) {
 
 		struct portinfo		portinfo = {};
@@ -413,6 +416,7 @@ static void  _accept_event(struct comm_context *commctx)
 static void _recv_event(struct comm_context *commctx, int fd)
 {
 	assert(commctx);
+    log("");
 	int			n = 0;
 	int			bytes = 0;
 	struct comm_data*	commdata = NULL;
@@ -453,6 +457,7 @@ static void _recv_event(struct comm_context *commctx, int fd)
 /* 有数据可以发送的时候 */
 static void  _send_event(struct comm_context *commctx, int* fda, int cnt)
 {
+    log("");
 	assert(commctx && fda);
 	int			n = 0;
 	int			bytes = 0;

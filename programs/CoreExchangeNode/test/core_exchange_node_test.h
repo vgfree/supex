@@ -1,7 +1,7 @@
 #ifndef _CORE_EXCHANGE_NODE_TEST_H
 #define _CORE_EXCHANGE_NODE_TEST_H
 
-#include "../router.h"
+#include "router.h"
 
 #include <stdlib.h>
 

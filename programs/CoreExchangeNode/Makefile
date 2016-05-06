@@ -14,7 +14,7 @@ $(OBJ): $(SRC)
 	$(CC) $(CFLAG) $(INCLUDE_PATH) -c $(SRC)
 
 $(TARGET) : $(OBJ)
-	$(CC) $(OBJ) -L../../lib/liblog/slog/lib -llog4cxx -lslog -L../../lib/libcomm/lib -lcomm -L../../lib/utils/lib -lutils -lstdc++ -lpthread ../../lib/libkv/src/libkv.a -o $(TARGET)
+	$(CC) $(OBJ) -L../../lib/liblog/slog/lib -llog4cxx -lslog ../../lib/libcomm/lib/libcomm.a ../../lib/utils/lib/libutils.a -lstdc++ -lpthread ../../lib/libkv/src/libkv.a -o $(TARGET)
 
 clean:
 	rm -f *.o $(TARGET)

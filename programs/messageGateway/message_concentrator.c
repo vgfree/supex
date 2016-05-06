@@ -1,5 +1,6 @@
 #include "comm_io_wraper.h"
 #include "downstream.h"
+#include "loger.h"
 #include "message_concentrator.h"
 #include "upstream.h"
 #include "zmq_io_wraper.h"
@@ -13,16 +14,15 @@
 int message_fountain()
 {
   while (1) {
-    printf("message_fountain.\n");
+    log("message_fountain.");
     upstream_msg();
-//    downstream_msg();
   }
   return 0;
 }
 
 static void *_fountain_thread(void *usr)
 {
-  printf("_fountain_thread.\n");
+  log("_fountain_thread.\n");
   assert(init_comm_io() == 0);
   assert(init_zmq_io() == 0);
   message_fountain();

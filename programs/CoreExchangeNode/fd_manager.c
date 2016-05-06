@@ -116,7 +116,7 @@ int array_fill_fd(const int fd, const struct fd_descriptor *des)
     g_array.max_fd = fd;
   }
   else {
-    warn("max_fd >fd ?");
+    warn("max_fd >fd");
   }
   return SUCCESS;
 }

@@ -61,7 +61,9 @@ int init_comm_io()
     if (*ptr == ';') {
       count++;
     }
+    ptr++;
   }
+  log("node server number:%d", count);
   char *ipptr = ip;
   char *portptr = port;
   for (int i = 0; i < count; i++) {
@@ -69,19 +71,29 @@ int init_comm_io()
 	char portbuf[10];
 	int j = 0;
 	while (*ipptr != ';') {
+      if (*ipptr == '\0') {
+        break;
+      }
       ipbuf[j] = *ipptr;
-	  ipptr ++;
+	  ipptr++;
 	  j++;
 	}
+    ipptr++;
 	ipbuf[j] = '\0';
     j = 0;
 	while (*portptr != ';') {
+      if (*portptr == '\0') {
+        break;
+      }
       portbuf[j] = *portptr;
-      portptr ++;
+      portptr++;
       j++;
 	}
+    portptr++;
     portbuf[j] = '\0';
+	log("comm_socket before:ip:%s, port:%s.", ipbuf, portbuf);
     int retval = comm_socket(g_commctx, ipbuf, portbuf, &callback_info, COMM_CONNECT);
+	log("retval:%d", retval);
 	if (retval == -1) {
       error("can't connect socket, ip:%s, port:%s.", ipbuf, portbuf);
       return -1;
@@ -99,7 +111,7 @@ void destroy_comm_io()
 int recv_msg(struct comm_message *msg)
 {
   assert(msg);
-  return comm_recv(g_commctx, msg, false, -1);
+  return comm_recv(g_commctx, msg, true, -1);
 }
 
 int send_msg(struct comm_message *msg)
