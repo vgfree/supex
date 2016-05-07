@@ -45,7 +45,7 @@ void mfptp_package_init(struct mfptp_packager *packager, char *buff, int *size);
  * @data:待打包的数据首地址 @flag:压缩和加密的标志位  @method:socket的type
  * @返回值: -1:失败, 否则代表打包之后的数据的大小
 ************************************************************************************/
-int mfptp_package (struct mfptp_packager *packager, const char* data, unsigned char flag,  int method);
+int mfptp_package(struct mfptp_packager *packager, const char* data, unsigned char flag,  int method);
 
 /***********************************************************************************
  * 功能：检测用于保存打包好的数据的内存大小是否足够 
@@ -61,7 +61,7 @@ int mfptp_check_memory(int memsize, int packages, int frames, int dsize);
  * @frmoffset:待打包数据帧的偏移数组 @frames_of_pack:每包中的帧数
  * 返回值：总是成功
 ***********************************************************************************/
-void mfptp_fill_package(struct mfptp_packager *packager, const int *frame_offset, const int *frames_of_pack, int packages, int frames, int dsize);
+void mfptp_fill_package(struct mfptp_packager *packager, const int *frame_offset, const int *frame_size, const int *frames_of_pack, int packages);
 
 #ifdef __cplusplus
 	}

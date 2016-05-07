@@ -5,7 +5,7 @@
 #include <dirent.h>
 #include <stdlib.h>
 
-#include "loger.h"
+//#include "loger.h"
 #include "communication.h"
 
 
@@ -28,6 +28,8 @@ static void  _send_event(struct comm_context *commctx, int *fda, int cnt);
 static bool _write_data(struct comm_data *commdata, int fd);
 
 static bool _read_data(struct comm_data *commdata, int fd);
+
+static void _fill_message_package(struct comm_message *message, const struct mfptp_package_info *package); 
 
 struct comm_context* comm_ctx_create(int epollsize)
 {
@@ -157,13 +159,13 @@ int comm_socket(struct comm_context *commctx, const char *host, const char *serv
 int comm_send(struct comm_context *commctx, const struct comm_message *message, bool block, int timeout)
 {
 	assert(commctx && message && message->content);
+	assert(message->fd > 0 && message->fd < EPOLL_SIZE); /* 保证描述符在范围内 */
 
 	bool			flag = false;
 	struct comm_message	*commmsg = NULL;
 	struct comm_data	*commdata = (struct comm_data *)commctx->data[message->fd];
-
 	if (likely(commdata)) {
-		commmsg = new_commmsg(message->dsize);
+		commmsg = new_commmsg(message->package.dsize);
 		if (likely(commmsg)) {
 			copy_commmsg(commmsg, message);
 			commlock_lock(&commdata->sendlock);
@@ -197,7 +199,7 @@ int comm_send(struct comm_context *commctx, const struct comm_message *message, 
 			if (likely(flag)) {
 				/* 数据写入成功 往此管道写入fd 触发子线程的写事件 */
 				commpipe_write(&commctx->commpipe, (void*)&message->fd, sizeof(message->fd));
-				return message->dsize;
+				return message->package.dsize;
 			} else {
 				free_commmsg(commmsg);				/* push数据失败则需要释放commmsg */
 			}
@@ -240,7 +242,7 @@ int comm_recv(struct comm_context *commctx, struct comm_message *message, bool b
 	if (flag) {
 		copy_commmsg(message, commmsg);
 		free_commmsg(commmsg);						/* 释放掉comm_message结构体 */
-		return message->dsize;
+		return message->package.dsize;
 	}
 	return -1;
 }
@@ -374,7 +376,6 @@ static void  _accept_event(struct comm_context *commctx)
 	int fd = -1;
 	struct comm_data *lsnfd_commdata = (struct comm_data*)commctx->data[commctx->listenfd];
 
-	log("");
 	while (1) {
 
 		struct portinfo		portinfo = {};
@@ -416,7 +417,6 @@ static void  _accept_event(struct comm_context *commctx)
 static void _recv_event(struct comm_context *commctx, int fd)
 {
 	assert(commctx);
-    log("");
 	int			n = 0;
 	int			bytes = 0;
 	struct comm_data*	commdata = NULL;
@@ -457,7 +457,6 @@ static void _recv_event(struct comm_context *commctx, int fd)
 /* 有数据可以发送的时候 */
 static void  _send_event(struct comm_context *commctx, int* fda, int cnt)
 {
-    log("");
 	assert(commctx && fda);
 	int			n = 0;
 	int			bytes = 0;
@@ -573,23 +572,6 @@ static  bool _read_data(struct comm_data *commdata, int fd)
 	return true;
 }
 
-/* 模拟解析函数 返回值为解析了多少大小的数据 */
-int parse(const char* buff, int size, int *bodyoffset)
-{
-	/* 真正的解析数据在解析结构体里面需要告知body的偏移 */
-	//size = strlen(buff);	/*此类字符串长度不可以使用 因为非字符串会出问题	*/
-	*bodyoffset = 0;
-	return size;
-}
-
-/* 模拟打包数据 返回值为打包之后数据的大小 */
-int  package(const char *buff, int size, char*packbuff)
-{
-	/* 测试用，只是单纯的额将send_queue里面的数据拷贝到send_buff里面 */
-	memcpy(packbuff, buff, size);
-	return size;
-}
-
 /* 解析数据 */
 static bool _parse_data(struct comm_data *commdata)
 {
@@ -604,41 +586,47 @@ static bool _parse_data(struct comm_data *commdata)
 
 	/* 有数据进行解析的时候才去进行解析 */
 	if (commdata->recv_buff.size > 0) {
-		//size = parse(&commdata->recv_buff.cache[commdata->recv_buff.start], commdata->recv_buff.size, &bodyoffset);
 		size = mfptp_parse(&commdata->parser);
 		log("size: %d recv_buff.size:%d\n", size, commdata->recv_buff.size);
-		message = new_commmsg(size);
-		if (likely(message)) {
-			memcpy(message->content, &commdata->recv_buff.cache[commdata->recv_buff.start+bodyoffset], size);
-			message->fd = commdata->portinfo.fd;
-			message->dsize = size;
-			commdata->recv_buff.start += size;
-			commdata->recv_buff.size -= size;
-			commlock_lock(&commctx->recvlock);
-			while (1) {
-				if (likely(commqueue_push(&commctx->recv_queue, (void*)&message))) {
-					if (unlikely(!commctx->recv_queue.readable)) {			/* 为0代表有线程在等待可读 */
-						commlock_wake(&commctx->recvlock, &commctx->recv_queue.readable, 1, true);
-					}
-					flag = true;
-					break ;
-				} else {
-					/* 解析数据的时候队列已满，默认堵塞一下等待用户取数据 */
-					commctx->recv_queue.writeable = 0;
-					if (likely(commlock_wait(&commctx->recvlock, &commctx->recv_queue.writeable, 1, timeout, true))) {
-						block = true;
-						continue ;
-					} else {
+		if (likely(size > 0 && commdata->parser.ms.error == MFPTP_OK)) {	/* 解析成功 */
+			message = new_commmsg(commdata->parser.package.dsize);
+			if (likely(message)) {
+				message->fd = commdata->portinfo.fd;
+				memcpy(message->content, &commdata->parser.ms.cache.cache[commdata->parser.ms.cache.start], commdata->parser.package.dsize);
+				_fill_message_package(message, &commdata->parser.package);
+				commdata->parser.ms.cache.start += commdata->parser.package.dsize;
+				commdata->parser.ms.cache.size -= commdata->parser.package.dsize;
+				commdata->recv_buff.start += size;
+				commdata->recv_buff.size -= size;
+				commcache_clean(&commdata->recv_buff);
+				commcache_clean(&commdata->parser.ms.cache);
+				commlock_lock(&commctx->recvlock);
+				while (1) {
+					if (likely(commqueue_push(&commctx->recv_queue, (void*)&message))) {
+						if (unlikely(!commctx->recv_queue.readable)) {			/* 为0代表有线程在等待可读 */
+							commlock_wake(&commctx->recvlock, &commctx->recv_queue.readable, 1, true);
+						}
+						flag = true;
 						break ;
+					} else {
+						/* 解析数据的时候队列已满，默认堵塞一下等待用户取数据 */
+						commctx->recv_queue.writeable = 0;
+						if (likely(commlock_wait(&commctx->recvlock, &commctx->recv_queue.writeable, 1, timeout, true))) {
+							block = true;
+							continue ;
+						} else {
+							break ;
+						}
 					}
 				}
-			}
-			if (unlikely(block && commctx->recv_queue.nodes == commctx->recv_queue.capacity)) {
-				commctx->recv_queue.writeable = 0;
-			}
-			commlock_unlock(&commctx->recvlock);
-			commcache_clean(&commdata->recv_buff);
-		} 
+				if (unlikely(block && commctx->recv_queue.nodes == commctx->recv_queue.capacity)) {
+					commctx->recv_queue.writeable = 0;
+				}
+				commlock_unlock(&commctx->recvlock);
+			} 
+		} else {
+			/* 解析出错 */
+		}
 	}
 	return flag;
 }
@@ -683,21 +671,49 @@ static bool _package_data(struct comm_data *commdata)
 	if (likely(flag)) {
 		//packsize = package(message->content, message->dsize, &commdata->send_buff.cache[commdata->send_buff.end]);
 		int size = 0;
-		size = mfptp_check_memory(commdata->send_buff.size, message->packages, message->frames, message->dsize);
+		size = mfptp_check_memory(commdata->send_buff.size, message->package.packages, message->package.frames, message->package.dsize);
 		if (size > 0) {
 			/* 检测到内存不够 则增加内存*/
 			if (unlikely(!commcache_expend(&commdata->send_buff, size))) {
 				/* 增加内存失败 */
+				flag = false;
 			} else {
 				/* 增加内存成功 */
 			}
 		}
-		mfptp_fill_package(&commdata->packager, message->frame_offset, message->frames_of_package, message->packages, message->frames, message->dsize);
-		packsize = mfptp_package(&commdata->packager, message->content, message->compression | message->encryption, message->socket_type);
-		commdata->send_buff.end += packsize;
-		commdata->send_buff.size += packsize;
+		if (likely(flag)) {
+			mfptp_fill_package(&commdata->packager, message->package.frame_offset, message->package.frame_size, message->package.frames_of_package, message->package.packages);
+			packsize = mfptp_package(&commdata->packager, message->content, message->config, message->socket_type);
+			if (packsize > 0 && commdata->packager.ms.error == MFPTP_OK) {
+				commdata->send_buff.end += packsize;
+				commdata->send_buff.size += packsize;
+				log("pakcage successed\n");
+			} else {
+				log("package failed\n");
+			}
+		}
 		free_commmsg(message);
 	}
 
 	return flag;
+}
+
+/* 填充message结构体 */ 
+static void _fill_message_package(struct comm_message *message, const struct mfptp_package_info *package) 
+{
+	assert(message && package);
+	int i = 0, j = 0, k = 0;
+	int frames = 0;
+	for (i = 0; i < package->packages; i++) {
+		for (j = 0; j < package->frame[i].frames; j++) {
+			message->package.frame_size[k] = package->frame[i].frame_size[j];
+			message->package.frame_offset[k] = package->frame[i].frame_offset[j];
+			k++;
+		}
+		message->package.frames_of_package[i] = package->frame[i].frames;
+		frames += package->frame[i].frames;
+	}
+	message->package.packages = package->packages;
+	message->package.frames = frames;
+	message->package.dsize = package->dsize;
 }

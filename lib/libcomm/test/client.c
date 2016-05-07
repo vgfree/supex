@@ -88,7 +88,17 @@ int main(int argc, char* argv[])
 		char buff[128] = "nothing is important\r\t";
 		char content[1024] = {};
 
-		struct comm_message sendmsg = {fd, -1, -1, 17, test_data};
+		struct comm_message sendmsg = {0};
+		sendmsg.fd = fd;
+		sendmsg.config = NO_COMPRESSION | NO_ENCRYPTION;
+		sendmsg.socket_type = REQ_METHOD;
+		sendmsg.content = buff;
+		sendmsg.package.dsize = strlen(buff);
+		sendmsg.package.frames = 1;
+		sendmsg.package.packages = 1;
+		sendmsg.package.frame_size[0] = strlen(buff);
+		sendmsg.package.frame_offset[0] = 0;
+		sendmsg.package.frames_of_package[0] = 1;
 		
 		retval = comm_send(commctx, &sendmsg, false, -1);
 		if( unlikely(retval < 0) ) {
@@ -104,7 +114,7 @@ int main(int argc, char* argv[])
 				sleep(1);
 				log("client recv_data failed\n");
 			} else {
-				log("client recv_data successed, size:%d,message:%s\n", retval,recvmsg.content);
+				log("client recv_data successed, size:%d,message:%s\n", recvmsg.package.dsize,recvmsg.content);
 				break ;
 			}
 		}

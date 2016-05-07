@@ -107,18 +107,23 @@ struct comm_context {
 	}		stat;			/* 线程的状态 */
 };
 
+/* 数据包的设置 */
+struct comm_package {
+	int dsize;				/* 数据总大小 */
+	int frames;				/* 总帧数 */
+	int packages;				/* 总包数 */
+	int frame_size[COMM_FRAMES];		/* 每个帧数据大小 */
+	int frame_offset[COMM_FRAMES];		/* 每个帧的偏移 */
+	int frames_of_package[COMM_FRAMES];	/* 每个包中帧的多少 */
+};
+
 /* 发送接收数据的结构体 */
 struct comm_message {
-	int	fd;					/* 消息对应的描述符 */
-	int	dsize;					/* 消息的总大小 */
-	int	frames;					/* 消息的总帧数 */
-	int	packages;				/* 消息的总包数 */
-	int	frame_offset[COMM_FRAMES];		/* 每个帧的偏移 */
-	int	frames_of_package[COMM_FRAMES];		/* 每个包的帧数 */
-	int	encryption;				/* 消息加密格式 */
-	int	compression;				/* 消息压缩格式 */
-	int	socket_type;				/* 消息套接字的类型 */
-	char*	content;				/* 消息的内容首地址 */
+	int			fd;			/* 消息对应的描述符 */
+	int			config;			/* 消息的加密压缩格式 */
+	int			socket_type;		/* 消息套接字的类型 */
+	char*			content;		/* 消息的内容首地址 */
+	struct comm_package	package;		/* 消息包的设置 */
 };
 
 struct comm_data*  commdata_init(struct comm_context* commctx, struct portinfo* portinfo,  struct cbinfo*  finishedcb);

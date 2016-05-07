@@ -34,13 +34,13 @@ void event_fun(struct comm_context* commctx, struct portinfo *portinfo, void* us
 	{
 		case FD_CLOSE:
 			close_fun();
-			break;
+			break ;
 		case FD_WRITE:
 			write_fun();
-			break;
+			break ;
 		case FD_READ:
 			read_fun();
-			break;
+			break ;
 		case FD_INIT:
 			if (portinfo->type == COMM_ACCEPT) {
 				accept_fun(); /* 当fd的类型为COMM_ACCEPT时才是accept事件 */
@@ -48,7 +48,7 @@ void event_fun(struct comm_context* commctx, struct portinfo *portinfo, void* us
 			break ;
 		default:
 			timeout_fun();
-			break;
+			break ;
 	}
 	log("server %d fd have action\n",portinfo->fd);
 }
@@ -95,11 +95,22 @@ int main(int argc, char* argv[])
 				sleep(1);
 				log("comm_recv failed\n");
 			} else {
-				log("comm_recv success, size: %d message:%s\n", recvmsg.size, recvmsg.content);
+				log("comm_recv success, size: %d message:%s\n", recvmsg.package.dsize, recvmsg.content);
 				break ;
 			}
 		}
-		struct comm_message sendmsg = {recvmsg.fd, -1, -1, strlen(buff), buff};
+		struct comm_message sendmsg = {0};
+		sendmsg.fd = recvmsg.fd;
+		/* 高四位是压缩设置 低四位是加密设置 */
+		sendmsg.config = NO_COMPRESSION | NO_ENCRYPTION;
+		sendmsg.socket_type = REP_METHOD;
+		sendmsg.content = buff;
+		sendmsg.package.dsize = strlen(buff);
+		sendmsg.package.frames = 1;
+		sendmsg.package.packages = 1;
+		sendmsg.package.frame_size[0] = strlen(buff);
+		sendmsg.package.frame_offset[0] = 0;
+		sendmsg.package.frames_of_package[0] = 1;
 		
 		retval = comm_send(commctx, &sendmsg, false, -1);
 		if( unlikely(retval < 0) )

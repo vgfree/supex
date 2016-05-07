@@ -25,7 +25,7 @@ extern "C" {
 #define MFPTP_F_SIZE_MAXLEN	4	/* MFPTP协议F_size所占的最大字节数 */
 
 /* 检测MFPTP协议头的6个字节是否正确 */
-#define CHECK_HEADER(parser)	(!strncmp(&(*parser->ms.data[parser->ms.dosize]), "#MFPTP", 6))
+#define CHECK_HEADER(parser)	(!strncmp(&(((*parser->ms.data)[parser->ms.dosize])), "#MFPTP", 6))
 
 /* 检测MFPTP协议的版本号是否正确 */
 #define CHECK_VERSION(parser)	(parser->header.major_version == MFPTP_MAJOR_VERSION &&	\
@@ -48,18 +48,14 @@ extern "C" {
 #define CHECK_FRAMESIZE(parser) (*parser->ms.dsize-parser->ms.dosize >= parser->header.f_size)
 
 
-/* MFPTP协议压缩格式 */
-enum mfptp_compression_type {
-	NO_COMPRESSION	= 0x00 << 4,
-	ZIP_COMPRESSION	= 0x01 << 4,
-	GZIP_COMPRESSION= 0x02 << 4
-};
-
-/* MFPTP协议加密格式 */
-enum mfptp_encryption_type {
-	NO_ENCRYPTION = 0x0,
-	IDEA_ENCRYPTION,
-	AES_ENCRYPTION
+/* MFPTP协议压缩加密设置 */
+enum mfptp_config {
+	NO_COMPRESSION		= 0x00 << 4,
+	ZIP_COMPRESSION		= 0x01 << 4,
+	GZIP_COMPRESSION	= 0x02 << 4,
+	NO_ENCRYPTION		= 0x00,
+	IDEA_ENCRYPTION		= 0x01,
+	AES_ENCRYPTION		= 0x02
 };
 
 /* MFPTP协议的socket的type */
@@ -120,7 +116,6 @@ struct mfptp_frame_info {
 struct mfptp_package_info {
 	bool			init;
 	int			packages;			/* 总包数 */
-	int			frames;				/* 总帧数 */
 	int			dsize;				/* 数据总大小 */
 	struct mfptp_frame_info frame[MFPTP_MAX_PACKAGES];	/* 包里面帧的相关信息 */
 };

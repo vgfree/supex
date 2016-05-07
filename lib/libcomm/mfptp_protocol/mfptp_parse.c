@@ -133,7 +133,6 @@ int mfptp_parse(struct mfptp_parser *parser)
 					if (parser->header.not_end) {
 						parser->ms.step = MFPTP_FP_CONTROL;
 					} else {
-						parser->package.frames += frame->frames;
 						parser->ms.step = MFPTP_FRAME_OVER;
 					}
 				} else {
@@ -149,7 +148,7 @@ int mfptp_parse(struct mfptp_parser *parser)
 				}
 				break ;
 			case MFPTP_PACKAGE_OVER:
-				parser->ms.error = MFPTP_PARSE_OVER;
+				parser->ms.step = MFPTP_PARSE_OVER;
 				break ;
 		}
 
@@ -159,7 +158,7 @@ int mfptp_parse(struct mfptp_parser *parser)
 		} else if (parser->ms.step == MFPTP_PARSE_OVER) {
 			/* 代表此次所有连续的两个包都已经解析完毕 即使后面还有其他的数据 都不进行解析了 */
 			parser->ms.step = MFPTP_PARSE_INIT;
-		//	break ;
+			break ;
 		}
 	}
 	return parser->ms.dosize;
