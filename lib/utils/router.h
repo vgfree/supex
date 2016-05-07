@@ -36,12 +36,13 @@ struct router_head {
     struct CID Cid;
     struct GID Gid;
     struct UID Uid;
-  };
+  } identity;
   uint32_t body_size;
   char *body;
 };
 
 struct router_head *parse_router(char *data, uint32_t size);
-char *pack_router(const struct router_head *head);
+struct comm_message *pack_router(const struct router_head *head,
+                                 const struct comm_message *msg);
 
 #endif

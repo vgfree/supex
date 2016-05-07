@@ -32,7 +32,7 @@ void io_notify_logic_thread(struct comm_context* commctx,
     break;
   case 1:   // connected.
 	{
-      struct fd_descriptor des;
+      struct fd_descriptor des = {};
       des.status = 1;
       array_fill_fd(portinfo->fd, &des);
 	}
@@ -41,6 +41,7 @@ void io_notify_logic_thread(struct comm_context* commctx,
     {
       struct fd_descriptor des;
       array_at_fd(portinfo->fd, &des);
+	  log("array_at_fd, status:%d, obj:%d.", des.status, des.obj);
       if (des.status != 1) {
         error("this fd:%d is not running.", portinfo->fd);
         return;
@@ -53,6 +54,7 @@ void io_notify_logic_thread(struct comm_context* commctx,
         list_remove(des.obj, portinfo->fd);
       }
       array_remove_fd(portinfo->fd);
+      log("array_remove_fd.");
       break;
     }
   default:

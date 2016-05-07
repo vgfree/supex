@@ -26,7 +26,7 @@ static void handle_cid_message(struct router_head *head,
 {
 // 去掉第一帧重新打包。
   struct comm_message new_msg;
-  new_msg.fd = head->Cid.fd;
+  new_msg.fd = head->identity.Cid.fd;
   new_msg.dsize = msg->dsize - msg->frame_offset[0];
   new_msg.frames = msg->frames - 1;
   for (int i = 0; i < new_msg.frames; i++) {
@@ -99,7 +99,7 @@ static void handle_uid_map(struct router_head *head)
     return;
   }
   char uid[UID_SIZE + 1];
-  memcpy(uid, head->Uid.uid, UID_SIZE);
+  memcpy(uid, head->identity.Uid.uid, UID_SIZE);
   uid[UID_SIZE] = '\0';
   int fd = head->body[5];
   fd = fd * 256 + head->body[4];
@@ -128,7 +128,7 @@ static void handle_gid_map(struct router_head *head)
     fdlist[count++] = fd;
   }
   char gid[GID_SIZE + 1];
-  memcpy(gid, head->Gid.gid, GID_SIZE);
+  memcpy(gid, head->identity.Gid.gid, GID_SIZE);
   gid[GID_SIZE] = '\0';
   if (insert_fd_list(gid, fdlist, count) == -1) {
     error("insert group fd, error.");

@@ -1,3 +1,4 @@
+#include "communication.h"
 #include "router.h"
 
 #include <assert.h>
@@ -22,32 +23,40 @@ struct router_head *parse_router(char *data, uint32_t size)
   head->message_from = data[i++];
   head->message_to = data[i++];
   head->type = data[i++];
-  switch (head->type) {
-    case 0x0:
-      memcpy(head->Cid.IP, &data[i], 4);
-	  memcpy(&head->Cid.fd, &data[i+4], 2);
-      break;
-    case 0x01:
-	  memcpy(head->Gid.gid, &data[i], 6);
-      break;
-    case 0x02:
-	  memcpy(head->Uid.uid, &data[i], 6);
-      break;
-    case 0x03:
-	  //reservev.
-      break;
-    case 0x04:
-	  //reservev.
-      break;
-    default:
-      break;
-  }
+  memcpy(&head->identity, data, 6);
   i += 6;
-  i += 4; // reserved.
   memcpy(&head->body_size, &data[i], 4);
   return head;
 }
 
-char *pack_router(const struct router_head *head)
+struct comm_message *pack_router(const struct router_head *head,
+                                 const struct comm_message *msg)
 {
+  assert(head && msg);
+  struct comm_message *message = (struct comm_message *)malloc(sizeof(struct comm_message));
+  message->fd = msg->fd;
+  uint32_t rou_Frame_Size = 7 + 3 + 6 + 4 + head->body_size;
+  message->dsize = msg->dsize + rou_Frame_Size;
+  message->frames = msg->frames + 1;
+  message->packages = msg->packages;
+  message->frame_offset[0] = 0;
+  for (int i = 0; i < msg->frames; i++) {
+    message->frame_offset[i+1] = msg->frame_offset[i] + rou_Frame_Size;
+  }
+  for (int i = 0; i < msg->packages; i++) {
+    message->frames_of_package[i] = msg->frames_of_package[i];
+  }
+  message->encryption = msg->encryption;
+  message->compression = msg->compression;
+  message->socket_type = msg->socket_type;
+  message->content = (char *)malloc(message->dsize * sizeof(char));
+  memcpy(message->content, route_sign, 7);
+  message->content[8] = head->message_from;
+  message->content[9] = head->message_to;
+  message->content[10] = head->type;
+  memcpy(message->content + 11, &head->identity, 6);
+  memcpy(message->content + 17, &head->body_size, 4);
+  memcpy(message->content + 21, head->body, head->body_size);
+  memcpy(message->content + rou_Frame_Size, msg->content, msg->dsize);
+  return message;
 }

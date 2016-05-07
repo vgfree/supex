@@ -62,6 +62,7 @@ static int comm_io_send(lua_State *L)
   msg.content = lua_touserdata(L, -1);
   downstream_msg(&msg);
   lua_pop(L, 1);
+  return 0;
 }
 
 static int _vms_cntl(lua_State **L, int last, struct swift_task_node *task)
