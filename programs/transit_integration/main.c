@@ -56,17 +56,18 @@ static lua_State *lua_vm_init(void)
 	lua_pcall(L, 0, 0, 0);
 	return L;
 }
-extern void    *g_subscriber;
 
 void *work_task(void *args)
 {
 	int             error = 0;
 	void            *data = NULL;
+	void    	*g_subscriber = NULL;
 	lua_State       *L = lua_vm_init();
 	
 	struct skt_device devc = {};
 
-	zmq_Javasrv_init();
+	zmq_Javasrv_init(&g_subscriber);
+	assert(g_subscriber != NULL);
 
 	while (1) {
 		zmq_srv_fetch(&devc);

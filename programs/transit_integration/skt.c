@@ -70,11 +70,11 @@ void zmq_srv_init(char *host, int port)
 	assert(rc == 0);
 }
 
-void zmq_Javasrv_init()
+void zmq_Javasrv_init(void** g_subscriber)
 {	
 	int rc;
-	g_subscriber = zmq_socket(g_ctx, ZMQ_PUSH);
-        rc = zmq_bind(g_subscriber, "tcp://*:1020");
+	*g_subscriber = zmq_socket(g_ctx, ZMQ_PUSH);
+        rc = zmq_bind(*g_subscriber, "tcp://*:1020");
         assert(rc == 0);
 }
 
