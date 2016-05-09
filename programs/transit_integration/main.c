@@ -56,6 +56,7 @@ static lua_State *lua_vm_init(void)
 	lua_pcall(L, 0, 0, 0);
 	return L;
 }
+extern void    *g_subscriber;
 
 void *work_task(void *args)
 {
@@ -69,6 +70,9 @@ void *work_task(void *args)
 
 	while (1) {
 		zmq_srv_fetch(&devc);
+		//TODO add
+		zmq_sendiov(g_subscriber, devc->ibuffer, &devc->idx, 0);
+		
 		lua_getglobal(L, "app_call");
 		lua_newtable(L);
 		int i = 0;
