@@ -94,11 +94,11 @@ int init_comm_io()
     log("comm_socket before:ip:%s, port:%s.", ipbuf, portbuf);
     int connectfd = comm_socket(g_commctx, ipbuf, portbuf, &callback_info, COMM_CONNECT);
     log("connectfd:%d", connectfd);
-    send_validate_logon_package(connectfd);
     if (connectfd == -1) {
       error("can't connect socket, ip:%s, port:%s.", ipbuf, portbuf);
-      return -1;
+      continue;
     }
+    send_validate_logon_package(connectfd);
   }
   destroy_config_reader(config);
   return 0;

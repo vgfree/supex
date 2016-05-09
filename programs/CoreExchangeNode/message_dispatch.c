@@ -21,7 +21,7 @@ void find_best_gateway(int *fd)
   *fd = node.fd;
 }
 
-static void handle_cid_message(struct router_head *head,
+static int handle_cid_message(struct router_head *head,
                                struct comm_message *msg)
 {
 // 去掉第一帧重新打包。
@@ -36,23 +36,26 @@ static void handle_cid_message(struct router_head *head,
   log("message body start :%d", msg->dsize - head->body_size);
   memcpy(new_msg.content, msg->content + msg->frame_offset[1], new_msg.dsize);
   log("Prepare to send mesg.");
-  comm_send(g_serv_info.commctx, &new_msg, true, -1);
+  int ret = comm_send(g_serv_info.commctx, &new_msg, true, -1);
   free(new_msg.content);
+  return ret;
 }
 
-static void handle_gid_message(struct router_head *head,
+static int handle_gid_message(struct router_head *head,
                                struct comm_message *msg)
 {
   // To do:
+  return 0;
 }
 
-static void handle_uid_message(struct router_head *head,
+static int handle_uid_message(struct router_head *head,
                                struct comm_message *msg)
 {
   // To do:
+  return 0;
 }
 
-static void handle_server_login(struct router_head *head,
+static int handle_server_login(struct router_head *head,
                                 struct comm_message *msg)
 {
   switch (head->message_from) {
@@ -69,9 +72,10 @@ static void handle_server_login(struct router_head *head,
       // to do. map table.
     break;
   } 
+  return 0;
 }
 
-static void handle_client_login(struct router_head *head,
+static int handle_client_login(struct router_head *head,
                                 struct comm_message *msg)
 {
   /* 即验证当前发送者.
@@ -83,20 +87,21 @@ static void handle_client_login(struct router_head *head,
   int fd;
   find_best_gateway(&fd);
   new_msg.fd = fd;
-  comm_send(g_serv_info.commctx, &new_msg, true, -1);
+  int ret = comm_send(g_serv_info.commctx, &new_msg, true, -1);
   free(new_msg.content);
+  return ret;
 }
 
-static void handle_uid_map(struct router_head *head)
+static int handle_uid_map(struct router_head *head)
 {
   assert(head);
   if (head->body_size != 4) {
     error("wrong body_size:%d", head->body_size);
-    return;
+    return -1;
   }
   if (memcmp(g_serv_info.ip, head->body, 4) != 0) {
     error("abandon message, this message is not belong to this core exchange node.");
-    return;
+    return -1;
   }
   char uid[UID_SIZE + 1];
   memcpy(uid, head->identity.Uid.uid, UID_SIZE);
@@ -105,15 +110,18 @@ static void handle_uid_map(struct router_head *head)
   fd = fd * 256 + head->body[4];
   if (insert_fd(uid, fd) == -1) {
     error("insert error, uid:%s-------fd:%x.", uid, fd);
+    return -1;
   }
+  return 0;
 }
 
-static void handle_gid_map(struct router_head *head)
+static int handle_gid_map(struct router_head *head)
 {
   assert(head);
   int cid = head->body_size / 6;
   if (head->body_size == 0 || head->body_size % 6 != 0 ) {
     error("wrong head->body_size:%x", head->body_size);
+    return -1;
   }
   int fdlist[GROUP_SIZE];
   int count = 0;
@@ -132,7 +140,9 @@ static void handle_gid_map(struct router_head *head)
   gid[GID_SIZE] = '\0';
   if (insert_fd_list(gid, fdlist, count) == -1) {
     error("insert group fd, error.");
+    return -1;
   }
+  return 0;
 }
 
 void message_dispatch()
@@ -144,31 +154,35 @@ void message_dispatch()
     log("org_msg fd:%d, size:%d", org_msg.fd, org_msg.dsize);
     struct router_head *oldhead = 
       parse_router(org_msg.content, org_msg.frame_offset[1]);
+    int ret = 0;
     if (oldhead) {
       switch (oldhead->type) {
         case 0x0:
-          handle_cid_message(oldhead, &org_msg);
+          ret = handle_cid_message(oldhead, &org_msg);
           break;
         case 0x01:
-          handle_gid_message(oldhead, &org_msg);
+          ret = handle_gid_message(oldhead, &org_msg);
           break;
         case 0x02:
-          handle_uid_message(oldhead, &org_msg);
+          ret = handle_uid_message(oldhead, &org_msg);
           break;
         case 0x03:
-          handle_client_login(oldhead, &org_msg);
+          ret = handle_client_login(oldhead, &org_msg);
           break;
         case 0x04:
-          handle_server_login(oldhead, &org_msg);
+          ret = handle_server_login(oldhead, &org_msg);
         case 0x05:
-          handle_uid_map(oldhead);
+          ret = handle_uid_map(oldhead);
           break;
         case 0x06:
-          handle_gid_map(oldhead);
+          ret = handle_gid_map(oldhead);
           break;
         default:
           break;
       }
+	  if (ret == -1) {
+        error("wrong handle_****");
+	  }
       log("head type:%d, message_from:%d, message_to:%d.",
           oldhead->type, oldhead->message_from, oldhead->message_to);
       free(oldhead);

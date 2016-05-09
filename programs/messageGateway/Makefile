@@ -33,6 +33,7 @@ CLEANFILES = mhooktrace.log
 
 MAIN_OBJ = comm_io_wraper.c \
 	   zmq_io_wraper.c \
+	   zmq_pull_thread.c \
 	   upstream.c \
 	   validate_logon.c \
 	   downstream.c \

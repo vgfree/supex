@@ -1,5 +1,6 @@
 #include "communication.h"
 #include "comm_io_wraper.h"
+#include "loger.h"
 #include "router.h"
 #include "validate_logon.h"
 
@@ -13,7 +14,9 @@ int send_validate_logon_package(int fd)
   struct comm_message msg = {};
   msg.fd = fd;
   struct comm_message *sendmsg = pack_router(&head, &msg);
-  send_msg(sendmsg);
+  if (send_msg(sendmsg) == -1) {
+    error("wron msg, msg fd:%d.", sendmsg->fd);
+  }
   free(sendmsg->content);
   free(sendmsg);
   return 0;

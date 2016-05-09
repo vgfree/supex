@@ -23,7 +23,7 @@ int main(int argc, char *argv[])
     printf("concentrator not init.");
     return -1;
   }
-  http_run(argc, argv);
+//  http_run(argc, argv);
   void *status;
   pthread_join(tid, &status);
   concentrator_destroy();

@@ -16,8 +16,8 @@ struct router_head *parse_router(char *data, uint32_t size)
   struct router_head *head =
     (struct router_head*)malloc(sizeof(struct router_head));
   if (memcmp(route_sign, data, 7) != 0) {
-	printf("This is not router frame, error.");
-	return NULL;
+    printf("This is not router frame, error.");
+    return NULL;
   }
   int i = 7;
   head->message_from = data[i++];

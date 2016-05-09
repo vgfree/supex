@@ -31,17 +31,17 @@ void io_notify_logic_thread(struct comm_context* commctx,
   case 0:
     break;
   case 1:   // connected.
-	{
+    {
       struct fd_descriptor des = {};
       des.status = 1;
       array_fill_fd(portinfo->fd, &des);
-	}
+    }
     break;
   case 4:   // closed.
     {
       struct fd_descriptor des;
       array_at_fd(portinfo->fd, &des);
-	  log("array_at_fd, status:%d, obj:%d.", des.status, des.obj);
+      log("array_at_fd, status:%d, obj:%d.", des.status, des.obj);
       if (des.status != 1) {
         error("this fd:%d is not running.", portinfo->fd);
         return;
