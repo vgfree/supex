@@ -5,7 +5,6 @@ LIB =  -L../../lib -L/usr/local/lib
 OPT = -D_REENTRANT -D_GNU_SOURCE -DDEBUG -DBASE_THREADSAFE \
       -DSELECT_MULTITHREAD
 
-
 all:
 	gcc -g $(OPT) $(INC) $(LIB)  -lluajit-5.1 -lpthread -lrt  skt.c main.c -lzmq  -lstdc++  -o transit_integration
 

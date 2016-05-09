@@ -66,6 +66,8 @@ void *work_task(void *args)
 	
 	struct skt_device devc = {};
 
+	zmq_Javasrv_init();
+
 	while (1) {
 		zmq_srv_fetch(&devc);
 		//TODO add

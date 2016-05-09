@@ -68,10 +68,14 @@ void zmq_srv_init(char *host, int port)
 	rc = zmq_bind(g_forwarder, addr);
 #endif
 	assert(rc == 0);
-	//ADD
+}
+
+void zmq_Javasrv_init()
+{	
+	int rc;
 	g_subscriber = zmq_socket(g_ctx, ZMQ_PUSH);
-	rc = zmq_bind(g_subscriber, "tcp://*:1020");
-	assert(rc == 0);
+        rc = zmq_bind(g_subscriber, "tcp://*:1020");
+        assert(rc == 0);
 }
 
 void zmq_srv_fetch(struct skt_device *devc)
