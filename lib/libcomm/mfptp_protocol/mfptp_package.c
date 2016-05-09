@@ -33,14 +33,17 @@ int mfptp_package(struct mfptp_packager *packager, const char *data, unsigned ch
 	packager->header.compression = flag & 0xF0;
 	packager->header.encryption = flag & 0x0F;
 	packager->header.socket_type = method;
+	packager->ms.dosize = 0;
 
 	_set_callback(packager);
 	if (CHECK_VERSION(packager)) {
+
 	} else {
 		packager->ms.error = MFPTP_VERSION_INVAILD;
 		return -1;
 	}
 	if (CHECK_CONFIG(packager)) {
+
 	} else {
 		packager->ms.error = MFPTP_CONFIG_INVAILD;
 		return -1;
@@ -53,6 +56,7 @@ int mfptp_package(struct mfptp_packager *packager, const char *data, unsigned ch
 	}
 
 	if (CHECK_PACKAGES(packager)) {
+
 	} else {
 		packager->ms.error = MFPTP_PACKAGES_TOOMUCH;
 		return -1;
@@ -62,20 +66,25 @@ int mfptp_package(struct mfptp_packager *packager, const char *data, unsigned ch
 		/* 开始组包头 */
 		memcpy(&packager->ms.buff[*packager->ms.size], "#MFPTP", 6);
 		*packager->ms.size += 6;
+		packager->ms.dosize += 6;
 		/* 版本号 */
 		packager->ms.buff[*packager->ms.size] = packager->header.major_version << 4 | packager->header.minor_version;
 		*packager->ms.size += 1;
+		packager->ms.dosize += 1;
 		/* 压缩加密设置 */
-		packager->ms.buff[*packager->ms.size] = packager->header.compression << 4 | packager->header.encryption;
+		packager->ms.buff[*packager->ms.size] = packager->header.compression | packager->header.encryption;
 		*packager->ms.size += 1;
+		packager->ms.dosize += 1;
 
 		/* socket工作类型 */
 		packager->ms.buff[*packager->ms.size] = packager->header.socket_type;
 		*packager->ms.size += 1;
+		packager->ms.dosize += 1;
 
 		/* socket包数 */
 		packager->ms.buff[*packager->ms.size] = packager->header.packages;
 		*packager->ms.size += 1;
+		packager->ms.dosize += 1;
 
 		/* 开始组装帧 */
 		for(j = 0; j < packager->package.frame[i].frames; j++) {
@@ -123,30 +132,35 @@ int mfptp_package(struct mfptp_packager *packager, const char *data, unsigned ch
 				break ;
 			}
 			*packager->ms.size += 1;
+			packager->ms.dosize += 1;
 
 			/*F_SIZE的设置 */
 			for (k = 0; k < size_f_size; k++) {
 				/**/
 				packager->ms.buff[*packager->ms.size] = frame_size << (k*8);
 				*packager->ms.size += 1;
+				packager->ms.dosize += 1;
 			}
 			memcpy(&packager->ms.buff[*packager->ms.size], compressbuff, frame_size);
 			*packager->ms.size += frame_size;
+			packager->ms.dosize += frame_size;
 		}
 		if (packager->ms.error != MFPTP_OK) {
-			packager->package.dsize = -1;
+			*packager->ms.size -= packager->ms.dosize;
+			packager->ms.dosize = -1;
 			break ;
 		}
 		packager->header.packages -= 1;
 	}
-	return packager->package.dsize;
+	return packager->ms.dosize;
 }
 
+/* @返回值: > 0 代表所需内存还差多少字节， <= 0 代表内存足够 */
 int mfptp_check_memory(int memsize, int packages, int frames, int dsize)
 {
 	int  size = 0;
 	size = packages* MFPTP_HEADER_LEN + frames * (MFPTP_FP_CONTROL_LEN + MFPTP_F_SIZE_MAXLEN) + dsize;
-	return memsize-size;
+	return size - memsize;
 }
 
 void mfptp_fill_package(struct mfptp_packager *packager, const int *frame_offset, const int *frame_size, const int *frames_of_package, int packages) 
@@ -174,8 +188,12 @@ static inline void _set_callback(struct mfptp_packager *packager)
 			packager->encryptcb = NULL;
 			break ;
 		case IDEA_ENCRYPTION:
+			log("package IDEA_ENCRYPTION\n");
+			packager->encryptcb = NULL;
 			break ;
 		case AES_ENCRYPTION:
+			log("package AES_ENCRYPTION\n");
+			packager->encryptcb = NULL;
 			break ;
 		default:
 			packager->encryptcb = NULL;
@@ -187,8 +205,12 @@ static inline void _set_callback(struct mfptp_packager *packager)
 			packager->compresscb = NULL;
 			break ;
 		case ZIP_COMPRESSION:
+			log("package ZIP_COMPRESSION\n");
+			packager->compresscb = NULL;
 			break ;
 		case GZIP_COMPRESSION:
+			log("package GZIP_COMPRESSION\n");
+			packager->compresscb = NULL;
 			break ;
 		default:
 			packager->compresscb = NULL;

@@ -19,6 +19,7 @@ typedef int (*Encryption_CallBack)(char *dest, const char *src, int d_len, int s
 struct mfptp_pack_stat {
 	char*			buff;	/* 用于存放打包好的数据的缓冲区 */
 	int*			size;	/* 缓冲区已有数据大小 */
+	int			dosize;	/* 目前打包的字节数 */
 	enum mfptp_error	error;	/* MFPTP打包出错信息 */
 };
 

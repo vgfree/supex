@@ -37,6 +37,10 @@ extern "C" {
 				parser->header.encryption >= NO_ENCRYPTION &&		\
 				parser->header.encryption <= AES_ENCRYPTION)
 
+/* 检测MFPTP协议F_SIZE所占的字节数是否是在1-4范围之内 */
+#define CHECK_F_SIZE(parser)	(parser->header.size_f_size > 0 && \
+				 parser->header.size_f_size <= 4)
+
 /* 检测MFPTP协议socket type是否正确*/
 #define	CHECK_SOCKTYPE(parser)	(parser->header.socket_type <= HEARTBEAT_METHOD	&&	\
 				parser->header.socket_type >= PAIR_METHOD)
@@ -114,7 +118,7 @@ struct mfptp_frame_info {
 
 /* MFPTP协议包的相关信息 */
 struct mfptp_package_info {
-	bool			init;
+	//bool			init;
 	int			packages;			/* 总包数 */
 	int			dsize;				/* 数据总大小 */
 	struct mfptp_frame_info frame[MFPTP_MAX_PACKAGES];	/* 包里面帧的相关信息 */

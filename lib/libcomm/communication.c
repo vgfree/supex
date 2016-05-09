@@ -144,7 +144,7 @@ int comm_socket(struct comm_context *commctx, const char *host, const char *serv
 		return -1;
 	}
 	commdata = commdata_init(commctx, &portinfo, finishedcb);
-	if (unlikely(!commctx)) {
+	if (unlikely(!commdata)) {
 		close(fd);
 		return -1;
 	}
@@ -443,8 +443,11 @@ static void _recv_event(struct comm_context *commctx, int fd)
 	commdata = (struct comm_data*)commctx->data[fd];
 	if (likely(commdata)) {
 		if (likely(_read_data(commdata, fd))) {
-			/* 发送数据成功 */
-			_parse_data(commdata); /* 目前暂定只要接收到数据就是解析 */
+			/* 发送数据成功没有被关闭 */
+			commdata = (struct comm_data*)commctx->data[fd];
+			if (commdata) {
+				_parse_data(commdata); /* 目前暂定只要接收到数据就是解析 */
+			}
 		} else {
 			/* 数据发送失败 */
 			commctx->remainfd.rfda[commctx->remainfd.rcnt-1] = commctx->remainfd.rfda[n];
@@ -587,7 +590,7 @@ static bool _parse_data(struct comm_data *commdata)
 	/* 有数据进行解析的时候才去进行解析 */
 	if (commdata->recv_buff.size > 0) {
 		size = mfptp_parse(&commdata->parser);
-		log("size: %d recv_buff.size:%d\n", size, commdata->recv_buff.size);
+		log("dosize: %d dsize:%d\n", size, commdata->parser.package.dsize);
 		if (likely(size > 0 && commdata->parser.ms.error == MFPTP_OK)) {	/* 解析成功 */
 			message = new_commmsg(commdata->parser.package.dsize);
 			if (likely(message)) {
@@ -669,9 +672,8 @@ static bool _package_data(struct comm_data *commdata)
 	commlock_unlock(&commdata->sendlock);
 
 	if (likely(flag)) {
-		//packsize = package(message->content, message->dsize, &commdata->send_buff.cache[commdata->send_buff.end]);
 		int size = 0;
-		size = mfptp_check_memory(commdata->send_buff.size, message->package.packages, message->package.frames, message->package.dsize);
+		size = mfptp_check_memory(commdata->send_buff.capacity - commdata->send_buff.size, message->package.packages, message->package.frames, message->package.dsize);
 		if (size > 0) {
 			/* 检测到内存不够 则增加内存*/
 			if (unlikely(!commcache_expend(&commdata->send_buff, size))) {
@@ -686,9 +688,10 @@ static bool _package_data(struct comm_data *commdata)
 			packsize = mfptp_package(&commdata->packager, message->content, message->config, message->socket_type);
 			if (packsize > 0 && commdata->packager.ms.error == MFPTP_OK) {
 				commdata->send_buff.end += packsize;
-				commdata->send_buff.size += packsize;
+				//commdata->send_buff.size += packsize;
 				log("pakcage successed\n");
 			} else {
+				flag = false;
 				log("package failed\n");
 			}
 		}

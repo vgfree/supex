@@ -12,8 +12,8 @@ bool commcache_init(struct comm_cache* comm_cache, int capacity)
 {
 	assert(comm_cache);
 	memset(comm_cache, 0, sizeof(struct comm_cache));
-	comm_cache->capacity = capacity > 0 ? capacity : CACHE_SIZE;
-	comm_cache->cache = calloc(capacity, sizeof(char));
+	comm_cache->capacity = (capacity > 0 ) ? capacity : CACHE_SIZE;
+	comm_cache->cache = calloc(comm_cache->capacity, sizeof(char));
 	if (unlikely(!comm_cache->cache)) {
 		return false;
 	} else {

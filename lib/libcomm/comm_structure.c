@@ -53,7 +53,9 @@ struct comm_data*  commdata_init(struct comm_context* commctx, struct portinfo* 
 		goto error;
 	}
 
-	mfptp_parse_init(&commdata->parser, &commdata->recv_buff.cache, &commdata->recv_buff.size);
+	if (!mfptp_parse_init(&commdata->parser, &commdata->recv_buff.cache, &commdata->recv_buff.size)) {
+		goto error;
+	}
 	mfptp_package_init(&commdata->packager, commdata->send_buff.cache, &commdata->send_buff.size);
 
 	commdata->commctx = commctx;
@@ -115,6 +117,7 @@ inline void copy_commmsg(struct comm_message* destmsg, const struct comm_message
 	assert(destmsg && srcmsg && destmsg->content && srcmsg->content);
 	destmsg->fd = srcmsg->fd;
 	destmsg->config = srcmsg->config;
+	destmsg->socket_type = srcmsg->socket_type;
 	memcpy(&destmsg->package, &srcmsg->package, sizeof(srcmsg->package));
 	memcpy(destmsg->content, srcmsg->content, srcmsg->package.dsize);
 }
