@@ -98,10 +98,8 @@ int main(int argc, char *argv[])
 	zmq_srv_init("127.0.0.1", 5556);
 #ifdef SELECT_MULTITHREAD
 	zmq_threadstart(work_task, 1);
-	zmq_threadstart(work_task, 2);
 #else
 	zmq_process_start(work_task, (void *)1);
-	zmq_process_start(work_task, (void *)2);
 #endif
 
 	zmq_srv_start();

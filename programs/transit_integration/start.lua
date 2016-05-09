@@ -9,6 +9,7 @@ require("zmq")
 
 local ctx = zmq.init(1)
 local s = ctx:socket(zmq.PUSH)
+s:bind("tcp://*:5557")
 
 function app_init()
 	--> init first
