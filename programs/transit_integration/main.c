@@ -71,7 +71,9 @@ void *work_task(void *args)
 	while (1) {
 		zmq_srv_fetch(&devc);
 		//TODO add
-		zmq_sendiov(g_subscriber, devc.ibuffer, devc.idx, ZMQ_SNDMORE);
+		int ok = zmq_sendiov(g_subscriber, devc.ibuffer, devc.idx, ZMQ_SNDMORE);
+		printf("ok = %d\n", ok);
+		
 		lua_getglobal(L, "app_call");
 		lua_newtable(L);
 		int i = 0;

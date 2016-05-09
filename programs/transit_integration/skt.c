@@ -101,13 +101,14 @@ void zmq_srv_fetch(struct skt_device *devc)
 
 void zmq_srv_start(void)
 {
-	zmq_proxy(g_collecter, g_forwarder, NULL);
+	zmq_proxy(g_collecter, g_forwarder, g_subscriber);
 }
 
 void zmq_srv_exit(void)
 {
 	zmq_close(g_collecter);
 	zmq_close(g_forwarder);
+	zmq_close(g_subscriber);
 	zmq_ctx_destroy(g_ctx);
 }
 

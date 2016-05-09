@@ -97,7 +97,7 @@ int main (void)
 //  rc = zmq_sendmsg(sendHandle, &part3, ZMQ_SNDMORE);
   rc = zmq_sendmsg(sendHandle, &part3, 0);
   
-  //recive_some_data(&devc);
+  recive_some_data(&devc);
 
   sleep(2);
   return 0;  
