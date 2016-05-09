@@ -18,9 +18,7 @@ void recive_some_data(struct skt_device *devc)
 {
 	size_t  count = MAX_SPILL_DEPTH;
 	int rc = zmq_recviov(devc->skt, devc->ibuffer, &count, 0);
-//if (rc != -1) {
-		printf("after zmq_recv, count = %d %d\n", count, rc);
-//	}
+	printf("after zmq_recv, count = %d %d\n", count, rc);
 	devc->idx = count;
 }
 

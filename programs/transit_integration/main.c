@@ -62,10 +62,8 @@ void *work_task(void *args)
 {
 	int             error = 0;
 	void            *data = NULL;
-	//char 		*ret = NULL;
 	lua_State       *L = lua_vm_init();
 	
-	// printf("%d \n", args);
 	struct skt_device devc = {};
 
 	while (1) {
@@ -99,7 +97,6 @@ void *work_task(void *args)
 int main(int argc, char *argv[])
 {
 	skt_register(argv [1]);
-	//zmq_srv_init("127.0.0.1", 6992);
 	zmq_srv_init("127.0.0.1", 5556);
 #ifdef SELECT_MULTITHREAD
 	zmq_threadstart(work_task, 1);

@@ -16,9 +16,6 @@ struct skt_device
 
 
 static const char first_frame_data[] = "feedback?imei=177238787196594";
-//static const char second_frame_data[] = "{\"ERRORCODE\":\"0\",\"RESULT\":{\"accountID\":\"uRgZGyPykT\",\"content\":{\"mediaList\":[{\"format\":\"jpg\",\"index\":\"3\",\"pixels\":\"1920*1080\",\"size\":\"318215\"}]},\"imei\":\"306627488190175\",\"imsi\":\"460017204705594\",\"mod\":\"XZ001\",\"operationType\":\"3\",\"remarkMsg\":\"拍摄成功\",\"type\":\"20\"}}"; 
-
-//static const char second_frame_data[] = "{\"ERRORCODE\":\"0\",\"RESULT\":{\"altitude\":\"20.1\",\"id\":\"1\",\"imei\":\"12312312312\",\"mediaType\":\"1\",\"otherMsg\":\"1111111111111\",\"remarkMsg\":\"拍摄成功\",\"speed\":\"30\",\"token\":\"123\",\"voiceList\":[{\"byte\":\"sdfsadfa\",\"format\":\"mp3\",\"recordTime\":\"20\",\"size\":\"123\",\"time\":\"1231212\"}],\"videoList\":[{\"byte\":\"sdfsadfa\",\"format\":\"mp3\",\"size\":\"123\",\"time\":\"1231212\",\"lngLatList\":[{\"longitude\":\"121.351609\",\"latitude\":\"31.220259\"}]}],\"mediaList\":[{\"byte\":\"sdfsadfa\",\"format\":\"mp3\",\"photoTime\":\"20\",\"size\":\"123\",\"longitude\":\"121.351609\",\"latitude\":\"31.220259\"}]}}";
 
 static const char second_frame_data[] = "json\r\n{\"ERRORCODE\":\"0\",\"RESULT\":{\"accountID\":\"BM9xkNDQlh\",\"content\":{\"altitude\":17,\"direction\":86,\"latitude\":31.202028333333335,\"longitude\":121.69391833333333,\"mediaList\":[{\"format\":\"jpg\",\"index\":\"3\",\"pixels\":\"1920*1080\",\"size\":\"323153\"}],\"speed\":69},\"imei\":\"144601531989913\",\"imsi\":\"460060001040067\",\"mod\":\"XZ001\",\"operationType\":\"3\",\"remarkMsg\":\"............\",\"type\":\"20\"}}";
 
@@ -87,8 +84,6 @@ int main (void)
   
   void *context_recv = zmq_ctx_new ();
   devc.skt = zmq_socket(context_recv, ZMQ_PULL);
-  //rc = zmq_bind(devc.skt, "tcp://*:5557");
-  //assert(rc == 0);
   rc = zmq_connect(devc.skt, "tcp://127.0.0.1:1020");
   assert(rc == 0);
 
