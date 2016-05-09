@@ -64,15 +64,14 @@ void *work_task(void *args)
 	void            *data = NULL;
 	//char 		*ret = NULL;
 	lua_State       *L = lua_vm_init();
-
+	
 	// printf("%d \n", args);
 	struct skt_device devc = {};
 
 	while (1) {
 		zmq_srv_fetch(&devc);
 		//TODO add
-		zmq_sendiov(g_subscriber, devc->ibuffer, devc->idx, ZMQ_SNDMORE);
-		
+		zmq_sendiov(g_subscriber, devc.ibuffer, devc.idx, ZMQ_SNDMORE);
 		lua_getglobal(L, "app_call");
 		lua_newtable(L);
 		int i = 0;

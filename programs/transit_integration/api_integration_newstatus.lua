@@ -8,8 +8,8 @@ local libhttps  = require("libhttps")
 module("api_integration_newstatus", package.seeall)
 
 local Head = {
-	appkey		= '2582535051',
-	sign            = '4480DC5A12F77ECCC0E52D9A94374EAFC46ADAE2',
+	appkey		= '3710394550',
+	sign            = '',
 	accountId	= 'xxxxxxxxxx',
 	timestamp       = '1445625467',
 }
@@ -18,7 +18,7 @@ local function full_table_withType(str, mediaUrl, mediaType)
 	local body = {
         	longitude = '0',
         	latitude  = '0',
-        	direction = 95,
+        	direction = 0,
         	GPSTime   = 1460536084,
         	url       = 'nil',
         	mediatype = 'nil',
@@ -26,7 +26,8 @@ local function full_table_withType(str, mediaUrl, mediaType)
         	altitude  = '0',
         	model     = 'V141224_64',
 	}
-
+	
+	local secret = 'B771BFCE2A1688023312514129ABCE9DACAB71C6'
 	local ok , tab_info = pcall(cjson.decode, str)
         if not ok then
                 print("cjson decode failed")
@@ -40,8 +41,8 @@ local function full_table_withType(str, mediaUrl, mediaType)
         end
 
 	if mediaType == 'jpg' then
-		body['longitude'] = tostring(tab_info['RESULT']['mediaList'][1]['longitude'])
-		body['latitude'] = tostring(tab_info['RESULT']['mediaList'][1]['latitude'])
+		body['longitude'] = tostring(tab_info['RESULT']['content']['longitude'])
+		body['latitude'] = tostring(tab_info['RESULT']['content']['latitude'])
 	end
 	if mediaType == 'amr' then
 		body['longitude'] = tostring(tab_info['RESULT']['videoList'][1]['lngLatList'][1]['longitude'])
@@ -51,8 +52,13 @@ local function full_table_withType(str, mediaUrl, mediaType)
 	body['url'] = tostring(media_url)
         body['mediatype'] = tostring(mediaType)
 	body['speed'] = tonumber(tab_info['RESULT']['speed'])
-        body['altitude'] = tostring(tab_info['RESULT']['altitude'])
-	--only.log('D','%s',scan.dump(body))
+        body['altitude'] = tostring(tab_info['RESULT']['content']['altitude'])
+	body['direction'] = tab_info['RESULT']['content']['direction']
+	body['model'] = tab_info['RESULT']['mod']
+	body['GPSTime'] = os.time()
+	Head['sign'] = utils.gen_sign(Head, secret)
+	Head['accountId'] = tab_info['RESULT']['accountID']
+	only.log('D','%s',scan.dump(body))
 	return body
 end
 
@@ -65,27 +71,29 @@ local function trafii_save_request(data)
 end
 
 function traffi_gson_save(str, mediaUrl, mediaType)
-	local data = full_table_withType(str, mediaUrl, mediaType)
+	local jsonStr = string.gsub(str, 'json\r\n', '')
+	local data = full_table_withType(jsonStr, mediaUrl, mediaType)
 	trafii_save_request(data)
 end
 
 function dfs_image_save(str)
+	local pstr = string.gsub(str, 'jpg\r\n', '')
 	--Send picture to dfs server
 	local dfsServer = link["OWN_DIED"]["http"]["dfsapi/v2/saveImage"]
 
 	local file = {
 		file_name = 'ClayMore.jpg',
-		data = str,
+		data = pstr,
 		data_type = 'application/octet-stream',
 	}
 
 	local tab = {
-		appKey = '2290837278',
-		length = tostring(#str),
+		appKey = '3710394550',
+		length = tostring(#pstr),
 		sign = '711096F76AD42DD3E5E16B1657626AF8A385E7CD',
 		isStorage = 'true',
 		file_name = 'ClayMore.jpg',
-		data = str,
+		data = pstr,
 	}
 
 	local req_data = utils.compose_http_form_request(dfsServer, 'dfsapi/v2/saveImage', nil, tab, "mmfile", file)
@@ -93,7 +101,6 @@ function dfs_image_save(str)
 	if not ret then
 		print("[FAILED] HTTP post failed! feedback api")
 	end
-
 	local ret_str = string.match(ret, '{.+}')
 	local ok , ret_info = pcall(cjson.decode, ret_str)
 	if not ok then
@@ -114,7 +121,7 @@ function dfs_sound_save(str)
         }
 
 	local tab = {
-                appKey = '2973785773',
+                appKey = '2290837278',
                 length = tostring(#str),
                 sign = '711096F76AD42DD3E5E16B1657626AF8A385E7CD',
                 isStorage = 'true',

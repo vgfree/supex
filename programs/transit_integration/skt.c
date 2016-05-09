@@ -69,10 +69,8 @@ void zmq_srv_init(char *host, int port)
 #endif
 	assert(rc == 0);
 	//ADD
-	memset(addr, 0, 64);
-	sprintf(addr, "tcp://*:%d", port);
 	g_subscriber = zmq_socket(g_ctx, ZMQ_PUSH);
-	rc = zmq_bind(g_subscriber, addr);
+	rc = zmq_bind(g_subscriber, "tcp://*:1020");
 	assert(rc == 0);
 }
 
