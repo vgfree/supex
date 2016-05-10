@@ -82,6 +82,7 @@ SOBJ = $(addprefix $(SOBJ_DIR)/, \
 	daemon.o \
 	timer.o \
 	router.o \
+	comm_message_operator.o \
 	)
 
 

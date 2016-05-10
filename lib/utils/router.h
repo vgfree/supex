@@ -41,8 +41,4 @@ struct router_head {
   char *body;
 };
 
-struct router_head *parse_router(char *data, uint32_t size);
-struct comm_message *pack_router(const struct router_head *head,
-                                 const struct comm_message *msg);
-
 #endif
