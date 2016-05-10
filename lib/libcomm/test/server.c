@@ -26,28 +26,29 @@ int main(int argc, char* argv[])
 	if (likely(commctx)) {
 		log("client comm_ctx_create successed\n");
 		finishedcb.callback = event_fun;
-		finishedcb.usr = "server user data";
+		finishedcb.usr = &recvmsg;
 		fd = comm_socket(commctx, argv[1], argv[2], &finishedcb, COMM_BIND);
 		if (likely(fd > 0)) {
-			log("client comm_socket successed\n");
+			log("server comm_socket successed\n");
 			while (1) {
-				while (1) {
-					retval = recv_data(commctx, &recvmsg, -1);
+				memset(&recvmsg, 0, sizeof(recvmsg));
+				retval = recv_data(commctx, &recvmsg, -1);
+				if (likely(retval > 0)) {
+					//log("server recv_data successed\n");
+				} else {
+					log("server recv_data failed\n");
+					sleep(1);
+				}
+				if (recvmsg.fd > 0) {
+					memset(&sendmsg, 0, sizeof(sendmsg));
+					retval = send_data(commctx, &sendmsg, recvmsg.fd);
 					if (likely(retval > 0)) {
-						log("server recv_data successed\n");
-						break ;
+						//log("server send_data successed\n");
 					} else {
-						log("server recv_data failed\n");
-						sleep(1);
+						log("server send_data failed\n");
 					}
 				}
 
-				retval = send_data(commctx, &sendmsg, recvmsg.fd);
-				if (likely(retval > 0)) {
-					log("server send_data successed\n");
-				} else {
-					log("server send_data failed\n");
-				}
 			}
 		} else {
 			log("client comm_socket failed\n");
@@ -90,7 +91,7 @@ static bool send_data(struct comm_context *commctx, struct comm_message *message
 	message->package.packages = PACKAGES;
 
 	for (i = 0 ; i < PACKAGES; i++) {
-		for (j = 0; j < frames_of_package[i]; i++) {
+		for (j = 0; j < frames_of_package[i]; j++,k++) {
 			message->package.frame_offset[k] = frame_offset[k];
 			message->package.frame_size[k] = frame_size[k];
 		}
@@ -112,16 +113,17 @@ static bool recv_data(struct comm_context *commctx, struct comm_message *message
 	int retval = -1;
 	int i = 0, j = 0, k = 0; 
 	message->content = content;
-	retval = comm_recv(commctx, message, false, -1);
+	retval = comm_recv(commctx, message, true, 5000);
 	if( unlikely(retval < 0) ){
 		return false;
 	} else {
 		for (i = 0; i < message->package.packages; i++) {
 			for (j = 0; j < message->package.frames_of_package[j]; j++, k++) {
+				memset(buff, 0, 1024);
 				memcpy(buff, &message->content[message->package.frame_offset[k]], message->package.frame_size[k]);
-				printf("recv data: %s ", buff);
+				log("%s\n", buff);
 			}
-			log("\none package over\n");
+			//log("one package over\n");
 		}
 		return true;
 	}
@@ -129,32 +131,39 @@ static bool recv_data(struct comm_context *commctx, struct comm_message *message
 
 void close_fun(void *usr)
 {
-	printf("server here is close_fun(): %s\n", (char*)usr);
+	struct comm_message *message = (struct comm_message*)usr;
+	//printf("server here is close_fun(): %s\n", (char*)usr);
+	message->fd = -1;
+	printf("server here is close_fun()\n");
 }
 
 void write_fun(void *usr)
 {
-	printf("server here is write_fun(): %s\n", (char*)usr);
+	struct comm_message *message = (struct comm_message*)usr;
+	printf("server here is write_fun(): %s\n", message->content);
 }
 
 void read_fun(void *usr)
 {
-	printf("server here is read_fun(): %s\n", (char*)usr);
+	struct comm_message *message = (struct comm_message*)usr;
+	printf("server here is read_fun(): %s\n", message->content);
 }
 
 void accept_fun(void *usr)
 {
-	printf("server here is accept_fun(): %s\n", (char*)usr);
+	struct comm_message *message = (struct comm_message*)usr;
+	printf("server here is accept_fun(): %d\n", message->fd);
 }
 
 void timeout_fun(void *usr)
 {
-	printf("server here is timeout_fun(): %s\n", (char*)usr);
+	printf("server here is timeout_fun()\n");
 }
 
 /* @status: FD_CLOSE, FD_READ, FD_WRITE */
 void event_fun(struct comm_context* commctx, struct portinfo *portinfo, void* usr)
 {
+	//log("server %d fd have action\n", portinfo->fd);
 	switch (portinfo->stat)
 	{
 		case FD_CLOSE:
@@ -174,5 +183,4 @@ void event_fun(struct comm_context* commctx, struct portinfo *portinfo, void* us
 			timeout_fun(usr);
 			break;
 	}
-	log("server %d fd have action\n", portinfo->fd);
 }

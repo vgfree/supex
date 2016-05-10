@@ -354,11 +354,11 @@ static void _timeout_event(struct comm_context* commctx)
 			//接收缓冲区里面存在数据需要解析
 			if (likely(commdata->recv_buff.end - commdata->recv_buff.start > 0)) {
 
-				//_parse_data(commdata);
+				_parse_data(commdata);
 			}
 			//发送缓冲区里面存在数据需要打包
 			if (likely(commdata->send_buff.end - commdata->recv_buff.start > 0)) {
-				//_package_data(commdata);
+				_package_data(commdata);
 			}
 			counter--;
 		}
@@ -513,7 +513,7 @@ static  bool _write_data(struct comm_data *commdata, int fd)
 		if (likely(commdata->send_buff.size > 0)) {
 			bytes = write(fd, &commdata->send_buff.cache[commdata->send_buff.start], commdata->send_buff.size);
 			if (bytes < 0) {
-				log("write data failed fd:%d\n", fd);
+				//log("write data failed fd:%d\n", fd);
 				return false;
 			} else {
 				commdata->send_buff.start += bytes;
@@ -523,7 +523,7 @@ static  bool _write_data(struct comm_data *commdata, int fd)
 				if (commdata->finishedcb.callback) {
 					commdata->finishedcb.callback(commdata->commctx, &commdata->portinfo, commdata->finishedcb.usr);
 				}
-				log("write data successed fd:%d\n", fd);
+				//log("write data successed fd:%d\n", fd);
 				return true;
 			}
 		} else {
@@ -545,7 +545,7 @@ static  bool _read_data(struct comm_data *commdata, int fd)
 			commdata->recv_buff.size += bytes;
 			commdata->recv_buff.end += bytes;
 			if (bytes < COMM_READ_MIOU) {		/* 数据已经读取完毕 */
-				log("read data successed\n");
+				//log("read data successed\n");
 				break ;
 			} else {
 				continue ;
@@ -555,10 +555,10 @@ static  bool _read_data(struct comm_data *commdata, int fd)
 			break ;
 		} else {
 			if (errno == EAGAIN || errno == EWOULDBLOCK) { /* 数据已经读取完毕 */
-				log("read data successed\n");
+				//log("read data successed\n");
 				break ;
 			} else {
-				log("read data failed\n");
+				//log("read data failed\n");
 				return false;
 			}
 		}
@@ -568,7 +568,6 @@ static  bool _read_data(struct comm_data *commdata, int fd)
 		commdata->finishedcb.callback(commdata->commctx, &commdata->portinfo, commdata->finishedcb.usr);
 	}
 	if (commdata->portinfo.stat == FD_CLOSE) {
-		log("close fd: %d\n",commdata->portinfo.fd);
 		comm_close(commdata->commctx, fd);
 	}
 
@@ -590,7 +589,6 @@ static bool _parse_data(struct comm_data *commdata)
 	/* 有数据进行解析的时候才去进行解析 */
 	if (commdata->recv_buff.size > 0) {
 		size = mfptp_parse(&commdata->parser);
-		log("dosize: %d dsize:%d\n", size, commdata->parser.package.dsize);
 		if (likely(size > 0 && commdata->parser.ms.error == MFPTP_OK)) {	/* 解析成功 */
 			message = new_commmsg(commdata->parser.package.dsize);
 			if (likely(message)) {
@@ -626,9 +624,14 @@ static bool _parse_data(struct comm_data *commdata)
 					commctx->recv_queue.writeable = 0;
 				}
 				commlock_unlock(&commctx->recvlock);
+			//	log("parse successed\n");
 			} 
-		} else {
-			/* 解析出错 */
+		} else if (commdata->parser.ms.error != MFPTP_DATA_TOOFEW) {
+			/* 解析出错 抛弃已解析的错误数据  */
+			commdata->recv_buff.start += size;
+			commdata->recv_buff.size -= size;
+			commcache_clean(&commdata->recv_buff);
+		//	log("parse failed\n");
 		}
 	}
 	return flag;
@@ -689,10 +692,10 @@ static bool _package_data(struct comm_data *commdata)
 			if (packsize > 0 && commdata->packager.ms.error == MFPTP_OK) {
 				commdata->send_buff.end += packsize;
 				//commdata->send_buff.size += packsize;
-				log("pakcage successed\n");
+			//	log("package successed\n");
 			} else {
 				flag = false;
-				log("package failed\n");
+			//	log("package failed\n");
 			}
 		}
 		free_commmsg(message);

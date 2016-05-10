@@ -188,11 +188,11 @@ static inline void _set_callback(struct mfptp_packager *packager)
 			packager->encryptcb = NULL;
 			break ;
 		case IDEA_ENCRYPTION:
-			log("package IDEA_ENCRYPTION\n");
+			//log("package IDEA_ENCRYPTION\n");
 			packager->encryptcb = NULL;
 			break ;
 		case AES_ENCRYPTION:
-			log("package AES_ENCRYPTION\n");
+			//log("package AES_ENCRYPTION\n");
 			packager->encryptcb = NULL;
 			break ;
 		default:
@@ -205,11 +205,11 @@ static inline void _set_callback(struct mfptp_packager *packager)
 			packager->compresscb = NULL;
 			break ;
 		case ZIP_COMPRESSION:
-			log("package ZIP_COMPRESSION\n");
+			//log("package ZIP_COMPRESSION\n");
 			packager->compresscb = NULL;
 			break ;
 		case GZIP_COMPRESSION:
-			log("package GZIP_COMPRESSION\n");
+			//log("package GZIP_COMPRESSION\n");
 			packager->compresscb = NULL;
 			break ;
 		default:
