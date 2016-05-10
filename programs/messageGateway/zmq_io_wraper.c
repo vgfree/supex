@@ -85,6 +85,7 @@ int init_zmq_io()
   zmq_srv_init(ip, intport, CID_SERVER);
   char *clientIp = get_config_name(config, CLIENT_IP);
   char *clientPort = get_config_name(config, CLIENT_PORT);
+  log("clientIp:%s, clientPort:%s", clientIp, clientPort);
   if (zmq_client_init(clientIp, atoi(clientPort)) == 0) {
     error("connect failed, ip:%s, port:%s.", clientIp, clientPort);
   }

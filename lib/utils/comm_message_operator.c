@@ -57,3 +57,32 @@ int set_msg_frame(int index, struct comm_message *msg, int size, char *frame)
   }
   return 0;
 }
+
+int remove_first_nframe(int nframe, struct comm_message *msg)
+{
+  if (nframe > msg->package.frames) {
+    error("nframe:%d > msg->package.frames:%d.", nframe, msg->package.frames);
+  }
+  int rmsz = msg->package.frame_offset[nframe];
+  msg->package.dsize -= rmsz;
+  memmove(msg->content, msg->content + rmsz,
+          msg->package.dsize);
+  for (int i = nframe; i < msg->package.frames; i++) {
+     msg->package.frame_size[i - nframe] = msg->package.frame_size[nframe];
+     msg->package.frame_offset[i - nframe] = msg->package.frame_offset[i] - rmsz;
+  }
+  msg->package.frames -= nframe; 
+  return rmsz;
+}
+
+int get_max_msg_frame(struct comm_message *msg)
+{
+  assert(msg);
+  return msg->package.frames;
+}
+
+int get_frame_size(int index, struct comm_message *msg)
+{
+  assert(msg);
+  return msg->package.frame_size[index];
+}

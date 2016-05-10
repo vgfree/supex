@@ -1,23 +1,20 @@
 #include "communication.h"
 #include "comm_io_wraper.h"
+#include "comm_message_operator.h"
 #include "loger.h"
-#include "router.h"
 #include "validate_logon.h"
 
 int send_validate_logon_package(int fd)
 {
-  struct router_head head = {};
-  head.message_from = MESSAGE_GATEWAY;
-  head.message_to = ROUTER_SERVER;
-  head.type = 0x04;
-  head.body_size = 0x00;
   struct comm_message msg = {};
-  msg.fd = fd;
-  struct comm_message *sendmsg = pack_router(&head, &msg);
-  if (send_msg(sendmsg) == -1) {
-    error("wron msg, msg fd:%d.", sendmsg->fd);
+  msg.content = (char *)malloc(102400 * sizeof(char));
+  set_msg_frame(0, &msg, 14, "messageGateway");
+  set_msg_frame(0, &msg, 6, "server");
+  set_msg_frame(0, &msg, 5, "login");
+  set_msg_fd(&msg, fd);
+  if (send_msg(&msg) == -1) {
+    error("wron msg, msg fd:%d.", msg.fd);
   }
-  free(sendmsg->content);
-  free(sendmsg);
+  free(msg.content);
   return 0;
 }

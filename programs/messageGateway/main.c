@@ -26,6 +26,7 @@ int main(int argc, char *argv[])
 //  http_run(argc, argv);
   void *status;
   pthread_join(tid, &status);
+  log("exit main thread.");
   concentrator_destroy();
   daemon_exit(SERVER_FILE);
   CSLog_destroy(g_imlog);

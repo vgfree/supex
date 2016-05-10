@@ -1,3 +1,4 @@
+#include "comm_message_operator.h"
 #include "fd_manager.h"
 #include "gid_map.h"
 #include "loger.h"
@@ -21,74 +22,88 @@ void find_best_gateway(int *fd)
   *fd = node.fd;
 }
 
-static int handle_cid_message(struct router_head *head,
-                               struct comm_message *msg)
+static void _handle_cid_message(struct comm_message *msg)
 {
-// 去掉第一帧重新打包。
-  struct comm_message new_msg;
-  new_msg.fd = head->identity.Cid.fd;
-  new_msg.dsize = msg->dsize - msg->frame_offset[0];
-  new_msg.frames = msg->frames - 1;
-  for (int i = 0; i < new_msg.frames; i++) {
-    new_msg.frame_offset[i] = msg->frame_offset[i+1];
+  int fsz;
+  char *cid = get_msg_frame(2, msg, &fsz);
+  if (memcmp(cid, g_serv_info.ip, 4) == 0) {
+    char cfd[3] = {};
+    cfd[0] = cid[4];
+    cfd[1] = cid[5];
+    int fd = atoi(cfd);
+    set_msg_fd(msg, fd);
+    remove_first_nframe(3, msg);
+    comm_send(g_serv_info.commctx, msg, true, -1);
   }
-  new_msg.content = (char *)malloc(new_msg.dsize * sizeof(char));
-  log("message body start :%d", msg->dsize - head->body_size);
-  memcpy(new_msg.content, msg->content + msg->frame_offset[1], new_msg.dsize);
-  log("Prepare to send mesg.");
-  int ret = comm_send(g_serv_info.commctx, &new_msg, true, -1);
-  free(new_msg.content);
-  return ret;
 }
 
-static int handle_gid_message(struct router_head *head,
-                               struct comm_message *msg)
+static int _handle_gid_message(struct comm_message *msg)
 {
-  // To do:
+  int fsz = 0;
+  char *frame = get_msg_frame(2, msg, &fsz);
+  char gid[20] = {};
+  memcpy(gid, frame, fsz);
+  int fd_list[GROUP_SIZE] = {};
+  int size = find_fd_list(gid, fd_list);
+  remove_first_nframe(3, msg);
+  for (int i = 0; i < size; i++) {
+    set_msg_fd(msg, fd_list[i]);
+    comm_send(g_serv_info.commctx, msg, true, -1);
+  }
   return 0;
 }
 
-static int handle_uid_message(struct router_head *head,
-                               struct comm_message *msg)
+static int _handle_uid_message(struct comm_message *msg)
 {
-  // To do:
+  int fsz = 0;
+  char *frame = get_msg_frame(2, msg, &fsz);
+  char uid[20] = {};
+  memcpy(uid, frame, fsz);
+  int fd = find_fd(uid);
+  if (fd != -1) {
+    remove_first_nframe(3, msg);
+    set_msg_fd(msg, fd);
+    comm_send(g_serv_info.commctx, msg, true, -1);
+  }
   return 0;
 }
 
-static int handle_server_login(struct router_head *head,
-                                struct comm_message *msg)
+static int _handle_server_login(struct comm_message *msg)
 {
-  switch (head->message_from) {
-    case MESSAGE_GATEWAY: {
-      struct fd_node node;
-      node.fd = msg->fd;
-      list_push_back(MESSAGE_GATEWAY, &node);
-    }
-    break;
-	case ROUTER_SERVER:
-      log("Not support router_server to router_server.");
-    break;
-    case FULL_DAMS:
-      // to do. map table.
-    break;
-  } 
-  return 0;
+  int fsz = 0;
+  char *frame = get_msg_frame(2, msg, &fsz);
+  if (memcmp(frame, "messageGateway", 14) == 0) {
+    struct fd_node node;
+    node.fd = msg->fd;
+    list_push_back(MESSAGE_GATEWAY, &node);
+  }
+  else {
+    char server[30] = {};
+    memcpy(server, frame, fsz);
+    error("frame size:%d, not support this server:%s", fsz, server);
+  }
 }
 
-static int handle_client_login(struct router_head *head,
-                                struct comm_message *msg)
+static int _handle_client_login(struct comm_message *msg)
 {
   /* 即验证当前发送者.
      重新打包生成CID 并告知messageGateway. 
      客户端应在连接上coreChangeNode 时，发送第一个包为身份验证包。*/
-  struct comm_message new_msg;
   // 重新组包， 并生成cid , 通知server。
+  int store_fd = msg->fd;
   // TO DO: 存储到redis.
   int fd;
+  char cid[6] = {};
+  memcpy(cid, g_serv_info.ip, 4);
+  cid[4] = store_fd % 256;
+  cid[5] = store_fd / 256;
   find_best_gateway(&fd);
-  new_msg.fd = fd;
-  int ret = comm_send(g_serv_info.commctx, &new_msg, true, -1);
-  free(new_msg.content);
+  remove_first_nframe(2, msg);
+  set_msg_fd(msg, fd);
+  set_msg_frame(0, msg, 6, cid);
+  set_msg_frame(0, msg, 3, "cid");
+  set_msg_frame(0, msg, 5, "login");
+  int ret = comm_send(g_serv_info.commctx, msg, true, -1);
   return ret;
 }
 
@@ -145,54 +160,84 @@ static int handle_gid_map(struct router_head *head)
   return 0;
 }
 
-void message_dispatch()
+static void _downstream_msg(struct comm_message *msg)
 {
-  struct comm_message org_msg; 
-  org_msg.content = (char *)malloc(g_serv_info.package_size * sizeof(char));
-  comm_recv(g_serv_info.commctx, &org_msg, true, -1);
-  if (org_msg.fd != 0) {
-    log("org_msg fd:%d, size:%d", org_msg.fd, org_msg.dsize);
-    struct router_head *oldhead = 
-      parse_router(org_msg.content, org_msg.frame_offset[1]);
-    int ret = 0;
-    if (oldhead) {
-      switch (oldhead->type) {
-        case 0x0:
-          ret = handle_cid_message(oldhead, &org_msg);
-          break;
-        case 0x01:
-          ret = handle_gid_message(oldhead, &org_msg);
-          break;
-        case 0x02:
-          ret = handle_uid_message(oldhead, &org_msg);
-          break;
-        case 0x03:
-          ret = handle_client_login(oldhead, &org_msg);
-          break;
-        case 0x04:
-          ret = handle_server_login(oldhead, &org_msg);
-        case 0x05:
-          ret = handle_uid_map(oldhead);
-          break;
-        case 0x06:
-          ret = handle_gid_map(oldhead);
-          break;
-        default:
-          break;
-      }
-	  if (ret == -1) {
-        error("wrong handle_****");
-	  }
-      log("head type:%d, message_from:%d, message_to:%d.",
-          oldhead->type, oldhead->message_from, oldhead->message_to);
-      free(oldhead);
-    }
-    else {
-      error("wrong data.");
-    }
+  int fsz;
+  char *frame = get_msg_frame(1, msg, &fsz);
+  if (!frame) {
+    error("wrong frame, frame is NULL.");
+    return;
+  }
+  if (fsz != 3) {
+	error("downstream 2nd frame size:%d is not equal 3.", fsz);
+  }
+  if (memcmp(frame, "cid", 3) == 0) {
+    _handle_cid_message(msg); 
+  }
+  else if (memcmp(frame, "uid", 3) == 0) {
+    _handle_uid_message(msg);
+  }
+  else if (memcmp(frame, "gid", 3) == 0) {
+    _handle_gid_message(msg);
   }
   else {
-    log("no message.");
+    error("wrong frame.");
   }
+  return;
+}
+
+static void _upstream_msg(struct comm_message *msg)
+{
+}
+
+static void _login_msg(struct comm_message *msg)
+{
+  log("");
+  int fsz;
+  char *frame = get_msg_frame(1, msg, &fsz);
+  if (!frame) {
+    error("wrong frame, frame is NULL.");
+    return;
+  }
+  if (memcmp(frame, "server", 6) == 0) {
+    _handle_server_login(msg);
+  }
+  else if (memcmp(frame, "client", 6) == 0) {
+    _handle_client_login(msg);
+  } else {
+    error("wrong msg.");
+  }
+}
+
+static void _classified_message(struct comm_message *msg)
+{
+  log("");
+  int frame_size;
+  char *frame = get_msg_frame(0, msg, &frame_size);
+  if (!frame) {
+    error("wrong frame, and frame is NULL.");
+  }
+  if (memcmp(frame, "downstream", 10) == 0) {
+    _downstream_msg(msg);
+  }
+  else if (memcmp(frame, "upstream", 8) == 0) {
+    _upstream_msg(msg);
+  }
+  else if (memcmp(frame, "login", 5) == 0) {
+    _login_msg(msg);
+  }
+  else {
+    error("wrong first frame, frame_size:%d.", frame_size);
+  }
+}
+
+void message_dispatch()
+{
+  struct comm_message org_msg = {}; 
+  org_msg.content = (char *)malloc(g_serv_info.package_size * sizeof(char));
+  log("");
+  comm_recv(g_serv_info.commctx, &org_msg, true, -1);
+  log("");
+  _classified_message(&org_msg);
   free(org_msg.content);
 }

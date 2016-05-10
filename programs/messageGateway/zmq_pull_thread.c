@@ -13,7 +13,7 @@
 static void *_pull_thread(void *usr)
 {
   while (1) {
-    struct comm_message msg;
+    struct comm_message msg = {};
     msg.content = (char *)malloc(MAX_MSG_SIZE);
     pull_msg(&msg);
     downstream_msg(&msg);

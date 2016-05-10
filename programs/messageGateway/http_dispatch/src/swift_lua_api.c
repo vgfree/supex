@@ -27,7 +27,7 @@ static int comm_io_send(lua_State *L)
   msg.fd = lua_tointeger(L, -1);
   lua_pop(L, 1);
 */
-  lua_pushstring(L, "dsize");
+/*  lua_pushstring(L, "dsize");
   lua_gettable(L, 1);
   msg.dsize = lua_tointeger(L, -1);
   lua_pop(L, 1);
@@ -61,7 +61,7 @@ static int comm_io_send(lua_State *L)
   lua_gettable(L, 1);
   msg.content = lua_touserdata(L, -1);
   downstream_msg(&msg);
-  lua_pop(L, 1);
+  lua_pop(L, 1);*/
   return 0;
 }
 

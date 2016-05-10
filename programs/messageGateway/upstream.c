@@ -1,37 +1,38 @@
 #include "comm_io_wraper.h"
-#include "router.h"
+#include "comm_message_operator.h"
+#include "loger.h"
 #include "upstream.h"
 #include "zmq_io_wraper.h"
 
 int upstream_msg()
 {
-  struct comm_message msg;
+  struct comm_message msg = {};
   msg.content = (char *)malloc(102400 * sizeof(char));
   recv_msg(&msg);
-  int sz = 0;
-  if (msg.frames < 1) {
-    printf("wrong msg, msg frames:%d.", msg.frames);
-    return -1;
-  }
-  else if (msg.frames == 1) {
-    sz = msg.dsize;
+  int fsz = 0;
+  char *destination = get_msg_frame(0, &msg, &fsz);
+  if (memcmp(destination, "cidServer", 9) == 0) {
+    log("It's cid server."); 
   }
   else {
-    sz = msg.frame_offset[1] - msg.frame_offset[0];
+    char frame[30] = {};
+    memcpy(frame, destination, fsz);
+    error("not support this server:%s.", frame);
+    return -1;
   }
-  struct router_head *hd = parse_router(msg.content, sz);
-  assert(hd);
-  for (int i = 0; i < msg.frames; i++) {
+  remove_first_nframe(1, &msg);
+  for (int i = 0; i < get_max_msg_frame(&msg); i++) {
     zmq_msg_t msg_frame;
-    int rc = zmq_msg_init_size(&msg_frame, msg.frame_offset[i + 1] - msg.frame_offset[i]);
+    int fsz = 0;
+    char *frame = get_msg_frame(i, &msg, &fsz);
+    int rc = zmq_msg_init_size(&msg_frame, fsz);
     assert(rc == 0);
-    memcpy(zmq_msg_data(&msg_frame), msg.content + msg.frame_offset[i],
-           msg.frame_offset[i + 1] - msg.frame_offset[i]);
-    if (i < msg.frames - 1) {
-      zmq_io_send(hd->message_to, &msg_frame, ZMQ_SNDMORE);
+    memcpy(zmq_msg_data(&msg_frame), frame, fsz);
+    if (i < get_max_msg_frame(&msg) - 1) {
+      zmq_io_send(CID_SERVER, &msg_frame, ZMQ_SNDMORE);
     }
     else {
-      zmq_io_send(hd->message_to, &msg_frame, 0);
+      zmq_io_send(CID_SERVER, &msg_frame, 0);
     }
   } 
   free(msg.content);
