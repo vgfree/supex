@@ -62,9 +62,14 @@ int entry_cmd_locate(struct data_node *p_node)
         put_number_out(p_cache, ret_seg.ptr_seg->sgid_rt);
 
         // roadName
+        char road_name[128+1] = {0};
+
+	if(ret_seg.ptr_name) {
+		strncpy(road_name, ret_seg.ptr_name, 128);
+	}
         cache_add(p_cache, "$", 1);
-        put_number_out(p_cache, strlen(ret_seg.ptr_name));
-        put_string_out(p_cache, ret_seg.ptr_name);
+        put_number_out(p_cache, strlen(road_name));
+        put_string_out(p_cache, road_name);
 
         //起始经纬度
         put_double_out(p_cache, ret_seg.ptr_seg->start_lon);
