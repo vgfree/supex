@@ -232,7 +232,6 @@ static int show_user_road(user_info_t *p_user)
 int  match_roads(match_road_t *p_match, char *p_imei)
 {
 	user_info_t *p_user = user_info_get(p_imei);
-	printf("sizeof user_info:%d\n", sizeof(user_info_t));
 	if(!p_user)
 		return -1;
 
