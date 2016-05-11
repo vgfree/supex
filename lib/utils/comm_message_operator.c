@@ -2,6 +2,20 @@
 #include "loger.h"
 
 #include <assert.h>
+#define MAX_MSG_SIZE 4096
+
+void init_msg(struct comm_message *msg)
+{
+  assert(msg);
+  msg->package.packages = 1;
+  msg->content = (char *)malloc(MAX_MSG_SIZE * sizeof(char));
+}
+
+void destroy_msg(struct comm_message *msg)
+{
+  assert(msg && msg->content);
+  free(msg->content);
+}
 
 int get_msg_fd(struct comm_message *msg)
 {
@@ -47,14 +61,15 @@ int set_msg_frame(int index, struct comm_message *msg, int size, char *frame)
             msg->package.dsize - msg->package.frame_offset[index]); 
     memcpy(msg->content + msg->package.frame_offset[index],
            frame, size);
-    for (int i = index; i < msg->package.frames; i++) {
-      msg->package.frame_size[i + 1] = msg->package.frame_size[i];
-      msg->package.frame_offset[i + 1] = msg->package.frame_offset[i] + size;
+    for (int i = msg->package.frames; i > index; i--) {
+      msg->package.frame_size[i] = msg->package.frame_size[i - 1];
+      msg->package.frame_offset[i] = msg->package.frame_offset[i - 1] + size;
     }
     msg->package.frames ++;
     msg->package.frame_size[index] = size;
     msg->package.dsize += size;
   }
+  msg->package.frames_of_package[0] = msg->package.frames;
   return 0;
 }
 

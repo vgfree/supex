@@ -7,7 +7,7 @@
 int upstream_msg()
 {
   struct comm_message msg = {};
-  msg.content = (char *)malloc(102400 * sizeof(char));
+  init_msg(&msg);
   recv_msg(&msg);
   int fsz = 0;
   char *destination = get_msg_frame(0, &msg, &fsz);
@@ -35,6 +35,6 @@ int upstream_msg()
       zmq_io_send(CID_SERVER, &msg_frame, 0);
     }
   } 
-  free(msg.content);
+  destroy_msg(&msg);
   return 0;
 }

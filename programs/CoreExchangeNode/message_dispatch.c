@@ -233,11 +233,10 @@ static void _classified_message(struct comm_message *msg)
 
 void message_dispatch()
 {
-  struct comm_message org_msg = {}; 
-  org_msg.content = (char *)malloc(g_serv_info.package_size * sizeof(char));
-  log("");
-  comm_recv(g_serv_info.commctx, &org_msg, true, -1);
-  log("");
-  _classified_message(&org_msg);
-  free(org_msg.content);
+  struct comm_message msg = {}; 
+  init_msg(&msg);
+  log("comm_recv wait.");
+  comm_recv(g_serv_info.commctx, &msg, true, -1);
+  _classified_message(&msg);
+  destroy_msg(&msg);
 }

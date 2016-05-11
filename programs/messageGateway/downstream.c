@@ -26,11 +26,15 @@ int pull_msg(struct comm_message *msg)
     int rc = zmq_msg_init(&part);
     assert(rc == 0);
 	rc = zmq_io_recv(&part, 0);
+//    log("zmq_io_recv, rc:%d.", rc);
+//    char test[30] = {};
+//    memcpy(test, zmq_msg_data(&part), zmq_msg_size(&part));
+//    log("recv data:%s.", test);
     assert(rc != -1);
     set_msg_frame(i, msg, zmq_msg_size(&part), zmq_msg_data(&part));
     zmq_io_getsockopt(ZMQ_RCVMORE, &more, &more_size);
-    assert(rc == 0);
     zmq_msg_close(&part);
+//    log("more:%d.", more);
     i++;
   } while (more);
   return 0;

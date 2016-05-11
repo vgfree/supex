@@ -32,7 +32,9 @@ static int zmq_client_init(char *host, int port)
   g_client = zmq_socket(g_ctx, ZMQ_PULL);
   char addr[64] = {};
   sprintf(addr, "tcp://%s:%d", host, port);
+  log("addr:%s.", addr);
   int rc = zmq_connect(g_client, addr);
+  log("rc:%d", rc);
   return rc;
 }
 
