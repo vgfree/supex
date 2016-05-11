@@ -36,11 +36,13 @@ static void transform(sg_png_manag_t *gps,  sg_line_manage_t *line, sg_node_mana
         int factor = gps->weight / 200;
         factor = (factor > 0) ? factor : 1;
 
-        int ret = get_spacing(gps, &set);
-        int num = get_node(gps, node, factor+1);
+        int ret = get_spacing(gps, &set, node);
+        //int num = get_node(gps, node, factor+1);
         //memset(line, 0, sizeof(sg_line_manage_t));
-        if(ret<0 || num<0 || !set.L_space || !set.B_space) {
-                printf("transform error ret:%d L:%lf B:%lf num:%d", ret,set.L_space, set.B_space, num);
+        //if(ret<0 || num<0 || !set.L_space || !set.B_space) {
+        if(ret<0 || !set.L_space || !set.B_space) {
+                printf("transform error ret:%d L:%lf B:%lf\n", ret,set.L_space, set.B_space);
+                //printf("transform error ret:%d L:%lf B:%lf num:%d", ret,set.L_space, set.B_space, num);
                 return;
         }
 
@@ -55,6 +57,7 @@ static void transform(sg_png_manag_t *gps,  sg_line_manage_t *line, sg_node_mana
                 temp_line.x2 = (p->EL-set.MinL)*alpha;
                 temp_line.y2 = gps->height - (p->EB-set.MinB)*beta;
                 temp_line.rt = p->rt;
+                //printf("> %d %d\n", temp_line.rt, p->rt);
                 memcpy(temp_line.name, p->name, sizeof(p->name));
 
                 int ret = find_towway_road(line, &temp_line, factor);
@@ -73,7 +76,7 @@ static void transform(sg_png_manag_t *gps,  sg_line_manage_t *line, sg_node_mana
         //sg_line_manage_print(line);
 
         int i;
-        for(i = 0; i < num; i++) {
+        for(i = 0; i < ret; i++) {
                 node->node_buff[i].x = (node->node_buff[i].x - set.MinL)*alpha; 
                 node->node_buff[i].y = gps->height - (node->node_buff[i].y - set.MinB)*beta; 
         }

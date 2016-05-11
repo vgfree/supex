@@ -66,7 +66,7 @@ static bool popTable(lua_State* L, int idx, sg_png_manag_t *sg)
                                         else if(strncmp(value, "RT", 2) == 0) {
                                                 //printf("RT Value:%lf\n", lua_tonumber(L, -1));
                                                 temp_info.rt = lua_tonumber(L, -1);
-                                                //printf("Rt:%lf\n", temp_info.rt);
+                                                //printf("Rt:%d\n", temp_info.rt);
                                         }
                                         else {
                                                 //printf("SGEL Value:%lf\n", lua_tonumber(L, -1));

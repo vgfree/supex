@@ -12,6 +12,7 @@ typedef struct _sg_text_t {
         int Ey;
         int Ssg;
         int Esg;
+        short rt;
         uint8_t width;
         float dir;
         char name[128];

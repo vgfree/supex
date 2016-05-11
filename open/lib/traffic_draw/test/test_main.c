@@ -9,7 +9,7 @@
 int main(int argc, char *argv[])
 {
         if(argc < 6) {
-                printf("need 4 parameter: path name weight hight\n");
+                printf("need 5 parameter: path name weight hight\n");
                 return -1;
         }
         sg_png_manag_t p_manage;
