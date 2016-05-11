@@ -39,7 +39,8 @@ OBJ =			$(patsubst %.c, $(OBJ_DIR)/%.o, $(notdir $(SRC)))
 OBJ_DIR	=		objs
 TARGET_DIR =		lib
 
-vpath %.c $(BUILD_PWD)/mfptp_protocol
+#vpath %.c $(BUILD_PWD)/mfptp_protocol
+vpath %.c ./mfptp_protocol
 
 #######
 ifeq ($(BUILD_HOST), darwin)
@@ -96,7 +97,6 @@ $(TARGET) : $(OBJ)
 	$(ECHO) $(COLOR_TXT)"\t\t- ARCHIVE\t===>\t"$(COLOR_TAG)"$(TARGET_ARNAME)"$(COLOR_NONE)
 	$(AR) $(TARGET_DIR)/$(TARGET_ARNAME) $^
 	$(ECHO) $(COLOR_TXT)"\t\t- DYNAMIC\t===>\t"$(COLOR_TAG)"$(TARGET_NAME)"$(COLOR_NONE)
-	$(ECHO) $^
 	$(LN) -o $(TARGET_DIR)/$(TARGET_DLNAME) $^ $(BUILD_LIBS)
 	$(INSTALL_HEAD_FILE)
 	$(INSTALL_DYLIB_FILE)

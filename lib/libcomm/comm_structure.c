@@ -130,3 +130,20 @@ inline void free_commmsg(struct comm_message* message)
 		Free(message);
 	}
 }
+
+inline bool get_portinfo(struct portinfo *portinfo, int fd, int type, int status)
+{
+	assert(portinfo && portinfo->addr);
+	if (unlikely((get_address(fd, portinfo->addr, (size_t)sizeof(portinfo->addr))) == -1)) {
+		return false;
+	}
+	portinfo->port = get_port(fd);
+	if (unlikely(portinfo->port ==  -1)) {
+		return false;
+	}
+	portinfo->fd = fd;
+	portinfo->type = type;
+	portinfo->stat = status;
+
+	return true;
+}

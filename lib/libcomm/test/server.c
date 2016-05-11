@@ -24,7 +24,7 @@ int main(int argc, char* argv[])
 
 	commctx = comm_ctx_create(EPOLLSIZE);
 	if (likely(commctx)) {
-		log("client comm_ctx_create successed\n");
+		log("server comm_ctx_create successed\n");
 		finishedcb.callback = event_fun;
 		finishedcb.usr = &recvmsg;
 		fd = comm_socket(commctx, argv[1], argv[2], &finishedcb, COMM_BIND);
@@ -51,10 +51,10 @@ int main(int argc, char* argv[])
 
 			}
 		} else {
-			log("client comm_socket failed\n");
+			log("server comm_socket failed\n");
 		}
 	} else {
-		log("client comm_ctx_create failed\n");
+		log("server comm_ctx_create failed\n");
 	}
 
 	comm_ctx_destroy(commctx);
@@ -123,7 +123,6 @@ static bool recv_data(struct comm_context *commctx, struct comm_message *message
 				memcpy(buff, &message->content[message->package.frame_offset[k]], message->package.frame_size[k]);
 				log("%s\n", buff);
 			}
-			//log("one package over\n");
 		}
 		return true;
 	}
@@ -132,7 +131,6 @@ static bool recv_data(struct comm_context *commctx, struct comm_message *message
 void close_fun(void *usr)
 {
 	struct comm_message *message = (struct comm_message*)usr;
-	//printf("server here is close_fun(): %s\n", (char*)usr);
 	message->fd = -1;
 	printf("server here is close_fun()\n");
 }
@@ -160,7 +158,6 @@ void timeout_fun(void *usr)
 	printf("server here is timeout_fun()\n");
 }
 
-/* @status: FD_CLOSE, FD_READ, FD_WRITE */
 void event_fun(struct comm_context* commctx, struct portinfo *portinfo, void* usr)
 {
 	//log("server %d fd have action\n", portinfo->fd);
@@ -175,9 +172,10 @@ void event_fun(struct comm_context* commctx, struct portinfo *portinfo, void* us
 		case FD_READ:
 			read_fun(usr);
 			break;
-		case FD_INIT:
+		case FD_INIT: 
+			/* 当fd的类型为COMM_ACCEPT时才是accept事件 */
 			if (portinfo->type == COMM_ACCEPT) {
-				accept_fun(usr); /* 当fd的类型为COMM_ACCEPT时才是accept事件 */
+				accept_fun(usr);
 			}
 		default:
 			timeout_fun(usr);

@@ -31,7 +31,7 @@ extern "C" {
 
 struct comm_context ;
 struct portinfo	;
-/* 回调函数的原型: fd参数:对于超时和线程回调函数无用，主要用于finished回调函数 */
+/* 回调函数的原型 */
 typedef void (*CommCB)(struct comm_context* commctx, struct portinfo *portinfo, void* usr);
 
 /* 套接字的类型 */
@@ -104,17 +104,17 @@ struct comm_context {
 		COMM_STAT_INIT,
 		COMM_STAT_RUN,
 		COMM_STAT_STOP
-	}		stat;			/* 线程的状态 */
+	}		stat;				/* 线程的状态 */
 };
 
 /* 数据包的设置 */
 struct comm_package {
-	int dsize;				/* 数据总大小 */
-	int frames;				/* 总帧数 */
-	int packages;				/* 总包数 */
-	int frame_size[COMM_FRAMES];		/* 每个帧数据大小 */
-	int frame_offset[COMM_FRAMES];		/* 每个帧的偏移 */
-	int frames_of_package[COMM_FRAMES];	/* 每个包中帧的多少 */
+	int dsize;					/* 数据总大小 */
+	int frames;					/* 总帧数 */
+	int packages;					/* 总包数 */
+	int frame_size[COMM_FRAMES];			/* 每个帧数据大小 */
+	int frame_offset[COMM_FRAMES];			/* 每个帧的偏移 */
+	int frames_of_package[COMM_FRAMES];		/* 每个包中帧的多少 */
 };
 
 /* 发送接收数据的结构体 */
@@ -136,7 +136,7 @@ void copy_commmsg(struct comm_message* destmsg, const struct comm_message* srcms
 
 void free_commmsg(struct comm_message* message);
 
-
+bool get_portinfo( struct portinfo* portinfo, int fd, int type, int status);
 
 #ifdef __cplusplus
 	}

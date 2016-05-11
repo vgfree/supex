@@ -3,74 +3,122 @@
  Copyright © 2016年 xuli. All rights reserved.
 -------------------------------------------------------------------------------------------
 
-数据结构：
+外部使用数据结构:
 
 --套接字的type
 enum{
-	COMM_CONNECT = 0x01;
-	COMM_BIND;
-};
-
---用于保存每个fd的相关数据
-struct comm_data{
-	int magic;
-	int fd;
-	DQueueT recv_list;
-	DQueueT send_list;
-	struct cache recv_buff;
-	struct cache send_buff;
+	COMM_CONNECT = 0x01,
+	COMM_BIND,
+	COMM_ACCEPT
 };
 
 --通信模块上下文结构体
-struct comm{
-	int		magic;
-	int		type;			//套接字的类型
-	int		epfd;			//IO复用句柄
-	int		data[EPOLL_SIZE];	//保存接收发送的相关数据
-	long		watchcnt;		//正在监听的fd的个数
-	pthread_t	ptid;			//线程id
-	struct epoll_event *events;		//监听的所有fd
-	enum{
-		COMM_STAT_NONE;
-		COMM_STAT_INIT;
-		COMM_STAT_RUN;
-		COMM_STAT_STOP;
-	}		stat;			//线程的状态
+struct comm_context {
+	int			listenfd;		/* 如果类型为COMM_BIND此变量会被赋值 */
+	intptr_t		data[EPOLL_SIZE];	/* 保存接收发送的相关数据 */
+	pthread_t		ptid;			/* 新线程的pid */
+	struct cbinfo		timeoutcb;		/* 超时回调函数的相关信息 */
+	struct remainfd		remainfd;		/* 遗留下来没有及时处理的fd */
+	struct comm_queue	recv_queue;		/* 存放已经接收到并解析好的数据 */
+	struct comm_pipe	commpipe;		/* 关于管道的相关信息 */
+	struct comm_lock	recvlock;		/* 用来同步接收队列的锁*/
+	struct comm_lock	statlock;		/* 用来同步stat的状态 */
+	struct comm_epoll	commepoll;		/* epoll监听事件的相关信息 */
+	enum {
+		COMM_STAT_NONE,
+		COMM_STAT_INIT,
+		COMM_STAT_RUN,
+		COMM_STAT_STOP
+	}		stat;				/* 线程的状态 */
 };
+
+/* 回调函数的相关信息 */
+struct cbinfo {
+	int			timeout;
+	CommCB			callback;	/* 相关的回调函数 */
+	void*			usr;		/* 用户的参数 */
+};
+
+/* 端口的相关信息 */
+struct portinfo {
+	int		fd;			/* 套接字描述符 */
+	int		type;			/* 套接字的类型 */
+	enum {
+		FD_INIT = 0x01,
+		FD_READ,
+		FD_WRITE,
+		FD_CLOSE
+	}		stat;			/* 套接字的状态 */
+	uint16_t	port;			/* 本地端口 */
+	char		addr[IPADDR_MAXSIZE];	/* 本地IP地址 */
+};
+
+/* 数据包的设置 */
+struct comm_package {
+	int dsize;					/* 数据总大小 */
+	int frames;					/* 总帧数 */
+	int packages;					/* 总包数 */
+	int frame_size[COMM_FRAMES];			/* 每个帧数据大小 */
+	int frame_offset[COMM_FRAMES];			/* 每个帧的偏移 */
+	int frames_of_package[COMM_FRAMES];		/* 每个包中帧多少 */
+};
+
+/* 发送接收数据的结构体 */
+struct comm_message {
+	int			fd;			/* 消息对应的描述符 */
+	int			config;			/* 消息的加密压缩格式 */
+	int			socket_type;		/* 消息套接字的类型 */
+	char*			content;		/* 消息的内容首地址 */
+	struct comm_package	package;		/* 消息包的设置 */
+};
+
+--------------------------------------------------------------------------------
+
+内部结构体：
+--用于保存每个fd的相关数据
+struct comm_data {
+	struct comm_queue	recv_queue;	/* 存放接收并已经解析完毕的数据 */
+	struct comm_queue	send_queue;	/* 存放用户传递但并未打包的数据 */
+	struct comm_cache	recv_buff;	/* 存放接收但并未解析的数据 */
+	struct comm_cache	send_buff;	/* 存放需要发送并已经打包的数据 */
+	struct comm_lock	sendlock;	/* send_queue的锁 */
+	struct comm_context*	commctx;	/* 通信上下文的结构体 */
+	struct cbinfo		finishedcb;	/* 此描述符监听事件发生时相应的回调函数信息 */
+	struct portinfo		portinfo;	/* 端口的相关信息 */
+	struct mfptp_parser	parser;		/* 解析器 */
+	struct mfptp_packager	packager;	/* 打包器 */
+};
+
 
 
 外部接口：
-1.创建一个通信结构体comm：
-struct comm* comm_ctx_create(long size);
+1. 创建一个通信上下文的结构体
+struct comm_context* comm_ctx_create(int epollsize);
 
-2.销毁掉通信结构体comm:
-void comm_ctx_destroy(struct comm  *commctx);
+2. 销毁一个通信上下文的结构体
+void comm_ctx_destroy(struct comm_context *commctx);
 
-3.bind或者connect端口：返回fd，-1则失败
-int comm_socket(struct comm *commctx, char *host, char *server);
+3. bind或者connect某个指定的地址端口
+int comm_socket(struct comm_context *commctx, const char *host, const char *service, struct cbinfo *finishedcb, int type);
 
-4.发送数据：将传进来的数据放入链表中等待合适时机发送 返回-1失败，0成功 失败的时候通过errno查看原因
-int comm_send(struct comm *commctx, int fd, const char *buff);
+4. @block:发送数据失败的时候是否阻塞等待 @timeout[单位：ms]：阻塞多长时间返回，-1为一直阻塞 @返回值为-1失败
+int comm_send(struct comm_context *commctx, const struct comm_message *message, bool block, int timeout);
 
-5.接收数据:从链表中获取已经接收的数据 返回值为接收到的数据的大小，-1失败 失败的时候通过errno查看原因
-int comm_recv(struct comm *commctx, int fd, char *buff);
+5. @block:接收数据失败的时候是否阻塞等待 @timeout[单位：ms]：阻塞多长时间返回，-1为一直阻塞 @返回值为-1失败
+int comm_recv(struct comm_context *commctx, struct comm_message *message, bool block, int timeout);
 
+6.关闭指定套接
+void comm_close(struct comm_context *commctx, int fd);
 
-6.关闭某个socket:将对应的fd关闭
-bool comm_close(struct comm *commctx, char *host, char *server);
-
-7.启动通信模块 --暂时保留
+7.设置epoll_wait的超时时间
+void comm_settimeout(struct comm_context *commctx, int timeout, CommCB callback, void *usr);
+___________________________________________________________________________________________________
+8.启动通信模块 --暂时保留
 int comm_startup(struct comm *commctx);
 
 
-内部接口:
-添加一个监视的fd 
-typedef void (*commcb)(void *usr);
-struct watcher_flag{
-	int op;		//对于监视的fd的操作 
-	int event;	//监视的fd的事件
-	int timeout;    //超时设置
-	commcb finishedcb;//所监视的fd可读可写时所调用的函数
-	commcb timeoutcb;//监视的fd超时时所调用的函数
-};
-int comm_watcher(struct comm *commctx, in fd, struct watcher_flag flag);
+---------------------------------------------------------------------------------------------------------
+1.libcomm:这个comm不是common的意思，而是communication通信的意思,当然这里是指socket通信！
+
+2.libcomm的功能:主要功能就是进行socket通信，将socket通信的一套函数进行包装并且另开一个线程用来
+专门处理IO操作，

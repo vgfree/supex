@@ -6,6 +6,7 @@
 #define __COMMUNICATION_H__
 
 #include "comm_structure.h"
+#include "comm_event.h"
 
 #ifdef __cplusplus
 extern "C" {
