@@ -65,6 +65,7 @@ int sg_text_position(sg_line_manage_t *p_line, sg_text_manage_t *p_text)
                         sub_text->Sy  = p_line->line_buff[i].y1;
                         sub_text->Ex  = p_line->line_buff[i].x2;
                         sub_text->Ey  = p_line->line_buff[i].y2;
+                        sub_text->rt  = p_line->line_buff[i].rt;
                         sub_text->width  = p_line->line_buff[i].width;
                         sub_text->dir = atan2(sub_text->Ey - sub_text->Sy, sub_text->Ex - sub_text->Sx);//FIXME
                         memcpy(sub_text->name, p_line->line_buff[i].name, sizeof(p_line->line_buff[i].name));
@@ -126,12 +127,37 @@ int sg_text_manage_draw(sg_text_manage_t *p_text)
                 int key1 = nkey(ht);
                 ivalue = *(intptr_t*)value(ht);
                 temp_text = (sg_text_t *)ivalue;
+
                 if(temp_text) {
-                        mx = (temp_text->Sx+temp_text->Ex)/2;
-                        my = (temp_text->Sy+temp_text->Ey)/2;
-                        printf("hash:\t %s %lf %d %d\n", temp_text->name, temp_text->dir*180/3.1415926, temp_text->Sx, temp_text->Sy);
+                        //高速与高架路名放置在起点
+                        if(temp_text->rt != 0 || temp_text->rt != 10) {
+                                mx = (temp_text->Sx+temp_text->Ex)/2;
+                                my = (temp_text->Sy+temp_text->Ey)/2;
+                        }
+                        else {
+                                mx = temp_text->Sx;
+                                my = temp_text->Sy;
+                        }
+
+                        //printf("hash:\t %s %lf %d %d\n", temp_text->name, temp_text->dir*180/3.1415926, temp_text->Sx, temp_text->Sy);
                         radian_transition(temp_text, &mx);
-                        show_roadname(p_text->cr, temp_text->name, mx, my, 20, temp_text->dir);
+                        //printf("rt: %d\n", temp_text->rt);
+                        /*
+                         *['0'] = "高速",
+                         *['1'] = "国道",
+                         *['2'] = "省道",
+                         *['3'] = "县道",   
+                         *['4'] = "乡道",
+                         *['5'] = "村道",
+                         *['7'] = "普通道路",
+                         *['10'] = "城市快速路",
+                         *['11'] = "城市主干道",
+                         *['12'] = "城市次干道",
+                         *['15'] = "步行街",
+                         *['16'] = "内部道路",
+                         * */
+                        if(temp_text->rt % 10 < 3)
+                                show_roadname(p_text->cr, temp_text->name, mx, my, 20, temp_text->dir);
                         //show_nomalname(p_text->cr, temp_text->name, mx, my, 20);
                 }
         }
@@ -153,6 +179,7 @@ void sg_text_manage_destroy(sg_text_manage_t *p_text)
                 if(temp_text)
                         free(temp_text);
         }
-        hash_free(ht);
+        if(ht)
+                hash_free(ht);
         ht = NULL;
 }

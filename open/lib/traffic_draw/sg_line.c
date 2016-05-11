@@ -44,7 +44,7 @@ int sg_line_manage_find(sg_line_manage_t *p_manage, sg_line_t *p_sg_line)
                                 && p_sg_line->x2 == p_manage->line_buff[i].x1 \
                                 && p_sg_line->y1 == p_manage->line_buff[i].y2 \
                                 && p_sg_line->y2 == p_manage->line_buff[i].y1) {
-                        printf("two-way %s\n", p_sg_line->name);
+                        //printf("two-way %s\n", p_sg_line->name);
                         //printf("find two-way road\n");
                         return 1;
                 }

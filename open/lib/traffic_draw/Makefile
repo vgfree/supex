@@ -1,10 +1,10 @@
 APPS    = traffic_draw_test
 DRAWSO	= ../libtrafficd.so
 
-UTILDIR  = ./c-hashtable/util
+UTILDIR = ./c-hashtable/util
 CFLAGS  = -Wall -g -O3
 LDFLAGS = -lm -lhts
-INCS     = -I$(UTILDIR)
+INCS    = -I$(UTILDIR)
 LIBDIR  = -L$(UTILDIR) -L../
 #CFLAGS  += `pkg-config gtk+-2.0 --cflags`
 #LDFLAGS += `pkg-config gtk+-2.0 --libs`
@@ -42,7 +42,7 @@ statics:
 	cd $(UTILDIR);  $(MAKE) libhts.a
 
 test_main: ./test/test_main.c
-	gcc  -I./ $(CFLAGS) $(LIBDIR) $^ -Wl,-rpath=../ -lluamap -o $(APPS)
+	gcc  -I./ $(CFLAGS) $(LIBDIR) $^ -Wl,-rpath=../ -ltrafficd -o $(APPS)
 	#gcc  -I./ $(CFLAGS) $(LIBDIR) $^ $(LDFLAGS) -lluamap -o $(APPS)
 
 clean:

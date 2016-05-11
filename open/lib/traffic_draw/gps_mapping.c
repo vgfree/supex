@@ -1,5 +1,8 @@
 #include <stdbool.h>
 #include <math.h>
+#include <string.h>
+
+#include "hashtable.h"
 #include "gps_mapping.h"
 
 //gps坐标 转换为 图像坐标经度
@@ -109,19 +112,27 @@ static sg_node_t getIntersg_node(sg_info_t a, sg_info_t b)
         return hp;
 }
 
-int get_spacing(sg_png_manag_t *sg, sg_maxandmin_t *ret)
+int get_spacing(sg_png_manag_t *sg, sg_maxandmin_t *ret, sg_node_manage_t *node_t)
 {
         if(!sg || !ret || !sg->sg_count) {
                 printf("list is null... sg_png_manag_t:%p sg_maxandmin_t:%p sg_count %d\n", sg, ret, sg->sg_count);
                 return -1;
         }
+        
+        int factor = sg->weight / 200;  
+        factor = (factor > 0) ? factor : 1;
 
         sg_info_t *p = sg->cur_sg->next;//FIXME
         double MinL, MinB, MaxL, MaxB;
         MinL = 200*FACTOR, MinB = 200*FACTOR, MaxL = -1, MaxB = -1;
 
-        printf("dir: %d\n", sg->dir);
+        HashTable *ht = create_hashtable(100,char*,int);
+        if(!ht)
+                return -1;
 
+        char keyS[20] = "";
+        char keyE[20] = "";
+        sg_node_t p_node;
         while(p) {
                 //rotate_gps(p, sg->dir);
                 if(p->SL < MinL)
@@ -141,15 +152,36 @@ int get_spacing(sg_png_manag_t *sg, sg_maxandmin_t *ret)
                 if(p->EB > MaxB)
                         MaxB = p->EB;
 
+                sprintf(keyS, "%lf&%lf", p->SL, p->SB);
+                sprintf(keyE, "%lf&%lf", p->EL, p->EB);
+                if(hash_exists(ht, keyS) == NOTEXISTS) {
+                        hash_add(ht, keyS, 1);
+                }
+                else if(hash_exists(ht, keyS) == EXISTS) {
+                        p_node.x = p->SL;
+                        p_node.y = p->SB;
+                        p_node.r = factor+1;
+                        sg_node_manage_add(node_t, p_node);
+                }
+                if(hash_exists(ht, keyE) == NOTEXISTS) {
+                        hash_add(ht, keyE, 1);
+                }
+                else if(hash_exists(ht, keyE) == EXISTS) {
+                        p_node.x = p->EL;
+                        p_node.y = p->EB;
+                        p_node.r = factor+1;
+                        sg_node_manage_add(node_t, p_node);
+                }
                 p = p->next;
         }
+        hash_free(ht);
         ret->MinL = MinL;
         ret->MinB = MinB;
         ret->MaxL = MaxL;
         ret->MaxB = MaxB;
         ret->L_space = MaxL - MinL;
         ret->B_space = MaxB - MinB;
-        return 0;
+        return node_t->node_count;
 }
 /*
  *获取路段交点，需在get_spacing后调用

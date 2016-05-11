@@ -16,5 +16,5 @@ typedef struct _sg_maxandmin
         double B_space;
 } sg_maxandmin_t;
 
-int get_spacing(sg_png_manag_t *sg, sg_maxandmin_t *ret);
+int get_spacing(sg_png_manag_t *sg, sg_maxandmin_t *ret, sg_node_manage_t *node_t);
 int get_node(sg_png_manag_t *sg, sg_node_manage_t *node_t, int r);

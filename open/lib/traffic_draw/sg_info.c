@@ -121,7 +121,10 @@ int sg_png_manage_draw(sg_png_manag_t *p_manage)
 void sg_png_manage_destory(sg_png_manag_t *p_manage)
 {
         /* 销毁并退出Cairo绘图环境 */
-        cairo_destroy(p_manage->cr);
-        sg_png_manage_draw(p_manage);
-        cairo_surface_destroy (p_manage->surface);
+        if(p_manage->cr)
+                cairo_destroy(p_manage->cr);
+        if(p_manage)
+                sg_png_manage_draw(p_manage);
+        if(p_manage->surface)
+                cairo_surface_destroy (p_manage->surface);
 }
