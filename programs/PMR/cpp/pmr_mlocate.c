@@ -151,7 +151,7 @@ static int pmr_mlocate_cb(void *arg, map_line_info *p_line_info)
                 return 0;
         }
 
-        x_printf(I, "line:%d%03d, dist:%d, p_lon:%f,p_lat:%f,sl:%f,sb:%f, el:%f, eb:%f\n", p_line_info->rr_id, p_line_info->sgid, dist, p_match->cur_pt.lon, p_match->cur_pt.lat,
+        x_printf(I, "lineid:%d,line:%d%03d, dist:%d, p_lon:%f,p_lat:%f,sl:%f,sb:%f, el:%f, eb:%f\n", p_line_info->line_id, p_line_info->rr_id, p_line_info->sgid, dist, p_match->cur_pt.lon, p_match->cur_pt.lat,
                 p_line_info->start_lon, p_line_info->start_lat,p_line_info->end_lon, p_line_info->end_lat);
 
         back_seg ret_seg;

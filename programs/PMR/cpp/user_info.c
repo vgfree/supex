@@ -16,6 +16,7 @@ int user_info_save(user_info_t *p_user)
                 kv_answer_release(ans);
                 return -1;
         }
+        kv_answer_release(ans);
 
         return 0;
 }
@@ -68,6 +69,7 @@ user_info_t* user_info_get(char *p_imei)
         kv_answer_rewind_iter(ans, iter);
         value = kv_answer_next(iter);
         unsigned long pt = strtol((char *)(value->ptr), NULL, 10);
+	kv_answer_release_iter(iter);
         kv_answer_release(ans);
 
         user_info_t *p_user = (user_info_t *)pt;

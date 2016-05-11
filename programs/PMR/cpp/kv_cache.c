@@ -8,7 +8,7 @@
 
 kv_cache *kv_cache_create(int kv_num)
 {
-	if ((kv_num <= 1) || (kv_num > CACHE_POOL_MAX_KV)) {
+	if ((kv_num < 1) || (kv_num > CACHE_POOL_MAX_KV)) {
 		x_printf(E, "kv_num should between 1 and %d!\n", kv_num);
 		return NULL;
 	}

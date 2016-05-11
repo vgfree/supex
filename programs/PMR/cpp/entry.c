@@ -26,7 +26,7 @@ void entry_init(void)
                 g_locate_cfg = (locate_cfg_t *)malloc(sizeof(locate_cfg_t));
                 memset(g_locate_cfg, 0, sizeof(locate_cfg_t));
         }
-         g_kv_cache = kv_cache_create(8);
+         g_kv_cache = kv_cache_create(4);
 	pmr_load_data_all();
         seg_file_load(g_locate_cfg->seg_file_name);
         map_topo_load();

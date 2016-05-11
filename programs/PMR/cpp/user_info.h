@@ -2,8 +2,8 @@
 #include "map_seg.h"
 
 #define MAX_MATCH_ROAD_SIZE 30
-#define IMEI_LEN 15
-#define MLOCATE_ROAD_DEEP 3
+#define IMEI_LEN 32
+#define MLOCATE_ROAD_DEEP 2
 
 typedef struct gps_point_t {
         long long time;
@@ -17,8 +17,8 @@ typedef struct gps_point_t {
 typedef struct road_info_t {
         map_seg_info *p_sg;
         char *p_sg_name;
-        gps_point_t start_point;
-        gps_point_t end_point;
+//        gps_point_t start_point;
+//        gps_point_t end_point;
         short dist;
         short sub_dir;
         double weight;
