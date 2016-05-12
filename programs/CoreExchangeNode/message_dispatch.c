@@ -27,12 +27,10 @@ static void _handle_cid_message(struct comm_message *msg)
   int fsz;
   char *cid = get_msg_frame(2, msg, &fsz);
   if (memcmp(cid, g_serv_info.ip, 4) == 0) {
-    char cfd[3] = {};
-    cfd[0] = cid[4];
-    cfd[1] = cid[5];
-    int fd = atoi(cfd);
+    int fd = cid[4] * 256 + cid[5];
     set_msg_fd(msg, fd);
     remove_first_nframe(3, msg);
+    log("fd:%d.", fd);
     comm_send(g_serv_info.commctx, msg, true, -1);
   }
 }
@@ -186,32 +184,9 @@ static void _downstream_msg(struct comm_message *msg)
   return;
 }
 
-static void _upstream_msg(struct comm_message *msg)
-{
-}
-
-static void _login_msg(struct comm_message *msg)
-{
-  log("");
-  int fsz;
-  char *frame = get_msg_frame(1, msg, &fsz);
-  if (!frame) {
-    error("wrong frame, frame is NULL.");
-    return;
-  }
-  if (memcmp(frame, "server", 6) == 0) {
-    _handle_server_login(msg);
-  }
-  else if (memcmp(frame, "client", 6) == 0) {
-    _handle_client_login(msg);
-  } else {
-    error("wrong msg.");
-  }
-}
-
 static void _classified_message(struct comm_message *msg)
 {
-  log("");
+  log("max msg:%d.", get_max_msg_frame(msg));
   int frame_size;
   char *frame = get_msg_frame(0, msg, &frame_size);
   if (!frame) {
@@ -219,12 +194,6 @@ static void _classified_message(struct comm_message *msg)
   }
   if (memcmp(frame, "downstream", 10) == 0) {
     _downstream_msg(msg);
-  }
-  else if (memcmp(frame, "upstream", 8) == 0) {
-    _upstream_msg(msg);
-  }
-  else if (memcmp(frame, "login", 5) == 0) {
-    _login_msg(msg);
   }
   else {
     error("wrong first frame, frame_size:%d.", frame_size);
@@ -237,6 +206,16 @@ void message_dispatch()
   init_msg(&msg);
   log("comm_recv wait.");
   comm_recv(g_serv_info.commctx, &msg, true, -1);
-  _classified_message(&msg);
+  struct fd_descriptor des;
+  array_at_fd(msg.fd, &des);
+  if (des.obj == CLIENT) {
+    int fd;
+    find_best_gateway(&fd);
+    set_msg_fd(&msg, fd);
+    comm_send(g_serv_info.commctx, &msg, true, -1);
+  }
+  else if (des.obj == MESSAGE_GATEWAY) { 
+    _classified_message(&msg);
+  }
   destroy_msg(&msg);
 }

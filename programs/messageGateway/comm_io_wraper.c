@@ -12,13 +12,7 @@ static void core_exchange_node_cb(struct comm_context *commctx,
                                   void *usr)
 {
   log("callback, fd:%d, status:%d.", portinfo->fd, portinfo->stat);
-  if (portinfo->stat == FD_INIT) {
-    if (g_node_ptr->max_size > NODE_SIZE) {
-      error("core exchange node:%d > max size:%d.", g_node_ptr->max_size, NODE_SIZE);
-    }
-    g_node_ptr->fd_array[g_node_ptr->max_size++] = portinfo->fd;
-  }
-  else if (portinfo->stat == FD_CLOSE){
+  if (portinfo->stat == FD_CLOSE){
     int i = 0;
     for (; i < g_node_ptr->max_size; i++) {
       if (g_node_ptr->fd_array[i] == portinfo->fd) {
@@ -98,7 +92,12 @@ int init_comm_io()
       error("can't connect socket, ip:%s, port:%s.", ipbuf, portbuf);
       continue;
     }
-    send_validate_logon_package(connectfd);
+    if (g_node_ptr->max_size > NODE_SIZE) {
+      error("core exchange node:%d > max size:%d.", g_node_ptr->max_size, NODE_SIZE);
+    }
+    g_node_ptr->fd_array[g_node_ptr->max_size++] = connectfd;
+    log("g_node_ptr->max_size:%d.", g_node_ptr->max_size);
+    //send_validate_logon_package(connectfd);
   }
   destroy_config_reader(config);
   return 0;

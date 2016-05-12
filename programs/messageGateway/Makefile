@@ -29,6 +29,7 @@ BASE_OBJ = $(addprefix $(BIN)/, \
 OBJ ?= $(BASE_OBJ)
 SRV := $(MAIN_APP_SERV)
 JOB += $(SRV)
+CFLAGS += -g
 CLEANFILES = mhooktrace.log
 
 MAIN_OBJ = comm_io_wraper.c \

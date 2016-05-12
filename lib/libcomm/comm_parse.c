@@ -4,6 +4,7 @@
 /*********************************************************************************************/
 
 #include "comm_parse.h"
+#include "loger.h"
 
 static void _fill_message_package(struct comm_message *message, const struct mfptp_parser *packager);
 

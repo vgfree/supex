@@ -4,6 +4,7 @@
 /*********************************************************************************************/
 
 #include "comm_package.h"
+#include "loger.h"
 
 bool package_data(struct comm_data *commdata)
 {

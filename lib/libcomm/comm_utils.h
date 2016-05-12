@@ -19,7 +19,7 @@ extern "C" {
 #endif
 
 
-#define log(fmt, ...) fprintf(stdout, "FILENAME:%s | LINE:%d | FUNCTION:%s | MASSAGE: "  fmt , __FILE__, __LINE__, __FUNCTION__, ##__VA_ARGS__)
+//#define log(fmt, ...) fprintf(stdout, "FILENAME:%s | LINE:%d | FUNCTION:%s | MASSAGE: "  fmt , __FILE__, __LINE__, __FUNCTION__, ##__VA_ARGS__)
 
 
 /* 编译器版本 */

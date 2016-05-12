@@ -47,7 +47,7 @@ static int exec_cmd()
     printf("\n ------------please cin -------------\n");
     return 0;	
   }
-
+/*
   if (strcmp(g_cmd_string[0], "parse\0") == 0) {
     if (test_parse_function() == 0) {
       printf("\n -------parse function OK------------\n");	  
@@ -63,7 +63,7 @@ static int exec_cmd()
 	else {
       printf("\n ---------pack function failed ---------------\n");
 	}
-  }
+  }*/
   else if (strcmp(g_cmd_string[0], "gateway\0") == 0) {   
     if (test_simulate_gateway() == 0) {
       printf("\n-----------simulate gateway function OK -------\n");

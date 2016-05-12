@@ -3,64 +3,24 @@
 #include "daemon.h"
 #include "fd_manager.h"
 #include "gid_map.h"
-#include "message_dispatch.h"
 #include "loger.h"
+#include "message_dispatch.h"
+#include "notify.h"
 #include "uid_map.h"
 
 #include <signal.h>
 #include <stdlib.h>
 
 #define CONFIG "core_exchange_node.conf"
-#define LISTEN_IP "ListenIP"
-#define LISTEN_PORT "ListenPort"
+#define LISTEN_MESSAGEGATEWAY_IP "ListenMessageGatewayIP"
+#define LISTEN_MESSAGEGATEWAY_PORT "ListenMessageGatewayPort"
+#define LISTEN_CLIENT_IP "ListenClientIP"
+#define LISTEN_CLIENT_PORT "ListenClientPort"
 #define SERVER_FILE "CoreExchangeNode.pid"
 #define PACKAGE_SIZE "PackageSize"
 #define MODULE_NAME "CoreExchangeNode"
 
 struct CSLog* g_imlog = NULL;
-
-void io_notify_logic_thread(struct comm_context* commctx,
-                            struct portinfo *portinfo, void *usr)
-{
-  if (g_serv_info.commctx != commctx) {
-    error("callback commctx not equal. g_serv_info.commctx:%p, commctx:%p",
-          g_serv_info.commctx, commctx);
-  }
-  log("callback, fd:%d, status:%d.", portinfo->fd, portinfo->stat);
-  switch (portinfo->stat) {
-  case 0:
-    break;
-  case 1:   // connected.
-    {
-      struct fd_descriptor des = {};
-      des.status = 1;
-      array_fill_fd(portinfo->fd, &des);
-    }
-    break;
-  case 4:   // closed.
-    {
-      struct fd_descriptor des;
-      array_at_fd(portinfo->fd, &des);
-      log("array_at_fd, status:%d, obj:%d.", des.status, des.obj);
-      if (des.status != 1) {
-        error("this fd:%d is not running.", portinfo->fd);
-        return;
-      }
-      if (des.obj == CLIENT){
-        // 打包路由结束包发送给其他服务器。message_from 为router_server.
-        // TO DO:  更新到redis 服务器。
-      }
-      else if (des.obj == MESSAGE_GATEWAY) {
-        list_remove(des.obj, portinfo->fd);
-      }
-      array_remove_fd(portinfo->fd);
-      log("array_remove_fd.");
-      break;
-    }
-  default:
-    break;
-  }
-}
 
 
 static int init() {
@@ -68,10 +28,13 @@ static int init() {
   log("init");
   struct config_reader *config =
     init_config_reader(CONFIG);
-  char *IP = get_config_name(config, LISTEN_IP);
-  char *port = get_config_name(config, LISTEN_PORT);
-  char *package_sz = get_config_name(config, PACKAGE_SIZE);
-  log("ListenIp = %s, ListenPort = %s, pcakge size = %s", IP, port, package_sz);
+  char *clientIP = get_config_name(config, LISTEN_CLIENT_IP);
+  char *clientPort = get_config_name(config, LISTEN_CLIENT_PORT);
+  char *MGsrvIP = get_config_name(config, LISTEN_MESSAGEGATEWAY_IP);
+  char *MGsrvPort = get_config_name(config, LISTEN_MESSAGEGATEWAY_PORT);
+//  char *package_sz = get_config_name(config, PACKAGE_SIZE);
+  log("ListenClientIp = %s, ListenClientPort = %s", clientIP, clientPort);
+  log("MGsrvIp = %s, MGsrvPort = %s", MGsrvIP, MGsrvPort);
   list_init();
   array_init();
   struct comm_context *commctx = NULL;
@@ -79,18 +42,23 @@ static int init() {
   if (unlikely(!commctx)) {
     return -1;
   }
-  struct cbinfo  finishedcb = {};
-  finishedcb.callback = io_notify_logic_thread;
+  struct cbinfo  clientCB = {};
+  clientCB.callback = client_event_notify;
 
-  int retval = comm_socket(commctx, IP, port, &finishedcb, COMM_BIND);
+  int retval = comm_socket(commctx, clientIP, clientPort, &clientCB, COMM_BIND);
   if (retval == -1) {
-    error("can't bind socket.");
+    error("can't bind client socket, ip:%s, port:%s.", clientIP, clientPort);
     return retval;
   }
-  log("IP:%s", IP);
-  get_ip(IP, g_serv_info.ip);
-  g_serv_info.port = atoi(port);
-  g_serv_info.package_size = atoi(package_sz);
+  struct cbinfo MGCB = {};
+  MGCB.callback = server_event_notify;
+  retval = comm_socket(commctx, MGsrvIP, MGsrvPort, &MGCB, COMM_BIND);
+  if (retval == -1) {
+    error("can't bind MG socket, ip:%s, port:%s.", MGsrvIP, MGsrvPort);
+  }
+  get_ip(clientIP, g_serv_info.ip);
+  g_serv_info.port = atoi(clientPort);
+//  g_serv_info.package_size = atoi(package_sz);
   g_serv_info.commctx = commctx;
   log("port:%d", g_serv_info.port);
   destroy_config_reader(config);

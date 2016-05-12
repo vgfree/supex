@@ -5,7 +5,7 @@
 #include <dirent.h>
 #include <stdlib.h>
 
-//#include "loger.h"
+#include "loger.h"
 #include "communication.h"
 
 

@@ -129,6 +129,7 @@ int array_remove_fd(const int fd)
 
 int array_at_fd(const int fd, struct fd_descriptor *des)
 {
+  assert(des);
   des->ip = g_array.dsp_array[fd].ip;
   des->port = g_array.dsp_array[fd].port;
   des->status = g_array.dsp_array[fd].status;

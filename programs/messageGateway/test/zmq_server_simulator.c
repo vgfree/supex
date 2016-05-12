@@ -6,7 +6,7 @@ int main(int argc, char *argv[])
 {
   void *ctx = zmq_ctx_new();
   void *server_simulator = zmq_socket(ctx, ZMQ_PUSH);
-  int rc = zmq_bind(server_simulator, "tcp://127.0.0.1:8085");
+  int rc = zmq_bind(server_simulator, "tcp://127.0.0.1:8090");
   assert(rc == 0);
   sleep(10);
   while (1) {
@@ -27,7 +27,12 @@ int main(int argc, char *argv[])
     rc = zmq_msg_init_size(&part3, 6);
     printf("send msg 3 frame content.\n");
     memcpy(zmq_msg_data(&part3), cid, 6);
-    zmq_sendmsg(server_simulator, &part3, 0);
+    zmq_sendmsg(server_simulator, &part3, ZMQ_SNDMORE);
+
+    zmq_msg_t part4;
+    zmq_msg_init_size(&part4, 4);
+    memcpy(zmq_msg_data(&part4), "lili", 4);
+    zmq_sendmsg(server_simulator, &part4, 0);
 
 	sleep(5);
   }
