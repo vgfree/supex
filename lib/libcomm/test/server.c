@@ -112,17 +112,22 @@ static bool recv_data(struct comm_context *commctx, struct comm_message *message
 	char content[1024] = {0};
 	int retval = -1;
 	int i = 0, j = 0, k = 0; 
+	int size = 0;
 	message->content = content;
 	retval = comm_recv(commctx, message, true, 5000);
 	if( unlikely(retval < 0) ){
 		return false;
 	} else {
 		for (i = 0; i < message->package.packages; i++) {
-			for (j = 0; j < message->package.frames_of_package[j]; j++, k++) {
-				memset(buff, 0, 1024);
-				memcpy(buff, &message->content[message->package.frame_offset[k]], message->package.frame_size[k]);
-				log("%s\n", buff);
+			size = 0;
+			memset(buff, 0, 1024);
+			for (j = 0; j < message->package.frames_of_package[i]; j++, k++) {
+				memcpy(&buff[size], &message->content[message->package.frame_offset[k]], message->package.frame_size[k]);
+				size += message->package.frame_size[k];
+				buff[size++] = ' ';
 			}
+			log("%s\n", buff);
+
 		}
 		return true;
 	}

@@ -50,11 +50,11 @@ int mfptp_package(struct mfptp_packager *packager, const char* data, unsigned ch
 
 /***********************************************************************************
  * 功能：检测用于保存打包好的数据的内存大小是否足够 
- * @memsize:用于保存打包数据内存的大小 @packages:总包数
+ * @memsize:用于保存打包数据内存的大小 
  * @frames:总帧数  @dsize:待打包数据的总大小
  * @返回值：>0代表空间不足还需的内存大小 <=0则代表空间足够
 ***********************************************************************************/
-int mfptp_check_memory(int memsize, int packages, int frames, int dsize);
+int mfptp_check_memory(int memsize, int frames, int dsize);
 
 /***********************************************************************************
  * 功能：填充struct mfptp_packager_info结构体的数据

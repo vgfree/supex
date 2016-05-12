@@ -39,7 +39,7 @@ bool package_data(struct comm_data *commdata)
 
 	if (likely(flag)) {
 		int size = 0;
-		size = mfptp_check_memory(commdata->send_buff.capacity - commdata->send_buff.size, message->package.packages, message->package.frames, message->package.dsize);
+		size = mfptp_check_memory(commdata->send_buff.capacity - commdata->send_buff.size, message->package.frames, message->package.dsize);
 		if (size > 0) {
 			/* 检测到内存不够 则增加内存*/
 			if (unlikely(!commcache_expend(&commdata->send_buff, size))) {
@@ -55,10 +55,10 @@ bool package_data(struct comm_data *commdata)
 			if (packsize > 0 && commdata->packager.ms.error == MFPTP_OK) {
 				commdata->send_buff.end += packsize;
 				//commdata->send_buff.size += packsize;
-			//	log("package successed\n");
+				log("package successed\n");
 			} else {
 				flag = false;
-			//	log("package failed\n");
+				log("package failed\n");
 			}
 		}
 		free_commmsg(message);

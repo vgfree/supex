@@ -17,7 +17,7 @@ bool parse_data(struct comm_data *commdata)
 	struct comm_message	*message = NULL;
 
 	/* 有数据进行解析的时候才去进行解析 */
-	if (commdata->recv_buff.size > 0) {
+	while (commdata->recv_buff.size > 0) {
 		size = mfptp_parse(&commdata->parser);
 		if (likely(size > 0 && commdata->parser.ms.error == MFPTP_OK)) {	/* 解析成功 */
 			message = new_commmsg(commdata->parser.package.dsize);
@@ -54,7 +54,10 @@ bool parse_data(struct comm_data *commdata)
 					flag = false;
 				}
 				commlock_unlock(&commctx->recvlock);
-			//	log("parse successed\n");
+				log("parse successed\n");
+				if (!flag) {
+					break ;
+				}
 			} 
 		} else if (commdata->parser.ms.error != MFPTP_DATA_TOOFEW) {
 			/* 解析出错 抛弃已解析的错误数据  */
@@ -62,7 +65,8 @@ bool parse_data(struct comm_data *commdata)
 			commdata->recv_buff.start += size;
 			commdata->recv_buff.size -= size;
 			commcache_clean(&commdata->recv_buff);
-		//	log("parse failed\n");
+			log("parse failed\n");
+			break ;
 		}
 	}
 	return flag;
@@ -72,16 +76,17 @@ bool parse_data(struct comm_data *commdata)
 static void _fill_message_package(struct comm_message *message, const struct mfptp_package_info *package) 
 {
 	assert(message && package);
-	int i = 0, j = 0, k = 0;
-	int frames = 0;
-	for (i = 0; i < package->packages; i++) {
-		for (j = 0; j < package->frame[i].frames; j++) {
-			message->package.frame_size[k] = package->frame[i].frame_size[j];
-			message->package.frame_offset[k] = package->frame[i].frame_offset[j];
-			k++;
+	int k = 0;
+	int pckidx = 0;		/* 包的索引 */
+	int frmidx = 0;		/* 帧的缩影 */
+	int frames = 0;		/* 总帧数 */
+	for (pckidx = 0; pckidx < package->packages; pckidx++) {
+		for (frmidx = 0; frmidx < package->frame[pckidx].frames; frmidx++, k++) {
+			message->package.frame_size[k] = package->frame[pckidx].frame_size[frmidx];
+			message->package.frame_offset[k] = package->frame[pckidx].frame_offset[frmidx];
 		}
-		message->package.frames_of_package[i] = package->frame[i].frames;
-		frames += package->frame[i].frames;
+		message->package.frames_of_package[pckidx] = package->frame[pckidx].frames;
+		frames += package->frame[pckidx].frames;
 	}
 	message->package.packages = package->packages;
 	message->package.frames = frames;
