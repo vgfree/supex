@@ -25,7 +25,7 @@ int mfptp_parse(struct mfptp_parser *parser)
 {
 	assert(parser && parser->init);
 
-	int		i = 0;
+	int		size_f_size = 0;			/* f_size字段占几位 */
 	int		frame_size = 0;				/* 解压解密之后的帧数据大小 */
 	int		frame_offset = parser->ms.cache.size;	/* 每帧在cache里面的偏移 */
 	int		dsize = *(parser->ms.dsize);		/* 待解析数据的大小 */
@@ -34,11 +34,12 @@ int mfptp_parse(struct mfptp_parser *parser)
 	char decryptbuff[MFPTP_MAX_FRAMESIZE] = {0};		/* 用于保存解密之后的数据 */
 	char decompressbuff[MFPTP_MAX_FRAMESIZE] = {0};		/* 用于保存解压之后的数据 */
 
-	if (parser->ms.error == MFPTP_PARSER_OVER) {
+	if (parser->ms.step == MFPTP_PARSER_OVER) {
 		/* 外部需要检测error的状态，为MFPTP_PARSER_OVER时就必须清理一下cache */
 		parser->ms.error = MFPTP_PARSE_INIT;
 		parser->ms.dosize = 0;
 		memset(&parser->package, 0, sizeof(parser->package));
+		//memset(&parser->header, 0 , sizeof(parser->header));
 	}
 	while (dsize) {
 		switch (parser->ms.step) {
@@ -49,7 +50,6 @@ int mfptp_parse(struct mfptp_parser *parser)
 						dsize -= 6;
 						parser->ms.dosize += 6;
 						parser->ms.step = MFPTP_VERSION;
-						memset(&parser->header, 0 , sizeof(parser->header));
 					} else {
 						parser->ms.error = MFPTP_HEAD_INVAILD;
 					}
@@ -101,7 +101,7 @@ int mfptp_parse(struct mfptp_parser *parser)
 				}
 				break ;
 			case MFPTP_FP_CONTROL:
-				parser->header.not_end = data[parser->ms.dosize] & 0x0C;
+				parser->header.not_end = (data[parser->ms.dosize] & 0x0C) >> 2;
 				parser->header.size_f_size = (data[parser->ms.dosize] & 0x03) + 0x01;
 				dsize --;
 				parser->ms.dosize += 1;
@@ -110,8 +110,9 @@ int mfptp_parse(struct mfptp_parser *parser)
 			case MFPTP_F_SIZE:
 				if (dsize >= parser->header.size_f_size) {
 					if (CHECK_F_SIZE(parser)) {
-						for(i = 0; i < parser->header.size_f_size; i++) {
-							parser->header.f_size = parser->header.f_size + (data[parser->ms.dosize] << i*8) ;
+						parser->header.f_size = 0;
+						for(size_f_size = 0; size_f_size < parser->header.size_f_size; size_f_size++) {
+							parser->header.f_size = parser->header.f_size + (data[parser->ms.dosize] << size_f_size*8);
 						}
 						parser->ms.dosize += parser->header.size_f_size;
 						dsize -= parser->header.size_f_size;
@@ -160,13 +161,12 @@ int mfptp_parse(struct mfptp_parser *parser)
 				}
 				break ;
 			case MFPTP_FRAME_OVER:
-				parser->package.packages ++;
-				parser->ms.step = MFPTP_PARSE_INIT;
 				dsize -= parser->header.f_size;
-				if (parser->header.packages  == 1) {	/* 代表是最后一个包的数据 */
+				parser->package.packages ++;
+				if (parser->header.packages  == parser->package.packages) {	/* 代表所有的包都已经解析完毕 */
 					parser->ms.step = MFPTP_PARSE_OVER;
 				} else {
-					parser->ms.step = MFPTP_PARSE_INIT;
+					parser->ms.step = MFPTP_FP_CONTROL;
 				}
 				break ;
 		}

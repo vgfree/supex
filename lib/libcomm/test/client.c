@@ -64,12 +64,12 @@ static bool send_data(struct comm_context *commctx, struct comm_message *message
 #undef FRAMES
 #define FRAMES	3
 #undef PACKAGES
-#define PACKAGES 3
+#define PACKAGES 1
 
 	int i = 0, j = 0, k = 0;
 	int retval = -1; 
 	char buff[1024] = "nothingisimportant";
-	int frames_of_package[PACKAGES] = {1,1,1};				/* 每个包里面帧数 */
+	int frames_of_package[PACKAGES] = {3};				/* 每个包里面帧数 */
 	
 	int frame_offset[FRAMES] = {0, 
 					strlen("nothing"), 
