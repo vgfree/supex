@@ -5,7 +5,7 @@
 
 #include "comm_parse.h"
 
-static void _fill_message_package(struct comm_message *message, const struct mfptp_package_info *package);
+static void _fill_message_package(struct comm_message *message, const struct mfptp_parser *packager);
 
 bool parse_data(struct comm_data *commdata)
 {
@@ -24,7 +24,7 @@ bool parse_data(struct comm_data *commdata)
 			if (likely(message)) {
 				message->fd = commdata->portinfo.fd;
 				memcpy(message->content, &commdata->parser.ms.cache.cache[commdata->parser.ms.cache.start], commdata->parser.package.dsize);
-				_fill_message_package(message, &commdata->parser.package);
+				_fill_message_package(message, &commdata->parser);
 				commdata->parser.ms.cache.start += commdata->parser.package.dsize;
 				commdata->parser.ms.cache.size -= commdata->parser.package.dsize;
 				commdata->recv_buff.start += size;
@@ -73,13 +73,15 @@ bool parse_data(struct comm_data *commdata)
 }
 
 /* 填充message结构体 */ 
-static void _fill_message_package(struct comm_message *message, const struct mfptp_package_info *package) 
+static void _fill_message_package(struct comm_message *message, const struct mfptp_parser *parser) 
 {
-	assert(message && package);
+	assert(message && parser);
 	int k = 0;
 	int pckidx = 0;		/* 包的索引 */
 	int frmidx = 0;		/* 帧的缩影 */
 	int frames = 0;		/* 总帧数 */
+	const struct mfptp_package_info* package = &parser->package;
+	const struct mfptp_header_info* header = &parser->header;
 	for (pckidx = 0; pckidx < package->packages; pckidx++) {
 		for (frmidx = 0; frmidx < package->frame[pckidx].frames; frmidx++, k++) {
 			message->package.frame_size[k] = package->frame[pckidx].frame_size[frmidx];
@@ -91,4 +93,7 @@ static void _fill_message_package(struct comm_message *message, const struct mfp
 	message->package.packages = package->packages;
 	message->package.frames = frames;
 	message->package.dsize = package->dsize;
+
+	message->config = header->compression | header->encryption;
+	message->socket_type = header->socket_type;
 }

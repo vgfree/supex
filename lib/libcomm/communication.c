@@ -75,14 +75,17 @@ void comm_ctx_destroy(struct comm_context* commctx)
 		ATOMIC_SET(&commctx->stat, COMM_STAT_STOP);
 
 		/* 等待子线程退出然后再继续销毁数据 */
+		log("wait here\n");
 		commlock_wait(&commctx->statlock, (int *)&commctx->stat, COMM_STAT_NONE, -1, false);
+		log("wait over\n");
 
-		while (commctx->commepoll.watchcnt) {
+		while (commctx->commepoll.watchcnt-1) {	/* 除去commpipe的一个监控fd*/
 			if(likely(commctx->data[fd ])) {
 				comm_close(commctx, fd);
 				log("close fd:%d in comm_ctx_destroy\n", fd);
 			}
 			fd ++;
+			log("here: %d\n", fd);
 		}
 
 		commqueue_destroy(&commctx->recv_queue);
@@ -259,7 +262,9 @@ static void * _start_new_pthread(void* usr)
 
 	while (1) {
 		/* 线程状态为STOP的时候则将状态设置为NONE，返回真，则代表设置成功，退出循环 */
-		if (unlikely(ATOMIC_CASB(&commctx->stat, COMM_STAT_STOP, COMM_STAT_NONE))) {
+		if (unlikely(commctx->stat == COMM_STAT_STOP)) {
+			log("I am break out\n");
+			commlock_wake(&commctx->statlock, (int *)&commctx->stat, COMM_STAT_NONE, false);
 			break;
 		}					
 
