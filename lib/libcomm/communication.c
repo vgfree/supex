@@ -21,7 +21,7 @@ struct comm_context* comm_ctx_create(int epollsize)
 		goto error;
 	}
 
-	commctx->listenfd = -1;
+	listenfd_init(&commctx->listenfd, commctx);
 	if (unlikely( !commqueue_init(&commctx->recv_queue, QUEUE_CAPACITY, sizeof(intptr_t)))) {
 		goto error;
 	}
@@ -38,7 +38,7 @@ struct comm_context* comm_ctx_create(int epollsize)
 		goto error;
 	}
 
-	if (unlikely(!commepoll_init(&commctx->commepoll, EPOLL_SIZE))) {
+	if (unlikely(!commepoll_init(&commctx->commepoll, (epollsize > 0 ) ? epollsize : EPOLL_SIZE))) {
 		goto error;
 	}
 
@@ -61,6 +61,7 @@ error:
 		if (commctx->commepoll.init && commctx->commepoll.watchcnt > 0) {
 			commepoll_del(&commctx->commepoll, commctx->commpipe.rfd, -1);
 		}
+		listenfd_destroy(&commctx->listenfd);
 		commepoll_destroy(&commctx->commepoll);
 		Free(commctx);
 	}
@@ -71,21 +72,21 @@ void comm_ctx_destroy(struct comm_context* commctx)
 {
 	int fd = 0;
 	if (likely(commctx)) {
-		log("destroy everything\n");
+		if (commctx->stat == COMM_STAT_INIT) {
+			/* 在子线程还没被唤醒的时候就调用销毁函数则需要先唤醒子线程 */
+			commlock_wake(&commctx->statlock, (int *)&commctx->stat, COMM_STAT_RUN, false);
+		};
 		ATOMIC_SET(&commctx->stat, COMM_STAT_STOP);
 
 		/* 等待子线程退出然后再继续销毁数据 */
-		log("wait here\n");
 		commlock_wait(&commctx->statlock, (int *)&commctx->stat, COMM_STAT_NONE, -1, false);
-		log("wait over\n");
 
-		while (commctx->commepoll.watchcnt-1) {	/* 除去commpipe的一个监控fd*/
+		while (commctx->commepoll.watchcnt - commctx->listenfd.counter - 1) {	/* 除去commpipe的一个监控fd 和其他所有监听fd */
 			if(likely(commctx->data[fd ])) {
 				comm_close(commctx, fd);
 				log("close fd:%d in comm_ctx_destroy\n", fd);
 			}
 			fd ++;
-			log("here: %d\n", fd);
 		}
 
 		commqueue_destroy(&commctx->recv_queue);
@@ -96,12 +97,17 @@ void comm_ctx_destroy(struct comm_context* commctx)
 		if (commctx->commepoll.init && commctx->commepoll.watchcnt > 0) {
 			commepoll_del(&commctx->commepoll, commctx->commpipe.rfd, -1);
 		}
+
+		for (fd = 0; fd < commctx->listenfd.counter; fd++) {
+		}
+		listenfd_destroy(&commctx->listenfd);
 		commepoll_destroy(&commctx->commepoll);
 		pthread_join(commctx->ptid, NULL);
 		Free(commctx);
 	}
 	return ;
 }
+
 
 int comm_socket(struct comm_context *commctx, const char *host, const char *service, struct cbinfo* finishedcb, int type)
 {
@@ -114,25 +120,28 @@ int comm_socket(struct comm_context *commctx, const char *host, const char *serv
 
 	if (type == COMM_BIND) {
 		fd = socket_listen(host, service);
-		commctx->listenfd = fd;
+		if (unlikely(!get_portinfo(&portinfo, fd, type, FD_INIT))) {
+			close(fd);
+			return -1;
+		}
+		if (unlikely(!add_listenfd(&commctx->listenfd, finishedcb, &portinfo, fd))) {
+			close(fd);
+			return -1;
+		}
+			
 	} else {
 		fd = socket_connect(host, service);
+		if (unlikely(!get_portinfo(&portinfo, fd, type, FD_INIT))) {
+			close(fd);
+			return -1;
+		}
+		commdata = commdata_init(commctx, &portinfo, finishedcb);
+		if (unlikely(!commdata)) {
+			close(fd);
+			return -1;
+		}
+		commctx->data[fd ] = (intptr_t)commdata;
 	}
-
-	if (unlikely(fd < 0)) {
-		return fd;
-	}
-
-	if (unlikely(!get_portinfo(&portinfo, fd, type, FD_INIT))) {
-		close(fd);
-		return -1;
-	}
-	commdata = commdata_init(commctx, &portinfo, finishedcb);
-	if (unlikely(!commdata)) {
-		close(fd);
-		return -1;
-	}
-	commctx->data[fd ] = (intptr_t)commdata;
 
 	/* 将状态值设置为COMM_STAT_RUN并唤醒等待的线程 */
 	commlock_wake(&commctx->statlock, (int *)&commctx->stat, COMM_STAT_RUN, false);
@@ -153,6 +162,7 @@ int comm_send(struct comm_context *commctx, const struct comm_message *message, 
 		if (likely(commmsg)) {
 			copy_commmsg(commmsg, message);
 			commlock_lock(&commdata->sendlock);
+#if 1
 			while (1) {
 				if (likely(commqueue_push(&commdata->send_queue, (void*)&commmsg))) {
 					if (!commdata->send_queue.readable) {	/* 此变量为0说明有线程等待可读 */
@@ -178,7 +188,7 @@ int comm_send(struct comm_context *commctx, const struct comm_message *message, 
 			if (unlikely(block && commdata->send_queue.nodes == commdata->send_queue.capacity)) {
 				commdata->send_queue.writeable = 0;
 			}
-
+#endif
 			commlock_unlock(&commdata->sendlock);
 			if (likely(flag)) {
 				/* 数据写入成功 往此管道写入fd 触发子线程的写事件 */
@@ -240,10 +250,13 @@ void comm_settimeout(struct comm_context *commctx, int timeout, CommCB callback,
 
 void comm_close(struct comm_context *commctx, int fd)
 {
+	int fdidx = -1;
 	if (likely(commctx)) {
 		if (likely(commctx->data[fd ])) {
 			commdata_destroy((struct comm_data*)commctx->data[fd ]);
 			commctx->data[fd ] = 0;
+		} else if ((fdidx = search_listenfd(&commctx->listenfd, fd)) > -1) {
+			del_listenfd(&commctx->listenfd, fdidx);
 		}
 		close(fd);
 	}
@@ -255,6 +268,7 @@ static void * _start_new_pthread(void* usr)
 {
 	assert(usr);
 	int			n = 0;
+	int			fdidx = 0;	/* 监听fd在结构体struct listenfd中数组的下标 */
 	struct comm_context*	commctx = (struct comm_context*)usr;
 
 	/* 等待主线程将状态设置为COMM_STAT_RUN，才被唤醒继续执行以下代码 */
@@ -279,8 +293,8 @@ static void * _start_new_pthread(void* usr)
 					continue ;
 				}
 
-				if (commctx->listenfd != -1 && commctx->commepoll.events[n].data.fd == commctx->listenfd) {	/* 新用户连接，触发accept事件 */
-					 accept_event(commctx);
+				if ((fdidx = search_listenfd(&commctx->listenfd, commctx->commepoll.events[n].data.fd)) > -1) {	/* 新用户连接，触发accept事件 */
+					 accept_event(commctx, fdidx);
 
 				} else if (commctx->commepoll.events[n].events & EPOLLIN) {					/* 有数据可读，触发读数据事件 */
 				

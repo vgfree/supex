@@ -18,8 +18,8 @@ extern "C" {
 /* epoll_wait超时时的回调函数:解析和打包数据 */
 void timeout_event(struct comm_context* commctx);
 
-/* 接收新用户的连接 */
-void accept_event(struct comm_context *commctx);
+/* 接收新用户的连接 @fdidex: 监听fd在结构体struct listenfd数组中的下标 */
+void accept_event(struct comm_context *commctx, int fdidx);
 
 /* 有数据可以接收的时候 */
 void recv_event(struct comm_context *commctx, int fd);

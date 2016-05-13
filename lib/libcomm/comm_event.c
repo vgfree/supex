@@ -12,7 +12,7 @@ static bool _read_data(struct comm_data *commdata, int fd);
 void timeout_event(struct comm_context* commctx)
 {
 	int fd = 0;
-	int counter = commctx->commepoll.watchcnt;
+	int counter = commctx->commepoll.watchcnt - commctx->listenfd.counter -1;
 	while (counter) {
 		struct comm_data *commdata = (struct comm_data*)commctx->data[fd];
 		if (likely(commdata)) {
@@ -34,18 +34,17 @@ void timeout_event(struct comm_context* commctx)
 	}
 }
 
-void  accept_event(struct comm_context *commctx)
+void  accept_event(struct comm_context *commctx, int fdidx)
 {
 	assert(commctx);
 	int fd = -1;
-	struct comm_data *lsnfd_commdata = (struct comm_data*)commctx->data[commctx->listenfd];
 
 	/* 循环处理accept直到所有新连接都处理完毕退出 */
 	while (1) {
 
 		struct portinfo		portinfo = {};
 		struct comm_data*	commdata = NULL;
-		fd = accept(commctx->listenfd, NULL, NULL);
+		fd = accept(commctx->listenfd.fd[fdidx], NULL, NULL);
 		if (likely(fd > 0)) {
 			if (unlikely(!fd_setopt(fd, O_NONBLOCK))) {
 				close(fd);
@@ -56,11 +55,11 @@ void  accept_event(struct comm_context *commctx)
 				close(fd);
 				continue ;
 			}
-			commdata = commdata_init(commctx, &portinfo, &lsnfd_commdata->finishedcb);
+			commdata = commdata_init(commctx, &portinfo, &commctx->listenfd.finishedcb[fdidx]);
 			if (likely(commdata)) {
 				commctx->data[fd ] = (intptr_t)commdata;
-				if (lsnfd_commdata->finishedcb.callback) {
-					lsnfd_commdata->finishedcb.callback(lsnfd_commdata->commctx, &portinfo, lsnfd_commdata->finishedcb.usr);
+				if (commctx->listenfd.finishedcb[fdidx].callback) {
+					commctx->listenfd.finishedcb[fdidx].callback(commctx, &portinfo, commctx->listenfd.finishedcb[fdidx].usr);
 				}
 			} else {
 				close(fd);
@@ -164,7 +163,7 @@ static  bool _write_data(struct comm_data *commdata, int fd)
 		commdata->portinfo.stat = FD_WRITE;
 		return true;
 	}
-	//commdata->portinfo.stat = FD_WRITE;
+	commdata->portinfo.stat = FD_WRITE;
 
 	int bytes = 0;
 	bool flag = false;
@@ -181,7 +180,7 @@ static  bool _write_data(struct comm_data *commdata, int fd)
 				if (commdata->finishedcb.callback) {
 					commdata->finishedcb.callback(commdata->commctx, &commdata->portinfo, commdata->finishedcb.usr);
 				}
-				//log("write data successed fd:%d\n", fd);
+				log("write data successed fd:%d\n", fd);
 				return true;
 			}
 		} else {

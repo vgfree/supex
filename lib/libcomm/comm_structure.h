@@ -21,6 +21,7 @@ extern "C" {
 #endif
 
 #define	EPOLL_SIZE		10000
+#define LISTEN_SIZE		10	/* 允许监听fd的最大个数 */
 #define TIMEOUTED		5000	/* 以毫秒(ms)为单位 1s = 1000ms*/
 #define IPADDR_MAXSIZE		128
 #define	CACHE_SIZE		1024
@@ -86,14 +87,22 @@ struct comm_data {
 	int			packpct;	/* 打包数据百分比[根据此值来决定什么时候调用打包函数]*/
 };
 
+/* 监听描述符的相关信息 */
+struct listenfd {
+	int		counter;			/* 监听fd的计数器 */
+	int		fd[LISTEN_SIZE];		/* 监听的每个fd */
+	struct cbinfo	finishedcb[LISTEN_SIZE];	/* 每个fd对应的回调函数 */
+	struct portinfo portinfo[LISTEN_SIZE];		/* 每个fd对应的端口信息 */
+	struct comm_context* commctx;
+};
 
 /* 通信模块的上下文环境结构体 */
 struct comm_context {
-	int			listenfd;		/* 如果类型为COMM_BIND此变量会被赋值 */
-	intptr_t		data[EPOLL_SIZE];	/* 保存接收发送的相关数据 */
 	pthread_t		ptid;			/* 新线程的pid */
+	intptr_t		data[EPOLL_SIZE];	/* 保存接收发送的相关数据 */
 	struct cbinfo		timeoutcb;		/* 超时回调函数的相关信息 */
 	struct remainfd		remainfd;		/* 遗留下来没有及时处理的fd */
+	struct listenfd		listenfd;		/* 所有监听描述符的信息 */
 	struct comm_queue	recv_queue;		/* 存放已经接收到并解析好的数据 */
 	struct comm_pipe	commpipe;		/* 关于管道的相关信息 */
 	struct comm_lock	recvlock;		/* 用来同步接收队列的锁*/
@@ -137,6 +146,16 @@ void copy_commmsg(struct comm_message* destmsg, const struct comm_message* srcms
 void free_commmsg(struct comm_message* message);
 
 bool get_portinfo( struct portinfo* portinfo, int fd, int type, int status);
+
+void listenfd_init(struct listenfd *listenfd, struct comm_context *commctx);
+
+void listenfd_destroy(struct listenfd *listenfd);
+
+bool add_listenfd(struct listenfd *listenfd, struct cbinfo *finishedcb, struct portinfo *portinfo, int fd);
+
+bool del_listenfd(struct listenfd *listenfd, int fdidx);
+
+int search_listenfd(struct listenfd *listenfd, int fd);
 
 #ifdef __cplusplus
 	}

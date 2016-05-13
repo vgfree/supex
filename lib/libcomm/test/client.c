@@ -43,6 +43,7 @@ int main(int argc, char* argv[])
 				retval = recv_data(commctx,&recvmsg, sendmsg.fd);
 				if (likely(retval > 0)) {
 				//	log("client recv_data successed\n");
+					break ;
 				} else {
 					log("client recv_data failed\n");
 					sleep(1);
@@ -54,6 +55,40 @@ int main(int argc, char* argv[])
 	} else {
 		log("client comm_ctx_create failed\n");
 	}
+
+#if	0
+	if (likely(commctx)) {
+		finishedcb.callback = event_fun;
+		finishedcb.usr = &sendmsg;
+		fd = comm_socket(commctx, "127.0.0.1", "10004", &finishedcb, COMM_CONNECT);
+		if (likely(fd > 0)) {
+			log("client comm_socket successed\n");
+			while (1) {
+				memset(&sendmsg, 0, sizeof(sendmsg));
+				retval = send_data(commctx, &sendmsg, fd);
+				if (likely(retval > 0)) {
+					//log("client send_data successed\n");
+				} else {
+					log("client send_data failed\n");
+				}
+
+				memset(&recvmsg, 0, sizeof(recvmsg));
+				retval = recv_data(commctx,&recvmsg, sendmsg.fd);
+				if (likely(retval > 0)) {
+					break ;
+				//	log("client recv_data successed\n");
+				} else {
+					log("client recv_data failed\n");
+					sleep(1);
+				}
+			}
+		} else {
+			log("client comm_socket failed\n");
+		}
+	} else {
+		log("client comm_ctx_create failed\n");
+	}
+#endif
 
 	comm_ctx_destroy(commctx);
 	return retval;
@@ -130,20 +165,20 @@ static bool recv_data(struct comm_context *commctx, struct comm_message *message
 void close_fun(void *usr)
 {
 	struct comm_message *message = (struct comm_message*)usr;
+	printf("client here is close_fun():%d\n", message->fd);
 	message->fd = -1;
-	printf("client here is close_fun()\n");
 }
 
 void write_fun(void *usr)
 {
 	struct comm_message *message = (struct comm_message*)usr;
-	printf("client here is write_fun(): %s\n", message->content);
+	printf("client here is write_fun(): %d\n", message->fd);
 }
 
 void read_fun(void *usr)
 {
 	struct comm_message *message = (struct comm_message*)usr;
-	printf("client here is read_fun(): %s\n", message->content);
+	printf("client here is read_fun(): %d\n", message->fd);
 }
 
 void accept_fun(void *usr)

@@ -131,6 +131,81 @@ inline void free_commmsg(struct comm_message* message)
 	}
 }
 
+/* 初始化struct listenfd的结构体 */
+inline void listenfd_init(struct listenfd *listenfd, struct comm_context *commctx)
+{
+	assert(listenfd);
+	int i= 0; 
+	for (i = 0; i < LISTEN_SIZE; i++) {
+		listenfd->fd[i] = -1;
+	}
+	listenfd->counter = 0;
+	listenfd->commctx = commctx;
+	memset(listenfd->finishedcb, 0, sizeof(listenfd->finishedcb));
+	memset(listenfd->portinfo, 0, sizeof(listenfd->portinfo));
+	return ;
+}
+
+/* 销毁struct listenfd结构体 */
+inline void listenfd_destroy(struct listenfd *listenfd)
+{
+	assert(listenfd);
+	int i = 0;
+	for (i = 0; i < listenfd->counter; i++) {
+		memset(&listenfd->portinfo[i], 0, sizeof(listenfd->portinfo[i]));
+		memset(&listenfd->finishedcb[i], 0, sizeof(listenfd->finishedcb[i]));
+		commepoll_del(&listenfd->commctx->commepoll, listenfd->fd[i], -1);	
+		listenfd->fd[i] = -1;
+	}
+	listenfd->counter = 0;
+	return ;
+}
+
+/* 添加一个监听fd */
+inline bool add_listenfd(struct listenfd *listenfd, struct cbinfo *finishedcb, struct portinfo *portinfo, int fd)
+{
+	assert(listenfd && fd > 0);
+	memcpy(&listenfd->portinfo[listenfd->counter], portinfo, sizeof(*portinfo));
+	if (finishedcb) {
+		memcpy(&listenfd->finishedcb[listenfd->counter], finishedcb, sizeof(*finishedcb));
+	}
+	listenfd->fd[listenfd->counter] = fd;
+	listenfd->counter ++;
+	if (likely(commepoll_add(&listenfd->commctx->commepoll, fd, EPOLLIN | EPOLLET))) {
+		return true;
+	} else {
+		return false;
+	}
+}
+
+/* 删除一个监听fd */
+inline bool del_listenfd(struct listenfd *listenfd, int fdidx)
+{
+	assert(listenfd && listenfd->fd[fdidx] > 0);
+
+	if (likely(commepoll_del(&listenfd->commctx->commepoll, listenfd->fd[fdidx], -1))) {
+		listenfd->fd[fdidx] = -1;
+		memset(&listenfd->portinfo[fdidx], 0, sizeof(listenfd->portinfo[fdidx]));
+		memset(&listenfd->finishedcb[fdidx], 0, sizeof(listenfd->finishedcb[fdidx]));
+		listenfd->counter --;
+		return true;
+	} else {
+		return false;
+	}
+}
+
+/* 检测是否fd是否是监听fd @返回值：-1代表不是，否则返回fd所在数组的下标 */
+inline int search_listenfd(struct listenfd *listenfd, int fd)
+{
+	int fdindex = 0;	/* 代表fd所在数组的下标 */
+	for (fdindex = 0; fdindex < listenfd->counter; fdindex++) {
+		if (fd == listenfd->fd[fdindex]) {
+			return fdindex;
+		}
+	}
+	return -1;
+}
+
 inline bool get_portinfo(struct portinfo *portinfo, int fd, int type, int status)
 {
 	assert(portinfo && portinfo->addr);

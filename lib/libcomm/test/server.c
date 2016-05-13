@@ -44,11 +44,39 @@ int main(int argc, char* argv[])
 					retval = send_data(commctx, &sendmsg, recvmsg.fd);
 					if (likely(retval > 0)) {
 						//log("server send_data successed\n");
+						break ;
 					} else {
 						log("server send_data failed\n");
 					}
 				}
-
+			}
+		} else {
+			log("server comm_socket failed\n");
+		}
+#if 0
+		comm_close(commctx, fd);
+		fd = comm_socket(commctx, "127.0.0.1", "10004", &finishedcb, COMM_BIND);
+		if (likely(fd > 0)) {
+			log("server comm_socket successed\n");
+			while (1) {
+				memset(&recvmsg, 0, sizeof(recvmsg));
+				retval = recv_data(commctx, &recvmsg, -1);
+				if (likely(retval > 0)) {
+					//log("server recv_data successed\n");
+				} else {
+					log("server recv_data failed\n");
+					sleep(1);
+				}
+				if (recvmsg.fd > 0) {
+					memset(&sendmsg, 0, sizeof(sendmsg));
+					retval = send_data(commctx, &sendmsg, recvmsg.fd);
+					if (likely(retval > 0)) {
+						//log("server send_data successed\n");
+						break ;
+					} else {
+						log("server send_data failed\n");
+					}
+				}
 			}
 		} else {
 			log("server comm_socket failed\n");
@@ -56,6 +84,7 @@ int main(int argc, char* argv[])
 	} else {
 		log("server comm_ctx_create failed\n");
 	}
+#endif
 
 	comm_ctx_destroy(commctx);
 	return retval;
@@ -136,26 +165,26 @@ static bool recv_data(struct comm_context *commctx, struct comm_message *message
 void close_fun(void *usr)
 {
 	struct comm_message *message = (struct comm_message*)usr;
+	printf("server here is close_fun():%d\n", message->fd);
 	message->fd = -1;
-	printf("server here is close_fun()\n");
 }
 
 void write_fun(void *usr)
 {
 	struct comm_message *message = (struct comm_message*)usr;
-	printf("server here is write_fun(): %s\n", message->content);
+	printf("server here is write_fun(): %d\n", message->fd);
 }
 
 void read_fun(void *usr)
 {
 	struct comm_message *message = (struct comm_message*)usr;
-	printf("server here is read_fun(): %s\n", message->content);
+	printf("server here is read_fun(): %d\n", message->fd);
 }
 
 void accept_fun(void *usr)
 {
-	struct comm_message *message = (struct comm_message*)usr;
-	printf("server here is accept_fun(): %d\n", message->fd);
+	struct portinfo *portinfo = (struct portinfo*)usr;
+	printf("server here is accept_fun(): %d\n", portinfo->fd);
 }
 
 void timeout_fun(void *usr)
@@ -180,7 +209,7 @@ void event_fun(struct comm_context* commctx, struct portinfo *portinfo, void* us
 		case FD_INIT: 
 			/* 当fd的类型为COMM_ACCEPT时才是accept事件 */
 			if (portinfo->type == COMM_ACCEPT) {
-				accept_fun(usr);
+				accept_fun(portinfo);
 			}
 		default:
 			timeout_fun(usr);
