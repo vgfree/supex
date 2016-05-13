@@ -1,9 +1,10 @@
-#include <core_exchange_node_test.h>
-#define MAX_LINE_LEN 1024
+#include "core_exchange_node_test.h"
+#include "loger.h"
 
 #include <string.h>
 #include <stdio.h>
 
+#define MAX_LINE_LEN 1024
 char g_cmd_string[10][20] = {};
 char g_buf[MAX_LINE_LEN] = {};
 int g_cmd_num = 0;
@@ -89,8 +90,12 @@ static int exec_cmd()
   }
   return 0;
 }
+
+struct CSLog *g_imlog = NULL;
+
 int main(int argc, char *argv[])
 {
+  g_imlog = CSLog_create("test", WATCH_DELAY_TIME);
   for (int i = 0; i < argc; i++) {
     printf("%s\n", argv[i]);
   }
@@ -108,5 +113,6 @@ int main(int argc, char *argv[])
       break;
 	}		
   }
+  CSLog_destroy(g_imlog);
   return 0;
 }

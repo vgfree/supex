@@ -4,15 +4,23 @@
 #include "validate_logon.h"
 
 #define CONFIG "messageGateway.conf"
-#define NODE_IP "CoreExchangeNodeIP"
-#define NODE_PORT "CoreExchangeNodePort"
+#define NODE_CONNECT_IP "CoreExchangeNodeIP"
+#define NODE_CONNECT_PORT "CoreExchangeNodePort"
+#define NODE_SERVER_IP "NodeServer"
+#define NODE_SERVER_PORT "NodePort"
 
 static void core_exchange_node_cb(struct comm_context *commctx,
                                   struct portinfo *portinfo,
                                   void *usr)
 {
   log("callback, fd:%d, status:%d.", portinfo->fd, portinfo->stat);
-  if (portinfo->stat == FD_CLOSE){
+  if (portinfo->stat == FD_INIT) {
+    if (g_node_ptr->max_size > NODE_SIZE) {
+      error("core exchange node:%d > max size:%d.", g_node_ptr->max_size, NODE_SIZE);
+    }
+    g_node_ptr->fd_array[g_node_ptr->max_size++] = portinfo->fd;
+  }
+  else if (portinfo->stat == FD_CLOSE) {
     int i = 0;
     for (; i < g_node_ptr->max_size; i++) {
       if (g_node_ptr->fd_array[i] == portinfo->fd) {
@@ -38,8 +46,8 @@ int init_comm_io()
   g_node_ptr->max_size = 0;
   struct config_reader *config =
     init_config_reader(CONFIG);
-  char *ip = get_config_name(config, NODE_IP);
-  char *port = get_config_name(config, NODE_PORT);
+  char *ip = get_config_name(config, NODE_CONNECT_IP);
+  char *port = get_config_name(config, NODE_CONNECT_PORT);
   log("ip:%s. port:%s.", ip, port);
   g_commctx = comm_ctx_create(EPOLL_SIZE);
   if (!g_commctx) {
@@ -49,13 +57,18 @@ int init_comm_io()
   struct cbinfo callback_info = {};
   callback_info.callback = core_exchange_node_cb;
 
-  char *ptr = port;
   int count = 1;
-  while (*ptr != '\0' ) {
-    if (*ptr == ';') {
-      count++;
+  if (port) {
+    char *ptr = port;
+    while (*ptr != '\0' ) {
+      if (*ptr == ';') {
+        count++;
+      }
+      ptr++;
     }
-    ptr++;
+  }
+  else {
+    count = 0;
   }
   log("node server number:%d", count);
   char *ipptr = ip;
@@ -99,6 +112,10 @@ int init_comm_io()
     log("g_node_ptr->max_size:%d.", g_node_ptr->max_size);
     //send_validate_logon_package(connectfd);
   }
+  char *nodeServer = get_config_name(config, NODE_SERVER_IP);
+  char *nodePort = get_config_name(config, NODE_SERVER_PORT);
+  log("nodeServer:%s, nodePort:%s.", nodeServer, nodePort);
+  comm_socket(g_commctx, nodeServer, nodePort, &callback_info, COMM_BIND);
   destroy_config_reader(config);
   return 0;
 }

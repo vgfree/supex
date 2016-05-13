@@ -15,11 +15,16 @@ struct server_info g_serv_info = {};
 
 void find_best_gateway(int *fd)
 {
-  struct fd_node node;
-  if (list_front(MESSAGE_GATEWAY, &node) == FAILED) {
-    error("no gateway server.");
+  if (g_serv_info.message_gateway_fd > 0) {
+    *fd = g_serv_info.message_gateway_fd;
   }
-  *fd = node.fd;
+  else {
+    struct fd_node node;
+    if (list_front(MESSAGE_GATEWAY, &node) == FAILED) {
+      error("no gateway server.");
+    }
+    *fd = node.fd;
+  } 
 }
 
 static void _handle_cid_message(struct comm_message *msg)
@@ -184,6 +189,24 @@ static void _downstream_msg(struct comm_message *msg)
   return;
 }
 
+static void _erased_client(struct comm_message *msg)
+{
+  int fsz;
+  char *frame = get_msg_frame(1, msg, &fsz);
+  if (!frame || memcmp(frame, "closed", 6) != 0) {
+    error("wrong frame, frame is NULL or not equal closed.");
+    return;
+  }
+  char *cid = get_msg_frame(2, msg, &fsz);
+  if (!cid || fsz != 6) {
+    error("wrong frame, frame is NULL or not equal a cid size 6 bytes.");
+  }
+  // to do, comm_close 相对应的fd.
+  int fd = cid[4] * 256 + cid[5];
+  // 删除gid, uid,
+  array_remove_fd(fd);
+}
+
 static void _classified_message(struct comm_message *msg)
 {
   log("max msg:%d.", get_max_msg_frame(msg));
@@ -194,6 +217,10 @@ static void _classified_message(struct comm_message *msg)
   }
   if (memcmp(frame, "downstream", 10) == 0) {
     _downstream_msg(msg);
+  }
+  else if (memcmp(frame, "status", 10) == 0) {
+	// to do , 移除所有与该cid 相关的内容， refresh redis.
+	_erased_client(msg);
   }
   else {
     error("wrong first frame, frame_size:%d.", frame_size);
@@ -209,7 +236,7 @@ void message_dispatch()
   struct fd_descriptor des;
   array_at_fd(msg.fd, &des);
   if (des.obj == CLIENT) {
-    int fd;
+    int fd = 0;
     find_best_gateway(&fd);
     set_msg_fd(&msg, fd);
     comm_send(g_serv_info.commctx, &msg, true, -1);

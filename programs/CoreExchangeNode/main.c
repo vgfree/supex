@@ -19,6 +19,8 @@
 #define SERVER_FILE "CoreExchangeNode.pid"
 #define PACKAGE_SIZE "PackageSize"
 #define MODULE_NAME "CoreExchangeNode"
+#define CONNECT_MESSAGEGATEWAY_IP "ConnectMessageGatewayIP"
+#define CONNECT_MESSAGEGATEWAY_PORT "ConnectMessageGatewayPort"
 
 struct CSLog* g_imlog = NULL;
 
@@ -61,6 +63,13 @@ static int init() {
 //  g_serv_info.package_size = atoi(package_sz);
   g_serv_info.commctx = commctx;
   log("port:%d", g_serv_info.port);
+  char *MGcliIP = get_config_name(config, CONNECT_MESSAGEGATEWAY_IP);
+  char *MGcliPort = get_config_name(config, CONNECT_MESSAGEGATEWAY_PORT);
+  log("MGcliIP:%s, MGcliPort:%s.", MGcliIP, MGcliPort);
+  if (MGcliIP) {
+    g_serv_info.message_gateway_fd =
+      comm_socket(commctx, MGcliIP, MGcliPort, &MGCB, COMM_CONNECT);
+  }
   destroy_config_reader(config);
   init_uid_map();
   init_gid_map();

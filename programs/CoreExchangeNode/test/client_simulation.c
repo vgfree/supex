@@ -1,49 +1,28 @@
+#include "communication.h"
+#include "comm_message_operator.h"
 #include "core_exchange_node_test.h"
-
-#include <arpa/inet.h>
-#include <netinet/in.h>
-#include <stdio.h>
-#include <string.h>
-#include <sys/socket.h>
-#include <sys/types.h>
-#include <unistd.h>
-
-static char expect_value[25] = {0x04, 0x17, 0x52, 0x4f, 0x55, 0x54, 0x49, 0x0d, 0x0a,
-  0x00, 0x01, 0x01, 0x00, 0x7f, 0x00, 0x00, 0x01, 0x07, 0x00, 0x02, 0x00, 0x00, 0x00, 0x00, 0x02
-};
-
-static char login_authentication_package[17] = {0x00, 0x11, 0x52, 0x4f, 0x55, 0x54, 0x49, 0x0d, 0x0a,
-  0x00, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00  // 结束端message_to为0x02, 0个数据包。
-};
+#include "loger.h"
 
 int test_simulate_client()
 {
-  struct sockaddr_in server_addr;
-  int err;
-  char server_ip[50] = "192.168.71.140\0";
-  int socket_fd = socket(AF_INET, SOCK_STREAM, 0);
-  if (socket_fd < 0) {
-    printf("client: create socket error\n");
-	return -1;
-  }
-  memset(&server_addr, 0, sizeof(server_addr));
-  server_addr.sin_family = AF_INET;
-  server_addr.sin_port = htons(8082);
-  inet_pton(AF_INET, server_ip, &server_addr.sin_addr);
-  err = connect(socket_fd, (struct sockaddr *)&server_addr, sizeof(struct sockaddr));
-  if (err == 0) {
-    printf("\nclient: connect to server success. \n start to send login authentication package----------------\n");
-    write(socket_fd, login_authentication_package, 17);
-    sleep(5);
-    printf("start to send data.\n");
-    write(socket_fd, expect_value, 25);
-  }
-  else {
-    printf("client: connect error\n");
-    close(socket_fd);
+  struct comm_context *ctx = comm_ctx_create(EPOLL_SIZE);
+  struct cbinfo callback_info = {};
+  callback_info.callback = NULL;
+  int connectfd = comm_socket(ctx, "127.0.0.1", "8082", &callback_info, COMM_CONNECT);
+  log("connectfd:%d", connectfd);
+  if (connectfd == -1) {
+    log("connect error.");
     return -1;
   }
-  while(1);
-  close(socket_fd);
+  while (1) {
+    struct comm_message msg = {};
+    init_msg(&msg);
+    set_msg_fd(&msg, connectfd);
+    log("start send client.");
+    set_msg_frame(0, &msg, 6, "client");
+    comm_send(ctx, &msg, true, -1);
+    destroy_msg(&msg);
+    sleep(5);
+  }
   return 0;
 }
