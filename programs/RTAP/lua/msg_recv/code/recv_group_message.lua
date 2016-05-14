@@ -2,7 +2,7 @@ local only = require('only')
 local supex = require('supex')
 local redis_api = require('redis_pool_api')
 
-module('weibo_recv_single_message', package.seeall)
+module('recv_group_message', package.seeall)
 local default_channel = '10086'
 
 local function get_message(GID,UID)

@@ -5,7 +5,7 @@ local Coro = require("coro")
 local luakv_api = require('luakv_pool_api')
 local scan = require('scan')
 
-module('weibo_send_group_message', package.seeall)
+module('send_group_message', package.seeall)
 
 
 
