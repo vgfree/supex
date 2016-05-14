@@ -1,6 +1,7 @@
 #include <iostream>
 #include <fstream>
 #include <string>
+#include <time.h>
 #include <sstream>
 #include "mirrtalk-transfer-data.pb.h"
 #include "google/protobuf/io/gzip_stream.h"
@@ -15,10 +16,12 @@
 #include "utils.h"
 #include "cjson_topb.h"
 #include "filter.h"
+#include "id_encrypt.h"
 
 #define DATANUM 15
 
 extern kv_handler_t *city_handler;
+extern kv_handler_t *count_handler;
 
 using namespace std;
 
@@ -38,12 +41,12 @@ cJSON *getjsonitem(cJSON *obj, const char *item);
 
 int     getjsonarry(cJSON * obj, cJSON * arr[5], int len, const char *arryitem);
 int     single_data_encode(CiTyWLPosition *citywl_position,
-	cJSON *idvalue, cJSON *latvalue,
+	cJSON *idvalue, unsigned char *ciphertext, cJSON *latvalue,
 	cJSON *lngvalue, cJSON *speedvalue,
 	cJSON *anglevalue, cJSON *gpstimevalue);
 
 int pack_data_encode(CiTyWLGpsData *citywl_gpsdata,
-	cJSON *idvalue, cJSON **latvalue,
+	cJSON *idvalue, unsigned char *ciphertext, cJSON **latvalue,
 	cJSON **lngvalue, cJSON **speedvalue,
 	cJSON **anglevalue, cJSON **gpstimevalue,
 	int len);
@@ -59,6 +62,7 @@ int cjson_topb(const char *data, char **result, data_count_t *dt)
 {
 	cJSON           *idvalue = NULL;
 	cJSON           *imei = NULL;
+	cJSON           *imsi = NULL;
 	cJSON           *latvalue[DATANUM] = { 0 };
 	cJSON           *lngvalue[DATANUM] = { 0 };
 	cJSON           *speedvalue[DATANUM] = { 0 };
@@ -72,6 +76,13 @@ int cjson_topb(const char *data, char **result, data_count_t *dt)
 	char    ret[GZIP_BUFF_SIZE] = {};
 	int     size = 0;
 
+        unsigned char ciphertext[128]="";
+        unsigned char encrypt_text[64]="";
+        char id_buff[32] = "";
+        struct tm *p;                                                                 
+        char get_date[16] = "";
+        time_t  u_date;
+        long date = 0;
 	if (!data) {
 		x_printf(E, "gps data is null!.\n");
 		return GV_ERR;
@@ -97,6 +108,12 @@ int cjson_topb(const char *data, char **result, data_count_t *dt)
 		x_printf(E, "get IMEI item failed !\n");
 		goto jsonerr;
 	}
+
+        imsi = getjsonitem(obj, "IMSI");
+        if (!imsi) {
+                x_printf(E, "get IMSI item failed !\n");
+                goto jsonerr;
+        }
 
 	// int min_retnum = 2147483;
 	retnum = getjsonarry(obj, latvalue, DATANUM, "latitude");
@@ -152,8 +169,26 @@ int cjson_topb(const char *data, char **result, data_count_t *dt)
 		return GV_FILTER;
 	}
 
+#ifdef _ENCRYPT
+        snprintf(id_buff, 32, "%s%s", imei->valuestring, imsi->valuestring);
+        u_date = gpstimevalue[0]->valueint;
+        p = localtime(&u_date);
+        if(p->tm_hour < 3) {
+                if(p->tm_mday > 0)
+                        p->tm_mday -= 1;
+                snprintf(get_date, 16, "%d%d%d", 1900 + p->tm_year, 1 + p->tm_mon, p->tm_mday);
+        }
+        else
+                snprintf(get_date, 16, "%d%d%d", 1900 + p->tm_year, 1 + p->tm_mon, p->tm_mday);
+        date = atol(get_date);
+        if (id_cmd_out(count_handler, id_buff, date, ciphertext, encrypt_text) < 0) {
+                cJSON_Delete(obj);
+                return -1;
+        }
+
+#endif
 	count = pack_data_encode(&citywl_gpsdata,
-			idvalue, latvalue, lngvalue,
+			idvalue, encrypt_text, latvalue, lngvalue,
 			speedvalue, anglevalue, gpstimevalue, retnum);
 
 	if (count < 0) {
@@ -242,11 +277,15 @@ int getjsonarry(cJSON *obj, cJSON *arr[DATANUM], int len, const char *arryitem)
 }
 
 int single_data_encode(CiTyWLPosition *citywl_position,
-	cJSON *idvalue, cJSON *latvalue,
+	cJSON *idvalue, unsigned char *ciphertext, cJSON *latvalue,
 	cJSON *lngvalue, cJSON *speedvalue,
 	cJSON *anglevalue, cJSON *gpstimevalue)
 {
+#ifdef _ENCRYPT
+        citywl_position->set_imei((const char*)ciphertext);
+#else
 	citywl_position->set_imei(idvalue->valuestring);
+#endif
 	citywl_position->set_lat((unsigned int)(latvalue->valuedouble * 1000000));
 	citywl_position->set_lon((unsigned int)(lngvalue->valuedouble * 1000000));
 	citywl_position->set_speed(speedvalue->valueint * 100);
@@ -259,7 +298,7 @@ int single_data_encode(CiTyWLPosition *citywl_position,
 #define DETA 1e-7
 
 int pack_data_encode(CiTyWLGpsData *citywl_gpsdata,
-	cJSON *idvalue, cJSON **latvalue,
+	cJSON *idvalue, unsigned char *ciphertext, cJSON **latvalue,
 	cJSON **lngvalue, cJSON **speedvalue,
 	cJSON **anglevalue, cJSON **gpstimevalue,
 	int len)
@@ -278,7 +317,7 @@ int pack_data_encode(CiTyWLGpsData *citywl_gpsdata,
 
 		CiTyWLPosition *position = citywl_gpsdata->add_position();
 		single_data_encode(position,
-			idvalue, latvalue[j],
+			idvalue, ciphertext, latvalue[j],
 			lngvalue[j], speedvalue[j],
 			anglevalue[j], gpstimevalue[j]);
 	}

@@ -7,7 +7,7 @@ INC_DIR=-I/usr/local/include/luajit-2.0 -I../../lib/libev \
 	-I../../lib/hiredis/ -I../../lib/libkv/release -I/usr/include/mysql
 
 LIB_DIR=-L/usr/local/lib -L../../lib -L../../engine/ -L../../lib/hiredis/ -L/usr/lib64/mysql
-LIBS=-lhiredis -lkv -lluajit-5.1 -lpthread -lrt -lm -lz -lstdc++  -lmysqlclient `pkg-config --cflags --libs protobuf`
+LIBS=-lhiredis -lkv -lluajit-5.1 -lpthread -lrt -lm -lz -lcrypto -lstdc++  -lmysqlclient `pkg-config --cflags --libs protobuf`
 LIBA=-ljson-c -lucmq -lcjson
 
 #[=========>MARK<=========]#
@@ -16,6 +16,7 @@ MAIN_APP_SERV ?= gdgive
 #CFLAGS +=-DSTORE_USE_UCMQ
 #CFLAGS +=-DSTORE_USE_QUEUE
 CFLAGS += -DSTORE_USE_UCMQ_AND_QUEUE
+CFLAGS += -D_ENCRYPT
 
 ifeq ($(MAIN_APP_SERV), gdgive)
 HANDLE_MODEL = EVUV
@@ -50,6 +51,7 @@ BASE_OBJ = $(addprefix $(BIN)/, \
 	   cjson_topb.o \
 	   mysql_ops.o \
 	   filter.o \
+	   id_encrypt.o \
 	   count.o \
 	   statistics_thread.o \
 	   )

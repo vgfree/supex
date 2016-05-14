@@ -1,4 +1,4 @@
-#pragma one
+#pragma once
 
 #include "ev.h"
 #include "rr_cfg.h"
