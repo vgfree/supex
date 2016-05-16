@@ -6,10 +6,10 @@ OPT = -D_REENTRANT -D_GNU_SOURCE -DDEBUG -DBASE_THREADSAFE \
       -DSELECT_MULTITHREAD
 
 all:
-	gcc -g $(OPT) $(INC) $(LIB)  -lluajit-5.1 -lpthread -lrt  skt.c main.c -lzmq  -lstdc++  -o UserInformationManager
+	gcc -g $(OPT) $(INC) $(LIB)  -lluajit-5.1 -lpthread -lrt  skt.c main.c -lzmq  -lstdc++  -o UserInfoApi
 
 clean:
-	rm -rf UserInformationManager
+	rm -rf UserInfoApi
 
 
 push:
