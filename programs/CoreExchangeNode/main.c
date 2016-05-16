@@ -21,6 +21,12 @@
 #define MODULE_NAME "CoreExchangeNode"
 #define CONNECT_MESSAGEGATEWAY_IP "ConnectMessageGatewayIP"
 #define CONNECT_MESSAGEGATEWAY_PORT "ConnectMessageGatewayPort"
+#define CONNECT_SETTINGSERVER_IP "ConnectSettingServerIP"
+#define CONNECT_SETTINGSERVER_PORT "ConnectSettingServerPort"
+#define CONNECT_LOGINSERVER_IP "ConnectLoginServerIP"
+#define CONNECT_LOGINSERVER_PORT "ConnectLoginServerPort"
+
+
 
 struct CSLog* g_imlog = NULL;
 
@@ -53,7 +59,7 @@ static int init() {
     return retval;
   }
   struct cbinfo MGCB = {};
-  MGCB.callback = server_event_notify;
+  MGCB.callback = message_gateway_event_notify;
   retval = comm_socket(commctx, MGsrvIP, MGsrvPort, &MGCB, COMM_BIND);
   if (retval == -1) {
     error("can't bind MG socket, ip:%s, port:%s.", MGsrvIP, MGsrvPort);
@@ -67,8 +73,75 @@ static int init() {
   char *MGcliPort = get_config_name(config, CONNECT_MESSAGEGATEWAY_PORT);
   log("MGcliIP:%s, MGcliPort:%s.", MGcliIP, MGcliPort);
   if (MGcliIP) {
-    g_serv_info.message_gateway_fd =
+    int fd =
       comm_socket(commctx, MGcliIP, MGcliPort, &MGCB, COMM_CONNECT);
+    if (fd > 0) {
+      struct fd_descriptor des = {};
+      des.status = 1;
+      des.obj = MESSAGE_GATEWAY;
+      array_fill_fd(fd, &des);
+
+      struct fd_node node = {};
+      node.fd = fd;
+      g_serv_info.message_gateway_fd = fd;
+      node.status = 1;
+      list_push_back(MESSAGE_GATEWAY, &node);
+	}
+	else {
+      error("connect message gateway failed.");
+	}
+  }
+  char *settingServerIp = get_config_name(config, CONNECT_SETTINGSERVER_IP);
+  char *settingServerPort = get_config_name(config, CONNECT_SETTINGSERVER_PORT);
+  if (settingServerIp) {
+    struct cbinfo settingServerCB = {};
+    settingServerCB.callback = setting_server_event_notify;
+    int fd =
+      comm_socket(commctx, settingServerIp, settingServerPort,
+                  &settingServerCB, COMM_CONNECT);
+    log("setting server fd:%d.", fd);
+    if (fd > 0) {
+      struct fd_descriptor des = {};
+      des.status = 1;
+      des.obj = SETTING_SERVER;
+      array_fill_fd(fd, &des);
+
+      struct fd_node node = {};
+      node.fd = fd;
+      g_serv_info.setting_server_fd = fd;
+      node.status = 1;
+      list_push_back(SETTING_SERVER, &node);
+	}
+	else {
+      error("connect settingServer failed.");
+      abort();
+	}
+  }
+  char *loginServerIp = get_config_name(config, CONNECT_LOGINSERVER_IP);
+  char *loginServerPort = get_config_name(config, CONNECT_LOGINSERVER_PORT);
+  if (loginServerIp) {
+    struct cbinfo loginServerCB = {};
+    loginServerCB.callback = login_server_event_notify;
+    int fd =
+      comm_socket(commctx, loginServerIp, loginServerPort,
+                  &loginServerCB, COMM_CONNECT);
+    log("login server fd:%d.", fd);
+    if (fd > 0) {
+      struct fd_descriptor des = {};
+      des.status = 1;
+      des.obj = LOGIN_SERVER;
+      array_fill_fd(fd, &des);
+
+      struct fd_node node = {};
+      node.fd = fd;
+      g_serv_info.login_server_fd = fd;
+      node.status = 1;
+      list_push_back(LOGIN_SERVER, &node);
+	}
+	else {
+      error("connect loginServer failed.");
+      abort();
+	}
   }
   destroy_config_reader(config);
   init_uid_map();

@@ -4,6 +4,7 @@
 #include "loger.h"
 #include "message_dispatch.h"
 #include "router.h"
+#include "status.h"
 #include "uid_map.h"
 
 #include <assert.h>
@@ -110,56 +111,13 @@ static int _handle_client_login(struct comm_message *msg)
   return ret;
 }
 
-static int handle_uid_map(struct router_head *head)
+static int _handle_uid_map(struct comm_message *msg)
 {
-  assert(head);
-  if (head->body_size != 4) {
-    error("wrong body_size:%d", head->body_size);
-    return -1;
-  }
-  if (memcmp(g_serv_info.ip, head->body, 4) != 0) {
-    error("abandon message, this message is not belong to this core exchange node.");
-    return -1;
-  }
-  char uid[UID_SIZE + 1];
-  memcpy(uid, head->identity.Uid.uid, UID_SIZE);
-  uid[UID_SIZE] = '\0';
-  int fd = head->body[5];
-  fd = fd * 256 + head->body[4];
-  if (insert_fd(uid, fd) == -1) {
-    error("insert error, uid:%s-------fd:%x.", uid, fd);
-    return -1;
-  }
   return 0;
 }
 
-static int handle_gid_map(struct router_head *head)
+static int _handle_gid_map(struct comm_message *msg)
 {
-  assert(head);
-  int cid = head->body_size / 6;
-  if (head->body_size == 0 || head->body_size % 6 != 0 ) {
-    error("wrong head->body_size:%x", head->body_size);
-    return -1;
-  }
-  int fdlist[GROUP_SIZE];
-  int count = 0;
-  for (int i = 0; i < cid; i++) {
-    char uid[4];
-    memcpy(uid, head->body + i * 6, 4);
-    if (memcmp(g_serv_info.ip, uid, 4) != 0) {
-      continue;
-    }
-    int fd = *(head->body + i * 6 + 5);
-    fd = fd * 256 + *(head->body + i*6 + 4);
-    fdlist[count++] = fd;
-  }
-  char gid[GID_SIZE + 1];
-  memcpy(gid, head->identity.Gid.gid, GID_SIZE);
-  gid[GID_SIZE] = '\0';
-  if (insert_fd_list(gid, fdlist, count) == -1) {
-    error("insert group fd, error.");
-    return -1;
-  }
   return 0;
 }
 
@@ -192,19 +150,35 @@ static void _downstream_msg(struct comm_message *msg)
 static void _erased_client(struct comm_message *msg)
 {
   int fsz;
-  char *frame = get_msg_frame(1, msg, &fsz);
-  if (!frame || memcmp(frame, "closed", 6) != 0) {
-    error("wrong frame, frame is NULL or not equal closed.");
-    return;
-  }
   char *cid = get_msg_frame(2, msg, &fsz);
   if (!cid || fsz != 6) {
     error("wrong frame, frame is NULL or not equal a cid size 6 bytes.");
   }
+  if (memcmp(cid, g_serv_info.ip, 4) != 0) {
+    log("the cid is not in this core_exchange_node.");
+    return;
+  }
   // to do, comm_close 相对应的fd.
   int fd = cid[4] * 256 + cid[5];
+  comm_close(g_serv_info.commctx, fd);
+  log("errase fd:%d.", fd);
+  send_status_msg(fd, FD_CLOSE);
   // 删除gid, uid,
   array_remove_fd(fd);
+}
+
+static void _handle_status(struct comm_message *msg)
+{
+  int fsz = 0;
+  char *frame = get_msg_frame(3, msg, &fsz);
+  if (!frame) {
+    error("wrong frame, frame is NULL or not equal closed.");
+    return;
+  }
+  else if (memcmp(frame, "closed", 6) == 0) {
+    _erased_client(msg);
+  } 
+ 
 }
 
 static void _classified_message(struct comm_message *msg)
@@ -218,13 +192,36 @@ static void _classified_message(struct comm_message *msg)
   if (memcmp(frame, "downstream", 10) == 0) {
     _downstream_msg(msg);
   }
-  else if (memcmp(frame, "status", 10) == 0) {
-	// to do , 移除所有与该cid 相关的内容， refresh redis.
-	_erased_client(msg);
+  else {
+    error("wrong first frame, frame_size:%d.", frame_size);
+  }
+}
+
+
+static void _setting_map(struct comm_message *msg)
+{
+  log("max msg:%d.", get_max_msg_frame(msg));
+  int frame_size;
+  char *frame = get_msg_frame(0, msg, &frame_size);
+  if (!frame) {
+    error("wrong frame, and frame is NULL.");
+  }
+  if (memcmp(frame, "setting", 7) == 0) {
+    char *cmd = get_msg_frame(1, msg, &frame_size);
+    if (memcmp(cmd, "status", 6) == 0) {
+      _handle_status(msg);
+    }
+	else if (memcmp(cmd, "uidmap", 6) == 0) {
+      _handle_uid_map(msg);
+	}
+	else if (memcmp(cmd, "gidmap", 6) == 0) {
+      _handle_gid_map(msg);
+	}
   }
   else {
     error("wrong first frame, frame_size:%d.", frame_size);
   }
+
 }
 
 void message_dispatch()
@@ -235,6 +232,7 @@ void message_dispatch()
   comm_recv(g_serv_info.commctx, &msg, true, -1);
   struct fd_descriptor des;
   array_at_fd(msg.fd, &des);
+  log("des.obj:%d", des.obj);
   if (des.obj == CLIENT) {
     int fd = 0;
     find_best_gateway(&fd);
@@ -243,6 +241,9 @@ void message_dispatch()
   }
   else if (des.obj == MESSAGE_GATEWAY) { 
     _classified_message(&msg);
+  }
+  else if (des.obj == SETTING_SERVER) {
+    _setting_map(&msg);
   }
   destroy_msg(&msg);
 }

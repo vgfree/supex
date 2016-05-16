@@ -9,6 +9,8 @@ struct server_info{
   struct comm_context *commctx;
   uint32_t package_size;
   int message_gateway_fd; //message gateway 的fd.
+  int setting_server_fd;
+  int login_server_fd;
 };
 
 extern struct server_info g_serv_info;

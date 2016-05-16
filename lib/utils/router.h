@@ -8,10 +8,11 @@
 #define GID_SIZE 6
 
 enum router_object {
-  CLIENT = 0,
+  CLIENT = 1,
   MESSAGE_GATEWAY,
   ROUTER_SERVER,
-  FULL_DAMS
+  SETTING_SERVER,
+  LOGIN_SERVER
 };
 
 struct CID {

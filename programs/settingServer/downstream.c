@@ -7,12 +7,12 @@
 int downstream_msg(struct comm_message *msg)
 {
   log("core exchange node max size:%d.", g_node_ptr->max_size);
-  log("get_max_msg_frame:%d", get_max_msg_frame(msg));
+//  log("get_max_msg_frame:%d", get_max_msg_frame(msg));
   int j = 0;
-  for (j = 0; j < msg->package.frames; j++) {
-	  log("frame[%d]:frame_size:%d, frame_offset:%d\n", j, msg->package.frame_size[j], msg->package.frame_offset[j]);
+/*  for (j = 0; j < msg->package.frames; j++) {
+    log("frame[%d]:frame_size:%d, frame_offset:%d\n", j, msg->package.frame_size[j], msg->package.frame_offset[j]);
   }
-  log("frames_of_package：%d packages:%d dsize:%d\n", msg->package.frames_of_package[0], msg->package.packages, msg->package.dsize);
+  log("frames_of_package：%d packages:%d dsize:%d\n", msg->package.frames_of_package[0], msg->package.packages, msg->package.dsize);*/
   for (int i = 0; i < g_node_ptr->max_size; i++) {
     msg->fd = g_node_ptr->fd_array[i];
 	if (send_msg(msg) == -1) {
