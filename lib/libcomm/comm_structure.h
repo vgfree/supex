@@ -12,6 +12,7 @@
 #include "comm_epoll.h"
 #include "comm_lock.h"
 #include "comm_pipe.h"
+#include "comm_list.h"
 #include "mfptp_protocol/mfptp_parse.h"
 #include "mfptp_protocol/mfptp_package.h"
 
@@ -73,7 +74,7 @@ struct  remainfd{
 
 /* 内部结构体, 外部无需关心 */
 struct comm_data {
-	struct comm_queue	recv_queue;	/* 存放接收并已经解析完毕的数据 */
+	//struct comm_queue	recv_queue;	/* 存放接收并已经解析完毕的数据 */
 	struct comm_queue	send_queue;	/* 存放用户传递但并未打包的数据 */
 	struct comm_cache	recv_buff;	/* 存放接收但并未解析的数据 */
 	struct comm_cache	send_buff;	/* 存放需要发送并已经打包的数据 */
@@ -108,6 +109,7 @@ struct comm_context {
 	struct comm_lock	recvlock;		/* 用来同步接收队列的锁*/
 	struct comm_lock	statlock;		/* 用来同步stat的状态 */
 	struct comm_epoll	commepoll;		/* epoll监听事件的相关信息 */
+	struct comm_list	head;			/* 存放send */
 	enum {
 		COMM_STAT_NONE,
 		COMM_STAT_INIT,
@@ -133,6 +135,7 @@ struct comm_message {
 	int			socket_type;		/* 消息套接字的类型 */
 	char*			content;		/* 消息的内容首地址 */
 	struct comm_package	package;		/* 消息包的设置 */
+	struct comm_list	list;			/* 链表节点 */
 };
 
 struct comm_data*  commdata_init(struct comm_context* commctx, struct portinfo* portinfo,  struct cbinfo*  finishedcb);
@@ -143,7 +146,7 @@ struct comm_message* new_commmsg(int size);
 
 void copy_commmsg(struct comm_message* destmsg, const struct comm_message* srcmsg);
 
-void free_commmsg(struct comm_message* message);
+void free_commmsg(void* arg);
 
 bool get_portinfo( struct portinfo* portinfo, int fd, int type, int status);
 

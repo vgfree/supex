@@ -42,8 +42,8 @@ int main(int argc, char* argv[])
 				memset(&recvmsg, 0, sizeof(recvmsg));
 				retval = recv_data(commctx,&recvmsg, sendmsg.fd);
 				if (likely(retval > 0)) {
-				//	log("client recv_data successed\n");
-					break ;
+					log("client recv_data successed\n");
+				//	break ;
 				} else {
 					log("client recv_data failed\n");
 					sleep(1);

@@ -18,11 +18,13 @@ struct comm_data*  commdata_init(struct comm_context* commctx, struct portinfo* 
 	if (unlikely(!commctx)) {
 		goto error;
 	}
-	retval = commqueue_init(&commdata->recv_queue, QUEUE_CAPACITY, nodesize);
+#if 0
+	retval = commqueue_init(&commdata->recv_queue, QUEUE_CAPACITY, nodesize, free_commmsg);
 	if (unlikely(!retval)) {
 		goto error;
 	}
-	retval = commqueue_init(&commdata->send_queue, QUEUE_CAPACITY, nodesize);
+#endif
+	retval = commqueue_init(&commdata->send_queue, QUEUE_CAPACITY, nodesize, free_commmsg);
 	if (unlikely(!retval)) {
 		goto error;
 	}
@@ -67,7 +69,7 @@ struct comm_data*  commdata_init(struct comm_context* commctx, struct portinfo* 
 
 error:
 	commlock_destroy(&commdata->sendlock);
-	commqueue_destroy(&commdata->recv_queue);
+	//commqueue_destroy(&commdata->recv_queue);
 	commqueue_destroy(&commdata->send_queue);
 	commepoll_destroy(&commctx->commepoll);
 	
@@ -82,7 +84,7 @@ void commdata_destroy(struct comm_data *commdata)
 {
 	if (likely(commdata)) {
 		commlock_destroy(&commdata->sendlock);
-		commqueue_destroy(&commdata->recv_queue);
+	//	commqueue_destroy(&commdata->recv_queue);
 		commqueue_destroy(&commdata->send_queue);
 		
 		commcache_free(&commdata->recv_buff);
@@ -123,8 +125,9 @@ inline void copy_commmsg(struct comm_message* destmsg, const struct comm_message
 }
 
 /* 销毁comm_message的结构体 */
-inline void free_commmsg(struct comm_message* message)
+inline void free_commmsg(void* arg)
 {
+	struct comm_message *message = (struct comm_message*)arg;
 	if (message) {
 		Free(message->content);
 		Free(message);
