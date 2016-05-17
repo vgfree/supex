@@ -6,7 +6,7 @@
 #include <stdlib.h>
 
 enum server {
-  CID_SERVER = 3
+  APP_SERVER = 0
 };
 
 int init_zmq_io();

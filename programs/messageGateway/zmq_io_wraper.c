@@ -5,8 +5,8 @@
 #include <assert.h>
 
 #define CONFIG "messageGateway.conf"
-#define CID_IP "CidServer"
-#define CID_PORT "CidPort"
+#define APPSRV_IP "AppServer"
+#define APPSRV_PORT "AppPort"
 #define CLIENT_IP "ClientIp"
 #define CLIENT_PORT "ClientPort"
 #define SERVER_SIZE 4
@@ -79,12 +79,12 @@ int init_zmq_io()
 {
   struct config_reader *config =
     init_config_reader(CONFIG);
-  char *ip = get_config_name(config, CID_IP);
-  char *port = get_config_name(config, CID_PORT);
+  char *ip = get_config_name(config, APPSRV_IP);
+  char *port = get_config_name(config, APPSRV_PORT);
   assert(!g_ctx);
   g_ctx = zmq_ctx_new();
   int intport = atoi(port);
-  zmq_srv_init(ip, intport, CID_SERVER);
+  zmq_srv_init(ip, intport, APP_SERVER);
   char *clientIp = get_config_name(config, CLIENT_IP);
   char *clientPort = get_config_name(config, CLIENT_PORT);
   log("clientIp:%s, clientPort:%s", clientIp, clientPort);
