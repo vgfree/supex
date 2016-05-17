@@ -19,7 +19,7 @@ void SO_GetIntOption(int fd, int level, int name, int *val)
 	rc = getsockopt(fd, level, name, val, &length);
 
 	if (unlikely(rc < 0)) {
-		x_printf(E, "Get option [L : %d, O : %d] failed: %s.",
+		x_perror("Get option [L : %d, O : %d] failed: %s.",
 			level, name, x_strerror(errno));
 		RAISE(EXCEPT_SYS);
 	}
@@ -32,7 +32,7 @@ void SO_SetIntOption(int fd, int level, int name, int val)
 	rc = setsockopt(fd, level, name, &val, (socklen_t)sizeof(int));
 
 	if (unlikely(rc < 0)) {
-		x_printf(E, "Set option [L : %d, O : %d] failed: %s.",
+		x_perror("Set option [L : %d, O : %d] failed: %s.",
 			level, name, x_strerror(errno));
 		RAISE(EXCEPT_SYS);
 	}
@@ -52,7 +52,7 @@ void SO_GetTimeOption(int fd, int level, int name, long *usec)
 	rc = getsockopt(fd, level, name, &tv, &length);
 
 	if (unlikely(rc < 0)) {
-		x_printf(E, "Get option [L : %d, O : %d] failed: %s.",
+		x_perror("Get option [L : %d, O : %d] failed: %s.",
 			level, name, x_strerror(errno));
 		RAISE(EXCEPT_SYS);
 	}
@@ -69,15 +69,19 @@ void SO_SetTimeOption(int fd, int level, int name, long usec)
 	struct timeval  tv = {};
 	int             rc = -1;
 
-	return_if_fail(usec > -1);
+//	return_if_fail(usec > -1);
 
-	tv.tv_sec = usec / 1000000;
-	tv.tv_usec = usec % 1000000;
-
+	if (usec >= 0) {
+		tv.tv_sec = usec / 1000000;
+		tv.tv_usec = usec % 1000000;
+	} else {
+		tv.tv_sec = UINT32_MAX;
+	}
+	
 	rc = setsockopt(fd, level, name, &tv, (socklen_t)sizeof(tv));
 
 	if (unlikely(rc < 0)) {
-		x_printf(E, "Set option [L : %d, O : %d] failed: %s.",
+		x_perror("Set option [L : %d, O : %d] failed: %s.",
 			level, name, x_strerror(errno));
 		RAISE(EXCEPT_SYS);
 	}
@@ -91,7 +95,7 @@ void SO_SetCloseLinger(int fd, bool onoff, int linger)
 	rc = setsockopt(fd, SOL_SOCKET, SO_LINGER, &buff, sizeof(buff));
 
 	if (unlikely(rc < 0)) {
-		x_printf(E, "Set the option of linger failed: %s.",
+		x_perror("Set the option of linger failed: %s.",
 			x_strerror(errno));
 		RAISE(EXCEPT_SYS);
 	}

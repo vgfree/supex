@@ -44,20 +44,29 @@ extern const char       *g_ProgName;	/**<进程名*/
 #define LOG_COLOR_BLUE          PALETTE_FULL(_COLOR_BLUE_, _DEPTH_1_, _STYLE_NULL_, _SCENE_NULL_)
 #define LOG_COLOR_NULL          PALETTE_NULL
 
+#define LOG_FILENAME			({const char *p = strrchr(__FILE__, '/'); p ? p + 1 : __FILE__;})
 /*
  * 终端日志格式
  */
+#define __FILENAME__ ({ const char *p = strrchr(__FILE__, '/'); p ? p + 1 : __FILE__; })
 #define x_printf(level, fmt, ...)							      \
 	fprintf(stdout, LOG_##level##_COLOR LOG_##level##_LEVEL				      \
 		LOG_COLOR_WHITE "|%16s:%4d" LOG_COLOR_PURPLE "|%06d" LOG_COLOR_BLUE "|%20s()" \
 		LOG_##level##_COLOR "|" fmt PALETTE_NULL "\n",				      \
-		__FILE__, __LINE__, (int)GetThreadID(),					      \
+		LOG_FILENAME, __LINE__, (int)GetThreadID(),					      \
 		__FUNCTION__, ##__VA_ARGS__)
 
 /*
  * 打印错误级别的信息
  */
-#define x_perror(...) x_printf(E, ##__VA_ARGS__)
+
+#define x_pdebug(...)   x_printf(D, ##__VA_ARGS__)
+#define x_pinfo(...)    x_printf(I, ##__VA_ARGS__)
+#define x_pwarn(...)    x_printf(W, ##__VA_ARGS__)
+#define x_perror(...)   x_printf(E, ##__VA_ARGS__)
+#define x_psys(...)     x_printf(S, ##__VA_ARGS__)
+#define x_pfatal(...)   x_printf(F, ##__VA_ARGS__)
+
 
 /*
  * 重定义断言
@@ -173,7 +182,7 @@ extern const char       *g_ProgName;	/**<进程名*/
  * 随机获取小数 x ： low <= x < high
  */
 #define RandReal(low, high)			  \
-	(assert((double)(high) >= (double)(low)), \
+	(assert((double)(high) > (double)(low)), \
 	(((double)random()) / ((double)RAND_MAX + 1)) * (high - low) + low)
 
 /*

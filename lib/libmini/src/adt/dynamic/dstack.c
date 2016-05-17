@@ -53,7 +53,7 @@ bool DStackPush(DStackT stack, intptr_t data)
 		nodes = stack->nodes;
 		return_val_if_fail(stack->capacity <1 || stack->capacity> nodes, false);
 
-		if (likely(ATOMIC_CASB(&stack->nodes, nodes, nodes + 1))) {
+		if (likely(AO_CASB(&stack->nodes, nodes, nodes + 1))) {
 			break;
 		}
 	}
@@ -61,7 +61,7 @@ bool DStackPush(DStackT stack, intptr_t data)
 	New(node);
 
 	if (unlikely(!node)) {
-		ATOMIC_DEC(&stack->nodes);
+		AO_DEC(&stack->nodes);
 		return false;
 	}
 
@@ -71,7 +71,7 @@ bool DStackPush(DStackT stack, intptr_t data)
 		head = stack->data;
 		node->next = head;
 
-		if (likely(ATOMIC_CASB(&stack->data, head, node))) {
+		if (likely(AO_CASB(&stack->data, head, node))) {
 			break;
 		}
 	}
@@ -91,12 +91,12 @@ bool DStackPop(DStackT stack, intptr_t *data)
 		head = stack->data;
 		return_val_if_fail(head, false);
 
-		if (likely(ATOMIC_CASB(&stack->data, head, head->next))) {
+		if (likely(AO_CASB(&stack->data, head, head->next))) {
 			break;
 		}
 	}
 
-	ATOMIC_DEC(&stack->nodes);
+	AO_DEC(&stack->nodes);
 
 	SET_POINTER(data, head->data);
 	Free(head);

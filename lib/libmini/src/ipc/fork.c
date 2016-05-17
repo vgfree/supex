@@ -11,11 +11,11 @@
 
 void InitProcess()
 {
-	ATOMIC_SET(&g_ThreadID, -1);
-	ATOMIC_SET(&g_ProcessID, -1);
+	AO_SET(&g_ThreadID, -1);
+	AO_SET(&g_ProcessID, -1);
 #if 1
-	ATOMIC_SET(&_g_ef_, NULL);
-	ATOMIC_SET(&g_errno, 0);
+	AO_SET(&_g_ef_, NULL);
+	AO_SET(&g_errno, 0);
 #endif
 }
 

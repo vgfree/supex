@@ -30,10 +30,10 @@ struct SQueueNode
  */
 enum
 {
-	SQUEUENODE_UNUSED,	/**< 未使用*/
-	SQUEUENODE_PUSHING,	/**< 正在推入*/
-	SQUEUENODE_USED,	/**< 已经推入，等待推出*/
-	SQUEUENODE_PULLING,	/**< 正在推出*/
+	SQNODE_UNUSED,	/**< 未使用*/
+	SQNODE_PUSHING,	/**< 正在推入*/
+	SQNODE_USED,	/**< 已经推入，等待推出*/
+	SQNODE_PULLING,	/**< 正在推出*/
 };
 
 #define calculate_node_size(size) \
@@ -92,7 +92,7 @@ SQueueT SQueueInit(char *buff, long size, int datasize, bool shared)
 
 	for (i = 0; i < queue->totalnodes; i++) {
 		node = calculate_node_ptr(queue, i);
-		node->used = SQUEUENODE_UNUSED;
+		node->used = SQNODE_UNUSED;
 		REFOBJ(node);
 	}
 
@@ -131,8 +131,8 @@ bool SQueueCheck(char *buff, long size, int datasize, bool repair)
 		node = calculate_node_ptr(queue, i);
 		return_val_if_fail(ISOBJ(node), false);
 
-		if (repair && ((node->used != SQUEUENODE_UNUSED) ||
-			(node->used != SQUEUENODE_USED))) {}
+		if (repair && ((node->used != SQNODE_UNUSED) ||
+			(node->used != SQNODE_USED))) {}
 	}
 
 	if (repair) {
@@ -172,7 +172,7 @@ bool SQueuePush(SQueueT queue, char *data, int size, int *effectsize)
 		
 		/*判断容量*/
 		if (unlikely((queue->capacity <= queue->nodes) || (next == queue->tailidx))) {
-			x_printf(W, "no more space.");
+			x_pwarn("no more space.");
 #ifdef SQUEUE_USE_RWLOCK
 			AO_SpinUnlock(&queue->wlck);
 #endif
@@ -180,8 +180,8 @@ bool SQueuePush(SQueueT queue, char *data, int size, int *effectsize)
 		}
 
 		/*原子改变头索引*/
-		if (likely(ATOMIC_CASB(&queue->headidx, head, next))) {
-			ATOMIC_INC(&queue->nodes);
+		if (likely(AO_CASB(&queue->headidx, head, next))) {
+			AO_INC(&queue->nodes);
 			node = calculate_node_ptr(queue, head);
 			break;
 		}
@@ -194,13 +194,13 @@ bool SQueuePush(SQueueT queue, char *data, int size, int *effectsize)
 	ASSERTOBJ(node);
 
 	/*等待pull消费数据，并改变节点状态，以准备拷入数据*/
-	while (unlikely(!ATOMIC_CASB(&node->used, SQUEUENODE_UNUSED, SQUEUENODE_PUSHING))) {
+	while (unlikely(!AO_CASB(&node->used, SQNODE_UNUSED, SQNODE_PUSHING))) {
 #if 0
 		sched_yield();
 #else
 		_cpu_pause();
 #endif
-		x_printf(D, "waiting pull");
+		x_pdebug("waiting pull");
 	}
 
 	if (likely(data && (size > 0))) {
@@ -211,9 +211,9 @@ bool SQueuePush(SQueueT queue, char *data, int size, int *effectsize)
 	}
 
 #if 0
-	ATOMIC_CASB(&node->used, SQUEUENODE_PUSHING, SQUEUENODE_USED);
+	AO_CASB(&node->used, SQNODE_PUSHING, SQNODE_USED);
 #else
-	assert(likely(ATOMIC_CASB(&node->used, SQUEUENODE_PUSHING, SQUEUENODE_USED)));
+	assert(likely(AO_CASB(&node->used, SQNODE_PUSHING, SQNODE_USED)));
 #endif
 	SET_POINTER(effectsize, node->size);
 
@@ -243,7 +243,7 @@ bool SQueuePriorityPush(SQueueT queue, char *data, int size, int *effectsize)
 		if (unlikely(next >= queue->totalnodes)) next -= queue->totalnodes;
 		
 		if (unlikely((queue->capacity <= queue->nodes) || (queue->headidx == next))) {
-			x_printf(W, "no more space.");
+			x_pwarn("no more space.");
 #ifdef SQUEUE_USE_RWLOCK
 			AO_SpinUnlock(&queue->rlck);
 			AO_SpinUnlock(&queue->wlck);
@@ -251,8 +251,8 @@ bool SQueuePriorityPush(SQueueT queue, char *data, int size, int *effectsize)
 			return false;
 		}
 
-		if (likely(ATOMIC_CASB(&queue->tailidx, tail, next))) {
-			ATOMIC_INC(&queue->nodes);
+		if (likely(AO_CASB(&queue->tailidx, tail, next))) {
+			AO_INC(&queue->nodes);
 			node = calculate_node_ptr(queue, next);
 			break;
 		}
@@ -265,13 +265,13 @@ bool SQueuePriorityPush(SQueueT queue, char *data, int size, int *effectsize)
 
 	ASSERTOBJ(node);
 
-	while (unlikely(!ATOMIC_CASB(&node->used, SQUEUENODE_UNUSED, SQUEUENODE_PUSHING))) {
+	while (unlikely(!AO_CASB(&node->used, SQNODE_UNUSED, SQNODE_PUSHING))) {
 #if 0
 		sched_yield();
 #else
 		_cpu_pause();
 #endif
-		x_printf(D, "waiting pull ......");
+		x_pdebug("waiting pull ......");
 	}
 
 	if (likely(data && (size > 0))) {
@@ -282,9 +282,9 @@ bool SQueuePriorityPush(SQueueT queue, char *data, int size, int *effectsize)
 	}
 
 #if 0
-	ATOMIC_CASB(&node->used, SQUEUENODE_PUSHING, SQUEUENODE_USED);
+	AO_CASB(&node->used, SQNODE_PUSHING, SQNODE_USED);
 #else
-	assert(likely(ATOMIC_CASB(&node->used, SQUEUENODE_PUSHING, SQUEUENODE_USED)));
+	assert(likely(AO_CASB(&node->used, SQNODE_PUSHING, SQNODE_USED)));
 #endif
 
 	SET_POINTER(effectsize, node->size);
@@ -321,8 +321,8 @@ bool SQueuePull(SQueueT queue, char *data, int size, int *effectsize)
 		}
 
 		/*原子修改尾索引*/
-		if (likely(ATOMIC_CASB(&queue->tailidx, tail, next))) {
-			ATOMIC_DEC(&queue->nodes);
+		if (likely(AO_CASB(&queue->tailidx, tail, next))) {
+			AO_DEC(&queue->nodes);
 			node = calculate_node_ptr(queue, tail);
 			break;
 		}
@@ -335,13 +335,13 @@ bool SQueuePull(SQueueT queue, char *data, int size, int *effectsize)
 	ASSERTOBJ(node);
 
 	/*等待push产生数据，并改变状态，以准备拷出数据*/
-	while (unlikely(!ATOMIC_CASB(&node->used, SQUEUENODE_USED, SQUEUENODE_PULLING))) {
+	while (unlikely(!AO_CASB(&node->used, SQNODE_USED, SQNODE_PULLING))) {
 #if 0
 		sched_yield();
 #else
 		_cpu_pause();
 #endif
-		x_printf(D, "waiting push ......");
+		x_pdebug("waiting push ......");
 	}
 
 	if (likely(data && (size > 0))) {
@@ -355,9 +355,9 @@ bool SQueuePull(SQueueT queue, char *data, int size, int *effectsize)
 	}
 
 #if 0
-	ATOMIC_CASB(&node->used, SQUEUENODE_PULLING, SQUEUENODE_UNUSED);
+	AO_CASB(&node->used, SQNODE_PULLING, SQNODE_UNUSED);
 #else
-	assert(likely(ATOMIC_CASB(&node->used, SQUEUENODE_PULLING, SQUEUENODE_UNUSED)));
+	assert(likely(AO_CASB(&node->used, SQNODE_PULLING, SQNODE_UNUSED)));
 #endif
 	SET_POINTER(effectsize, size);
 

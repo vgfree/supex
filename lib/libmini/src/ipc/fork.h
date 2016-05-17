@@ -72,9 +72,9 @@ void InitProcess();
 		}							      \
 		if (likely((_pid == pid) && WIFEXITED(_pStat) &&	      \
 			(WEXITSTATUS(_pStat) == EXIT_SUCCESS))) {	      \
-			x_printf(D, "Child process [%d] normal exit.", _pid); \
+			x_pdebug("Child process [%d] normal exit.", _pid); \
 		} else {						      \
-			x_printf(D, "Child process [%d] exit by %d.", _pid,   \
+			x_pdebug("Child process [%d] exit by %d.", _pid,   \
 				WEXITSTATUS(_pStat));			      \
 		}							      \
 		break;							      \
