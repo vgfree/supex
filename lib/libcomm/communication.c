@@ -4,10 +4,11 @@
 /*********************************************************************************************/
 #include <dirent.h>
 #include <stdlib.h>
-
-#include "loger.h"
 #include "communication.h"
 
+#define COMMMSG_OFFSET		(struct comm_message message;	\
+				 get_member_offset(&message, &message->list) \
+				)
 
 static void * _start_new_pthread(void* usr);
 
@@ -22,7 +23,8 @@ struct comm_context* comm_ctx_create(int epollsize)
 	}
 
 	listenfd_init(&commctx->listenfd, commctx);
-	if (unlikely( !commqueue_init(&commctx->recv_queue, QUEUE_CAPACITY, sizeof(intptr_t)))) {
+	commlist_init(&commctx->head, free_commmsg);
+	if (unlikely( !commqueue_init(&commctx->recv_queue, QUEUE_CAPACITY, sizeof(intptr_t), free_commmsg))) {
 		goto error;
 	}
 
@@ -98,8 +100,9 @@ void comm_ctx_destroy(struct comm_context* commctx)
 			commepoll_del(&commctx->commepoll, commctx->commpipe.rfd, -1);
 		}
 
-		for (fd = 0; fd < commctx->listenfd.counter; fd++) {
-		}
+		//int offset = COMMMSG_OFFSET();
+		struct comm_message message;
+		commlist_destroy(&commctx->head, get_member_offset(&message, &message.list));
 		listenfd_destroy(&commctx->listenfd);
 		commepoll_destroy(&commctx->commepoll);
 		pthread_join(commctx->ptid, NULL);
@@ -162,40 +165,23 @@ int comm_send(struct comm_context *commctx, const struct comm_message *message, 
 		if (likely(commmsg)) {
 			copy_commmsg(commmsg, message);
 			commlock_lock(&commdata->sendlock);
-#if 1
-			while (1) {
-				if (likely(commqueue_push(&commdata->send_queue, (void*)&commmsg))) {
-					if (!commdata->send_queue.readable) {	/* 此变量为0说明有线程等待可读 */
-						commlock_wake(&commdata->sendlock, &commdata->send_queue.readable, 1, true);
-					}
-					flag = true;
-					break ;
-				} else if (block) {
-					commdata->send_queue.writeable = 0;	/* 将此变量设置为0, 让其他线程进行唤醒 */
-					/* 目前打包取数据只在写事件里面被调用，所以必须唤醒写事件才能等待才能被唤醒 */
-					commpipe_write(&commctx->commpipe, (void*)&message->fd, sizeof(message->fd));
-					if (likely(commlock_wait(&commdata->sendlock, &commdata->send_queue.writeable, 1, timeout, true))) {
-						continue ;			/* 返回值为真则说明有空间可写数据 */
-					} else {		
-						break ;				/* 返回值为假则超时唤醒没有空间可写数据 */
-					}
-				} else {
-					commdata->send_queue.writeable = 1;	/* 不进行堵塞就设置为1不需要唤醒 */
-					break ;
-				}
-			}
+			if (likely(commqueue_push(&commdata->send_queue, (void*)&commmsg))) {
+				/* 数据保存成功 */
+				flag = true;
+			} else {
+				commlist_push(&commctx->head, &commmsg->list);
+				flag = true;
+			} 
 
-			if (unlikely(block && commdata->send_queue.nodes == commdata->send_queue.capacity)) {
-				commdata->send_queue.writeable = 0;
-			}
-#endif
 			commlock_unlock(&commdata->sendlock);
+
 			if (likely(flag)) {
 				/* 数据写入成功 往此管道写入fd 触发子线程的写事件 */
 				commpipe_write(&commctx->commpipe, (void*)&message->fd, sizeof(message->fd));
 				return message->package.dsize;
 			} else {
-				free_commmsg(commmsg);				/* push数据失败则需要释放commmsg */
+				free_commmsg(commmsg);		/* push数据失败则需要释放commmsg */
+				return -1;
 			}
 		}
 	}
@@ -208,37 +194,31 @@ int comm_recv(struct comm_context *commctx, struct comm_message *message, bool b
 
 	bool			flag = false;
 	struct comm_message	*commmsg = NULL;
+
 	commlock_lock(&commctx->recvlock);
-	while (1) {
+	do {
 		if (likely(commqueue_pull(&commctx->recv_queue, (void*)&commmsg))) {
-			if (!commctx->recv_queue.writeable) {			/* 此变量为0说明有线程等待可写 */
-				commlock_wake(&commctx->recvlock, &commctx->recv_queue.writeable, 1, true);
-			}
-			flag = true;
+			/* 数据成功获取 */
 			break ;
 		} else if (block) {
 			commctx->recv_queue.readable = 0;
 			if (commlock_wait(&commctx->recvlock, &commctx->recv_queue.readable, 1, timeout, true)) {
-				continue ;					/* 返回值为真说明有数据可读 */
-			} else {
-				break ;						/* 返回值为假说明超时唤醒，无数据可读 */
+				flag = true;			/* 返回值为真说明有数据可读 */
 			}
 		} else {
-			commctx->recv_queue.readable = 1;			/* 不进行堵塞就设置为1不需要唤醒 */
-			break ;
+			commctx->recv_queue.readable = 1;	/* 不进行堵塞就设置为1不需要唤醒 */
 		}
-	}
-	if (unlikely(block && commctx->recv_queue.nodes == 0)) {		/* 当节点数为0时并设置了block时设置此变量等待别人唤醒 */
-		commctx->recv_queue.readable = 0;
-	}
+	}while(flag);						/* flag为true说明成功等待到数据 尝试再去取一次数据 */
+
 	commlock_unlock(&commctx->recvlock);
 
-	if (flag) {
+	if (likely(commmsg)) {					/* 取到数据 */
 		copy_commmsg(message, commmsg);
-		free_commmsg(commmsg);						/* 释放掉comm_message结构体 */
+		free_commmsg(commmsg);				/* 释放掉comm_message结构体 */
 		return message->package.dsize;
+	} else {
+		return -1;
 	}
-	return -1;
 }
 
 void comm_settimeout(struct comm_context *commctx, int timeout, CommCB callback, void *usr)

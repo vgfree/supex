@@ -43,8 +43,8 @@ int main(int argc, char* argv[])
 					memset(&sendmsg, 0, sizeof(sendmsg));
 					retval = send_data(commctx, &sendmsg, recvmsg.fd);
 					if (likely(retval > 0)) {
-						//log("server send_data successed\n");
-						break ;
+						log("server send_data successed\n");
+						//break ;
 					} else {
 						log("server send_data failed\n");
 					}
@@ -81,10 +81,8 @@ int main(int argc, char* argv[])
 		} else {
 			log("server comm_socket failed\n");
 		}
-	} else {
-		log("server comm_ctx_create failed\n");
-	}
 #endif
+	}
 
 	comm_ctx_destroy(commctx);
 	return retval;

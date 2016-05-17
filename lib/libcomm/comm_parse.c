@@ -4,7 +4,6 @@
 /*********************************************************************************************/
 
 #include "comm_parse.h"
-#include "loger.h"
 
 static void _fill_message_package(struct comm_message *message, const struct mfptp_parser *packager);
 
@@ -17,7 +16,7 @@ bool parse_data(struct comm_data *commdata)
 	struct comm_context	*commctx = commdata->commctx;
 	struct comm_message	*message = NULL;
 
-	/* 有数据进行解析的时候才去进行解析 */
+	/* 有数据进行解析的时候才去进行解析并将数据全部解析完毕 */
 	while (commdata->recv_buff.size > 0) {
 		size = mfptp_parse(&commdata->parser);
 		if (likely(size > 0 && commdata->parser.ms.error == MFPTP_OK)) {	/* 解析成功 */
@@ -35,23 +34,12 @@ bool parse_data(struct comm_data *commdata)
 				commlock_lock(&commctx->recvlock);
 				if (likely(commqueue_push(&commctx->recv_queue, (void*)&message))) {
 					if (unlikely(!commctx->recv_queue.readable)) {			/* 为0代表有线程在等待可读 */
+						/* 唤醒在commctx->recv_queue.readable上等待的线程并设置其为1 */
 						commlock_wake(&commctx->recvlock, &commctx->recv_queue.readable, 1, true);
 					}
 					flag = true;
 				} else {
 					/* 解析数据的时候队列已满，另作处理 不进行堵塞等待用户取数据 */
-#if 0
-					commctx->recv_queue.writeable = 0;
-					if (likely(commlock_wait(&commctx->recvlock, &commctx->recv_queue.writeable, 1, timeout, true))) {
-						block = true;
-						continue ;
-					} else {
-						break ;
-					}
-					if (unlikely(block && commctx->recv_queue.nodes == commctx->recv_queue.capacity)) {
-						commctx->recv_queue.writeable = 0;
-					}
-#endif
 					flag = false;
 				}
 				commlock_unlock(&commctx->recvlock);

@@ -10,13 +10,38 @@
 #include <arpa/inet.h>
 #include <sys/un.h>
 #include <netdb.h>
+#include <unistd.h>
 #include "comm_utils.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
+/* 检查描述符是否可写 */
+static inline bool check_writeable(int fd)
+{
+	fd_set wfds;
+	FD_ZERO(&wfds);
+	FD_SET(fd, &wfds);
+	if (likely(select(fd+1, NULL, &wfds, NULL, NULL) > 0)) {
+		return true;
+	} else {
+		return false;
+	}
+}
 
+/* 检查描述符是否可读 */
+static inline bool check_readable(int fd)
+{
+	fd_set rfds;
+	FD_ZERO(&rfds);
+	FD_SET(fd, &rfds);
+	if (likely(select(fd+1, &rfds, NULL, NULL, NULL) > 0)) {
+		return true;
+	} else {
+		return false;
+	}
+}
 
 /* 通过套接字描述符获取本地的IP地址:本地字节序 */
 int get_address(int fd, char *paddr, size_t plen);

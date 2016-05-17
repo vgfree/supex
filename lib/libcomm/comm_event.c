@@ -167,6 +167,14 @@ static  bool _write_data(struct comm_data *commdata, int fd)
 
 	int bytes = 0;
 	bool flag = false;
+
+	if (likely(check_writeable(fd))) {
+		log("check fd writeable\n");
+	} else {
+		log("check fd not writeable\n");
+		/* fd已经不可写，则需要将此fd相关的数据全部删除 */
+		return false;
+	}
 	do {
 		if (likely(commdata->send_buff.size > 0)) {
 			bytes = write(fd, &commdata->send_buff.cache[commdata->send_buff.start], commdata->send_buff.size);
@@ -177,10 +185,10 @@ static  bool _write_data(struct comm_data *commdata, int fd)
 				commdata->send_buff.start += bytes;
 				commdata->send_buff.size -= bytes;
 				commcache_clean(&commdata->send_buff);
+				log("write data successed fd:%d\n", fd);
 				if (commdata->finishedcb.callback) {
 					commdata->finishedcb.callback(commdata->commctx, &commdata->portinfo, commdata->finishedcb.usr);
 				}
-				log("write data successed fd:%d\n", fd);
 				return true;
 			}
 		} else {
@@ -229,8 +237,11 @@ static  bool _read_data(struct comm_data *commdata, int fd)
 	if (commdata->finishedcb.callback) {
 		commdata->finishedcb.callback(commdata->commctx, &commdata->portinfo, commdata->finishedcb.usr);
 	}
+
 	if (commdata->portinfo.stat == FD_CLOSE) {
+		log("close fd :%d\n", fd);
 		comm_close(commdata->commctx, fd);
+		log("after close:%d\n", (int)commdata->commctx->data[fd]);
 	}
 	/* 目前暂定只要接收到数据就解析一次 */
 	if (flag) {
