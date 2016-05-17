@@ -42,10 +42,10 @@
 	(int32_t)(((int64_t)(lock)) & 0x00000000ffffffff)
 
 #define _AO_SPIN_LOCKOP(l, v) \
-	(AO_CASB(&(l)->lock, _AO_SPIN_UNLOCK, _CalculateLock((v))))
+	(ATOMIC_CASB(&(l)->lock, _AO_SPIN_UNLOCK, _CalculateLock((v))))
 
 #define _AO_SPIN_UNLOCKOP(l, v)	\
-	(AO_CASB(&(l)->lock, _CalculateLock((v)), _AO_SPIN_UNLOCK))
+	(ATOMIC_CASB(&(l)->lock, _CalculateLock((v)), _AO_SPIN_UNLOCK))
 
 static __thread unsigned long g_AOLockChecker = 0;
 
@@ -83,7 +83,7 @@ static bool _CheckAndRepairLock(AO_SpinLockT *lock, AO_T val)
 					 * 此时lock->pid被设置成有效的pid，已保证只有一个检查进程成功重置死锁
 					 */
 					bool ret = 0;
-					ret = AO_CASB(&lock->lock, old, _CalculateLock(val));
+					ret = ATOMIC_CASB(&lock->lock, old, _CalculateLock(val));
 
 					if (likely(ret)) {
 #ifdef DEBUG
@@ -91,7 +91,7 @@ static bool _CheckAndRepairLock(AO_SpinLockT *lock, AO_T val)
 							">>> REPAIR LOCK <<<"
 							PALETTE_NULL "\n");
 #endif
-						AO_CLEAR(&lock->counter);
+						ATOMIC_CLEAR(&lock->counter);
 						g_AOLockChecker = 0;
 						return true;
 					}
@@ -129,8 +129,8 @@ void (AO_SpinLockInit)(AO_SpinLockT *lock, bool shared)
 	}
 
 	lock->shared = !!shared;
-	AO_CLEAR(&lock->counter);
-	AO_SET(&lock->lock, _AO_SPIN_UNLOCK);
+	ATOMIC_CLEAR(&lock->counter);
+	ATOMIC_SET(&lock->lock, _AO_SPIN_UNLOCK);
 	REFOBJ(lock);
 }
 

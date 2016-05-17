@@ -28,7 +28,7 @@ int create_detach_pthread(void *(*func)(void *), void *data)
 	flag = pthread_create(&tid, &attr, func, data);
 
 	if (unlikely(flag)) {
-		x_psys("create deattch thread fail %s.", strerror(flag));
+		x_printf(S, "create deattch thread fail %s.", strerror(flag));
 	}
 
 	pthread_attr_destroy(&attr);
@@ -48,7 +48,7 @@ void ThreadSuspendStart(struct ThreadSuspend *cond)
 
 	pthread_cond_broadcast(&cond->cond);
 
-	x_pwarn("thread (%10ld) has been suspending.", GetThreadID());
+	x_printf(W, "thread (%10ld) has been suspending.", GetThreadID());
 
 	while (unlikely(!cond->reset)) {
 		struct timespec tm = {};
@@ -58,7 +58,7 @@ void ThreadSuspendStart(struct ThreadSuspend *cond)
 
 	cond->count--;
 
-	x_pwarn("thread (%10ld) has been continuning.", GetThreadID());
+	x_printf(W, "thread (%10ld) has been continuning.", GetThreadID());
 
 	pthread_cond_broadcast(&cond->cond);
 
@@ -110,14 +110,14 @@ bool ThreadSuspendInit(struct ThreadSuspend *cond)
 	flag = pthread_mutex_init(&cond->lock, NULL);
 
 	if (unlikely(flag > 0)) {
-		x_perror("pthread_mutex_init() fail : %s", x_strerror(flag));
+		x_printf(E, "pthread_mutex_init() fail : %s", x_strerror(flag));
 		return false;
 	}
 
 	flag = pthread_cond_init(&cond->cond, NULL);
 
 	if (unlikely(flag > 0)) {
-		x_perror("pthread_cond_init() fail : %s", x_strerror(flag));
+		x_printf(E, "pthread_cond_init() fail : %s", x_strerror(flag));
 
 		pthread_mutex_destroy(&cond->lock);
 

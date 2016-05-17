@@ -25,7 +25,7 @@ char *TM_FormatTime(char *tmString, size_t size, time_t tmInt, const char *forma
 	tmptr = localtime_r((time_t *)&tmInt, &local);
 
 	if (unlikely(!tmptr)) {
-		x_perror("Can't formate time [%ld] : %s.",
+		x_printf(E, "Can't formate time [%ld] : %s.",
 			tmInt, x_strerror(errno));
 		return NULL;
 	}
@@ -34,7 +34,7 @@ char *TM_FormatTime(char *tmString, size_t size, time_t tmInt, const char *forma
 
 	if (unlikely(nbytes == 0)) {
 		errno = ENOSPC;
-		x_perror("Can't formate time [%ld] : %s.",
+		x_printf(E, "Can't formate time [%ld] : %s.",
 			tmInt, x_strerror(errno));
 		return NULL;
 	}
@@ -50,7 +50,7 @@ time_t TM_ParseTime(const char *tmString, const char *formate)
 	time_t result = -1;
 
 #if defined(__LINUX__) && !defined(_GNU_SOURCE)
-	x_pwarn("Please define `_GNU_SOURCE` macro.");
+	x_printf(W, "Please define `_GNU_SOURCE` macro.");
 	errno = ENXIO;
 	return result;
 
@@ -70,7 +70,7 @@ time_t TM_ParseTime(const char *tmString, const char *formate)
 
 	if (unlikely(result == -1)) {
 		errno = EINVAL;
-		x_perror("Can't parse the string of time [%s] : %s.",
+		x_printf(E, "Can't parse the string of time [%s] : %s.",
 			tmString, x_strerror(errno));
 	}
 	return result;

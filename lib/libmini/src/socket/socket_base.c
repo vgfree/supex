@@ -33,7 +33,7 @@ again:
 			goto again;
 		}
 
-		x_perror("Can't get address information "
+		x_printf(E, "Can't get address information "
 			"about socket by [%s : %s] : %s.",
 			SWITCH_NULL_STR(host),
 			SWITCH_NULL_STR(serv),
@@ -153,7 +153,7 @@ socklen_t SA_pton(const char *paddr, struct sockaddr *naddr, socklen_t nlen)
 	}
 
 	if (unlikely(flag < 1)) {
-		x_perror("Converts IP[%s] to SA failed : %s.", paddr, x_strerror(errno));
+		x_printf(E, "Converts IP[%s] to SA failed : %s.", paddr, x_strerror(errno));
 		RAISE(EXCEPT_SYS);
 	}
 
@@ -361,17 +361,17 @@ bool SA_CompareAddr(struct sockaddr *a, struct sockaddr *b)
 
 ssize_t SIO_ReadPeek(int fd, char *buff, size_t len)
 {
-	char			t[1] = { 0 };
 	ssize_t         bytes = -1;
 	struct msghdr   hdr;
 	struct iovec    vec;
-//	assert(buff);
+
+	assert(buff);
 
 	bzero(&hdr, sizeof(hdr));
 	hdr.msg_iov = &vec;
 	hdr.msg_iovlen = 1;
-	vec.iov_base = likely(buff) ? buff : t;
-	vec.iov_len = likely(buff) ? len : sizeof(t);
+	vec.iov_base = buff;
+	vec.iov_len = len;
 
 #ifdef SIG_RESTART_SYSCALL
 again:
@@ -385,8 +385,8 @@ again:
 	bytes = recvmsg(fd, &hdr, MSG_PEEK | MSG_DONTWAIT);
 #endif
 
-	if (bytes != (ssize_t)(likely(buff) ? len : sizeof(t))) {
-		x_pwarn("Attempt to read data failed : %s.",
+	if (bytes != (ssize_t)len) {
+		x_printf(W, "Attempt to read data failed : %s.",
 			bytes < 0 ? x_strerror(errno) :
 			"Connection closed by foreign host "
 			"or try to read zero bytes");

@@ -75,7 +75,7 @@ int TcpListen(const char *host, const char *serv, SetSocketCB cb, void *usr)
 	}
 	CATCH
 	{
-		x_perror("Attempt to listen at "
+		x_printf(E, "Attempt to listen at "
 			"`%s : %s` failed : %s.",
 			host, serv,
 			x_strerror(errno));
@@ -94,7 +94,7 @@ int TcpListen(const char *host, const char *serv, SetSocketCB cb, void *usr)
 	return fd;
 }
 
-int TcpConnect(const char *host, const char *serv, SetSocketCB cb, void *usr, long timeout)
+int TcpConnect(const char *host, const char *serv, SetSocketCB cb, void *usr)
 {
 	struct addrinfo                 *aiptr = NULL;
 	struct addrinfo *volatile       ai = NULL;
@@ -108,7 +108,7 @@ int TcpConnect(const char *host, const char *serv, SetSocketCB cb, void *usr, lo
 		int code = 0;
 		ai = SA_GetAddrInfo(host, serv, 0, AF_UNSPEC, SOCK_STREAM);
 
-		for (aiptr = ai; likely(aiptr != NULL); aiptr = aiptr->ai_next) {
+		for (aiptr = ai; aiptr != NULL; aiptr = aiptr->ai_next) {
 			int flag = -1;
 
 			fd = socket(aiptr->ai_family, aiptr->ai_socktype, aiptr->ai_protocol);
@@ -123,7 +123,10 @@ int TcpConnect(const char *host, const char *serv, SetSocketCB cb, void *usr, lo
 			}
 
 			struct timeval  start = {};
-			long            remain = timeout < 0 ? INT32_MAX : timeout;
+			long            remain = 0;
+
+			remain = SO_GetSndTimeout(fd);
+			remain = remain == 0 ? CONNTIMEOUT : remain;
 			/*自己记录流失时间，并可能连接多次，直到超时或成功连接*/
 			gettimeofday(&start, NULL);
 again:
@@ -135,14 +138,9 @@ again:
 				code = errno;
 
 				if (likely((code == EINPROGRESS) || (code == EALREADY))) {
-					/*非阻塞连接，成功发起连接*/
-					if (timeout == 0) {
-						break;
-					}
-					
 					struct timeval  end = {};
 					long            diffms = 0;
-					/*粒度不能太大，系统调用也需要时间*/
+
 					gettimeofday(&end, NULL);
 					diffms = (end.tv_sec - start.tv_sec) * 1000;
 					diffms += (end.tv_usec - start.tv_usec) / 1000;
@@ -151,13 +149,13 @@ again:
 					if (likely(remain >= 0)) {
 						flag = FD_CheckWrite(fd, remain);
 						code = errno;
-						
-						/*中断或已经可写，即可能发生错误，也可能已连接，再次调用连接，以测试*/
+
 						if (likely((flag == 0) || (code == EINTR))) {
 							goto again;
-						} else {
-							/*纠正错误值*/
-							code = unlikely(code == EAGAIN) ? ETIMEDOUT : code;
+						}
+
+						if (unlikely(code == EAGAIN)) {
+							code = ETIMEDOUT;
 						}
 					} else {
 						code = ETIMEDOUT;
@@ -176,7 +174,7 @@ again:
 	}
 	CATCH
 	{
-		x_perror("Attempt to connect to `%s : %s` failed : %s.",
+		x_printf(E, "Attempt to connect to `%s : %s` failed : %s.",
 			host, serv, x_strerror(errno));
 
 		if (likely(fd > -1)) {

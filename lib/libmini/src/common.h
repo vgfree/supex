@@ -52,9 +52,6 @@
   #define  __APPLE__    (1)
 #elif !defined(__CYGWIN__) && (defined(__CYGWIN32__) || defined(CYGWIN))
   #define  __CYGWIN__   (1)
-#elif !defined(__WINDOWS__) && (defined(_WIN32) || defined(WIN32) \
-	|| defined(_window_) || defined(_WIN64) || defined(WIN64))
-  #define __WINDOWS__   (1)
 #endif
 
 #ifdef __LINUX__
@@ -231,14 +228,9 @@
 #define _SCENE_WHITE_VALUE_(scene)      _PALETTE_FORMAT_(scene)
 #define _SCENE_NULL_VALUE_(scene)       ""
 
-#ifdef ENABLE_LOG_COLOR
-  #define PALETTE_NULL "\x1B[m"
-  #define PALETTE_FULL(color, depth, style, scene) \
+#define PALETTE_NULL "\x1B[m"
+#define PALETTE_FULL(color, depth, style, scene) \
 	PALETTE_NULL color##VALUE_(color) depth##VALUE_(depth) style##VALUE_(style) scene##VALUE_(scene)
-#else
-  #define PALETTE_NULL	""
-  #define PALETTE_FULL(color, depth, style, scene)	""
-#endif
 
 /* -------------------------------------------                */
 #define MAX_BLOCK_SIZE  (8192)					/* 最大文本块长度 */

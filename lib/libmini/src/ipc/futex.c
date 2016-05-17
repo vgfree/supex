@@ -36,7 +36,7 @@ int futex_wait(int *uaddr, int val, int timeout)
 	struct timespec *tmptr = NULL;
 	int             flag = 0;
 
-	if (likely(AO_GET(uaddr) != val)) {
+	if (likely(ATOMIC_GET(uaddr) != val)) {
 		return -1;
 	}
 
@@ -117,12 +117,12 @@ int futex_wait(int *uaddr, int val, int timeout)
 
 	of = (((uintptr_t)uaddr) >> 3) % DIM(_futex_wait_ctl);
 
-	if (likely(AO_GET(uaddr) != val)) {
+	if (likely(ATOMIC_GET(uaddr) != val)) {
 		return -1;
 	}
 
 	pthread_mutex_lock(&_futex_wait_ctl[of].mutex);
-	AO_INC(&_futex_wait_ctl[of].waiter);
+	ATOMIC_INC(&_futex_wait_ctl[of].waiter);
 
 	if (timeout >= 0) {
 		struct timespec tm = {};
@@ -134,7 +134,7 @@ int futex_wait(int *uaddr, int val, int timeout)
 				&_futex_wait_ctl[of].mutex);
 	}
 
-	AO_DEC(&_futex_wait_ctl[of].waiter);
+	ATOMIC_DEC(&_futex_wait_ctl[of].waiter);
 	pthread_mutex_unlock(&_futex_wait_ctl[of].mutex);
 
 	if (unlikely(flag > 0)) {

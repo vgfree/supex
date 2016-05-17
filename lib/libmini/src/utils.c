@@ -23,7 +23,12 @@
 
 /* -------------------------------------------                */
 
-
+/*
+ * 错误消息最大长度
+ */
+#ifndef ERROR_MESSAGE_MAX_SIZE
+  #define       ERROR_MESSAGE_MAX_SIZE (512)
+#endif
 
 /* -------------------------------------------                */
 /**字节序*/
@@ -31,12 +36,6 @@ const union _byteorder g_ByteOrder = { 0x01020304 };
 
 /* -------------------------------------------                */
 
-/*
- * 错误消息最大长度
- */
-#ifndef ERROR_MESSAGE_MAX_SIZE
-#define       ERROR_MESSAGE_MAX_SIZE (512)
-#endif
 static __thread char _g_errMsg[ERROR_MESSAGE_MAX_SIZE] = { 0 };
 
 /**程序名称*/
@@ -194,7 +193,7 @@ void SetProgName(const char *name)
 		base = strrchr(name, '/');
 		base = base ? (base + 1) : name;
 		snprintf(_g_ProgName.name, sizeof(_g_ProgName.name), "%s", base);
-		AO_SET(&g_ProgName, &_g_ProgName.name[0]);
+		ATOMIC_SET(&g_ProgName, &_g_ProgName.name[0]);
 	}
 }
 
@@ -384,7 +383,7 @@ bool BindCPUCore(long which)
 	return_val_if_fail(ncpus > 1, false);
 
 	if (likely(which < 0)) {
-		which = AO_F_ADD(&curcore, 1) % (ncpus - 1) + 1;
+		which = ATOMIC_F_ADD(&curcore, 1) % (ncpus - 1) + 1;
 	} else {
 		which = INRANGE(which, 1, ncpus - 1);
 	}
@@ -394,7 +393,7 @@ bool BindCPUCore(long which)
 	rc = sched_setaffinity(0, sizeof(mask), &mask);
 
 	if (unlikely(rc < 0)) {
-		x_psys("set affinity error : %s.\n", x_strerror(errno));
+		x_printf(S, "set affinity error : %s.\n", x_strerror(errno));
 		return false;
 	}
 
@@ -402,7 +401,7 @@ bool BindCPUCore(long which)
 	rc = sched_getaffinity(0, sizeof(mask), &mask);
 
 	if (unlikely(rc < 0)) {
-		x_psys("get affinity error : %s.\n", x_strerror(errno));
+		x_printf(S, "get affinity error : %s.\n", x_strerror(errno));
 		return false;
 	}
 
@@ -443,7 +442,7 @@ long GetProcessID()
 	long gpid = -1;
 
 	/*不能调用有日志相关函数*/
-	if (likely((gpid = AO_GET(&g_ProcessID)) != -1)) {
+	if (likely((gpid = ATOMIC_GET(&g_ProcessID)) != -1)) {
 		return gpid;
 	}
 
@@ -457,7 +456,7 @@ long GetProcessID()
 		abort();
 	}
 
-	AO_SET(&g_ProcessID, (long)pid);
+	ATOMIC_SET(&g_ProcessID, (long)pid);
 
 	return (long)pid;
 }
@@ -467,7 +466,7 @@ long GetThreadID()
 	long gtid = -1;
 
 	/*不能调用有日志相关函数*/
-	if (likely((gtid = AO_GET(&g_ThreadID)) != -1)) {
+	if (likely((gtid = ATOMIC_GET(&g_ThreadID)) != -1)) {
 		return gtid;
 	}
 
@@ -478,11 +477,11 @@ long GetThreadID()
 #endif
 
 	if (unlikely(gtid < 0)) {
-		x_pfatal("Get thread's id failure : %s", x_strerror(errno));
+		x_printf(F, "Get thread's id failure : %s", x_strerror(errno));
 		abort();
 	}
 
-	AO_SET(&g_ThreadID, gtid);
+	ATOMIC_SET(&g_ThreadID, gtid);
 
 	return gtid;
 }
@@ -492,18 +491,18 @@ long GetCPUCores()
 	long gcpus = -1;
 
 	/*不能调用有日志相关函数*/
-	if (likely((gcpus = AO_GET(&g_CPUCores)) != -1)) {
+	if (likely((gcpus = ATOMIC_GET(&g_CPUCores)) != -1)) {
 		return gcpus;
 	}
 
 	gcpus = sysconf(_SC_NPROCESSORS_CONF);
 
 	if (unlikely(gcpus < 0)) {
-		x_pfatal("Get number of CPU failure : %s", x_strerror(errno));
+		x_printf(F, "Get number of CPU failure : %s", x_strerror(errno));
 		abort();
 	}
 
-	AO_SET(&g_CPUCores, gcpus);
+	ATOMIC_SET(&g_CPUCores, gcpus);
 
 	return gcpus;
 }
@@ -520,14 +519,14 @@ int Getch(int *r)
 	rc = isatty(fileno(stdout));
 
 	if (unlikely(rc < 1)) {
-		x_perror("isatty() : %s", x_strerror(errno));
+		x_printf(E, "isatty() : %s", x_strerror(errno));
 		return -1;
 	}
 
 	rc = tcgetattr(fileno(stdin), &newv);
 
 	if (unlikely(rc < 0)) {
-		x_perror("tcgetattr() : %s", x_strerror(errno));
+		x_printf(E, "tcgetattr() : %s", x_strerror(errno));
 		return -1;
 	}
 
@@ -542,7 +541,7 @@ int Getch(int *r)
 	rc = tcsetattr(fileno(stdin), TCSANOW, &newv);
 
 	if (unlikely(rc < 0)) {
-		x_perror("%s", x_strerror(errno));
+		x_printf(E, "%s", x_strerror(errno));
 		return -1;
 	}
 
@@ -550,16 +549,16 @@ int Getch(int *r)
 
 	if (unlikely(c == EOF)) {
 		if (unlikely(ferror(stdin) != 0)) {
-			x_pwarn("getchar() : %s.", x_strerror(errno));
+			x_printf(W, "getchar() : %s.", x_strerror(errno));
 		} else {
-			x_pwarn("the stream is at end-of-file.");
+			x_printf(W, "the stream is at end-of-file.");
 		}
 	}
 
 	rc = tcsetattr(fileno(stdin), TCSANOW, &oldv);
 
 	if (unlikely(rc < 0)) {
-		x_perror("tcsetattr() : %s", x_strerror(errno));
+		x_printf(E, "tcsetattr() : %s", x_strerror(errno));
 		return -1;
 	}
 
@@ -573,18 +572,18 @@ long GetPageSize()
 	long ps = -1;
 
 	/*不能调用有日志相关函数*/
-	if (likely((ps = AO_GET(&g_PageSize)) != -1)) {
+	if (likely((ps = ATOMIC_GET(&g_PageSize)) != -1)) {
 		return ps;
 	}
 
 	ps = sysconf(_SC_PAGE_SIZE);
 
 	if (unlikely(ps < 0)) {
-		x_pfatal("Get size of page failure : %s", x_strerror(errno));
+		x_printf(F, "Get size of page failure : %s", x_strerror(errno));
 		abort();
 	}
 
-	AO_SET(&g_PageSize, ps);
+	ATOMIC_SET(&g_PageSize, ps);
 
 	return ps;
 }

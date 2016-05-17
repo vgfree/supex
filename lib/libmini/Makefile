@@ -60,7 +60,7 @@ endif
 
 #######
 
-CC_COMPILER ?=		gcc
+CC_COMPILER ?=		@gcc
 CC =			$(CC_COMPILER) $(BUILD_CFLAGS) $(CFLAGS) $(BUILD_INC_DIR) $(BUILD_OPTIMIZE)
 LN = 			$(CC_COMPILER) $(BUILD_CFLAGS) $(CFLAGS) $(DYLIB_CFLAGS) $(BUILD_LIB_DIR)
 AR = 			@ar -rcs
@@ -82,7 +82,7 @@ prepare:
 
 SFILE_BASE_DIR = 	src
 
-SFILE_AO_DIR = 	$(SFILE_BASE_DIR)/atomic
+SFILE_ATOMIC_DIR = 	$(SFILE_BASE_DIR)/atomic
 SFILE_ADT_DIR =         $(SFILE_BASE_DIR)/adt
 SFILE_ADT_STATIC_DIR =  $(SFILE_BASE_DIR)/adt/static
 SFILE_ADT_DYNAMIC_DIR = $(SFILE_BASE_DIR)/adt/dynamic
@@ -133,7 +133,7 @@ SOBJ = $(addprefix $(SOBJ_DIR)/, \
 $(SOBJ_DIR)/%.o : $(SFILE_BASE_DIR)/%.c
 	$(call compile_obj, $<, $@)
 
-$(SOBJ_DIR)/%.o : $(SFILE_AO_DIR)/%.c
+$(SOBJ_DIR)/%.o : $(SFILE_ATOMIC_DIR)/%.c
 	$(call compile_obj, $<, $@)
 
 $(SOBJ_DIR)/%.o : $(SFILE_ADT_DIR)/%.c

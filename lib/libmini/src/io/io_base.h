@@ -16,12 +16,7 @@ __BEGIN_DECLS
 /* -----------------------                      */
 
 /* 描述符的相关操作 */
-static inline int Close(int fd)
-{
-	if (fd > -1) { return close(fd); }
-//	errno = EBADF;
-	return -1;
-}
+
 /**
  * 写测试
  * @return -1，出错；0，就绪
@@ -63,15 +58,6 @@ int FD_CloseAll();
 	RAISE_SYS_ERROR(_rc);		   \
 	STMT_END
 
-#define FD_Disable(fd, flag)		   \
-	STMT_BEGIN			   \
-	int _rc = 0;			   \
-	_rc = fcntl((fd), F_GETFL, NULL);  \
-	RAISE_SYS_ERROR(_rc);		   \
-	_rc &= ~(flag);			   \
-	_rc = fcntl((fd), F_SETFL, (_rc)); \
-	RAISE_SYS_ERROR(_rc);		   \
-	STMT_END
 /* -----------------------                      */
 
 /*

@@ -22,56 +22,56 @@ typedef volatile long AO_T;
 /* 内存访问栅 */
   #define barrier()             (__sync_synchronize())
 /* 原子获取 */
-// #define AO_GET(ptr)                 (barrier(), ( __typeof__ (*( ptr ))) ( (AO_GET)((AO_T*)( ptr ))))
-  #define AO_GET(ptr)       ({ __typeof__(*(ptr)) volatile *_val = (ptr); barrier(); (*_val); })
-// #define AO_GET(ptr)                 (barrier(), ( __typeof__ (*( ptr ))) ( *( ptr )))
+// #define ATOMIC_GET(ptr)                 (barrier(), ( __typeof__ (*( ptr ))) ( (ATOMIC_GET)((AO_T*)( ptr ))))
+  #define ATOMIC_GET(ptr)       ({ __typeof__(*(ptr)) volatile *_val = (ptr); barrier(); (*_val); })
+// #define ATOMIC_GET(ptr)                 (barrier(), ( __typeof__ (*( ptr ))) ( *( ptr )))
 
 /* 原子设置 */
-  #define AO_SET(ptr, value)        ((void)__sync_lock_test_and_set((ptr), (value)))
+  #define ATOMIC_SET(ptr, value)        ((void)__sync_lock_test_and_set((ptr), (value)))
 
 /* 原子交换，如果被设置，则返回旧值，否则返回设置值 */
-  #define AO_SWAP(ptr, value)       ((__typeof__(*(ptr)))__sync_lock_test_and_set((ptr), (value)))
+  #define ATOMIC_SWAP(ptr, value)       ((__typeof__(*(ptr)))__sync_lock_test_and_set((ptr), (value)))
 
 /* 原子比较交换，如果当前值等于旧值，则新值被设置，返回旧值，否则返回新值*/
-  #define AO_CAS(ptr, comp, value)  ((__typeof__(*(ptr)))__sync_val_compare_and_swap((ptr), (comp), (value)))
+  #define ATOMIC_CAS(ptr, comp, value)  ((__typeof__(*(ptr)))__sync_val_compare_and_swap((ptr), (comp), (value)))
 
 /* 原子比较交换，如果当前值等于旧指，则新值被设置，返回真值，否则返回假 */
-  #define AO_CASB(ptr, comp, value) (__sync_bool_compare_and_swap((ptr), (comp), (value)) != 0 ? true : false)
+  #define ATOMIC_CASB(ptr, comp, value) (__sync_bool_compare_and_swap((ptr), (comp), (value)) != 0 ? true : false)
 
 /* 原子清零 */
-  #define AO_CLEAR(ptr)             ((void)__sync_lock_release((ptr)))
+  #define ATOMIC_CLEAR(ptr)             ((void)__sync_lock_release((ptr)))
 
 /* maths/bitop of ptr by value, and return the ptr's new value */
-  #define AO_ADD_F(ptr, value)      ((__typeof__(*(ptr)))__sync_add_and_fetch((ptr), (value)))
-  #define AO_SUB_F(ptr, value)      ((__typeof__(*(ptr)))__sync_sub_and_fetch((ptr), (value)))
-  #define AO_OR_F(ptr, value)       ((__typeof__(*(ptr)))__sync_or_and_fetch((ptr), (value)))
-  #define AO_AND_F(ptr, value)      ((__typeof__(*(ptr)))__sync_and_and_fetch((ptr), (value)))
-  #define AO_XOR_F(ptr, value)      ((__typeof__(*(ptr)))__sync_xor_and_fetch((ptr), (value)))
+  #define ATOMIC_ADD_F(ptr, value)      ((__typeof__(*(ptr)))__sync_add_and_fetch((ptr), (value)))
+  #define ATOMIC_SUB_F(ptr, value)      ((__typeof__(*(ptr)))__sync_sub_and_fetch((ptr), (value)))
+  #define ATOMIC_OR_F(ptr, value)       ((__typeof__(*(ptr)))__sync_or_and_fetch((ptr), (value)))
+  #define ATOMIC_AND_F(ptr, value)      ((__typeof__(*(ptr)))__sync_and_and_fetch((ptr), (value)))
+  #define ATOMIC_XOR_F(ptr, value)      ((__typeof__(*(ptr)))__sync_xor_and_fetch((ptr), (value)))
 
-  #define AO_F_ADD(ptr, value)      ((__typeof__(*(ptr)))__sync_fetch_and_add((ptr), (value)))
-  #define AO_F_SUB(ptr, value)      ((__typeof__(*(ptr)))__sync_fetch_and_sub((ptr), (value)))
-  #define AO_F_OR(ptr, value)       ((__typeof__(*(ptr)))__sync_fetch_and_or((ptr), (value)))
-  #define AO_F_AND(ptr, value)      ((__typeof__(*(ptr)))__sync_fetch_and_and((ptr), (value)))
-  #define AO_F_XOR(ptr, value)      ((__typeof__(*(ptr)))__sync_fetch_and_xor((ptr), (value)))
+  #define ATOMIC_F_ADD(ptr, value)      ((__typeof__(*(ptr)))__sync_fetch_and_add((ptr), (value)))
+  #define ATOMIC_F_SUB(ptr, value)      ((__typeof__(*(ptr)))__sync_fetch_and_sub((ptr), (value)))
+  #define ATOMIC_F_OR(ptr, value)       ((__typeof__(*(ptr)))__sync_fetch_and_or((ptr), (value)))
+  #define ATOMIC_F_AND(ptr, value)      ((__typeof__(*(ptr)))__sync_fetch_and_and((ptr), (value)))
+  #define ATOMIC_F_XOR(ptr, value)      ((__typeof__(*(ptr)))__sync_fetch_and_xor((ptr), (value)))
 
 #else
 
   #error "can not supported atomic operate by gcc(v4.0.1+) buildin function."
 #endif	/* if (GCC_VERSION >= 40100) */
 
-#define AO_INC(ptr)                 ((void)AO_ADD_F((ptr), 1))
-#define AO_DEC(ptr)                 ((void)AO_SUB_F((ptr), 1))
-#define AO_ADD(ptr, val)            ((void)AO_ADD_F((ptr), (val)))
-#define AO_SUB(ptr, val)            ((void)AO_SUB_F((ptr), (val)))
+#define ATOMIC_INC(ptr)                 ((void)ATOMIC_ADD_F((ptr), 1))
+#define ATOMIC_DEC(ptr)                 ((void)ATOMIC_SUB_F((ptr), 1))
+#define ATOMIC_ADD(ptr, val)            ((void)ATOMIC_ADD_F((ptr), (val)))
+#define ATOMIC_SUB(ptr, val)            ((void)ATOMIC_SUB_F((ptr), (val)))
 
 /* set some bits on(1) of ptr, and return the ptr's new value */
-#define AO_BIT_ON(ptr, mask)        AO_OR((ptr), (mask))
+#define ATOMIC_BIT_ON(ptr, mask)        ATOMIC_OR((ptr), (mask))
 
 /* set some bits off(0) of ptr, and return the ptr's new value */
-#define AO_BIT_OFF(ptr, mask)       AO_AND((ptr), ~(mask))
+#define ATOMIC_BIT_OFF(ptr, mask)       ATOMIC_AND((ptr), ~(mask))
 
 /* exchange some bits(1->0/0->1) of ptr, and return the ptr's new value */
-#define AO_BIT_XCHG(ptr, mask)      AO_XOR((ptr), (mask))
+#define ATOMIC_BIT_XCHG(ptr, mask)      ATOMIC_XOR((ptr), (mask))
 
 /* -------------------                  */
 
@@ -90,7 +90,7 @@ typedef volatile long AO_T;
 		int _old = 0;					     \
 		bool _ret = false;				     \
 		if (likely((obj))) {				     \
-			_old = AO_SWAP(&(obj)->magic, OBJMAGIC); \
+			_old = ATOMIC_SWAP(&(obj)->magic, OBJMAGIC); \
 		}						     \
 		_ret = (_old == OBJMAGIC ? false : true);	     \
 		_ret;						     \
@@ -102,14 +102,14 @@ typedef volatile long AO_T;
 	({								\
 		bool _ret = false;					\
 		if (likely((obj))) {					\
-			_ret = AO_CASB(&(obj)->magic, OBJMAGIC, 0);	\
+			_ret = ATOMIC_CASB(&(obj)->magic, OBJMAGIC, 0);	\
 		}							\
 		_ret;							\
 	})
 
 /*原子的验证魔数*/
 #undef ISOBJ
-#define ISOBJ(obj) ((obj) && AO_GET(&(obj)->magic) == OBJMAGIC)
+#define ISOBJ(obj) ((obj) && ATOMIC_GET(&(obj)->magic) == OBJMAGIC)
 
 /*断言魔数*/
 #undef ASSERTOBJ
