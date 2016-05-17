@@ -4,6 +4,10 @@
 #include <unistd.h>
 #include <assert.h>
 
+#include <openssl/evp.h>               
+#include <openssl/aes.h>
+#include <openssl/err.h>
+
 #include "mq_api.h"
 
 #include "swift_api.h"
@@ -268,6 +272,10 @@ static void swift_entry_init(void)
 
 	// init statistics pthread
 	statistics_start(1);
+
+        //openssl init
+        OpenSSL_add_all_algorithms();
+        ERR_load_crypto_strings();
 }
 
 static void swift_shut_down(void)
@@ -436,6 +444,8 @@ int main(int argc, char **argv)
 
 	kvhandler_destroy(count_handler);
 	kvhandler_destroy(city_handler);
+        ERR_free_strings();
+        EVP_cleanup();
 	return 0;
 }
 

@@ -109,8 +109,8 @@ int id_cmd_out(kv_handler_t *handler, const char *id, long date, unsigned char *
                         /* Encrypt the plaintext */
                         snprintf(iv_date, 16, "%ld", date);
                         ciphertext_len = id_encrypt(plaintext, strlen(plaintext), aad, strlen(aad), key, iv_date, cipherbuff, tag);
-                        printf("Ciphertext is: %d\n", ciphertext_len);
-                        BIO_dump_fp(stdout, cipherbuff, ciphertext_len);
+                        //printf("Ciphertext is: %d\n", ciphertext_len);
+                        //BIO_dump_fp(stdout, cipherbuff, ciphertext_len);
                         /*int i = 0;
                         int k = 0;
                         for(i=0; i<ciphertext_len; i+=2) {
@@ -119,8 +119,8 @@ int id_cmd_out(kv_handler_t *handler, const char *id, long date, unsigned char *
                         */
                         extraction(cipherbuff, ciphertext_len, encrypt_text);
                         id_cmd_in(handler, id, date, encrypt_text);
-                        printf("encrypt_text is: %d\n", strlen(encrypt_text));
-                        BIO_dump_fp(stdout, encrypt_text, strlen(encrypt_text));
+                        //printf("encrypt_text is: %d\n", strlen(encrypt_text));
+                        //BIO_dump_fp(stdout, encrypt_text, strlen(encrypt_text));
                         flag = 1;
                         goto end;
                 }
@@ -145,15 +145,16 @@ int id_cmd_out(kv_handler_t *handler, const char *id, long date, unsigned char *
                 long get_date = atoi((char *)value->ptr);
                 if(date == get_date) {
                         memset(cmd, 0, sizeof(cmd));
-                        snprintf(cmd, CMD_BUF_SIZE, "hget %s cipher",id);    
-                        kv_answer_t *ans = kv_ask(handler, cmd, strlen(cmd));
-                        if (ans->errnum != ERR_NONE) {
+                        snprintf(cmd, CMD_BUF_SIZE, "hget %s cipher",id); 
+                        kv_answer_t *ans_cipher = kv_ask(handler, cmd, strlen(cmd));
+                        if (ans_cipher->errnum != ERR_NONE) {
                                 flag = -1;
+                                kv_answer_release(ans_cipher);
                                 goto end;
                         }
-                        unsigned num = kv_answer_length(ans);
+                        unsigned num = kv_answer_length(ans_cipher);
                         if (num == 1) {
-                                kv_answer_value_t *cipher_text = kv_answer_first_value(ans);
+                                kv_answer_value_t *cipher_text = kv_answer_first_value(ans_cipher);
                                 if (!cipher_text) {
                                         x_printf(E, "Failed to get cipher_text by cmd[%s].\n", cmd);
                                         flag = -2;
@@ -163,16 +164,17 @@ int id_cmd_out(kv_handler_t *handler, const char *id, long date, unsigned char *
                                 } 
 
                         }
+                        kv_answer_release(ans_cipher);
                         goto end;
                 }
                 else if (date > get_date){
-                        id_cmd_del(handler, id);
+                        //id_cmd_del(handler, id);
                         snprintf(plaintext, 128, "%s%ld", id, date);
                         /* Encrypt the plaintext */
                         snprintf(iv_date, 16, "%ld", date);
                         ciphertext_len = id_encrypt(plaintext, strlen(plaintext), aad, strlen(aad), key, iv_date, cipherbuff, tag);
-                        printf("Ciphertext is: %d\n", ciphertext_len);
-                        BIO_dump_fp(stdout, cipherbuff, ciphertext_len);
+                        //printf("Ciphertext is: %d\n", ciphertext_len);
+                        //BIO_dump_fp(stdout, cipherbuff, ciphertext_len);
                         /*int i = 0;
                         int k = 0;
                         for(i=0; i<ciphertext_len; i+=2) {
@@ -181,8 +183,8 @@ int id_cmd_out(kv_handler_t *handler, const char *id, long date, unsigned char *
                         */
                         extraction(cipherbuff, ciphertext_len, encrypt_text);
                         id_cmd_in(handler, id, date, encrypt_text);
-                        printf("encrypt_text is: %d\n", strlen(encrypt_text));
-                        BIO_dump_fp(stdout, encrypt_text, strlen(encrypt_text));
+                        //printf("encrypt_text is: %d\n", strlen(encrypt_text));
+                        //BIO_dump_fp(stdout, encrypt_text, strlen(encrypt_text));
                         flag = 1;
                 }
                 else {
