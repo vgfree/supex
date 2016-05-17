@@ -8,7 +8,6 @@ int main(int argc, char *argv[])
   void *server_simulator = zmq_socket(ctx, ZMQ_PULL);
   int rc = zmq_connect(server_simulator, "tcp://127.0.0.1:8102");
   assert(rc == 0);
-  sleep(10);
   while (1) {
     int more;
     size_t more_size = sizeof(more);

@@ -1,6 +1,24 @@
 #include "comm_message_operator.h"
+#include "gid_map.h"
 #include "message_dispatch.h"
 #include "status.h"
+#include "uid_map.h"
+
+int erase_client(int fd)
+{
+  char uid[30] = {};
+  int size = 0;
+  find_uid(uid, &size, fd);
+  remove_fd(uid);
+  remove_uid(fd);
+  char gid_list[20][20] = {};
+  find_gid_list(fd, (char**)gid_list, &size);
+  for (int i = 0; i < size; i++) {
+    remove_fd_list((char*)gid_list[i], &fd, 1);
+  }
+  remove_gid_list(fd, (char**)gid_list, size);
+  return size;
+}
 
 void send_status_msg(int clientfd, int status)
 {

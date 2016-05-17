@@ -1,5 +1,5 @@
 #include "daemon.h"
-#include "http_dispatch.h"
+//#include "http_dispatch.h"
 #include "loger.h"
 #include "message_concentrator.h"
 
@@ -12,7 +12,7 @@
 struct CSLog *g_imlog = NULL;
 int main(int argc, char *argv[])
 {
-  //signal(SIGPIPE, SIG_IGN);
+  signal(SIGPIPE, SIG_IGN);
   if (daemon_init(SERVER_FILE) == 1) {
     printf("server is running");
     return -1;
@@ -23,7 +23,6 @@ int main(int argc, char *argv[])
     printf("concentrator not init.");
     return -1;
   }
-//  http_run(argc, argv);
   void *status;
   pthread_join(tid, &status);
   log("exit main thread.");

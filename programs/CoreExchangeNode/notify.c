@@ -22,7 +22,9 @@ void client_event_notify(struct comm_context *commctx,
   case FD_CLOSE:
     {
       array_remove_fd(portinfo->fd);
+      erase_client(portinfo->fd);
       send_status_msg(portinfo->fd, FD_CLOSE);
+      log("errase client fd:%d.", portinfo->fd);
     }
     break;
   default:

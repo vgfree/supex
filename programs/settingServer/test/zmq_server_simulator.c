@@ -8,7 +8,6 @@ int main(int argc, char *argv[])
   void *server_simulator = zmq_socket(ctx, ZMQ_PUSH);
   int rc = zmq_bind(server_simulator, "tcp://127.0.0.1:8111");
   assert(rc == 0);
-  sleep(10);
   while (1) {
     zmq_msg_t part1;
     int rc = zmq_msg_init_size(&part1, 7);

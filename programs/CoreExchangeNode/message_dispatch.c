@@ -72,6 +72,7 @@ static int _handle_uid_message(struct comm_message *msg)
   return 0;
 }
 
+/*
 static int _handle_server_login(struct comm_message *msg)
 {
   int fsz = 0;
@@ -90,17 +91,17 @@ static int _handle_server_login(struct comm_message *msg)
 
 static int _handle_client_login(struct comm_message *msg)
 {
-  /* 即验证当前发送者.
-     重新打包生成CID 并告知messageGateway. 
-     客户端应在连接上coreChangeNode 时，发送第一个包为身份验证包。*/
+  // 即验证当前发送者.
+  // 重新打包生成CID 并告知messageGateway. 
+  // 客户端应在连接上coreChangeNode 时，发送第一个包为身份验证包
   // 重新组包， 并生成cid , 通知server。
   int store_fd = msg->fd;
   // TO DO: 存储到redis.
   int fd;
   char cid[6] = {};
   memcpy(cid, g_serv_info.ip, 4);
-  cid[4] = store_fd % 256;
-  cid[5] = store_fd / 256;
+  cid[4] = store_fd / 256;
+  cid[5] = store_fd % 256;
   find_best_gateway(&fd);
   remove_first_nframe(2, msg);
   set_msg_fd(msg, fd);
@@ -109,15 +110,52 @@ static int _handle_client_login(struct comm_message *msg)
   set_msg_frame(0, msg, 5, "login");
   int ret = comm_send(g_serv_info.commctx, msg, true, -1);
   return ret;
-}
+}*/
 
 static int _handle_uid_map(struct comm_message *msg)
 {
+  int fsz = 0;
+  char *cid = get_msg_frame(2, msg, &fsz);
+  if (memcmp(cid, g_serv_info.ip, 4) != 0) {
+    log("this cid is not belong to this server");
+    return -1;
+  }
+  int fd = cid[4] * 256 + cid[5];
+  char *uid = get_msg_frame(3, msg, &fsz);
+  char uid_buf[20] = {};
+  memcpy(uid_buf, uid, fsz);
+  insert_fd(uid_buf, fd);
   return 0;
 }
 
 static int _handle_gid_map(struct comm_message *msg)
 {
+  int fsz = 0;
+  char *cid = get_msg_frame(2, msg, &fsz);
+  if (fsz != 6) {
+    error("wrong frame.");
+  }
+  if (memcmp(cid, g_serv_info.ip, 4) != 0) {
+    log("this cid is not belong to this server");
+    return -1;
+  }
+  int fd = cid[4] * 256 + cid[5];
+  char *gid_list = get_msg_frame(3, msg, &fsz);
+  char gid[20] = {};
+  int gid_index = 0;
+  for (int i = 0; i < fsz; i++) {
+    if (gid_list[i] == ',') {
+       insert_fd_list(gid, &fd, 1);
+       insert_gid_list(fd, gid);
+       memset(gid, 0, 20);
+       gid_index = 0;
+    }
+	else {
+      gid[gid_index++] = gid_list[i];
+    } 
+  } 
+  insert_fd_list(gid, &fd, 1);
+  insert_gid_list(fd, gid);
   return 0;
 }
 
@@ -161,9 +199,9 @@ static void _erased_client(struct comm_message *msg)
   // to do, comm_close 相对应的fd.
   int fd = cid[4] * 256 + cid[5];
   comm_close(g_serv_info.commctx, fd);
+  erase_client(fd);
   log("errase fd:%d.", fd);
   send_status_msg(fd, FD_CLOSE);
-  // 删除gid, uid,
   array_remove_fd(fd);
 }
 

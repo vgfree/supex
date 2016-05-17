@@ -57,7 +57,7 @@ int init_comm_io()
   struct cbinfo callback_info = {};
   callback_info.callback = core_exchange_node_cb;
 
-  int count = 1;
+/*  int count = 1;
   if (port) {
     char *ptr = port;
     while (*ptr != '\0' ) {
@@ -111,7 +111,7 @@ int init_comm_io()
     g_node_ptr->fd_array[g_node_ptr->max_size++] = connectfd;
     log("g_node_ptr->max_size:%d.", g_node_ptr->max_size);
     //send_validate_logon_package(connectfd);
-  }
+  }*/
   char *nodeServer = get_config_name(config, NODE_SERVER_IP);
   char *nodePort = get_config_name(config, NODE_SERVER_PORT);
   log("nodeServer:%s, nodePort:%s.", nodeServer, nodePort);

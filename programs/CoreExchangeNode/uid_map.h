@@ -11,7 +11,11 @@ int find_fd(char *uid);
 
 int insert_fd(char *uid, int fd);
 
+int find_uid(char *uid, int *size, int fd);
+
 int remove_fd(char *uid);
+
+int remove_uid(int fd);
 
 void destroy_uid_map();
 

@@ -38,11 +38,11 @@ static int init() {
     init_config_reader(CONFIG);
   char *clientIP = get_config_name(config, LISTEN_CLIENT_IP);
   char *clientPort = get_config_name(config, LISTEN_CLIENT_PORT);
-  char *MGsrvIP = get_config_name(config, LISTEN_MESSAGEGATEWAY_IP);
-  char *MGsrvPort = get_config_name(config, LISTEN_MESSAGEGATEWAY_PORT);
+//  char *MGsrvIP = get_config_name(config, LISTEN_MESSAGEGATEWAY_IP);
+//  char *MGsrvPort = get_config_name(config, LISTEN_MESSAGEGATEWAY_PORT);
 //  char *package_sz = get_config_name(config, PACKAGE_SIZE);
   log("ListenClientIp = %s, ListenClientPort = %s", clientIP, clientPort);
-  log("MGsrvIp = %s, MGsrvPort = %s", MGsrvIP, MGsrvPort);
+//  log("MGsrvIp = %s, MGsrvPort = %s", MGsrvIP, MGsrvPort);
   list_init();
   array_init();
   struct comm_context *commctx = NULL;
@@ -60,10 +60,10 @@ static int init() {
   }
   struct cbinfo MGCB = {};
   MGCB.callback = message_gateway_event_notify;
-  retval = comm_socket(commctx, MGsrvIP, MGsrvPort, &MGCB, COMM_BIND);
+/*  retval = comm_socket(commctx, MGsrvIP, MGsrvPort, &MGCB, COMM_BIND);
   if (retval == -1) {
     error("can't bind MG socket, ip:%s, port:%s.", MGsrvIP, MGsrvPort);
-  }
+  }*/
   get_ip(clientIP, g_serv_info.ip);
   g_serv_info.port = atoi(clientPort);
 //  g_serv_info.package_size = atoi(package_sz);
@@ -86,10 +86,11 @@ static int init() {
       g_serv_info.message_gateway_fd = fd;
       node.status = 1;
       list_push_back(MESSAGE_GATEWAY, &node);
-	}
-	else {
+    }
+    else {
       error("connect message gateway failed.");
-	}
+      return -1;
+    }
   }
   char *settingServerIp = get_config_name(config, CONNECT_SETTINGSERVER_IP);
   char *settingServerPort = get_config_name(config, CONNECT_SETTINGSERVER_PORT);
@@ -112,10 +113,10 @@ static int init() {
       node.status = 1;
       list_push_back(SETTING_SERVER, &node);
 	}
-	else {
+    else {
       error("connect settingServer failed.");
-      abort();
-	}
+      return -1;
+    }
   }
   char *loginServerIp = get_config_name(config, CONNECT_LOGINSERVER_IP);
   char *loginServerPort = get_config_name(config, CONNECT_LOGINSERVER_PORT);
@@ -137,11 +138,11 @@ static int init() {
       g_serv_info.login_server_fd = fd;
       node.status = 1;
       list_push_back(LOGIN_SERVER, &node);
-	}
-	else {
+    }
+    else {
       error("connect loginServer failed.");
-      abort();
-	}
+	  return -1;
+    }
   }
   destroy_config_reader(config);
   init_uid_map();
