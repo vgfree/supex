@@ -34,7 +34,7 @@ char *PosixIPCName(char *buff, size_t size, const char *ipcname)
 	bytes = snprintf(buff, size, "%s%s%s", preName, slash, ipcname);
 
 	if (unlikely(bytes >= size)) {
-		x_printf(E, "not enough space to construct a name of posix-ipc.");
+		x_perror("not enough space to construct a name of posix-ipc.");
 		return NULL;
 	}
 

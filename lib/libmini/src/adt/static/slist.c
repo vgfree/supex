@@ -88,21 +88,21 @@ void SListAddRefs(SListT list)
 {
 	ASSERTOBJ(list);
 
-	ATOMIC_INC(&list->refs);
+	AO_INC(&list->refs);
 }
 
 int SListDecRefs(SListT list)
 {
 	ASSERTOBJ(list);
 
-	return ATOMIC_SUB_F(&list->refs, 1);
+	return AO_SUB_F(&list->refs, 1);
 }
 
 int SListGetRefs(SListT list)
 {
 	ASSERTOBJ(list);
 
-	return ATOMIC_GET(&list->refs);
+	return AO_GET(&list->refs);
 }
 
 /* ----------------                 */
@@ -582,7 +582,7 @@ static inline int _PrevDelNode(SListT list, int *idx)
 	delnode->previdx = -1;
 	list->unusedidx = delidx;
 
-	ATOMIC_DEC(&list->nodes);
+	AO_DEC(&list->nodes);
 
 	return delidx;
 }
@@ -616,7 +616,7 @@ static inline int _NextDelNode(SListT list, int *idx)
 	delnode->previdx = -1;
 	list->unusedidx = delidx;
 
-	ATOMIC_DEC(&list->nodes);
+	AO_DEC(&list->nodes);
 
 	return delidx;
 }
@@ -662,7 +662,7 @@ static inline int _DelNode(SListT list, int delidx)
 	delnode->previdx = -1;
 	list->unusedidx = delidx;
 
-	ATOMIC_DEC(&list->nodes);
+	AO_DEC(&list->nodes);
 
 	return delidx;
 }
@@ -675,7 +675,7 @@ static inline int _InsertNextNode(SListT list, int curidx)
 	ASSERTOBJ(list);
 
 	if (unlikely(list->unusedidx < 0)) {
-		x_printf(D, "no more space");
+		x_pdebug("no more space");
 		return -1;
 	}
 
@@ -713,7 +713,7 @@ static inline int _InsertNextNode(SListT list, int curidx)
 		}
 	}
 
-	ATOMIC_INC(&list->nodes);
+	AO_INC(&list->nodes);
 
 	return newidx;
 }
@@ -726,7 +726,7 @@ static inline int _InsertPrevNode(SListT list, int curidx)
 	ASSERTOBJ(list);
 
 	if (unlikely(list->unusedidx < 0)) {
-		x_printf(D, "no more space");
+		x_pdebug("no more space");
 		return -1;
 	}
 
@@ -764,7 +764,7 @@ static inline int _InsertPrevNode(SListT list, int curidx)
 		}
 	}
 
-	ATOMIC_INC(&list->nodes);
+	AO_INC(&list->nodes);
 
 	return newidx;
 }

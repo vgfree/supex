@@ -87,7 +87,7 @@ FileQueueT File_QueueCreate(const char *file, int nodetotal, int nodesize)
 				}
 
 				if (unlikely(--trys < 0)) {
-					x_printf(E, "File_QueueCreate() by %s failed : "
+					x_perror("File_QueueCreate() by %s failed : "
 						"expected the size of "
 						"file is `%ld`, but get `%ld`.",
 						file, totalsize, fsize);
@@ -120,7 +120,7 @@ FileQueueT File_QueueCreate(const char *file, int nodetotal, int nodesize)
 		 */
 		int     offset = 0;
 		int     flag = 0;
-		offset = ATOMIC_F_ADD(&data->refs, 1);
+		offset = AO_F_ADD(&data->refs, 1);
 		flag = FL_ReadTryLock(fd, SEEK_SET, offset, 1);
 		AssertError(flag, EBUSY);
 
@@ -181,7 +181,7 @@ void File_QueueDestroy(FileQueueT *queue, bool shmrm, NodeDestroyCB destroy)
 		{
 			/*试图锁住整个文件，然后销毁数据*/
 			int refs = 0;
-			refs = ATOMIC_GET(&data->refs);
+			refs = AO_GET(&data->refs);
 
 			if (unlikely(refs > 1)) {
 				if (likely(FL_WriteTryLock((*queue)->fd, SEEK_SET, 0, 0))) {
@@ -190,7 +190,7 @@ void File_QueueDestroy(FileQueueT *queue, bool shmrm, NodeDestroyCB destroy)
 			}
 
 			if (unlikely(refs > 1)) {
-				ATOMIC_DEC(&data->refs);
+				AO_DEC(&data->refs);
 			} else {
 				flag = unlink((*queue)->file);
 				RAISE_SYS_ERROR(flag);

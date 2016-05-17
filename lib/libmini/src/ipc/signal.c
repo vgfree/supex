@@ -69,7 +69,7 @@ SignalCB SignalIntr(int signo, SignalCB cb)
 
 void SignalNormalCB(int signo)
 {
-	x_printf(D, "Interrupt by [%d : %s] signal.", signo, sys_siglist[signo]);
+	x_pdebug("Interrupt by [%d : %s] signal.", signo, sys_siglist[signo]);
 }
 
 /**

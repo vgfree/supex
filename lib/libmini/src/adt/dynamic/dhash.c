@@ -138,7 +138,7 @@ void DHashDestroy(DHashT *hashptr)
 	for (pos = 0; pos < bucket->size; pos++) {
 		pthread_rwlock_wrlock(&bucket->lockerptr[pos]);
 #ifdef DEBUG
-		x_printf(D, "this bucket have got %d nodes", bucket->nodesptr[pos]);
+		x_pdebug("this bucket have got %d nodes", bucket->nodesptr[pos]);
 #endif
 		struct DHashNode        *next = bucket->nodeptr[pos];
 		struct DHashNode        *tmp = NULL;
@@ -189,7 +189,7 @@ bool DHashSet(DHashT hash, const char *key, int klen, const char *value, int vle
 	DHASH_SEARCH_BEGIN(flag, hash, key, klen, startptr, hashvalue, counter);
 
 	if (likely(flag)) {
-		x_printf(W, "this key `%.*s` is already exists", klen, key);
+		x_pwarn("this key `%.*s` is already exists", klen, key);
 		flag = false;
 		errno = EEXIST;
 	} else {
@@ -212,7 +212,7 @@ bool DHashSet(DHashT hash, const char *key, int klen, const char *value, int vle
 			node->next = (*startptr);
 			*startptr = node;
 			/*increase counter of node*/
-			ATOMIC_INC(counter);
+			AO_INC(counter);
 			flag = true;
 		}
 	}
@@ -292,7 +292,7 @@ bool DHashPut(DHashT hash, const char *key, int klen, const char *value, int vle
 			node->next = (*startptr);
 			*startptr = node;
 			/*increase counter of node*/
-			ATOMIC_INC(counter);
+			AO_INC(counter);
 			flag = true;
 		}
 	}
@@ -435,7 +435,7 @@ static inline struct DHashNode *_DHashNodeAllocate(struct DHashNode *old,
 			node->vlen = vsize;
 		} else {
 			errno = ENOMEM;
-			x_printf(W, "no more space, realloc() failed.");
+			x_pwarn("no more space, realloc() failed.");
 		}
 	} else {
 		node = old;

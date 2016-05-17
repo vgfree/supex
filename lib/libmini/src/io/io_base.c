@@ -45,8 +45,13 @@ static inline int _FD_SelectWrap(int fd, long ms, int which)
 			break;
 	}
 
-	if (unlikely(flag == 0)) {
-		errno = unlikely(ms == 0) ? EAGAIN : ETIMEDOUT;
+	if (likely(flag == 1)) {
+		flag = 0;
+	} else if (likely(flag == 0)) {
+		errno = (ms == 0 ? EAGAIN : ETIMEDOUT);
+		flag = -1;
+	} else {
+		flag = -1;
 	}
 
 	return flag;
@@ -54,16 +59,12 @@ static inline int _FD_SelectWrap(int fd, long ms, int which)
 
 int FD_CheckWrite(int fd, long ms)
 {
-	int ret = _FD_SelectWrap(fd, ms, 'W');
-
-	return likely(ret > 0) ? 0 : -1;
+	return _FD_SelectWrap(fd, ms, 'W');
 }
 
 int FD_CheckRead(int fd, long ms)
 {
-	int ret = _FD_SelectWrap(fd, ms, 'R');
-
-	return likely(ret > 0) ? 0 : -1;
+	return _FD_SelectWrap(fd, ms, 'R');
 }
 
 int FD_CloseAll()
@@ -75,7 +76,7 @@ int FD_CloseAll()
 	rc = getrlimit(RLIMIT_NOFILE, &rl);
 
 	if (unlikely(rc < 0)) {
-		x_printf(E, "getrlimit() for RLIMIT_NOFILE failed : %s", x_strerror(errno));
+		x_psys("getrlimit() for RLIMIT_NOFILE failed : %s", x_strerror(errno));
 		return -1;
 	}
 
@@ -116,7 +117,7 @@ find:
 		/*位移空间*/
 		if (DIM(buff->buff) - buff->size <= 0) {
 			if (unlikely(buff->nlend == -1)) {
-				x_printf(E, "The length of line is large, that more than %d.\n", DIM(buff->buff));
+				x_perror("The length of line is large, that more than %d.\n", DIM(buff->buff));
 				errno = ERANGE;
 				return -1;
 			}
