@@ -79,34 +79,31 @@ function handle()
     check_parameter(args)
     local starttime = args['startTime']
     Time(args['startTime'])
-    local dotokenType = "SELECT tokenCode,startTime,endTime FROM mileageInfo201604 WHERE imei = \'%s\' and startTime <= %s union SELECT tokenCode,startTime,endTime FROM mileageInfo201603 WHERE imei = \'%s\' and startTime >= %s"
+    local i,sum = 1,0
+    local dotokenType = "SELECT tokenCode,startTime,endTime FROM mileageInfo201604 WHERE imei = %s and startTime <= %s union SELECT tokenCode ,startTime ,endTime FROM mileageInfo201603 WHERE imei = %s and startTime >= %s"
     dotokenType  = string.format(dotokenType,args['imei'],time,args['imei'],starttime -THIRTY)
     local ok,retdata = mysql_pool_api.cmd("dotoken","select",dotokenType)
     only.log('D', "retdata" .. scan.dump(retdata))
-    local i,sum = 1,0
-    if not ok and not retdata then
-        only.log('E', "select mysql retdata  FROM mileageInfo201604 and FROM mileageInfo201603 error!")
+    if not ok then
+        only.log('E', "select mysql retdata  FROM mileageInfo201604 error!")
         gosay.go_false(url_tab, msg['MSG_DO_MYSQL_FAILED'])
     else
             local retcount = table.maxn(retdata)
             local x1 = os.clock()
             for k,v in pairs(retdata) do
-                    local ok,whole_mileage_data = domile.mileage_time_handle(args['imei'],tonumber(v["startTime"]),tonumber(v["endTime"]))
-                    only.log('D',"whole_mileage_data"..scan.dump(whole_mileage_data))
-                    if ok then
+                    local ok,miledata = domile.mileage_time_handle(args['imei'],tonumber(v["startTime"]),tonumber(v["endTime"]))
+                    if ok and miledata then
                         local d = domile.get_data()
                         sleep(5)    
-                        sum = sum + d     
-                    end			
+                        sum = sum + d   
+                    end
                	    if i == retcount then
                    	     break
                     end
                     i = i + 1
-            end
-            only.log('D', string.format("sum = :%s", scan.dump(sum)))   
+            end 
             local x2 = os.clock() 
             local p = x2 -x1
             only.log('D', string.format("p = :%s", scan.dump(p)))    
     end
 
-end

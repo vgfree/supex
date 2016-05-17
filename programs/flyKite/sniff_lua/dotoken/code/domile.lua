@@ -17,7 +17,7 @@ local redis_api = require('redis_pool_api')
 
 local onelevecount,twolevecount,threelevecount = 0,0,0
 local ok,addcount,aa = true,0
-local datamileage = {}
+local mile_data = {}
 local TWO_HOURS = 3600*2  
 local TEN_MINUTES  = 600
 
@@ -106,7 +106,7 @@ local function get_data_from_tsearchapi(tsearch_api,imei,st_frame,ed_frame )
     local  ret = http_api.http(serv, body_data,true)
         -- if not ok or not ret then return nil end
           -->获取RESULT后的数据   
---   only.log('D', "%s", ret)
+    only.log('D', "%s", ret)
 
     local data = utils.parse_api_result(ret, tsearch_api)
     if not data then
@@ -125,8 +125,8 @@ local function get_data_from_tsearchapi(tsearch_api,imei,st_frame,ed_frame )
     if not frame_data then
         return {}
     end
- --only.log('D', "frame_data" .. scan.dump(frame_data))
-	  return frame_data
+ 	only.log('D', "frame_data" .. scan.dump(frame_data))
+	  return ok,frame_data
 end
 
 
@@ -146,14 +146,14 @@ function mileage_time_handle(imei,startTime,endTime)
 	        if ed_frame > endTime then
 	        	ed_frame = endTime
 	        end    
-		    datamileage  = get_from_mileage_data(imei,st_frame,ed_frame,startTime,endTime)
-			if not datamileage then
-			only.log('E',string.format("get_from_mileage_data is error :%s",datamileage))
+		    local ok = get_from_mileage_data(imei,st_frame,ed_frame,startTime,endTime)
+			if not ok then			
+				only.log('E',"get_from_mileage_data is error")
 			end
 
 	    until ed_frame == endTime
 --	only.log('D',"datamileage"..scan.dump(datamileage))
-	return ok
+	return ok,mile_data
 end
 
 
@@ -162,10 +162,8 @@ end
 --参数    ：data_mileage,startTime,endTime
 --返回值  ：取到数据放到table中进行返回
 local function data_handle_mileage(data_mileage,startTime,endTime)
-
 	for k,v in pairs(data_mileage) do	
 		local tmp = {}
-		local mile_data = {}
 		tmp['GPSTime'] = tonumber(v[1])
 		tmp['imei'] = v[3]
 		tmp['accountID'] = v[4]
@@ -178,39 +176,42 @@ local function data_handle_mileage(data_mileage,startTime,endTime)
 
 		if (tmp['GPSTime'] >=  startTime) or (tmp['GPSTime'] <=  endTime) then
 --	only.log('D', string.format("tmp :%s", scan.dump(tmp)))	
-			table.insert(mile_data,tmp)
+			table.insert(mile_data, tmp)
 		end
 	end
-	return mile_data
+	return ok
 end
 
 
 
---功能作用  ：从tsearchapi接口获取数据，然后在data_handle_mileage函数中处理
---参数	  ：imei，st_frame,ed_frame,startTime,endTime
+--功能作用 ：从tsearchapi接口获取数据，然后在data_handle_mileage函数中处理
+--参数	   ：imei，st_frame,ed_frame,startTime,endTime
 --返回值   ：返回从data_handle_mileage函数处理后的数据
 
-local function get_from_mileage_data(imei,st_frame,ed_frame,startTime,endTime)
+function get_from_mileage_data(imei,st_frame,ed_frame,startTime,endTime)
 
 	aa = imei
 	local tsearch_api = "getgps"
-	local data_mileage = get_data_from_tsearchapi(tsearch_api,imei,st_frame,ed_frame)
---	only.log('D', "data_mileage" .. scan.dump(data_mileage))
-	if not data_mileage then
-		only.log('E',"tsearch_api:%s imei:%s st_frame:%s ed_frame:%s",tsearch_api,imei,st_frame,ed_frame)
+	local ok,data_mileage = get_data_from_tsearchapi(tsearch_api,imei,st_frame,ed_frame)
+	if data_mileage == nil then
+		return
 	end
-	local handledata = data_handle_mileage(data_mileage,startTime,endTime)
-	if not handledata then
-		only.log("handledata is fail")
+	only.log('D', "data_mileage" .. scan.dump(data_mileage))
+	if not ok then
+		only.log('I',string.format("tsearch_api:%s imei:%s st_frame:%s ed_frame:%s",tsearch_api,imei,st_frame,ed_frame))
 	end
---	only.log('D', "handledata" .. scan.dump(handledata))
-	return handledata
+	local ok = data_handle_mileage(data_mileage,startTime,endTime)
+		only.log('D', string.format("mile_data :%s", scan.dump(mile_data)))	
+	if not ok then
+		only.log('I',string.format("get data fail by:startTime:%s endTime :%s",startTime,endTime))
+	end
+	return ok
 end
 
 
 
----功能作用   ：限速处理
----参数	    ：speed，rt
+---功能作用  ：限速处理
+---参数	     ：speed，rt
 --返回值     ：返回统计的数据
 
 local function handle_speed(speed,rt)	
@@ -238,32 +239,33 @@ local function handle_speed(speed,rt)
 ---返回值   ：返回统计后的数据
 
  function get_data()
+
 	local count,m = 1
 	local pointcount,sum_speed,maxspeed,starttime,endtime,etime,avgspeed,imei,rrid,sgid,countycode = 0,0,0,0,0,0
 --	only.log('D', string.format("real_mileage_data:%s", scan.dump(real_mileage_data)))
 	local filename 	= string.format("/data/ye/%s",aa)
-	local fd 	= io.open(filename,"rw+")
+	local fd 	= io.open(filename,"wr+")
 	fd:write("imei|tokencode|rrid|sgid|maxspeed|avgspeed|pointcount|onelevecount|twolevecount|threelevecount|starttime|endtime|accountID|countycode")
 	fd:write("\n")
-	for k,v in pairs(datamileage)do
-		local len = table.maxn(datamileage)
+	for k,v in pairs(mile_data)do
+		local len = table.maxn(mile_data)
 		only.log('D', string.format("len =:%s", scan.dump(len)))
 		local ok,data = redis_api.cmd('road','','hmget','MLOCATE',v["imei"],v["longitude"],v["latitude"],v["direction"],v["altitude"],v["speed"],v["GPSTime"])
 --		only.log('D', string.format("data:%s", scan.dump(data)))
-		if not ok and not data then
+		if not ok then
 		only.log('I', string.format("get data failed by : [** imei:%s, lon:%s, lat:%s, dir:%s, alt:%s, spe:%s , gpst:%s**]", imei,longitude,latitude,direction,altitude,speed,gpstime))
 		end		 
 		local t = string.format("%s%s",data[1],data[2])
 		only.log('D', string.format("t =:%s", scan.dump(t)))
-
 	-------------------  每段路的数据统计
 			if  data [1] == nil or data [2] == nil  then
 				goto continue
-			end				
+			end
+				
 				::once::
 	        if  m == t or count == 1 then    
 				if v["speed"] > maxspeed then
-				    maxspeed = v["speed"]
+				       maxspeed = v["speed"]
 				end
 				pointcount = pointcount + 1
 				if pointcount == 1 then
@@ -280,7 +282,7 @@ local function handle_speed(speed,rt)
 	            	sum_speed = sum_speed + v["speed"]
 	            	count = count  + 1	        	
 	            	m = t
-	           	only.log('D', string.format(" m =:%s", scan.dump(m)))
+	           
 	        end
 
 	        if  m ~= t or k == len  then
@@ -288,20 +290,23 @@ local function handle_speed(speed,rt)
 				addcount = addcount + pointcount
 				local result = {imei,tokencode,rrid,sgid,maxspeed,avgspeed,pointcount,onelevecount,twolevecount,threelevecount,starttime,endtime,accountID,countycode}
 				avgspeed,maxspeed,sum_speed,pointcount,endtime,starttime,onelevecount,twolevecount,threelevecount = 0,0,0,0,0,0,0,0,0
+				fd:write("\n")
 				for k,v in pairs(result)do
 					fd:write(v,"|")
 			    end   
 					fd:flush()
 					m = t
-				if k == len then
-					break
-				end 
-				goto once
+					if k == len then
+						break
+					end 
+					goto once
 			end 
 			::continue::					
 	end
+
 		fd:close()
 		return addcount
+	--	return ok
 end
 
 
@@ -313,15 +318,12 @@ function handle()
 	only.log('D', "args" .. scan.dump(args))
 	check_parameter(args)
 	local ok = mileage_time_handle(args['imei'],args['startTime'],args['endTime'])
-	--only.log('D', string.format("real_mileage_data :%s", scan.dump(real_mileage_data)))
-	if  not ok  then
-	only.log('E',"real_mileage_data error")
+	if  not ok then
+	only.log('E',"mile_data is error")
 	end
 	local ok = get_data()
 	if ok then
-		return ok
+	only.log('E',"get_data is success")
 	end
 
 end
-
-
