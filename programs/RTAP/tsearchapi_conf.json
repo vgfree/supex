@@ -1,8 +1,8 @@
 {
         "service_port": 2222,
-        "hander_counts": 2,
+        "smart_hander_counts": 2,
         "smart_worker_counts": 4,
-        "tasker_counts": 128,
+        "smart_tasker_counts": 128,
 	"smart_protocol": "http",
         "max_req_size": 32768,
 
@@ -21,6 +21,6 @@
                 "/tsearchapi/v2/getExtGps",
                 "/tsearchapi/v2/geturllog",
                 "/tsearchapi/v2/getgpssize",
-                "/tsearchapi/v2/getCheckImport",
+                "/tsearchapi/v2/getCheckImport"
          ]
 }
