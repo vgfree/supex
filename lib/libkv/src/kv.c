@@ -97,6 +97,7 @@ struct redisCommand redisCommandTable[] = {
 	{"rpush",rpushCommand,-3,"wmF",0,NULL,1,1,1,0,0},
 	{"lpop",lpopCommand,2,"wF",0,NULL,1,1,1,0,0},
 	{"rpop",rpopCommand,2,"wF",0,NULL,1,1,1,0,0},
+	{"lrem",lremCommand,4,"w",0,NULL,1,1,1,0,0},
 //        {"zadd",zaddCommand,-4,"wmF",0,NULL,1,1,1,0,0},
 //        {"zrange",zrangeCommand,-4,"r",0,NULL,1,1,1,0,0},
         {"hset",hsetCommand,4,"wmF",0,NULL,1,1,1,0,0},

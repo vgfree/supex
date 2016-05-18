@@ -295,7 +295,7 @@ struct sharedObjectsStruct {
                 *outofrangeerr, *noscripterr, *loadingerr, *slowscripterr, *bgsaveerr,
                 *masterdownerr, *roslaveerr, *execaborterr, *noautherr, *noreplicaserr,
                 *busykeyerr, *oomerr, *plus, *messagebulk, *pmessagebulk, *subscribebulk,
-                *unsubscribebulk, *psubscribebulk, *punsubscribebulk, *del, *rpop, *lpop,
+                *unsubscribebulk, *psubscribebulk, *punsubscribebulk, *del, *rpop, *lpop, *lrem,
                 *lpush, *emptyscan, *minstring, *maxstring,
                 *select[REDIS_SHARED_SELECT_CMDS],
                 *mbulkhdr[REDIS_SHARED_BULKHDR_LEN], /* "*<value>\r\n" */
@@ -772,6 +772,7 @@ void msetCommand(struct kv_handler *handler);
 void rpushCommand(struct kv_handler *handler);
 void lpopCommand(struct kv_handler *handler);
 void rpopCommand(struct kv_handler *handler);
+void lremCommand(struct kv_handler *handler);
 
 #define KV_DEFAULT_DBNUM     16
 

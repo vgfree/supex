@@ -64,7 +64,7 @@ static int init() {
   if (retval == -1) {
     error("can't bind MG socket, ip:%s, port:%s.", MGsrvIP, MGsrvPort);
   }*/
-  get_ip(clientIP, g_serv_info.ip);
+  strcpy(g_serv_info.ip, clientIP);
   g_serv_info.port = atoi(clientPort);
 //  g_serv_info.package_size = atoi(package_sz);
   g_serv_info.commctx = commctx;

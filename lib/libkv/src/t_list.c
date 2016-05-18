@@ -28,6 +28,7 @@
  */
 
 #include "kv_inner.h"
+#include <stdio.h>
 
 
 /*-----------------------------------------------------------------------------
@@ -472,6 +473,62 @@ void _pop(struct kv_handler *handler, int where)
 		dbDelete(c->db, c->argv[1]);
 	}
 	handler->dirty++;
+}
+
+void lremCommand(struct kv_handler *handler) {
+    robj *obj;
+	reply_t *c = handler->reply;
+    obj = c->argv[3];
+    long long toremove;
+    long removed = 0;
+    robj *o;
+
+    if (getLongLongFromObject(c->argv[2], &toremove) != REDIS_OK) {
+      printf("toremove:%lld.\n", toremove);
+	  return;
+	}
+
+	if((o = lookupKeyRead(handler, &handler->db[handler->dbindex], c->argv[1])) ==NULL) {
+		reply_set_err(c, ERR_NIL);
+		return ;
+	}
+	
+	if(o &&  o->type != REDIS_LIST) {
+		reply_set_err(c, ERR_TYPE);
+		return ;
+	}
+
+
+    listTypeIterator *li;
+//    if (toremove < 0) {
+//        toremove = -toremove;
+        li = listTypeInitIterator(o,-1,REDIS_HEAD);
+//    } else {
+//        li = listTypeInitIterator(subject,0,REDIS_TAIL);
+//    }
+
+    listTypeEntry entry;
+    while (listTypeNext(li,&entry)) {
+        if (listTypeEqual(&entry,obj)) {
+            listTypeDelete(&entry);
+            handler->dirty++;
+            removed++;
+            if (toremove && removed == toremove) break;
+        }
+    }
+    listTypeReleaseIterator(li);
+
+/*    if (removed) {
+        signalModifiedKey(c->db,c->argv[1]);
+        notifyKeyspaceEvent(NOTIFY_GENERIC,"lrem",c->argv[1],c->db->id);
+    }*/
+
+    if (listTypeLength(o) == 0) {
+        dbDelete(c->db,c->argv[1]);
+//        notifyKeyspaceEvent(NOTIFY_GENERIC,"del",c->argv[1],c->db->id);
+    }
+
+ //   addReplyLongLong(c,removed);
 }
 
 void lpopCommand(struct kv_handler *handler)

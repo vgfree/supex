@@ -33,7 +33,7 @@ int find_fd_list(char *gid, int *fd_list)
     strncpy(buf, (char*)value->ptr, value->ptrlen);
     printf("find fd:%s.\n", buf);
     fd_list[i] = atoi(buf);
-	i++;
+    i++;
   }
   kv_answer_release_iter(iter);
   return i;
@@ -46,7 +46,7 @@ int insert_fd_list(char *gid, int fd_list[], int size)
   for (int i = 0; i < size; i++) {
     strcat(cmd, " ");
     char buf[10];
-	snprintf(buf, 10, "%d", fd_list[i]);
+    snprintf(buf, 10, "%d", fd_list[i]);
     strcat(cmd, buf);
   }
   kv_answer_t *ans = kv_ask(g_gid_map, cmd, strlen(cmd));
@@ -64,9 +64,8 @@ int remove_fd_list(char *gid, int fd_list[], int size)
     strcat(cmd, gid);
     strcat(cmd, " 0 ");
     char buf[10];
-	snprintf(buf, 10, "%d", fd_list[i]);
+    snprintf(buf, 10, "%d", fd_list[i]);
     strcat(cmd, buf);
-    printf("remove_fd_list, :%s\n", cmd);
     kv_answer_t *ans = kv_ask(g_gid_map, cmd, strlen(cmd));
     if (ans->errnum != ERR_NONE) {
       printf("errnum:%d\terr:%s\n", ans->errnum, ans->err);
@@ -94,17 +93,11 @@ int insert_gid_list(int fd, char *gid)
 
 int find_gid_list(int fd, char *gid_list[], int *size)
 {
-  
-  printf("fd:%d.\n", fd);
   char cmd[30] = "lrange ";
   char buf[10] = {};
   snprintf(buf, 10, "%d", fd);
-  printf("fd:%d.\n", fd);
-  printf("buf:%s\n", buf);
   strcat(cmd, buf);
-  printf("cmd:%s\n", cmd);
   strcat(cmd, " 0 -1");
-  printf("cmd:%s\n", cmd);
   kv_answer_t *ans = kv_ask(g_gid_map, cmd, strlen(cmd));
   if (ans->errnum != ERR_NONE) {
     printf("find multi fd error, cmd:%s\n", cmd);
@@ -134,7 +127,7 @@ int remove_gid_list(int fd, char *gid[], int size)
   for (int i = 0; i < size; i++) {
     char cmd[50] = "lrem ";
     strcat(cmd, buf);
-    strcat(cmd, " 0 ");
+	strcat(cmd, " 0 ");
     strcat(cmd, gid[i]);
     printf("remove_gid_list:%s\n", cmd);
     kv_answer_t *ans = kv_ask(g_gid_map, cmd, strlen(cmd));

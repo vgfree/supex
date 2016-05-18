@@ -4,7 +4,7 @@
 #include "communication.h"
 
 struct server_info{
-  char ip[4]; // 客户端绑定ip.
+  char ip[20]; // 客户端绑定ip.
   uint16_t port; // 客户端绑定port
   struct comm_context *commctx;
   uint32_t package_size;

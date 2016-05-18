@@ -27,10 +27,12 @@ void send_status_msg(int clientfd, int status)
 {
   struct comm_message msg = {};
   init_msg(&msg);
-  char cid[6] = {};
-  memcpy(cid, g_serv_info.ip, 4);
-  cid[4] = clientfd / 256;
-  cid[5] = clientfd % 256;
+  char cid[30] = {};
+  strcpy(cid, g_serv_info.ip);
+  strcat(cid, ":");
+  char buf[10] = {};
+  snprintf(buf, 10, "%d", clientfd);
+  strcat(cid, buf);
   set_msg_frame(0, &msg, 6, cid);
   if (status == FD_INIT) {
     set_msg_frame(0, &msg, 9, "connected");

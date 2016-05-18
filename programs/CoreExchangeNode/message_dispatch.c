@@ -31,9 +31,13 @@ void find_best_gateway(int *fd)
 static void _handle_cid_message(struct comm_message *msg)
 {
   int fsz;
-  char *cid = get_msg_frame(2, msg, &fsz);
-  if (memcmp(cid, g_serv_info.ip, 4) == 0) {
-    int fd = cid[4] * 256 + cid[5];
+  char *frame = get_msg_frame(2, msg, &fsz);
+  char cid[30] = {};
+  strncpy(cid, frame, fsz);
+  char *ip = strtok(cid, ":");
+  if (strcmp(ip, g_serv_info.ip) == 0) {
+    char *cfd = strtok(NULL, ":");
+    int fd = atoi(cfd);
     set_msg_fd(msg, fd);
     remove_first_nframe(3, msg);
     log("fd:%d.", fd);
@@ -115,12 +119,16 @@ static int _handle_client_login(struct comm_message *msg)
 static int _handle_uid_map(struct comm_message *msg)
 {
   int fsz = 0;
-  char *cid = get_msg_frame(2, msg, &fsz);
-  if (memcmp(cid, g_serv_info.ip, 4) != 0) {
+  char *frame = get_msg_frame(2, msg, &fsz);
+  char cid[30] = {};
+  strncpy(cid, frame, fsz);
+  char *ip = strtok(cid, ":");
+  if (strcmp(ip, g_serv_info.ip) != 0) {
     log("this cid is not belong to this server");
     return -1;
   }
-  int fd = cid[4] * 256 + cid[5];
+  char *cfd = strtok(NULL, ":");
+  int fd = atoi(cfd);
   char *uid = get_msg_frame(3, msg, &fsz);
   char uid_buf[20] = {};
   memcpy(uid_buf, uid, fsz);
@@ -131,15 +139,16 @@ static int _handle_uid_map(struct comm_message *msg)
 static int _handle_gid_map(struct comm_message *msg)
 {
   int fsz = 0;
-  char *cid = get_msg_frame(2, msg, &fsz);
-  if (fsz != 6) {
-    error("wrong frame.");
-  }
-  if (memcmp(cid, g_serv_info.ip, 4) != 0) {
-    log("this cid is not belong to this server");
+  char *frame = get_msg_frame(2, msg, &fsz);
+  char cid[30] = {};
+  strncpy(cid, frame, fsz);
+  char *ip = strtok(cid, ":");
+  if (strcmp(ip, g_serv_info.ip) != 0) {
+    log("this ip:%s is not belong to this server:%s.", ip, g_serv_info.ip);
     return -1;
   }
-  int fd = cid[4] * 256 + cid[5];
+  char *cfd = strtok(NULL, ":");
+  int fd = atoi(cfd);
   char *gid_list = get_msg_frame(3, msg, &fsz);
   char gid[20] = {};
   int gid_index = 0;
@@ -188,16 +197,16 @@ static void _downstream_msg(struct comm_message *msg)
 static void _erased_client(struct comm_message *msg)
 {
   int fsz;
-  char *cid = get_msg_frame(2, msg, &fsz);
-  if (!cid || fsz != 6) {
-    error("wrong frame, frame is NULL or not equal a cid size 6 bytes.");
+  char *frame = get_msg_frame(2, msg, &fsz);
+  char cid[30] = {};
+  strncpy(cid, frame, fsz);
+  char *ip = strtok(cid, ":");
+  if (strcmp(ip, g_serv_info.ip) != 0) {
+    error("erase ip:%s, serv ip:%s.", ip, g_serv_info.ip);
+    return -1;
   }
-  if (memcmp(cid, g_serv_info.ip, 4) != 0) {
-    log("the cid is not in this core_exchange_node.");
-    return;
-  }
-  // to do, comm_close 相对应的fd.
-  int fd = cid[4] * 256 + cid[5];
+  char *cfd = strtok(NULL, ":");
+  int fd = atoi(cfd);
   comm_close(g_serv_info.commctx, fd);
   erase_client(fd);
   log("errase fd:%d.", fd);

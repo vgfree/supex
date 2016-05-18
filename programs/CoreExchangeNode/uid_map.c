@@ -1,6 +1,7 @@
 #include "uid_map.h"
 
 #include <string.h>
+#include <stdio.h>
 #include <stdlib.h>
 
 static kv_handler_t *g_uid_map = NULL;

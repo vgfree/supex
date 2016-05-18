@@ -33,7 +33,7 @@ int test_gid_map()
   for (int i = 0; i < 2; i++) {
     remove_fd_list(tested_gid[i], &fd, 1);
   }
-  remove_gid_list(fd, tested_gid, size);
+  remove_gid_list(fd, tested_gid, 2);
   for (int i = 0; i < 2; i++) {
     free(tested_gid[i]);
     tested_gid[i] = NULL;
