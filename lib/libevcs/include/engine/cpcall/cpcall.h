@@ -1,6 +1,6 @@
 #pragma once
 
-#include "libmini.h"
+#include <libmini.h>
 
 
 void *cpinit(void);

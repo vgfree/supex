@@ -32,6 +32,8 @@ struct ev_coro
 	coro_context            ctx;	/*协程运行上下文*/
 	coro_context            *main;	/*如果是主协程上下文，则为nullptr*/
 
+	int			depth;	/*调度状态切换的深度*/
+
 	evcoro_taskcb           call;	/*协程运行时的入口函数*/
 	void                    *usr;	/*协程运行时的入口函数的参数*/
 	enum
