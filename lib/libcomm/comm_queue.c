@@ -5,48 +5,21 @@
 
 #include "comm_queue.h"
 
-#define QUEUE_SIZE	1024	/* 队列里面可以存放1024个节点 */
+#define MAXQUEUENODES	1024	/* 队列能存的最大节点数 */
 
-bool commqueue_init(struct comm_queue* comm_queue, int capacity, int nodesize, DestroyCB destroy)
+bool commqueue_init(struct comm_queue* commqueue, int nodesize, int capacity, DestroyCB destroy)
 {
-	assert(comm_queue);
-	memset(comm_queue, 0, sizeof(*comm_queue));
-	comm_queue->capacity = capacity > 0 ? capacity : QUEUE_SIZE;
-	comm_queue->nodesize = nodesize;
-	comm_queue->destroy = destroy;
-	comm_queue->writeable = 1;
-	comm_queue->readable = 1;
-	comm_queue->queue = calloc(capacity, nodesize);
-	if (unlikely(!comm_queue->queue)) {
-		return false;
-	} else {
-		comm_queue->init = true;
-		return true;
-	}
-}
+	assert(commqueue && nodesize > 0);
 
-
-bool commqueue_push(struct comm_queue* comm_queue, const void* data)
-{
-	assert(comm_queue && comm_queue->init && data);
-	if (likely(comm_queue->nodes < comm_queue->capacity)) {
-		memcpy(&comm_queue->queue[comm_queue->tailidx * comm_queue->nodesize ], data, comm_queue->nodesize);
-		comm_queue->tailidx = (comm_queue->tailidx + 1)%comm_queue->capacity;
-		comm_queue->nodes += 1;
-		return true;
-	} else {
-		return false;
-	}
-}
-
-bool commqueue_pull(struct comm_queue* comm_queue, void* data)
-{
-	assert(comm_queue && comm_queue->init && data);
-	if (likely(comm_queue->nodes > 0)) {
-		int index = comm_queue->headidx * comm_queue->nodesize;
-		memcpy(data, &comm_queue->queue[comm_queue->headidx * comm_queue->nodesize ], comm_queue->nodesize);
-		comm_queue->headidx = (comm_queue->headidx + 1)%comm_queue->capacity;
-		comm_queue->nodes -= 1;
+	memset(commqueue, 0, sizeof(*commqueue));
+	commqueue->capacity = (capacity <= 0 || capacity > MAXQUEUENODES) ? MAXQUEUENODES : capacity;
+	commqueue->nodesize = nodesize;
+	commqueue->destroy = destroy;
+	commqueue->writeable = 1;
+	commqueue->readable = 1;
+	commqueue->buffer = calloc(commqueue->capacity, commqueue->nodesize);
+	if (commqueue->buffer) {
+		commqueue->init = true;
 		return true;
 	} else {
 		return false;
@@ -54,16 +27,44 @@ bool commqueue_pull(struct comm_queue* comm_queue, void* data)
 }
 
 
-void commqueue_destroy(struct comm_queue* comm_queue)
+bool commqueue_push(struct comm_queue* commqueue, const void* data)
+{
+	assert(commqueue && commqueue->init && data);
+	if (commqueue->nodes < commqueue->capacity) {
+		memcpy(&commqueue->buffer[commqueue->tailidx * commqueue->nodesize ], data, commqueue->nodesize);
+		commqueue->tailidx = (commqueue->tailidx + 1)%commqueue->capacity;
+		commqueue->nodes += 1;
+		return true;
+	} else {
+		return false;
+	}
+}
+
+bool commqueue_pull(struct comm_queue* commqueue, void* data)
+{
+	assert(commqueue && commqueue->init && data);
+	if (commqueue->nodes > 0) {
+		int index = commqueue->headidx * commqueue->nodesize;
+		memcpy(data, &commqueue->buffer[commqueue->headidx * commqueue->nodesize ], commqueue->nodesize);
+		commqueue->headidx = (commqueue->headidx + 1)%commqueue->capacity;
+		commqueue->nodes -= 1;
+		return true;
+	} else {
+		return false;
+	}
+}
+
+
+void commqueue_destroy(struct comm_queue* commqueue)
 {
 	void *data = NULL;
-	if (likely(comm_queue && comm_queue->init)) {
-		if (comm_queue->destroy && (comm_queue->nodes > 0)) {
-			while(comm_queue->nodes) {
-				commqueue_pull(comm_queue, (void*)&data);
-				comm_queue->destroy(data);
+	if (commqueue && commqueue->init) {
+		if ((commqueue->nodes > 0) && commqueue->destroy) {
+			while(commqueue->nodes) {
+				commqueue_pull(commqueue, (void*)&data);
+				commqueue->destroy(data);
 			}
 		}
-		Free(comm_queue->queue);
+		Free(commqueue->buffer);
 	}
 }

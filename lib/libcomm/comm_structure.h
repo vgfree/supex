@@ -31,6 +31,10 @@ extern "C" {
 #define COMM_WRITE_MIOU		1024	/* 写入数据大小[getsockopt SNDBUF] */
 #define COMM_FRAMES		13
 
+#define	COMMMSG_OFFSET		({ struct comm_message message;	\
+				   get_member_offset(&message, &message.list); \
+				})				
+
 struct comm_context ;
 struct portinfo	;
 /* 回调函数的原型 */
@@ -76,14 +80,14 @@ struct  remainfd{
 struct comm_data {
 	//struct comm_queue	recv_queue;	/* 存放接收并已经解析完毕的数据 */
 	struct comm_queue	send_queue;	/* 存放用户传递但并未打包的数据 */
-	struct comm_cache	recv_buff;	/* 存放接收但并未解析的数据 */
-	struct comm_cache	send_buff;	/* 存放需要发送并已经打包的数据 */
+	struct comm_cache	recv_cache;	/* 存放接收但并未解析的数据 */
+	struct comm_cache	send_cache;	/* 存放需要发送并已经打包的数据 */
 	struct comm_lock	sendlock;	/* send_queue的锁 */
-	struct comm_context*	commctx;	/* 通信上下文的结构体 */
 	struct cbinfo		finishedcb;	/* 此描述符监听事件发生时相应的回调函数信息 */
 	struct portinfo		portinfo;	/* 端口的相关信息 */
 	struct mfptp_parser	parser;		/* 解析器 */
 	struct mfptp_packager	packager;	/* 打包器 */
+	struct comm_context*	commctx;	/* 通信上下文的结构体 */
 	int			parsepct;	/* 解析数据百分比[根据此值来决定什么时候调用解析函数] */
 	int			packpct;	/* 打包数据百分比[根据此值来决定什么时候调用打包函数]*/
 };

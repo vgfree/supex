@@ -50,21 +50,25 @@ static inline void commlist_init(struct comm_list *list, DestroyCB destroy) {
 }
 
 /* @head:头节点 @list:要插入的节点 */
-static inline void commlist_push(struct comm_list *head, struct comm_list *list)
+static inline bool commlist_push(struct comm_list *head, struct comm_list *list)
 {
 	head->tail->next = list;
 	head->tail = list;
 	head->tail->tail = head->tail;
 	head->tail->next = head;
+	return true;
 }
 
 /* 取出一个节点的数据 @head:头节点 @返回值：取出节点 */
-static inline bool commlist_pull(struct comm_list *head, struct comm_list *data)
+static inline bool commlist_pull(struct comm_list *head, struct comm_list **data)
 {
 	struct comm_list *list = head->next;
 	head->next = head->next->next;
 	if (list != head ) {
-		data = list;
+		if (list == head->tail) {
+			head->tail = head;
+		}
+		*data = list;
 		return true;
 	} else {
 		return false;

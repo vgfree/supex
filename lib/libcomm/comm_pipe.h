@@ -14,7 +14,7 @@
 extern "C" {
 #endif
 
-#define	MAXPATHLEN	128
+
 
 struct comm_pipe {
 	bool init;			/* 用于判断此结构体是否被初始化 */
@@ -22,13 +22,18 @@ struct comm_pipe {
 	int  rfd;			/* PIPE打开用于写的描述符 */
 };
 
+/* 创建一个管道 */
 bool commpipe_init(struct comm_pipe *commpipe);
 
+/* 关闭一个管道 */
 void commpipe_destroy(struct comm_pipe *commpipe);
 
+/* 从管道读取数据 */
 int commpipe_read(struct comm_pipe *commpipe, void *buff, int size);
 
+/* 往管道里面写数据 */
 int commpipe_write(struct comm_pipe *commpipe, void *buff, int size);
+
 
 
 #ifdef __cplusplus

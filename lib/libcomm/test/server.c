@@ -36,7 +36,7 @@ int main(int argc, char* argv[])
 				if (likely(retval > 0)) {
 					//log("server recv_data successed\n");
 				} else {
-					log("server recv_data failed\n");
+				//	log("server recv_data failed\n");
 					sleep(1);
 				}
 				if (recvmsg.fd > 0) {

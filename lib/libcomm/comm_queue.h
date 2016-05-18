@@ -11,6 +11,9 @@
 extern "C" {
 #endif
 
+
+
+
 /* 销毁队列里面数据的回调函数原型 */	
 typedef void (*DestroyCB)(void *arg);
 
@@ -21,23 +24,23 @@ struct comm_queue{
 	int		nodesize;	/* 单个节点的大小 */
 	int		headidx;	/* 队列首节点的索引 */
 	int		tailidx;	/* 队列尾节点的索引 */
-	int		readable;	/* 队列中是否有数据可读 只有用锁的时候才启用此变量 0 不可读 1 可读 */
-	int		writeable;	/* 队列中是否有空间可写 只有用锁的时候才启用此变量 0 不可写 2 可写 */
-	char*		queue;		/* 队列存储地址 */
+	int		readable;	/* 队列是否可读,用锁时才需要用此变量,需要自己管理此变量 */
+	int		writeable;	/* 队列是否可写,用锁时才需要用此变量,需要自己管理此变量 */
+	char*		buffer;		/* 队列存储数据缓冲区 */
 	DestroyCB	destroy;	/* 销毁队列里面数据的回调函数 */
 };
 
 
-/* 创建一个队列 @nodesize：单个节点的大小，即需要保存的一个数据包的大小 */
-bool commqueue_init(struct comm_queue* comm_queue,  int capacity, int nodesize, DestroyCB destroy);
+/* 创建一个队列 @nodesize：单个节点的大小 @capacity:队列能保存多少个节点 @destroy:销毁队列里面数据的回调函数 */
+bool commqueue_init(struct comm_queue* comm_queue, int nodesize, int capacity, DestroyCB destroy);
 
-/* push一个节点的数据到queue里面 */
+/* 往队列里面添加一个节点的数据 @data:待添加的节点数据*/
 bool commqueue_push(struct comm_queue* comm_queue, const void* data);
 
-/* 从queue里面pull一个节点的数据出来 */
+/* 从队列里面取出一个节点的数据 @data:用于保存取出的节点数据*/
 bool commqueue_pull(struct comm_queue* comm_queue, void* data);
 
-/* 销毁queue */
+/* 销毁队列 */
 void commqueue_destroy(struct comm_queue* comm_queue);
 
 

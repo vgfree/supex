@@ -13,8 +13,8 @@ bool commcache_init(struct comm_cache* comm_cache, int capacity)
 	assert(comm_cache);
 	memset(comm_cache, 0, sizeof(struct comm_cache));
 	comm_cache->capacity = (capacity > 0 ) ? capacity : CACHE_SIZE;
-	comm_cache->cache = calloc(comm_cache->capacity, sizeof(char));
-	if (unlikely(!comm_cache->cache)) {
+	comm_cache->buffer = calloc(comm_cache->capacity, sizeof(char));
+	if (unlikely(!comm_cache->buffer)) {
 		return false;
 	} else {
 		comm_cache->init = true;
@@ -22,11 +22,10 @@ bool commcache_init(struct comm_cache* comm_cache, int capacity)
 	}
 }
 
-
 void commcache_free(struct comm_cache* comm_cache)
 {
 	if (likely(comm_cache && comm_cache->init)) {
-		Free(comm_cache->cache);
+		Free(comm_cache->buffer);
 	}
 }
 
@@ -43,7 +42,7 @@ bool commcache_append(struct comm_cache* comm_cache, const char* data, int datas
 		}
 	}
 	
-	memcpy(&comm_cache->cache[comm_cache->end ], data, size);
+	memcpy(&comm_cache->buffer[comm_cache->end ], data, size);
 	comm_cache->end += size;
 	comm_cache->size += size;
 	return true;
@@ -62,7 +61,7 @@ void commcache_clean(struct comm_cache* comm_cache)
 	assert(comm_cache && comm_cache->init);
 	if (likely(comm_cache->start != 0)) {
 		if (likely( comm_cache->size > 0)) {
-			memmove(comm_cache->cache, &comm_cache->cache[comm_cache->start ], comm_cache->size);
+			memmove(comm_cache->buffer, &comm_cache->buffer[comm_cache->start ], comm_cache->size);
 		}
 		comm_cache->end -= comm_cache->start;
 		comm_cache->start = 0;
@@ -76,11 +75,11 @@ bool commcache_expend(struct comm_cache* comm_cache, int size)
 	if (size <= 0) {
 		size = CACHE_INCREASE_SIZE;
 	}
-	char *temp = comm_cache->cache;
+	char *temp = comm_cache->buffer;
 	
-	comm_cache->cache = realloc(comm_cache->cache, comm_cache->end + size);
-	if (unlikely(!comm_cache->cache)) {
-		comm_cache->cache = temp;
+	comm_cache->buffer = realloc(comm_cache->buffer, comm_cache->end + size);
+	if (unlikely(!comm_cache->buffer)) {
+		comm_cache->buffer = temp;
 		return false;
 	} else {
 		comm_cache->capacity = size;
