@@ -39,7 +39,7 @@ static void print_help()
   printf("Usage:\n");
   printf("Please typed fellow:\n");
 
-  printf("function select: parse|pack|gateway|client|quit.\n");
+  printf("function select: uidmap|gidmap|gateway|client|quit.\n");
 }
 
 static int exec_cmd()
@@ -48,23 +48,22 @@ static int exec_cmd()
     printf("\n ------------please cin -------------\n");
     return 0;	
   }
-/*
-  if (strcmp(g_cmd_string[0], "parse\0") == 0) {
-    if (test_parse_function() == 0) {
-      printf("\n -------parse function OK------------\n");	  
+  if (strcmp(g_cmd_string[0], "uidmap\0") == 0) {
+    if (test_uid_map() == 0) {
+      printf("\n -------tested uidmap OK------------\n");	  
     }
 	else {
-      printf("\n -----------parse function failed-------------\n");
+      printf("\n -----------tested uidmap failed-------------\n");
 	}
   }
-  else if (strcmp(g_cmd_string[0], "pack\0") == 0) {
-    if (test_pack_function() == 0) {
-      printf("\n ---------pack fucntion OK-----------\n");
+  else if (strcmp(g_cmd_string[0], "gidmap\0") == 0) {
+    if (test_gid_map() == 0) {
+      printf("\n ---------tested gidmap  OK-----------\n");
     }
 	else {
-      printf("\n ---------pack function failed ---------------\n");
+      printf("\n ---------tested gidmap failed ---------------\n");
 	}
-  }*/
+  }
   else if (strcmp(g_cmd_string[0], "gateway\0") == 0) {   
     if (test_simulate_gateway() == 0) {
       printf("\n-----------simulate gateway function OK -------\n");

@@ -5,9 +5,9 @@
 
 #include <stdlib.h>
 
-//int test_parse_function();
+int test_uid_map();
 
-//int test_pack_function();
+int test_gid_map();
 
 int test_simulate_client();
 

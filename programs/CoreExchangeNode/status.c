@@ -11,12 +11,15 @@ int erase_client(int fd)
   find_uid(uid, &size, fd);
   remove_fd(uid);
   remove_uid(fd);
-  char gid_list[20][20] = {};
-  find_gid_list(fd, (char**)gid_list, &size);
+  char *gid_list[20] = {};
+  find_gid_list(fd, gid_list, &size);
   for (int i = 0; i < size; i++) {
-    remove_fd_list((char*)gid_list[i], &fd, 1);
+    remove_fd_list(gid_list[i], &fd, 1);
   }
-  remove_gid_list(fd, (char**)gid_list, size);
+  remove_gid_list(fd, gid_list, size);
+  for (int i = 0; i < size; i++) {
+    free(gid_list[i]);
+  }
   return size;
 }
 
