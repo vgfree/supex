@@ -17,9 +17,9 @@ bool package_data(struct comm_data *commdata)
 	commlock_lock(&commdata->sendlock);
 	if (likely(commqueue_pull(&commdata->send_queue, (void*)&message))) {
 		flag = true;
-	} else if (likely(commlist_pull(&commctx->head, (struct comm_list*)&list))) {
+	} else if (likely(commlist_pull(&commctx->head, &list))) {
 		/* 无数据可打包的时候 应该直接退出 */
-		message = (struct comm_message*)get_container_addr(&list, get_member_offset(&message, &message->list));
+		message = (struct comm_message*)get_container_addr(list, COMMMSG_OFFSET);
 		if (message->fd == commdata->portinfo.fd) {
 			flag = true;
 		} else {
@@ -32,10 +32,10 @@ bool package_data(struct comm_data *commdata)
 	if (likely(message)) {
 		int size = 0;
 		bool pckflag = true;
-		size = mfptp_check_memory(commdata->send_buff.capacity - commdata->send_buff.size, message->package.frames, message->package.dsize);
+		size = mfptp_check_memory(commdata->send_cache.capacity - commdata->send_cache.size, message->package.frames, message->package.dsize);
 		if (size > 0) {
 			/* 检测到内存不够 则增加内存*/
-			if (unlikely(!commcache_expend(&commdata->send_buff, size))) {
+			if (unlikely(!commcache_expend(&commdata->send_cache, size))) {
 				/* 增加内存失败 */
 				pckflag = false;
 			}
@@ -44,7 +44,7 @@ bool package_data(struct comm_data *commdata)
 			mfptp_fill_package(&commdata->packager, message->package.frame_offset, message->package.frame_size, message->package.frames_of_package, message->package.packages);
 			packsize = mfptp_package(&commdata->packager, message->content, message->config, message->socket_type);
 			if (packsize > 0 && commdata->packager.ms.error == MFPTP_OK) {
-				commdata->send_buff.end += packsize;
+				commdata->send_cache.end += packsize;
 				log("package successed\n");
 			} else {
 				flag = false;

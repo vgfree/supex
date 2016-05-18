@@ -12,7 +12,6 @@ extern "C" {
 #include "comm_utils.h"
 #include <sys/epoll.h>
 
-#define MAXEPOLLSIZE	1024
 
 
 struct comm_epoll {
@@ -21,7 +20,7 @@ struct comm_epoll {
 	int			epollsize;		/* epoll能够监听事件的最大值 */
 	int			watchcnt;		/* 正在监听的fd的个数 */
 	int			eventcnt;		/* 被触发的事件的个数 */
-	struct epoll_event	*events;		/* 保存epoll监听到的事件 */
+	struct epoll_event*	events;			/* 保存epoll监听到的事件 */
 };
 
 /* 初始化epoll结构体 */

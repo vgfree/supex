@@ -17,19 +17,19 @@ bool parse_data(struct comm_data *commdata)
 	struct comm_message	*message = NULL;
 
 	/* 有数据进行解析的时候才去进行解析并将数据全部解析完毕 */
-	while (commdata->recv_buff.size > 0) {
+	while (commdata->recv_cache.size > 0) {
 		size = mfptp_parse(&commdata->parser);
 		if (likely(size > 0 && commdata->parser.ms.error == MFPTP_OK)) {	/* 解析成功 */
 			message = new_commmsg(commdata->parser.package.dsize);
 			if (likely(message)) {
 				message->fd = commdata->portinfo.fd;
-				memcpy(message->content, &commdata->parser.ms.cache.cache[commdata->parser.ms.cache.start], commdata->parser.package.dsize);
+				memcpy(message->content, &commdata->parser.ms.cache.buffer[commdata->parser.ms.cache.start], commdata->parser.package.dsize);
 				_fill_message_package(message, &commdata->parser);
 				commdata->parser.ms.cache.start += commdata->parser.package.dsize;
 				commdata->parser.ms.cache.size -= commdata->parser.package.dsize;
-				commdata->recv_buff.start += size;
-				commdata->recv_buff.size -= size;
-				commcache_clean(&commdata->recv_buff);
+				commdata->recv_cache.start += size;
+				commdata->recv_cache.size -= size;
+				commcache_clean(&commdata->recv_cache);
 				commcache_clean(&commdata->parser.ms.cache);
 				commlock_lock(&commctx->recvlock);
 				if (likely(commqueue_push(&commctx->recv_queue, (void*)&message))) {
@@ -51,9 +51,9 @@ bool parse_data(struct comm_data *commdata)
 		} else if (commdata->parser.ms.error != MFPTP_DATA_TOOFEW) {
 			/* 解析出错 抛弃已解析的错误数据  */
 			flag = false;
-			commdata->recv_buff.start += size;
-			commdata->recv_buff.size -= size;
-			commcache_clean(&commdata->recv_buff);
+			commdata->recv_cache.start += size;
+			commdata->recv_cache.size -= size;
+			commcache_clean(&commdata->recv_cache);
 			log("parse failed\n");
 			break ;
 		}

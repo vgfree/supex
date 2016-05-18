@@ -19,7 +19,7 @@ struct comm_cache{
 	int	end;		/* 有效数据的结束下标 */
 	int	size;		/* 有效数据的大小 */
 	int	capacity;	/* 缓冲区的大小 */
-	char*	cache;		/* 缓冲区的地址 */
+	char*	buffer;		/* 缓冲区的地址 */
 };
 
 /* 初始化cache */

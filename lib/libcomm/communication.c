@@ -6,9 +6,7 @@
 #include <stdlib.h>
 #include "communication.h"
 
-#define COMMMSG_OFFSET		(struct comm_message message;	\
-				 get_member_offset(&message, &message->list) \
-				)
+
 
 static void * _start_new_pthread(void* usr);
 
@@ -24,7 +22,7 @@ struct comm_context* comm_ctx_create(int epollsize)
 
 	listenfd_init(&commctx->listenfd, commctx);
 	commlist_init(&commctx->head, free_commmsg);
-	if (unlikely( !commqueue_init(&commctx->recv_queue, QUEUE_CAPACITY, sizeof(intptr_t), free_commmsg))) {
+	if (unlikely( !commqueue_init(&commctx->recv_queue, sizeof(intptr_t), QUEUE_CAPACITY, free_commmsg))) {
 		goto error;
 	}
 
@@ -100,9 +98,7 @@ void comm_ctx_destroy(struct comm_context* commctx)
 			commepoll_del(&commctx->commepoll, commctx->commpipe.rfd, -1);
 		}
 
-		//int offset = COMMMSG_OFFSET();
-		struct comm_message message;
-		commlist_destroy(&commctx->head, get_member_offset(&message, &message.list));
+		commlist_destroy(&commctx->head, COMMMSG_OFFSET);
 		listenfd_destroy(&commctx->listenfd);
 		commepoll_destroy(&commctx->commepoll);
 		pthread_join(commctx->ptid, NULL);
@@ -165,6 +161,7 @@ int comm_send(struct comm_context *commctx, const struct comm_message *message, 
 		if (likely(commmsg)) {
 			copy_commmsg(commmsg, message);
 			commlock_lock(&commdata->sendlock);
+
 			if (likely(commqueue_push(&commdata->send_queue, (void*)&commmsg))) {
 				/* 数据保存成功 */
 				flag = true;

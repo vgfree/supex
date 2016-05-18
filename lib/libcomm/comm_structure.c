@@ -24,16 +24,16 @@ struct comm_data*  commdata_init(struct comm_context* commctx, struct portinfo* 
 		goto error;
 	}
 #endif
-	retval = commqueue_init(&commdata->send_queue, QUEUE_CAPACITY, nodesize, free_commmsg);
+	retval = commqueue_init(&commdata->send_queue, nodesize, QUEUE_CAPACITY, free_commmsg);
 	if (unlikely(!retval)) {
 		goto error;
 	}
-	retval = commcache_init(&commdata->recv_buff, CACHE_SIZE);
+	retval = commcache_init(&commdata->recv_cache, CACHE_SIZE);
 	if (unlikely(!retval)) {
 		goto error;
 	}
 
-	retval = commcache_init(&commdata->send_buff, CACHE_SIZE);
+	retval = commcache_init(&commdata->send_cache, CACHE_SIZE);
 	if (unlikely(!retval)) {
 		goto error;
 	}
@@ -55,10 +55,10 @@ struct comm_data*  commdata_init(struct comm_context* commctx, struct portinfo* 
 		goto error;
 	}
 
-	if (!mfptp_parse_init(&commdata->parser, &commdata->recv_buff.cache, &commdata->recv_buff.size)) {
+	if (!mfptp_parse_init(&commdata->parser, &commdata->recv_cache.buffer, &commdata->recv_cache.size)) {
 		goto error;
 	}
-	mfptp_package_init(&commdata->packager, commdata->send_buff.cache, &commdata->send_buff.size);
+	mfptp_package_init(&commdata->packager, commdata->send_cache.buffer, &commdata->send_cache.size);
 
 	commdata->commctx = commctx;
 	memcpy(&commdata->portinfo, portinfo, sizeof(*portinfo));
@@ -73,8 +73,8 @@ error:
 	commqueue_destroy(&commdata->send_queue);
 	commepoll_destroy(&commctx->commepoll);
 	
-	commcache_free(&commdata->recv_buff);
-	commcache_free(&commdata->send_buff);
+	commcache_free(&commdata->recv_cache);
+	commcache_free(&commdata->send_cache);
 	Free(commdata);
 	return NULL;
 }
@@ -87,8 +87,8 @@ void commdata_destroy(struct comm_data *commdata)
 	//	commqueue_destroy(&commdata->recv_queue);
 		commqueue_destroy(&commdata->send_queue);
 		
-		commcache_free(&commdata->recv_buff);
-		commcache_free(&commdata->send_buff);
+		commcache_free(&commdata->recv_cache);
+		commcache_free(&commdata->send_cache);
 
 		commepoll_del(&commdata->commctx->commepoll, commdata->portinfo.fd, -1);
 		Free(commdata);
