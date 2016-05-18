@@ -3,7 +3,7 @@
 
 #include "core/evcs_events.h"
 
-struct evcs_events g_evcs_evts = {};
+extern struct evcs_events g_evcs_evts;
 
 struct evcs_argv_settings
 {

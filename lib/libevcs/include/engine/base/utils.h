@@ -34,7 +34,7 @@
 
 #include <libmini.h>
 
-#include "common.h"
+#include "spx_common.h"
 #include "errors.h"
 
 /*
@@ -83,7 +83,7 @@ struct safe_once_init
 	STMT_BEGIN						 \
 	AO_SpinLock(&(safe)->lock);				 \
 	STMT_BEGIN						 \
-	if (ATOMIC_SWAP(&(safe)->magic, OBJMAGIC) == OBJMAGIC) { \
+	if (AO_SWAP(&(safe)->magic, OBJMAGIC) == OBJMAGIC) { \
 		break;						 \
 	}
 

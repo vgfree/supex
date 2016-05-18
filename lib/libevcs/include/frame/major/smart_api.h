@@ -4,8 +4,8 @@
 #include <arpa/inet.h>
 #include <mqueue.h>
 
-#include "../engine/cache/cache.h"
-#include "../engine/base/utils.h"
+#include "cache/cache.h"
+#include "base/utils.h"
 #include "async_comm.h"
 #include "scco.h"
 #include "adopt_tasks/adopt_task.h"
@@ -65,9 +65,4 @@ int smart_mount(struct smart_cfg_list *conf);
 int smart_start(void);
 
 
-void smart_section_send_start(char origin, int sfd)
-{
-	if ((origin == BIT8_TASK_ORIGIN_HTTP) || (origin == BIT8_TASK_ORIGIN_REDIS)) {
-		smart_dispatch_task(SEND_TASK_TYPE, sfd);
-	}
-}
+void smart_section_send_start(char origin, int sfd);

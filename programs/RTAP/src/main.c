@@ -15,8 +15,38 @@ extern char     *ZK_RNODE;
 #endif
 
 #include "load_cfg.h"
-#include "smart_api.h"
+#include "major/smart_api.h"
 #include "smart_evcoro_lua_api.h"
+static void session_dispatch_task(struct session_task *service)
+{
+	char type = 0;
+
+	assert(service);
+	assert(service->action);
+
+	if ((service->action->taskmode != BIT8_TASK_TYPE_WHOLE) &&
+		(service->action->taskmode != BIT8_TASK_TYPE_ALONE)) {
+		type = BIT8_TASK_TYPE_ALONE;
+	} else {
+		type = service->action->taskmode;
+	}
+
+	struct adopt_task_node task = {
+		.id     = 0,
+		.sfd    = 0,
+		.type   = type,
+		.origin = BIT8_TASK_ORIGIN_MSMQ,
+		.func   = (TASK_VMS_FCB)service->action->action,
+		.index  = 0,
+		.data   = (void *)service
+	};
+
+	if (type == BIT8_TASK_TYPE_WHOLE) {
+		smart_all_task_hit(&task, false, service->fd);
+	} else {
+		smart_one_task_hit(&task, false, service->fd);
+	}
+}
 
 struct smart_cfg_list g_smart_cfg_list = {};
 

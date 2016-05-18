@@ -1,7 +1,7 @@
 #include <assert.h>
 
-#include "smart_api.h"
-#include "lua_evcoro.h"
+#include "major/smart_api.h"
+//#include "lua_evcoro.h"
 // #include "luakvcore.h"
 #include "smart_evcoro_lua_api.h"
 
@@ -79,7 +79,8 @@ static lua_State *_vms_new(void)
 	luaopen_base(L);
 	luaL_openlibs(L);
 	/*reg func*/
-	lua_register(L, "supex_http", async_http_evcoro);
+	//lua_register(L, "supex_http", async_http_evcoro);
+	/*
 	lua_register(L, "lua_default_switch", lua_evcoro_switch);
 	lua_register(L, "app_lua_get_head_data", app_lua_get_head_data);
 	lua_register(L, "app_lua_get_body_data", app_lua_get_body_data);
@@ -87,9 +88,10 @@ static lua_State *_vms_new(void)
 	lua_register(L, "app_lua_get_uri_args", app_lua_get_uri_args);
 	lua_register(L, "app_lua_get_recv_buf", app_lua_get_recv_buf);
 	lua_register(L, "app_lua_add_send_data", app_lua_add_send_data);
+	lua_register(L, "search_kvhandle", search_kvhandle);
+	*/
 	// lua_register(L, "luakv_cmd", luakv_run);
 	// lua_register(L, "luakv_ask", luakv_iterfactory);
-	lua_register(L, "search_kvhandle", search_kvhandle);
 #ifdef OPEN_ZOOKEEPER
 	lua_register(L, "zk_get_read_dn", zk_get_read_dn);
 #endif
@@ -154,6 +156,7 @@ int smart_vms_init(void *user, union virtual_system **VMS, struct adopt_task_nod
 int smart_vms_exit(void *user, union virtual_system **VMS, struct adopt_task_node *task)
 {
 	int error = 0;
+	lua_State       **L = VMS;
 	x_printf(S, "exit one batch LUA!\n");
 
 	lua_getglobal(*L, "app_exit");
@@ -173,6 +176,7 @@ int smart_vms_exit(void *user, union virtual_system **VMS, struct adopt_task_nod
 int smart_vms_rfsh(void *user, union virtual_system **VMS, struct adopt_task_node *task)
 {
 	int error = 0;
+	lua_State       **L = VMS;
 	lua_getglobal(*L, "app_rfsh");
 	lua_pushboolean(*L, task->last);
 	lua_pushinteger(*L, task->sfd);
@@ -189,6 +193,7 @@ int smart_vms_rfsh(void *user, union virtual_system **VMS, struct adopt_task_nod
 int smart_vms_sync(void *user, union virtual_system **VMS, struct adopt_task_node *task)
 {
 	int error = 0;
+	lua_State       **L = VMS;
 	lua_getglobal(*L, "app_push");
 	lua_pushboolean(*L, task->last);
 	lua_pushinteger(*L, task->sfd);
@@ -205,6 +210,7 @@ int smart_vms_sync(void *user, union virtual_system **VMS, struct adopt_task_nod
 int smart_vms_gain(void *user, union virtual_system **VMS, struct adopt_task_node *task)
 {
 	int error = 0;
+	lua_State       **L = VMS;
 	lua_getglobal(*L, "app_pull");
 	lua_pushboolean(*L, task->last);
 	lua_pushinteger(*L, task->sfd);
@@ -221,6 +227,7 @@ int smart_vms_gain(void *user, union virtual_system **VMS, struct adopt_task_nod
 int smart_vms_call(void *user, union virtual_system **VMS, struct adopt_task_node *task)
 {
 	int error = 0;
+	lua_State       **L = VMS;
 	lua_getglobal(*L, "app_call_all");
 	lua_pushboolean(*L, task->last);
 	lua_pushinteger(*L, task->sfd);
@@ -237,6 +244,7 @@ int smart_vms_call(void *user, union virtual_system **VMS, struct adopt_task_nod
 int smart_vms_exec(void *user, union virtual_system **VMS, struct adopt_task_node *task)
 {
 	int error = 0;
+	lua_State       **L = VMS;
 	lua_getglobal(*L, "app_call_one");
 	lua_pushboolean(*L, task->last);
 	lua_pushinteger(*L, task->sfd);

@@ -52,14 +52,14 @@ enum
 #define LIMIT_FUNC_ORDER 100
 
 // ---> *_api.h
-#include "../engine/http_api/http_status.h"
+#include "http_api/http_status.h"
 #include "adopt_tasks/adopt_task.h"
 
 #ifdef _mttptest
   #include "mttp.h"
 #endif
 
-#include "../engine/redis_api/redis_status.h"
+#include "redis_api/redis_status.h"
 /*************************************************/
 #define FETCH_MAX_CNT_MSG               "-you have time travel!\r\n"
 #define SERVER_BUSY_ALARM_FACTOR        10000

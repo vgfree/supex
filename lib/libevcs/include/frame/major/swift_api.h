@@ -4,7 +4,7 @@
 #include <arpa/inet.h>
 #include <mqueue.h>
 
-#include "../engine/cache/cache.h"
+#include "cache/cache.h"
 #include "base/utils.h"
 #include "../lib/libscco/scco.h"
 #include "adopt_tasks/adopt_task.h"
@@ -44,7 +44,7 @@ struct swift_settings
 #define SWIFT_WORKER_PTHREAD HANDER_PTHREAD
 
 extern SWIFT_WORKER_PTHREAD     *g_swift_worker_pthread;
-extern int                      SWIFT_WORKER_COUNTS;
+extern int                      G_SWIFT_WORKER_COUNTS;
 /*******************************************/
 int swift_mount(struct swift_cfg_list *conf);
 

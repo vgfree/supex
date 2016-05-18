@@ -31,6 +31,7 @@ struct evcs_events {
 
 
 #define EVENT_NAME_GEN(name, _) case name: return #name;
+static inline
 const char* event_getname(int type) {
 	switch (type) {
 		EVENT_MAP(EVENT_NAME_GEN)
@@ -42,6 +43,7 @@ const char* event_getname(int type) {
 
 
 #define EVENT_INFO_GEN(name, info) case name: return info;
+static inline
 const char* event_getinfo(int type) {
 	switch (type) {
 		EVENT_MAP(EVENT_INFO_GEN)
@@ -53,6 +55,7 @@ const char* event_getinfo(int type) {
 
 
 #define EVENT_PRINT_GEN(name,info) printf("value:%d, name:%s, info:%s\n",name,#name,info);
+static inline
 void event_print(void)
 {
 	EVENT_MAP(EVENT_PRINT_GEN)
@@ -60,6 +63,7 @@ void event_print(void)
 #undef EVENT_PRINT_GEN
 
 
+static inline
 void event_work(struct evcs_events *evts, int type, void *data) {
 	if (evts && evts->evcb[type]) {
 		printf("\t\t\tEVENT[%s]\t\t\thappend!\n", event_getinfo(type));
