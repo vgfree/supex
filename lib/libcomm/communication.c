@@ -112,40 +112,33 @@ int comm_socket(struct comm_context *commctx, const char *host, const char *serv
 {
 	assert(commctx && host && service);
 
-	int			fd = -1;
 	bool			retval = false;
-	struct portinfo		portinfo = {};
+	struct comm_tcp		commtcp = {};
 	struct comm_data*	commdata = NULL;
 
 	if (type == COMM_BIND) {
-		fd = socket_listen(host, service);
-		if (unlikely(!get_portinfo(&portinfo, fd, type, FD_INIT))) {
-			close(fd);
-			return -1;
-		}
-		if (unlikely(!add_listenfd(&commctx->listenfd, finishedcb, &portinfo, fd))) {
-			close(fd);
-			return -1;
+		if (socket_listen(&commtcp, host, service)) {
+			if (unlikely(!add_listenfd(&commctx->listenfd, finishedcb, &commtcp, commtcp.fd))) {
+				close(commtcp.fd);
+				return -1;
+			}
 		}
 			
 	} else {
-		fd = socket_connect(host, service);
-		if (unlikely(!get_portinfo(&portinfo, fd, type, FD_INIT))) {
-			close(fd);
-			return -1;
+		if (socket_connect(&commtcp, host, service)) {
+			commdata = commdata_init(commctx, &commtcp, finishedcb);
+			if (unlikely(!commdata)) {
+				close(commtcp.fd);
+				return -1;
+			}
+			commctx->data[commtcp.fd ] = (intptr_t)commdata;
 		}
-		commdata = commdata_init(commctx, &portinfo, finishedcb);
-		if (unlikely(!commdata)) {
-			close(fd);
-			return -1;
-		}
-		commctx->data[fd ] = (intptr_t)commdata;
 	}
 
 	/* 将状态值设置为COMM_STAT_RUN并唤醒等待的线程 */
 	commlock_wake(&commctx->statlock, (int *)&commctx->stat, COMM_STAT_RUN, false);
 	
-	return fd;
+	return commtcp.fd;
 }
 
 int comm_send(struct comm_context *commctx, const struct comm_message *message, bool block, int timeout)

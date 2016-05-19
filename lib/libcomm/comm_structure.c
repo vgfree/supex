@@ -6,9 +6,9 @@
 #include "comm_structure.h"
 
 /* 初始化一个fd的数据结构体，并将此fd添加到epoll的监控中 */
-struct comm_data*  commdata_init(struct comm_context* commctx, struct portinfo* portinfo,  struct cbinfo*  finishedcb)
+struct comm_data*  commdata_init(struct comm_context* commctx, struct comm_tcp* commtcp,  struct cbinfo*  finishedcb)
 {
-	assert(commctx && portinfo);
+	assert(commctx && commtcp);
 	int			nodesize = sizeof(intptr_t);
 	int			flag = 0;
 	bool			retval = false;
@@ -42,7 +42,7 @@ struct comm_data*  commdata_init(struct comm_context* commctx, struct portinfo* 
 		goto error;
 	}
 
-	if (portinfo->type == COMM_BIND) {
+	if (commtcp->type == COMM_BIND) {
 		flag = EPOLLIN | EPOLLET;
 	} else {
 		flag = EPOLLIN | EPOLLOUT | EPOLLET;
@@ -50,7 +50,7 @@ struct comm_data*  commdata_init(struct comm_context* commctx, struct portinfo* 
 
 
 	/* 监听套接字的时间太晚，可能会出现事件已发生，但是epoll却没监听到 */
-	retval = commepoll_add(&commctx->commepoll, portinfo->fd, flag);
+	retval = commepoll_add(&commctx->commepoll, commtcp->fd, flag);
 	if( unlikely(!retval) ){
 		goto error;
 	}
@@ -61,7 +61,7 @@ struct comm_data*  commdata_init(struct comm_context* commctx, struct portinfo* 
 	mfptp_package_init(&commdata->packager, commdata->send_cache.buffer, &commdata->send_cache.size);
 
 	commdata->commctx = commctx;
-	memcpy(&commdata->portinfo, portinfo, sizeof(*portinfo));
+	memcpy(&commdata->commtcp, commtcp, sizeof(*commtcp));
 	if (finishedcb) {
 		memcpy(&commdata->finishedcb, finishedcb, sizeof(*finishedcb));
 	}
@@ -90,7 +90,7 @@ void commdata_destroy(struct comm_data *commdata)
 		commcache_free(&commdata->recv_cache);
 		commcache_free(&commdata->send_cache);
 
-		commepoll_del(&commdata->commctx->commepoll, commdata->portinfo.fd, -1);
+		commepoll_del(&commdata->commctx->commepoll, commdata->commtcp.fd, -1);
 		Free(commdata);
 	}
 
@@ -145,7 +145,7 @@ inline void listenfd_init(struct listenfd *listenfd, struct comm_context *commct
 	listenfd->counter = 0;
 	listenfd->commctx = commctx;
 	memset(listenfd->finishedcb, 0, sizeof(listenfd->finishedcb));
-	memset(listenfd->portinfo, 0, sizeof(listenfd->portinfo));
+	memset(listenfd->commtcp, 0, sizeof(listenfd->commtcp));
 	return ;
 }
 
@@ -155,7 +155,7 @@ inline void listenfd_destroy(struct listenfd *listenfd)
 	assert(listenfd);
 	int i = 0;
 	for (i = 0; i < listenfd->counter; i++) {
-		memset(&listenfd->portinfo[i], 0, sizeof(listenfd->portinfo[i]));
+		memset(&listenfd->commtcp[i], 0, sizeof(listenfd->commtcp[i]));
 		memset(&listenfd->finishedcb[i], 0, sizeof(listenfd->finishedcb[i]));
 		commepoll_del(&listenfd->commctx->commepoll, listenfd->fd[i], -1);	
 		listenfd->fd[i] = -1;
@@ -165,10 +165,10 @@ inline void listenfd_destroy(struct listenfd *listenfd)
 }
 
 /* 添加一个监听fd */
-inline bool add_listenfd(struct listenfd *listenfd, struct cbinfo *finishedcb, struct portinfo *portinfo, int fd)
+inline bool add_listenfd(struct listenfd *listenfd, struct cbinfo *finishedcb, struct comm_tcp *commtcp, int fd)
 {
 	assert(listenfd && fd > 0);
-	memcpy(&listenfd->portinfo[listenfd->counter], portinfo, sizeof(*portinfo));
+	memcpy(&listenfd->commtcp[listenfd->counter], commtcp, sizeof(*commtcp));
 	if (finishedcb) {
 		memcpy(&listenfd->finishedcb[listenfd->counter], finishedcb, sizeof(*finishedcb));
 	}
@@ -188,7 +188,7 @@ inline bool del_listenfd(struct listenfd *listenfd, int fdidx)
 
 	if (likely(commepoll_del(&listenfd->commctx->commepoll, listenfd->fd[fdidx], -1))) {
 		listenfd->fd[fdidx] = -1;
-		memset(&listenfd->portinfo[fdidx], 0, sizeof(listenfd->portinfo[fdidx]));
+		memset(&listenfd->commtcp[fdidx], 0, sizeof(listenfd->commtcp[fdidx]));
 		memset(&listenfd->finishedcb[fdidx], 0, sizeof(listenfd->finishedcb[fdidx]));
 		listenfd->counter --;
 		return true;
@@ -207,21 +207,4 @@ inline int search_listenfd(struct listenfd *listenfd, int fd)
 		}
 	}
 	return -1;
-}
-
-inline bool get_portinfo(struct portinfo *portinfo, int fd, int type, int status)
-{
-	assert(portinfo && portinfo->addr);
-	if (unlikely((get_address(fd, portinfo->addr, (size_t)sizeof(portinfo->addr))) == -1)) {
-		return false;
-	}
-	portinfo->port = get_port(fd);
-	if (unlikely(portinfo->port ==  -1)) {
-		return false;
-	}
-	portinfo->fd = fd;
-	portinfo->type = type;
-	portinfo->stat = status;
-
-	return true;
 }
