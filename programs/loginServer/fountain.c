@@ -17,7 +17,7 @@ int message_fountain()
   return 0;
 }
 
-int fountain_init(pthread_t *ntid)
+int fountain_init()
 {
   assert(init_comm_io() == 0);
   assert(init_zmq_io() == 0);

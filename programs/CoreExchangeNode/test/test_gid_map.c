@@ -1,6 +1,8 @@
 #include "core_exchange_node_test.h"
 #include "../gid_map.h"
 
+#include <stdio.h>
+
 int test_gid_map()
 {
   init_gid_map();

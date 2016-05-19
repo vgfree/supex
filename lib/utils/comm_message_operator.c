@@ -1,5 +1,5 @@
 #include "comm_message_operator.h"
-#include "loger.h"
+//#include "loger.h"
 
 #include <assert.h>
 #define MAX_MSG_SIZE 10 * 1024 *1024
@@ -33,7 +33,7 @@ char *get_msg_frame(int index, struct comm_message *msg, int *size)
 {
   assert(msg && msg->content);
   if (index >= msg->package.frames || index < 0) {
-    error("index:%d > max frames:%d.", index, msg->package.frames);
+//    error("index:%d > max frames:%d.", index, msg->package.frames);
     return NULL;
   }
   *size = msg->package.frame_size[index];
@@ -45,7 +45,7 @@ int set_msg_frame(int index, struct comm_message *msg, int size, char *frame)
   // 默认msg->content 已经malloc 了足够大的空间。
   assert(msg && msg->content && frame);
   if (index > msg->package.frames || index < 0) {
-    error("index:%d > max frames:%d.", index, msg->package.frames);
+//    error("index:%d > max frames:%d.", index, msg->package.frames);
     return -1;
   }
   if (index == msg->package.frames) {
@@ -76,7 +76,7 @@ int set_msg_frame(int index, struct comm_message *msg, int size, char *frame)
 int remove_first_nframe(int nframe, struct comm_message *msg)
 {
   if (nframe > msg->package.frames) {
-    error("nframe:%d > msg->package.frames:%d.", nframe, msg->package.frames);
+//    error("nframe:%d > msg->package.frames:%d.", nframe, msg->package.frames);
   }
   int rmsz = msg->package.frame_offset[nframe];
   msg->package.dsize -= rmsz;

@@ -1,14 +1,14 @@
 #include <assert.h>
 #include <stdio.h>
+#include <string.h>
 #include <zmq.h>
 
 int main(int argc, char *argv[])
 {
   void *ctx = zmq_ctx_new();
-  void *server_simulator = zmq_socket(ctx, ZMQ_SUB);
-  assert(zmq_setsockopt(server_simulator, ZMQ_SUBSCRIBE, "", 0) == 0);
-  printf("zmq_connect server.\n");
-  int rc = zmq_connect(server_simulator, "tcp://127.0.0.1:8101");
+  void *server_simulator = zmq_socket(ctx, ZMQ_PULL);
+  printf("zmq_bind server.\n");
+  int rc = zmq_bind(server_simulator, "tcp://127.0.0.1:8102");
   assert(rc == 0);
   while (1) {
     int more;

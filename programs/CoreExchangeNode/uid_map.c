@@ -1,4 +1,4 @@
-#include "loger.h"
+//#include "loger.h"
 #include "uid_map.h"
 
 #include <string.h>
@@ -19,7 +19,7 @@ int find_fd(char *uid)
   kv_answer_t *ans;
   ans = kv_ask(g_uid_map, cmd, strlen(cmd));
   if (ans->errnum != ERR_NONE) {
-    error("errnum:%d\terr:%s\n", ans->errnum, ans->err);
+//    error("errnum:%d\terr:%s\n", ans->errnum, ans->err);
     return -1;
   }
 
@@ -37,7 +37,7 @@ int find_uid(char *uid, int *size, int fd)
   kv_answer_t *ans;
   ans = kv_ask(g_uid_map, cmd, strlen(cmd));
   if (ans->errnum != ERR_NONE) {
-    error("errnum:%d\terr:%s\n", ans->errnum, ans->err);
+//    error("errnum:%d\terr:%s\n", ans->errnum, ans->err);
     return -1;
   }
 
@@ -61,7 +61,7 @@ int insert_fd(char *uid, int fd)
   strcat(cmd, buf);
   kv_answer_t *ans = kv_ask(g_uid_map, cmd, strlen(cmd));
   if (ans->errnum != ERR_NONE) {
-    error("failed:%s.\n", cmd);
+//    error("failed:%s.\n", cmd);
     return -1;
   }
   
@@ -71,7 +71,7 @@ int insert_fd(char *uid, int fd)
   strcat(uid_cmd, uid);
   kv_answer_t *uid_ans = kv_ask(g_uid_map, uid_cmd, strlen(uid_cmd));
   if (uid_ans->errnum != ERR_NONE) {
-    error("insert fd:%s, uid:%s error.\n", buf, uid);
+//    error("insert fd:%s, uid:%s error.\n", buf, uid);
     return -1;
   }
   return 0;
@@ -83,7 +83,7 @@ int remove_fd(char *uid)
   strcat(cmd, uid);
   kv_answer_t *ans = kv_ask(g_uid_map, cmd, strlen(cmd));
   if (ans->errnum != ERR_NONE) {
-    error("removed uid:%s error.\n", uid);
+//    error("removed uid:%s error.\n", uid);
     return -1;
   }
   return 0;
@@ -97,7 +97,7 @@ int remove_uid(int fd)
   strcat(cmd, buf);
   kv_answer_t *ans = kv_ask(g_uid_map, cmd, strlen(cmd));
   if (ans->errnum != ERR_NONE) {
-    error("removed fd:%d error.\n", fd);
+//    error("removed fd:%d error.\n", fd);
     return -1;
   }
   return 0;

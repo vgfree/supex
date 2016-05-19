@@ -1,33 +1,55 @@
+#include "cidmap.h"
 #include "simulate.h"
 
 #include <assert.h>
 #include <stdio.h>
 #include <string.h>
 #include <zmq.h>
+#include <malloc.h>
 
 void *login_thread(void *usr)
 {
-  void *sub = zmq_socket(g_ctx, ZMQ_SUB);
-  int rc = zmq_bind(sub, "tcp://127.0.0.1:8101");
+  void *pull = zmq_socket(g_ctx, ZMQ_PULL);
+  int rc = zmq_connect(pull, "tcp://127.0.0.1:8101");
   assert(rc == 0);
-  assert(zmq_setsockopt(sub, ZMQ_SUBSCRIBE, "", 0) == 0);
+  printf("login pull.\n");
   while (1) {
     int more;
     size_t more_size = sizeof(more);
+    char *test[20] = {};
+    int frames = 0;
     do {
       zmq_msg_t part;
       int rc = zmq_msg_init(&part);
       assert(rc == 0);
-	  rc = zmq_recvmsg(sub, &part, 0);
-      printf("login server:%d,zmq_io_recv, rc:%d.\n", thread_status[2], rc);
-      char test[30] = {};
-      memcpy(test, zmq_msg_data(&part), zmq_msg_size(&part));
-      printf("recv data:%s.\n", test);
+	  rc = zmq_recvmsg(pull, &part, 0);
       assert(rc != -1);
-      zmq_getsockopt(sub, ZMQ_RCVMORE, &more, &more_size);
+      test[frames] = (char*)malloc((zmq_msg_size(&part) + 1) * sizeof(char)); 
+      memset(test[frames], 0, zmq_msg_size(&part) +1);
+      memcpy(test[frames], zmq_msg_data(&part), zmq_msg_size(&part));
+      printf("loginserver data:%s.\n", test[frames]);
+      frames++;
+      zmq_getsockopt(pull, ZMQ_RCVMORE, &more, &more_size);
       zmq_msg_close(&part);
-      printf("more:%d.\n", more);
    } while (more);
+   if (strcmp(test[0], "status") != 0) {
+     for (int i = 0; i < frames; i++) {
+       free(test[i]);
+     }
+     continue;
+   }
+   if (strcmp(test[1], "connected") == 0) {
+     append_cid(test[2], strlen(test[2]));
+   }
+   else if (strcmp(test[1], "closed") == 0) {
+     remove_cid(test[2], strlen(test[2]));
+   }
+   else {
+     printf("wrong 2 frame:%s.\n", test[frames]);
+   }
+   for (int i = 0; i < frames; i++) {
+     free(test[i]);
+    }
   }
-  zmq_close(sub);
+  zmq_close(pull);
 }

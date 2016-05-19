@@ -1,5 +1,5 @@
 #include "core_exchange_node_test.h"
-#include "loger.h"
+//#include "loger.h"
 
 #include <string.h>
 #include <stdio.h>
@@ -90,11 +90,11 @@ static int exec_cmd()
   return 0;
 }
 
-struct CSLog *g_imlog = NULL;
+//struct CSLog *g_imlog = NULL;
 
 int main(int argc, char *argv[])
 {
-  g_imlog = CSLog_create("test", WATCH_DELAY_TIME);
+//  g_imlog = CSLog_create("test", WATCH_DELAY_TIME);
   for (int i = 0; i < argc; i++) {
     printf("%s\n", argv[i]);
   }
@@ -112,6 +112,6 @@ int main(int argc, char *argv[])
       break;
 	}		
   }
-  CSLog_destroy(g_imlog);
+//  CSLog_destroy(g_imlog);
   return 0;
 }
