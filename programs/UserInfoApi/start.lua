@@ -17,7 +17,7 @@ function app_init()
 end
 
 function app_call(tab)
-	for k,v in ipairs(tab) do
-                print(k, v)
-        end
+	if #tab > 2 then
+		api_redis_save.handle(tab)
+	end
 end
