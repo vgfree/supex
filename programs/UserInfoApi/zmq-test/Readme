@@ -1,0 +1,4 @@
+How to test code:
+1. Run UserInfoApi.
+2. Run zmqclient.
+3. Run zmqrealtest. 
