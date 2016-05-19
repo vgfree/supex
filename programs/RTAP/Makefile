@@ -7,7 +7,6 @@ INC_DIR=-I/usr/local/include/luajit-2.0 -I../../lib/libev -I../../lib/json-c \
 	-I../../lib/libevcoro/include \
 	-I../../lib/libevcs/include/engine \
 	-I../../lib/libevcs/include/frame \
-	-I../../lib/libevcs/include/lua_expand \
 	-I./src
 
 

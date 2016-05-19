@@ -1,7 +1,8 @@
 #include <assert.h>
 
 #include "major/smart_api.h"
-//#include "lua_evcoro.h"
+#include "lua_expand/lj_c_coro.h"
+#include "lua_expand/lua_link.h"
 // #include "luakvcore.h"
 #include "smart_evcoro_lua_api.h"
 
@@ -79,17 +80,17 @@ static lua_State *_vms_new(void)
 	luaopen_base(L);
 	luaL_openlibs(L);
 	/*reg func*/
-	//lua_register(L, "supex_http", async_http_evcoro);
+	lua_register(L, "supex_http", async_http);
+	lua_register(L, "lua_default_switch", lj_evcoro_switch);
 	/*
-	lua_register(L, "lua_default_switch", lua_evcoro_switch);
 	lua_register(L, "app_lua_get_head_data", app_lua_get_head_data);
 	lua_register(L, "app_lua_get_body_data", app_lua_get_body_data);
 	lua_register(L, "app_lua_get_path_data", app_lua_get_path_data);
 	lua_register(L, "app_lua_get_uri_args", app_lua_get_uri_args);
 	lua_register(L, "app_lua_get_recv_buf", app_lua_get_recv_buf);
 	lua_register(L, "app_lua_add_send_data", app_lua_add_send_data);
-	lua_register(L, "search_kvhandle", search_kvhandle);
 	*/
+	lua_register(L, "search_kvhandle", search_kvhandle);
 	// lua_register(L, "luakv_cmd", luakv_run);
 	// lua_register(L, "luakv_ask", luakv_iterfactory);
 #ifdef OPEN_ZOOKEEPER
