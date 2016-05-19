@@ -22,10 +22,10 @@ int main(int argc, char *argv[])
     memcpy(zmq_msg_data(&part2), "status", 6);
     zmq_sendmsg(server_simulator, &part2, ZMQ_SNDMORE);
     zmq_msg_t part3;
-    char cid[6] = {0x7f, 0x00, 0x00, 0x01, 0x00, 0x09};
-    rc = zmq_msg_init_size(&part3, 6);
+    char cid[20] = "127.0.0.1:9";
+    rc = zmq_msg_init_size(&part3, 11);
     printf("send msg 3 frame content.\n");
-    memcpy(zmq_msg_data(&part3), cid, 6);
+    memcpy(zmq_msg_data(&part3), cid, 11);
     zmq_sendmsg(server_simulator, &part3, ZMQ_SNDMORE);
 
     zmq_msg_t part4;

@@ -7,7 +7,7 @@
 void client_event_notify(struct comm_context *commctx,
                          struct portinfo *portinfo, void *usr)
 {
-  assert(g_serv_info.commctx != commctx);
+  assert(g_serv_info.commctx == commctx);
   log("callback, fd:%d, status:%d.", portinfo->fd, portinfo->stat);
   switch (portinfo->stat) {
   case FD_INIT:

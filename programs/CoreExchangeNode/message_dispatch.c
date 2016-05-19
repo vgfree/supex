@@ -203,7 +203,7 @@ static void _erased_client(struct comm_message *msg)
   char *ip = strtok(cid, ":");
   if (strcmp(ip, g_serv_info.ip) != 0) {
     error("erase ip:%s, serv ip:%s.", ip, g_serv_info.ip);
-    return -1;
+    return;
   }
   char *cfd = strtok(NULL, ":");
   int fd = atoi(cfd);
