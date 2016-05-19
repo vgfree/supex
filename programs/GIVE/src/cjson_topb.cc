@@ -109,12 +109,13 @@ int cjson_topb(const char *data, char **result, data_count_t *dt)
 		goto jsonerr;
 	}
 
+#ifdef _ENCRYPT
         imsi = getjsonitem(obj, "IMSI");
         if (!imsi) {
                 x_printf(E, "get IMSI item failed !\n");
                 goto jsonerr;
         }
-
+#endif
 	// int min_retnum = 2147483;
 	retnum = getjsonarry(obj, latvalue, DATANUM, "latitude");
 

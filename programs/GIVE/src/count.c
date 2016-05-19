@@ -7,7 +7,9 @@
 // TODO: create MYSQL table
 
 #include "count.h"
+#include "rr_cfg.h"
 
+extern struct rr_cfg_file       g_rr_cfg_file;
 // #define __TEST 1
 
 static int str_cmd_in(kv_handler_t *handler, struct tm *timenow, char *const_str, unsigned int city_code, unsigned int val)
@@ -15,7 +17,7 @@ static int str_cmd_in(kv_handler_t *handler, struct tm *timenow, char *const_str
 	char cmd[DAT_BUF_SIZE] = { '\0' };
 
 	snprintf(cmd, DAT_BUF_SIZE, "INCRBY %u:%d%02d%02d%02d%d:%s %u", city_code, timenow->tm_year + 1900,
-		timenow->tm_mon + 1, timenow->tm_mday, timenow->tm_hour, timenow->tm_min / 10, const_str, val);
+		timenow->tm_mon + 1, timenow->tm_mday, timenow->tm_hour, timenow->tm_min / (g_rr_cfg_file.synctime/60), const_str, val);
 
 	kv_answer_t *ans = kv_ask(handler, cmd, strlen(cmd));
 
@@ -30,7 +32,7 @@ static int str_cmd_in(kv_handler_t *handler, struct tm *timenow, char *const_str
 
 #if __TEST
 	snprintf(cmd, DAT_BUF_SIZE, "GET %u:%d%02d%02d%02d%d:%s", city_code, timenow->tm_year + 1900,
-		timenow->tm_mon + 1, timenow->tm_mday, timenow->tm_hour, timenow->tm_min / 10, const_str);
+		timenow->tm_mon + 1, timenow->tm_mday, timenow->tm_hour, timenow->tm_min / (g_rr_cfg_file.synctime/60), const_str);
 	ans = kv_ask(handler, cmd, strlen(cmd));
 	unsigned long len = kv_answer_length(ans);
 
@@ -55,7 +57,7 @@ static int set_cmd_in(kv_handler_t *handler, struct tm *timenow, char *const_str
 	char cmd[DAT_BUF_SIZE] = { '\0' };
 
 	snprintf(cmd, DAT_BUF_SIZE, "SADD %u:%d%02d%02d%02d%d:%s %llu", city_code, timenow->tm_year + 1900,
-		timenow->tm_mon + 1, timenow->tm_mday, timenow->tm_hour, timenow->tm_min / 10, const_str, val);
+		timenow->tm_mon + 1, timenow->tm_mday, timenow->tm_hour, timenow->tm_min / (g_rr_cfg_file.synctime/60), const_str, val);
 
 	kv_answer_t *ans = kv_ask(handler, cmd, strlen(cmd));
 
@@ -69,7 +71,7 @@ static int set_cmd_in(kv_handler_t *handler, struct tm *timenow, char *const_str
 
 #if __TEST
 	snprintf(cmd, DAT_BUF_SIZE, "SCARD %u:%d%02d%02d%02d%d:%s", city_code, timenow->tm_year + 1900,
-		timenow->tm_mon + 1, timenow->tm_mday, timenow->tm_hour, (int)(timenow->tm_min / 10), const_str);
+		timenow->tm_mon + 1, timenow->tm_mday, timenow->tm_hour, (int)(timenow->tm_min / (g_rr_cfg_file.synctime/60)), const_str);
 	ans = kv_ask(handler, cmd, strlen(cmd));
 	unsigned long len = kv_answer_length(ans);
 
@@ -97,7 +99,7 @@ static int str_cmd_out(kv_handler_t *handler, const char *const_str, unsigned lo
 
 	char cmd[DAT_BUF_SIZE] = { 0 };
 	snprintf(cmd, DAT_BUF_SIZE, "GET %u:%d%02d%02d%02d%d:%s", city_code, timenow->tm_year + 1900,
-		timenow->tm_mon + 1, timenow->tm_mday, timenow->tm_hour, (int)(timenow->tm_min / 10) /*tm_min*/, const_str);
+		timenow->tm_mon + 1, timenow->tm_mday, timenow->tm_hour, (int)(timenow->tm_min / (g_rr_cfg_file.synctime/60)) /*tm_min*/, const_str);
 	kv_answer_t *ans = kv_ask(handler, cmd, strlen(cmd));
 
 	if (ans->errnum != ERR_NONE) {
@@ -130,7 +132,7 @@ static int set_cmd_out(kv_handler_t *handler, const char *const_str, unsigned lo
 	char cmd[DAT_BUF_SIZE] = { '\0' };
 
 	snprintf(cmd, DAT_BUF_SIZE, "SCARD %u:%d%02d%02d%02d%d:%s", city_code, timenow->tm_year + 1900,
-		timenow->tm_mon + 1, timenow->tm_mday, timenow->tm_hour, (int)(timenow->tm_min / 10), const_str);
+		timenow->tm_mon + 1, timenow->tm_mday, timenow->tm_hour, (int)(timenow->tm_min / (g_rr_cfg_file.synctime/60)), const_str);
 	kv_answer_t *ans = kv_ask(handler, cmd, strlen(cmd));
 
 	if (ans->errnum != ERR_NONE) {
@@ -163,7 +165,7 @@ static int add_active_city(kv_handler_t *handler, struct tm *timenow, unsigned i
 	char cmd[DAT_BUF_SIZE] = { '\0' };
 
 	snprintf(cmd, DAT_BUF_SIZE, "SADD %d%02d%02d%02d%d:activeCity %u", timenow->tm_year + 1900,
-		timenow->tm_mon + 1, timenow->tm_mday, timenow->tm_hour, timenow->tm_min / 10, city_code);
+		timenow->tm_mon + 1, timenow->tm_mday, timenow->tm_hour, timenow->tm_min / (g_rr_cfg_file.synctime/60), city_code);
 
 	kv_answer_t *ans = kv_ask(handler, cmd, strlen(cmd));
 
@@ -177,7 +179,7 @@ static int add_active_city(kv_handler_t *handler, struct tm *timenow, unsigned i
 
 #if __TEST
 	snprintf(cmd, DAT_BUF_SIZE, "SCARD %d%02d%02d%02d%d:activeCity", timenow->tm_year + 1900,
-		timenow->tm_mon + 1, timenow->tm_mday, timenow->tm_hour, timenow->tm_min / 10);
+		timenow->tm_mon + 1, timenow->tm_mday, timenow->tm_hour, timenow->tm_min / (g_rr_cfg_file.synctime/60));
 	ans = kv_ask(handler, cmd, strlen(cmd));
 
 	if (ans->errnum != ERR_NONE) {
@@ -220,7 +222,7 @@ static int get_active_city(kv_handler_t *handler, struct tm *timenow, unsigned i
 	char cmd[DAT_BUF_SIZE] = { '\0' };
 
 	snprintf(cmd, DAT_BUF_SIZE, "SMEMBERS %d%02d%02d%02d%d:activeCity", timenow->tm_year + 1900,
-		timenow->tm_mon + 1, timenow->tm_mday, timenow->tm_hour, timenow->tm_min / 10);
+		timenow->tm_mon + 1, timenow->tm_mday, timenow->tm_hour, timenow->tm_min / (g_rr_cfg_file.synctime/60));
 	kv_answer_t *ans = kv_ask(handler, cmd, strlen(cmd));
 
 	if (ans->errnum != ERR_NONE) {
@@ -275,7 +277,7 @@ static int str_cmd_del(kv_handler_t *handler, const char *const_str, struct tm *
 
 	char cmd[DAT_BUF_SIZE] = { 0 };
 	snprintf(cmd, DAT_BUF_SIZE, "DEL %u:%d%02d%02d%02d%d:%s", city_code, timenow->tm_year + 1900,
-		timenow->tm_mon + 1, timenow->tm_mday, timenow->tm_hour, (int)(timenow->tm_min / 10), const_str);
+		timenow->tm_mon + 1, timenow->tm_mday, timenow->tm_hour, (int)(timenow->tm_min / (g_rr_cfg_file.synctime/60)), const_str);
 	kv_answer_t *ans = kv_ask(handler, cmd, strlen(cmd));
 
 	if (ans->errnum != ERR_NONE) {
@@ -296,7 +298,7 @@ static int city_key_rm(kv_handler_t *handler, struct tm *timenow)
 
 	char cmd[DAT_BUF_SIZE] = { 0 };
 	snprintf(cmd, DAT_BUF_SIZE, "DEL %d%02d%02d%02d%d:activeCity", timenow->tm_year + 1900,
-		timenow->tm_mon + 1, timenow->tm_mday, timenow->tm_hour, (int)(timenow->tm_min / 10));
+		timenow->tm_mon + 1, timenow->tm_mday, timenow->tm_hour, (int)(timenow->tm_min / (g_rr_cfg_file.synctime/60)));
 	kv_answer_t *ans = kv_ask(handler, cmd, strlen(cmd));
 
 	if (ans->errnum != ERR_NONE) {
@@ -404,9 +406,9 @@ int data_dump(kv_handler_t *handler, sql_conf_t *sql_conf)
 		}
 
 		char sql_str[DAT_SQL_SIZE] = { 0 };
-		snprintf(sql_str, DAT_SQL_SIZE, "INSERT INTO %s SET createTime=%ld, intervalTime='%d%02d%02d%02d%d', gpsCnt=%llu, gpsSize=%llu, imeiCnt=%llu, cityCode=%u",
+		snprintf(sql_str, DAT_SQL_SIZE, "INSERT INTO %s SET createTime=%ld, intervalTime='%d%02d%02d%02d%02d', gpsCnt=%llu, gpsSize=%llu, imeiCnt=%llu, cityCode=%u",
 			sql_conf->table, time(NULL), timenow->tm_year + 1900, timenow->tm_mon + 1,
-			timenow->tm_mday, timenow->tm_hour, (int)(timenow->tm_min / 10),
+			timenow->tm_mday, timenow->tm_hour, (int)(timenow->tm_min / (g_rr_cfg_file.synctime/60)),
 			gps_cnt, gps_size, imei_cnt, active_city[i]);
 
 		x_printf(I, "SQL:%s\n", sql_str);
