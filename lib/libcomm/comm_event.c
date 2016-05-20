@@ -17,12 +17,12 @@ void timeout_event(struct comm_context* commctx)
 		struct comm_data *commdata = (struct comm_data*)commctx->data[fd];
 		if (likely(commdata)) {
 			//接收缓冲区里面存在数据需要解析
-			if (likely(commdata->recv_cache.end - commdata->recv_cache.start > 0)) {
+			if (likely(commdata->recv_cache.size > 0)) {
 
 				parse_data(commdata);
 			}
 			//发送缓冲区里面存在数据需要打包
-			if (likely(commdata->send_cache.end - commdata->recv_cache.start > 0)) {
+			if (likely(commdata->send_cache.size > 0)) {
 				package_data(commdata);
 			}
 			counter--;
@@ -197,12 +197,14 @@ static  bool _read_data(struct comm_data *commdata, int fd)
 	assert(commdata);
 	int bytes = 0;
 	bool flag = false;
+	char buff[1024] = {};
 	commdata->commtcp.stat = FD_READ;
 	do {
-		bytes = read(fd, &commdata->recv_cache.buffer[commdata->recv_cache.end], COMM_READ_MIOU);
+		bytes = read(fd, buff, COMM_READ_MIOU);
 		if (likely(bytes > 0)) {
-			commdata->recv_cache.size += bytes;
-			commdata->recv_cache.end += bytes;
+			//commdata->recv_cache.size += bytes;
+			//commdata->recv_cache.end += bytes;
+			commcache_append(&commdata->recv_cache, buff, bytes);
 			if (bytes < COMM_READ_MIOU) {		/* 数据已经读取完毕 */
 				//log("read data successed\n");
 				flag = true;
