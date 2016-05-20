@@ -79,7 +79,7 @@ static lua_State *_vms_new(void)
 	lua_register(L, "app_lua_reverse", app_lua_reverse);
 	lua_register(L, "app_lua_ifmatch", app_lua_ifmatch);
 	lua_register(L, "search_kvhandle", search_kvhandle);
-	lua_register(L, "app_lua_get_recv_buf", app_lua_get_recv_buf);
+	lua_register(L, "app_lua_get_recv_data", app_lua_get_recv_data);
 	/*lua init*/
 	{
 		extern struct swift_cfg_list g_swift_cfg_list;

@@ -128,6 +128,9 @@ void evcoro_destroy(struct evcoro_scheduler *scheduler, evcoro_destroycb destroy
 int evcoro_once(struct evcoro_scheduler *scheduler, evcoro_taskcb idle, void *usr);
 int evcoro_loop(struct evcoro_scheduler *scheduler, evcoro_taskcb idle, void *usr);
 
+
+int evcoro_evdo(struct evcoro_scheduler *scheduler);
+
 /**
  * 加入一个协程（任务），新加入的协程要待下一次循环才会调度。
  * 如果底层是用信号运行栈和长跳转实现，则不能在协程（任务）中调用此函数，mac os x系统就是此种实现

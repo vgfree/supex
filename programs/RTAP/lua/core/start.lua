@@ -51,11 +51,11 @@ function app_evcoro_init( sch, num )
 	supex["__TASKER_SCHEME__"] = sch
 	supex["__TASKER_NUMBER__"] = num
 
-	--APP_REDIS_API.reg( lua_default_switch, sch )
-	--APP_LHTTP_API.reg( lua_default_switch, sch )
+	APP_REDIS_API.reg( lua_default_switch, sch )
+	APP_LHTTP_API.reg( lua_default_switch, sch )
 
 
-	--app_line_init()
+	app_line_init()
 end
 
 
@@ -211,7 +211,7 @@ local function app_call_by_sfd( top, sfd, way )
 	
 	--> get data
 	supex.http_req_init( )
-	supex.set_our_info_data( app_lua_get_recv_buf(sfd) )
+	supex.set_our_info_data( app_lua_get_recv_data(sfd) )
 	supex.set_our_path( app_lua_get_path_data(sfd) )
 	supex.set_our_head( app_lua_get_head_data(sfd) )
 	supex.set_our_body_data( app_lua_get_body_data(sfd) )

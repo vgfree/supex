@@ -211,7 +211,7 @@ local function app_call_by_sfd( top, sfd, way )
 	
 	--> get data
 	supex.http_req_init( )
-	supex.set_our_info_data( app_lua_get_recv_buf(sfd) )
+	supex.set_our_info_data( app_lua_get_recv_data(sfd) )
 	supex.set_our_path( app_lua_get_path_data(sfd) )
 	supex.set_our_head( app_lua_get_head_data(sfd) )
 	supex.set_our_body_data( app_lua_get_body_data(sfd) )

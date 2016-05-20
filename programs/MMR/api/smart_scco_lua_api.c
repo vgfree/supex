@@ -12,7 +12,7 @@ extern int app_lua_get_body_data(lua_State *L);
 
 extern int app_lua_get_path_data(lua_State *L);
 
-extern int app_lua_get_recv_buf(lua_State *L);
+extern int app_lua_get_recv_data(lua_State *L);
 
 extern int app_lua_get_uri_args(lua_State *L);
 
@@ -76,7 +76,7 @@ static lua_State *_vms_new(void)
 	lua_register(L, "app_lua_get_body_data", app_lua_get_body_data);
 	lua_register(L, "app_lua_get_path_data", app_lua_get_path_data);
 	lua_register(L, "app_lua_get_uri_args", app_lua_get_uri_args);
-	lua_register(L, "app_lua_get_recv_buf", app_lua_get_recv_buf);
+	lua_register(L, "app_lua_get_recv_data", app_lua_get_recv_data);
 	lua_register(L, "app_lua_add_send_data", app_lua_add_send_data);
 	lua_register(L, "app_lua_mapinit", app_lua_mapinit);
 	lua_register(L, "app_lua_convert", app_lua_convert);

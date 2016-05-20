@@ -3,6 +3,8 @@
 #include "major/smart_api.h"
 #include "lua_expand/lj_c_coro.h"
 #include "lua_expand/lua_link.h"
+#include "lua_expand/lj_http_info.h"
+#include "lua_expand/lj_cache.h"
 #include "luakv/luakv.h"
 // #include "luakvcore.h"
 #include "smart_evcoro_lua_api.h"
@@ -10,20 +12,6 @@
 #ifdef OPEN_ZOOKEEPER
   #include "lua_zk.h"
 #endif
-
-extern int async_http_evcoro(lua_State *L);
-
-extern int lua_evcoro_switch(lua_State *L);
-
-extern int app_lua_get_head_data(lua_State *L);
-
-extern int app_lua_get_body_data(lua_State *L);
-
-extern int app_lua_get_path_data(lua_State *L);
-
-extern int app_lua_get_uri_args(lua_State *L);
-
-extern int app_lua_add_send_data(lua_State *L);
 
 int smart_vms_cntl(void *user, union virtual_system **VMS, struct adopt_task_node *task)
 {
@@ -83,14 +71,12 @@ static lua_State *_vms_new(void)
 	/*reg func*/
 	lua_register(L, "supex_http", async_http);
 	lua_register(L, "lua_default_switch", lj_evcoro_switch);
-	/*
 	lua_register(L, "app_lua_get_head_data", app_lua_get_head_data);
 	lua_register(L, "app_lua_get_body_data", app_lua_get_body_data);
 	lua_register(L, "app_lua_get_path_data", app_lua_get_path_data);
 	lua_register(L, "app_lua_get_uri_args", app_lua_get_uri_args);
-	lua_register(L, "app_lua_get_recv_buf", app_lua_get_recv_buf);
+	lua_register(L, "app_lua_get_recv_data", app_lua_get_recv_data);
 	lua_register(L, "app_lua_add_send_data", app_lua_add_send_data);
-	*/
 	lua_register(L, "search_kvhandle", search_kvhandle);
 	// lua_register(L, "luakv_cmd", luakv_run);
 	// lua_register(L, "luakv_ask", luakv_iterfactory);

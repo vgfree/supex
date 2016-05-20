@@ -98,16 +98,3 @@ void get_cache_data(int sfd, void *buff, int *size);
 int socket_init(int port);
 
 int get_redis_cmd_order(uint64_t cmd);
-#if 0
-int app_lua_get_head_data(lua_State *L);
-
-int app_lua_get_body_data(lua_State *L);
-
-int app_lua_get_path_data(lua_State *L);
-
-int app_lua_get_uri_args(lua_State *L);
-
-int app_lua_add_send_data(lua_State *L);
-
-int app_lua_get_recv_buf(lua_State *L);
-#endif
