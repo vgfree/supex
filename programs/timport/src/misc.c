@@ -59,7 +59,7 @@ inline int64_t get_file_size(const char *path)
 }
 
 /* write data to file. */
-inline int write_file(int32_t fd, const char *buf, int32_t count)
+int write_file(int32_t fd, const char *buf, int32_t count)
 {
 	int32_t write_size = 0;
 
@@ -256,7 +256,7 @@ int fmt_task_key(timport_task_t *p_ttask)
 	p_ttask->key[0] = '\0';
 
 	p_tkey = p_ttask->tkey;
-
+	
 	if (p_tkey->param_cnt == 1) {
 		if (NULL == p_ttask->ftime) {
 			return -1;
@@ -366,8 +366,8 @@ int merge_child_sets(timport_task_t *p_ttask)
 		if (NULL != q->reply) {
 			free(q->reply);
 		}
-
 		free(q);
+	
 	}
 
 	if (0 == reply->elements) {

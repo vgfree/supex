@@ -22,14 +22,10 @@ void timport_shut_down(void)
 int main(int argc, char *argv[])
 {
 	load_supex_args(&g_timport_cfg_list.argv_info, argc, argv, NULL, NULL, NULL);
-
 	read_timport_cfg(&g_timport_cfg_list.file_info, g_timport_cfg_list.argv_info.conf_name);
-
 	g_timport_cfg_list.entry_init = timport_entry_init;
 	g_timport_cfg_list.shut_down = timport_shut_down;
-
 	timport_mount(&g_timport_cfg_list);
-
 	timport_start();
 
 	return 0;

@@ -14,7 +14,7 @@ int32_t set_stime(int32_t fd, int64_t t);
 
 inline int64_t get_file_size(const char *path);
 
-inline int write_file(int32_t fd, const char *buf, int32_t count);
+int write_file(int32_t fd, const char *buf, int32_t count);
 
 int sort_array(struct redis_reply *reply);
 

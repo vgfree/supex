@@ -25,30 +25,6 @@
         {       
             "host": "192.168.1.12",
             "port": 9004
-        },      
-        {       
-            "host": "192.168.1.12",
-            "port": 9005
-        },      
-        {       
-            "host": "192.168.1.12",
-            "port": 9006
-        },      
-        {       
-            "host": "192.168.1.12",
-            "port": 9007
-        },      
-        {       
-            "host": "192.168.1.12",
-            "port": 9008
-        },      
-        {       
-            "host": "192.168.1.12",
-            "port": 9009
-        },      
-        {       
-            "host": "192.168.1.12",
-            "port": 9010
         }
     ],
     "tsdb": [
@@ -56,8 +32,8 @@
             "key_set": [0, 2048],
             "data_set": [
                 {
-                    "host": "192.168.1.15",
-                    "port": 7000
+                    "host": "192.168.1.12",
+                    "port": 7101
                 }
             ]
         },
@@ -65,8 +41,8 @@
             "key_set": [2048, 4096],
             "data_set": [
                 {
-                    "host": "192.168.1.15",
-                    "port": 7010
+                    "host": "192.168.1.12",
+                    "port": 7103
                 }
             ]
         },
@@ -74,8 +50,8 @@
             "key_set": [4096, 6144],
             "data_set": [
                 {
-                    "host": "192.168.1.15",
-                    "port": 7020
+                    "host": "192.168.1.12",
+                    "port": 7105
                 }
             ]
         },
@@ -83,27 +59,27 @@
             "key_set": [6144, 8192],
             "data_set": [
                 {
-                    "host": "192.168.1.15",
-                    "port": 7030
+                    "host": "192.168.1.12",
+                    "port": 7107
                 }
             ]
         }
     ],
     "statistics": {
-        "host": "127.0.0.1",
-        "port": 6329,
+        "host": "192.168.1.12",
+        "port": 6379,
         "keys": [
             {
                 "key": "gps",
-                "mode": "INCR",
+                "mode": "INCR"
             },
             {
                 "key": "url",
-                "mode": "INCR",
+                "mode": "INCR"
             },
             {
                 "key": "activeuserCount",
-                "mode": "SET",
+                "mode": "SET"
             }
         ]
     },
@@ -122,7 +98,7 @@
                     "param_tm_pos": 1, 
                     "hash_filter": "imei_hash_filter",
                     "statistics": "gps"
-                }, 
+                },
                 {
                     "key": "URL", 
                     "type": "SET_VAL", 
@@ -136,7 +112,7 @@
             ]
         }, 
         {
-            "key": "RACTIVEUSER", 
+            "key": "RACTIVEUSER",
             "type": "WHOLE_INDEX", 
             "interval": "TEN_MIN", 
             "expire_time": 7200, 
@@ -159,7 +135,7 @@
                     "ignore_error": 1, 
                     "tsdb_in_cfg": 1,
                     "statistics": "url"
-                }
+               }
             ]
         }
     ]

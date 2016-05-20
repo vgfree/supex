@@ -41,6 +41,7 @@ backup_t *backup_open(const char *path)
 
 	if ((dir = opendir(path)) == NULL) {
 		x_printf(E, "Cannot open DB directory:[%s]", path);
+		free(backup);
 		return NULL;
 	}
 
@@ -104,6 +105,7 @@ backup_t *backup_open(const char *path)
 
 	if (backup->kix_file.fd == -1) {
 		x_printf(E, "open backup key file [%s] error, errno [%d]", tmp_path, errno);
+		free(backup);
 		return NULL;
 	}
 
@@ -115,6 +117,7 @@ backup_t *backup_open(const char *path)
 
 	if (backup->val_file.fd == -1) {
 		x_printf(E, "open backup value file [%s] error, errno [%d]", tmp_path, errno);
+		free(backup);
 		return NULL;
 	}
 

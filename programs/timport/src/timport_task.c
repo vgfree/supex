@@ -246,7 +246,7 @@ static void task_finish(timport_task_t *p_ttask)
 					}
 				} else if (TKEY_TYPE_WHOLE_INDEX == p->tkey->type) {
 					task_finish(p);
-					// free(p);	//free in merge_child_sets
+					 free(p);	//free in merge_child_sets
 				} else if (TKEY_TYPE_KEYS_INDEX == p->tkey->type) {
 					task_finish(p);
 					redis_reply_release(p->reply);
@@ -462,7 +462,6 @@ static void handle_string(timport_task_t *p_ttask)
 	static int count = 0;
 
 	x_printf(D, "tsdb_set_start_count = %d", ++count);
-
 	if (NULL == r) {
 		x_printf(F, "(%s) reply is null", p_ttask->key);
 		goto fail;
@@ -658,7 +657,7 @@ static void handle_set_cb(struct async_obj *obj, void *reply, void *data)
 
 	if ((REDIS_REPLY_NIL == r->type) || (0 == r->elements)) {
 		x_printf(W, "(%s) reply is nil", p_ttask->key);
-		task_finish(p_ttask);
+		//task_finish(p_ttask);
 		free(p_ttask);
 		return;
 	}
@@ -818,7 +817,7 @@ static void handle_index_cb(struct async_obj *obj, void *reply, void *data)
 
 	if ((REDIS_REPLY_NIL == r->type) || (0 == r->elements)) {
 		x_printf(W, "(%s) reply is nil", p_ttask->key);
-		task_finish(p_ttask);
+		//task_finish(p_ttask);
 		free(p_ttask);
 		return;
 	}
@@ -890,7 +889,6 @@ static void timport_task_start(struct ev_loop *loop, time_t tmstamp)
 
 			timport_task_t *p_ttask = NULL;
 			NewArray0(1, p_ttask);
-
 			if (NULL == p_ttask) {
 				x_printf(F, "NewArray0 failed, key = %s", p_tktree->child[i].key);
 				goto fail;
