@@ -19,7 +19,7 @@ void *client_thread_read(void *usr)
     char *buf = (char *)malloc((size + 1) * sizeof(char));
     memset(buf, 0, size + 1);
     memcpy(buf, frame, size);
-    printf("%s\n", buf);
+    printf("recv:%s\n", buf);
     free(buf);
     destroy_msg(&msg);
   }

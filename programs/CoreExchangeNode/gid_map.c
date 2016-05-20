@@ -130,7 +130,7 @@ int remove_gid_list(int fd, char *gid[], int size)
     strcat(cmd, gid[i]);
     kv_answer_t *ans = kv_ask(g_gid_map, cmd, strlen(cmd));
     if (ans->errnum != ERR_NONE) {
-      error("errnum:%d\terr:%s\n", ans->errnum, ans->err);
+//      error("errnum:%d\terr:%s\n", ans->errnum, ans->err);
       return -1;
     }
   }

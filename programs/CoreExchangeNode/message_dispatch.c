@@ -35,6 +35,7 @@ static void _handle_cid_message(struct comm_message *msg)
   char cid[30] = {};
   strncpy(cid, frame, fsz);
   char *ip = strtok(cid, ":");
+  log("cid:%s.", cid);
   if (strcmp(ip, g_serv_info.ip) == 0) {
     char *cfd = strtok(NULL, ":");
     int fd = atoi(cfd);
