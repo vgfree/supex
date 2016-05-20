@@ -12,7 +12,17 @@ local ctx = zmq.init(1)
 local s = ctx:socket(zmq.PUSH)
 
 local function loginServerInfoSave(table)
-	--only.log("D", "has enter loginServerInfoSave")
+	local status = table[2]
+	local cid = table[3]
+	local ok_status, ok_ret
+
+	if string.find(status,'connected') ~= nil or string.find(status,'closed') ~= nil then
+		ok_status, ok_ret = redis_api.cmd('IdKey', '', 'set', 'CID_Status:' .. cid, status)
+		if not (ok_status and ok_ret) then
+                        only.log('D', 'redis save failed')
+                end
+	end
+			
 end
 
 local function appServerInfoSave(table)
