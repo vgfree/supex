@@ -24,8 +24,6 @@ void *zmq_process_start(void *(*fcb)(void *args), void *args);
 
 void zmq_srv_init(char *host, int port);
 
-void zmq_SettingSrv_init(void**);
-
 void zmq_srv_fetch(struct skt_device *devc);
 
 void zmq_srv_start(void);

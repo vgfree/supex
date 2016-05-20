@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <stdarg.h>
 #include <string.h>
+#include <unistd.h>
 #include <time.h>
 #include <sys/time.h>
 
@@ -49,7 +50,6 @@ void *zmq_process_start(void *(*fcb)(void *args), void *args)
 /*===============================================================================*/
 void    *g_collecter = NULL;
 void    *g_forwarder = NULL;
-extern void    *g_subscriber = NULL;
 
 void zmq_srv_init(char *host, int port)
 {
@@ -68,14 +68,6 @@ void zmq_srv_init(char *host, int port)
 	rc = zmq_bind(g_forwarder, addr);
 #endif
 	assert(rc == 0);
-}
-
-void zmq_SettingSrv_init(void** g_subscriber)
-{	
-	int rc;
-	*g_subscriber = zmq_socket(g_ctx, ZMQ_PUSH);
-        rc = zmq_bind(*g_subscriber, "tcp://*:1020");
-        assert(rc == 0);
 }
 
 void zmq_srv_fetch(struct skt_device *devc)
@@ -112,7 +104,6 @@ void zmq_srv_exit(void)
 {
 	zmq_close(g_collecter);
 	zmq_close(g_forwarder);
-	zmq_close(g_subscriber);
 	zmq_ctx_destroy(g_ctx);
 }
 

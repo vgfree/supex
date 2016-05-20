@@ -2,6 +2,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#include <unistd.h>
 #include <assert.h>
 
 #include <lua.h>
@@ -61,14 +62,8 @@ void *work_task(void *args)
 	
 	struct skt_device devc = {};
 
-	//zmq_Javasrv_init(&g_subscriber);
-	//assert(g_subscriber != NULL);
-
 	while (1) {
 		zmq_srv_fetch(&devc);
-		//TODO add
-		//int ok = zmq_sendiov(g_subscriber, devc.ibuffer, devc.idx, ZMQ_SNDMORE);
-		//printf("ok = %d\n", ok);
 		
 		lua_getglobal(L, "app_call");
 		lua_newtable(L);
@@ -97,9 +92,9 @@ int main(int argc, char *argv[])
 	skt_register(argv [1]);
 	zmq_srv_init("127.0.0.1", 5558);
 #ifdef SELECT_MULTITHREAD
-	zmq_threadstart(work_task, 1);
+	zmq_threadstart((zmq_thread_fn*)work_task, (void *)1);
 #else
-	zmq_process_start(work_task, (void *)1);
+	zmq_process_start((zmq_thread_fn*)work_task, (void *)1);
 #endif
 
 	zmq_srv_start();
