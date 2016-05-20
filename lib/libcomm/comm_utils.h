@@ -18,7 +18,7 @@
 extern "C" {
 #endif
 
-#define	GOOGLE_LOG	1
+#define	GOOGLE_LOG	0
 
 #if GOOGLE_LOG
 #include "loger.h"

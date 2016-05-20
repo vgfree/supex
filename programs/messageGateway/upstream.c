@@ -18,10 +18,10 @@ int upstream_msg()
     assert(rc == 0);
     memcpy(zmq_msg_data(&msg_frame), frame, fsz);
     if (i < get_max_msg_frame(&msg) - 1) {
-      zmq_io_send(APP_SERVER, &msg_frame, ZMQ_SNDMORE);
+      zmq_io_send(&msg_frame, ZMQ_SNDMORE);
     }
     else {
-      zmq_io_send(APP_SERVER, &msg_frame, 0);
+      zmq_io_send(&msg_frame, 0);
     }
   } 
   destroy_msg(&msg);

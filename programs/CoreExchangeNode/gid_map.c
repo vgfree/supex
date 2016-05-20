@@ -1,4 +1,4 @@
-#include "loger.h"
+//#include "loger.h"
 #include "gid_map.h"
 
 #include <string.h>
@@ -19,7 +19,7 @@ int find_fd_list(char *gid, int *fd_list)
   strcat(cmd, " 0 -1");
   kv_answer_t *ans = kv_ask(g_gid_map, cmd, strlen(cmd));
   if (ans->errnum != ERR_NONE) {
-    error("find multi fd error, cmd:%s", cmd);
+//    error("find multi fd error, cmd:%s", cmd);
     return -1;
   }
   int i = 0;
@@ -50,7 +50,7 @@ int insert_fd_list(char *gid, int fd_list[], int size)
   }
   kv_answer_t *ans = kv_ask(g_gid_map, cmd, strlen(cmd));
   if (ans->errnum != ERR_NONE) {
-    error("errnum:%d\terr:%s\n", ans->errnum, ans->err);
+//    error("errnum:%d\terr:%s\n", ans->errnum, ans->err);
     return -1;
   }
   return 0;
@@ -67,7 +67,7 @@ int remove_fd_list(char *gid, int fd_list[], int size)
     strcat(cmd, buf);
     kv_answer_t *ans = kv_ask(g_gid_map, cmd, strlen(cmd));
     if (ans->errnum != ERR_NONE) {
-      error("errnum:%d\terr:%s\n", ans->errnum, ans->err);
+//      error("errnum:%d\terr:%s\n", ans->errnum, ans->err);
       return -1;
     }
   }
@@ -84,7 +84,7 @@ int insert_gid_list(int fd, char *gid)
   strcat(cmd, gid);
   kv_answer_t *ans = kv_ask(g_gid_map, cmd, strlen(cmd));
   if (ans->errnum != ERR_NONE) {
-    error("errnum:%d\terr:%s\n", ans->errnum, ans->err);
+//    error("errnum:%d\terr:%s\n", ans->errnum, ans->err);
     return -1;
   }
   return 0;
@@ -99,7 +99,7 @@ int find_gid_list(int fd, char *gid_list[], int *size)
   strcat(cmd, " 0 -1");
   kv_answer_t *ans = kv_ask(g_gid_map, cmd, strlen(cmd));
   if (ans->errnum != ERR_NONE) {
-    error("find multi gid error, cmd:%s\n", cmd);
+//    error("find multi gid error, cmd:%s\n", cmd);
     *size = 0;
     return -1;
   }
