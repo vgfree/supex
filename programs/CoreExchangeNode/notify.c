@@ -5,7 +5,7 @@
 #include "status.h"
 
 void client_event_notify(struct comm_context *commctx,
-                         struct portinfo *portinfo, void *usr)
+                         struct comm_tcp *portinfo, void *usr)
 {
   assert(g_serv_info.commctx == commctx);
   log("callback, fd:%d, status:%d.", portinfo->fd, portinfo->stat);
@@ -33,7 +33,7 @@ void client_event_notify(struct comm_context *commctx,
 }
 
 void message_gateway_event_notify(struct comm_context *commctx,
-  struct portinfo *portinfo, void *usr)
+  struct comm_tcp *portinfo, void *usr)
 {
   if (g_serv_info.commctx != commctx) {
     error("callback commctx not equal. g_serv_info.commctx:%p, commctx:%p",
@@ -72,7 +72,7 @@ void message_gateway_event_notify(struct comm_context *commctx,
 }
 
 void setting_server_event_notify(struct comm_context *commctx,
-  struct portinfo *portinfo, void *usr)
+  struct comm_tcp *portinfo, void *usr)
 {
   if (g_serv_info.commctx != commctx) {
     error("callback commctx not equal. g_serv_info.commctx:%p, commctx:%p",
@@ -112,7 +112,7 @@ void setting_server_event_notify(struct comm_context *commctx,
 }
 
 void login_server_event_notify(struct comm_context *commctx,
-  struct portinfo *portinfo, void *usr)
+  struct comm_tcp *portinfo, void *usr)
 {
   if (g_serv_info.commctx != commctx) {
     error("callback commctx not equal. g_serv_info.commctx:%p, commctx:%p",

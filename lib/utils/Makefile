@@ -27,7 +27,7 @@ SOBJ_DIR =		objs
 TOBJ_DIR =		lib
 
 #######
-BUILD_CFLAGS =		-fPIC -Wall -Wno-unused-function -Wno-unused-variable -g
+BUILD_CFLAGS =		-fPIC -Wall -Wno-unused-function -Wno-unused-variable -g -std=c99
 #BUILD_LIBS =		-lpthread -lm
 BUILD_INC_DIR = 	-I/usr/include -I/usr/local/include -I../liblog -I../libcomm
 BUILD_LIB_DIR =		-L/usr/local/lib -L/usr/lib -L/usr/libexec

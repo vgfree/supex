@@ -7,7 +7,7 @@
 #define NODE_SERVER_PORT "NodePort"
 
 static void core_exchange_node_cb(struct comm_context *commctx,
-                                  struct portinfo *portinfo,
+                                  struct comm_tcp *portinfo,
                                   void *usr)
 {
   log("callback, fd:%d, status:%d.", portinfo->fd, portinfo->stat);

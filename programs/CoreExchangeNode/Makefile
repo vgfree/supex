@@ -2,7 +2,7 @@ CC = gcc
 AR = ar
 TARGET = CoreExchangeNode
 
-CFLAG = -O2 -W -Wall
+CFLAG = -O2 -W -Wall -std=c99
 
 INCLUDE_PATH = -I. -I../../lib/libcomm -I../../lib/liblog -I../../lib/utils -I../../lib/libkv/src
 TARGET = ./core_exchange_node

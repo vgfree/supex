@@ -19,7 +19,7 @@ BIN=./bin_$(MAIN_APP_SERV)
 
 SRV := $(MAIN_APP_SERV)
 JOB += $(SRV)
-CFLAGS += -g
+CFLAGS += -g -std=c99
 
 MAIN_OBJ = comm_io_wraper.c \
 	   zmq_io_wraper.c \
