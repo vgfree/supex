@@ -3,6 +3,7 @@
 #include "major/smart_api.h"
 #include "lua_expand/lj_c_coro.h"
 #include "lua_expand/lua_link.h"
+#include "luakv/luakv.h"
 // #include "luakvcore.h"
 #include "smart_evcoro_lua_api.h"
 

@@ -19,7 +19,7 @@ BIN_TEST=./bin_test
 TEST_SRC=./test
 TEST_INC=-I$(INC) \
 	-I../libmini/include \
-	-I../leveldb-1.14.0/include/ \
+	-I../leveldb-1.18/include/ \
 	-I../zeromq-4.1.4/include \
 	-I../../engine
 

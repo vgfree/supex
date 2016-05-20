@@ -28,7 +28,7 @@ function app_line_init()
 	--> init zmq
 	zmq_api.init( )
 	--> init luakv
-	luakv_api.init()
+	--luakv_api.init()
 	--> init apply
 	APP_APPLY.apply_init( )
 	--> load apply
@@ -51,11 +51,11 @@ function app_evcoro_init( sch, num )
 	supex["__TASKER_SCHEME__"] = sch
 	supex["__TASKER_NUMBER__"] = num
 
-	APP_REDIS_API.reg( lua_default_switch, sch )
-	APP_LHTTP_API.reg( lua_default_switch, sch )
+	--APP_REDIS_API.reg( lua_default_switch, sch )
+	--APP_LHTTP_API.reg( lua_default_switch, sch )
 
 
-	app_line_init()
+	--app_line_init()
 end
 
 
