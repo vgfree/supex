@@ -6,7 +6,7 @@ static bool send_data(struct comm_context *commctx, struct comm_message *message
 
 static bool recv_data(struct comm_context *commctx, struct comm_message *message, int fd);
 
-void event_fun(struct comm_context* commctx, struct portinfo *portinfo, void* usr);
+void event_fun(struct comm_context* commctx, struct comm_tcp* commtcp, void* usr);
 
 int main(int argc, char* argv[])
 {
@@ -104,38 +104,73 @@ static bool send_data(struct comm_context *commctx, struct comm_message *message
 	int i = 0, j = 0, k = 0;
 	int retval = -1; 
 	char buff[1024] = "nothingisimportant";
-	int frames_of_package[PACKAGES] = {3};				/* 每个包里面帧数 */
+	char buff1[1024] = "nothingmattersI'monmyown";
+	int frames_of_package[1] = {3};				/* 每个包里面帧数 */
+	int frames_of_package1[2] = {2, 4};
 	
-	int frame_offset[FRAMES] = {0, 
+	int frame_offset[3] = {0, 
 					strlen("nothing"), 
 					strlen("nothingis")
 				};						/* 每帧的偏移 */
-	int frame_size[FRAMES] = {	strlen("nothing"), 
+	int frame_offset1[6] = {0,
+					strlen("nothing"),
+					strlen("nothingmatters"),
+					strlen("nothingmattersI'm"),
+					strlen("nothingmattersI'mon"),
+					strlen("nothingmattersI'monmy")
+				};
+	int frame_size[3] = {	strlen("nothing"), 
 					strlen("is"), 
 					strlen("important")
 				};						/* 每帧的大小 */
+	int frame_size1[6] = {
+					strlen("nothing"),
+					strlen("matters"),
+					strlen("I'm"),
+					strlen("on"),
+					strlen("my"),
+					strlen("own")
+				};
 
 	message->fd = fd;
 	message->content = buff;
 	message->config = ZIP_COMPRESSION | AES_ENCRYPTION;
 	message->socket_type = REQ_METHOD;
 	message->package.dsize = strlen(buff);
-	message->package.frames = FRAMES;
-	message->package.packages = PACKAGES;
+	message->package.frames = 3;
+	message->package.packages = 1;
 
-	for (i = 0 ; i < PACKAGES; i++) {
+	for (i = 0 ; i < message->package.packages; i++) {
 		for (j = 0; j < frames_of_package[i]; j++, k++) {
 			message->package.frame_offset[k] = frame_offset[k];
 			message->package.frame_size[k] = frame_size[k];
 		}
 	} 
-	memcpy(message->package.frames_of_package, frames_of_package, (sizeof(int))*PACKAGES);
+	memcpy(message->package.frames_of_package, frames_of_package, (sizeof(int))*message->package.packages);
 
 	retval = comm_send(commctx, message, false, -1);
 	if (retval <=  0) {
 		return false;
 	} else {
-		return true;
+		/* 进行第二次发送数据 */
+		message->content = buff1;
+		message->package.packages = 2;
+		message->package.frames = 6;
+		message->package.dsize = strlen(buff1);
+		k = 0;
+		for (i = 0 ; i < message->package.packages; i++) {
+			for (j = 0; j < frames_of_package1[i]; j++, k++) {
+				message->package.frame_offset[k] = frame_offset1[k];
+				message->package.frame_size[k] = frame_size1[k];
+			}
+		} 
+		memcpy(message->package.frames_of_package, frames_of_package1, (sizeof(int))*message->package.packages);
+		retval = comm_send(commctx, message, false, -1);
+		if (retval <= 0) {
+			return false;
+		} else {
+			return true;
+		}
 	}
 }
 
@@ -194,10 +229,9 @@ void timeout_fun(void *usr)
 }
 
 /* @status: FD_CLOSE, FD_READ, FD_WRITE */
-void event_fun(struct comm_context* commctx, struct portinfo *portinfo, void* usr)
+void event_fun(struct comm_context* commctx, struct comm_tcp *commtcp, void* usr)
 {
-	//log("client %d fd have action\n", portinfo->fd);
-	switch (portinfo->stat)
+	switch (commtcp->stat)
 	{
 		case FD_CLOSE:
 			close_fun(usr);
@@ -209,7 +243,7 @@ void event_fun(struct comm_context* commctx, struct portinfo *portinfo, void* us
 			read_fun(usr);
 			break;
 		case FD_INIT:
-			if (portinfo->type == COMM_ACCEPT) {
+			if (commtcp->type == COMM_ACCEPT) {
 				accept_fun(usr); /* 当fd的类型为COMM_ACCEPT时才是accept事件 */
 			}
 		default:

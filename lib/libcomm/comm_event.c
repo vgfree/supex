@@ -42,29 +42,20 @@ void  accept_event(struct comm_context *commctx, int fdidx)
 	/* 循环处理accept直到所有新连接都处理完毕退出 */
 	while (1) {
 
-		struct portinfo		portinfo = {};
+		struct comm_tcp		commtcp = {};
 		struct comm_data*	commdata = NULL;
-		fd = accept(commctx->listenfd.fd[fdidx], NULL, NULL);
-		if (likely(fd > 0)) {
-			if (unlikely(!fd_setopt(fd, O_NONBLOCK))) {
-				close(fd);
-				continue ;
-			}
-				
-			if (unlikely(!get_portinfo(&portinfo, fd, COMM_ACCEPT, FD_INIT))) {
-				close(fd);
-				continue ;
-			}
-			commdata = commdata_init(commctx, &portinfo, &commctx->listenfd.finishedcb[fdidx]);
+		fd = socket_accept(&commctx->listenfd.commtcp[fdidx], &commtcp);
+		if (fd > 0) {
+			commdata = commdata_init(commctx, &commtcp, &commctx->listenfd.finishedcb[fdidx]);
 			if (likely(commdata)) {
 				commctx->data[fd ] = (intptr_t)commdata;
 				if (commctx->listenfd.finishedcb[fdidx].callback) {
-					commctx->listenfd.finishedcb[fdidx].callback(commctx, &portinfo, commctx->listenfd.finishedcb[fdidx].usr);
+					commctx->listenfd.finishedcb[fdidx].callback(commctx, &commtcp, commctx->listenfd.finishedcb[fdidx].usr);
 				}
 			} else {
 				close(fd);
 			}
-		} else {
+		} else if (fd == -1){
 			if (unlikely(errno == ECONNABORTED || errno == EPROTO || errno == EINTR )) {
 				/* 可能被打断，继续处理下一个连接 */
 				continue ;
@@ -158,13 +149,13 @@ void  send_event(struct comm_context *commctx, int* fda, int cnt)
 static  bool _write_data(struct comm_data *commdata, int fd)
 {
 	assert(commdata);
-	if (unlikely(commdata->portinfo.stat == FD_INIT)) {
-		/* 第一次触发是强制触发 直接退出 */
-		commdata->portinfo.stat = FD_WRITE;
+
+	if (unlikely(commdata->commtcp.stat == FD_INIT)) {
+		commdata->commtcp.stat = FD_WRITE;
 		return true;
 	}
-	commdata->portinfo.stat = FD_WRITE;
 
+	commdata->commtcp.stat = FD_WRITE;
 	int bytes = 0;
 	bool flag = false;
 
@@ -187,7 +178,7 @@ static  bool _write_data(struct comm_data *commdata, int fd)
 				commcache_clean(&commdata->send_cache);
 				log("write data successed fd:%d\n", fd);
 				if (commdata->finishedcb.callback) {
-					commdata->finishedcb.callback(commdata->commctx, &commdata->portinfo, commdata->finishedcb.usr);
+					commdata->finishedcb.callback(commdata->commctx, &commdata->commtcp, commdata->finishedcb.usr);
 				}
 				return true;
 			}
@@ -206,7 +197,7 @@ static  bool _read_data(struct comm_data *commdata, int fd)
 	assert(commdata);
 	int bytes = 0;
 	bool flag = false;
-	commdata->portinfo.stat = FD_READ;
+	commdata->commtcp.stat = FD_READ;
 	do {
 		bytes = read(fd, &commdata->recv_cache.buffer[commdata->recv_cache.end], COMM_READ_MIOU);
 		if (likely(bytes > 0)) {
@@ -220,7 +211,7 @@ static  bool _read_data(struct comm_data *commdata, int fd)
 				continue ;
 			}
 		} else if (bytes == 0) {			/* 对端已经关闭 */
-			commdata->portinfo.stat = FD_CLOSE;
+			commdata->commtcp.stat = FD_CLOSE;
 			break ;
 		} else {
 			if (errno == EAGAIN || errno == EWOULDBLOCK) { /* 数据已经读取完毕 */
@@ -235,10 +226,10 @@ static  bool _read_data(struct comm_data *commdata, int fd)
 	} while(1); /* 只有当数据全部读取完毕才退出循环 */
 
 	if (commdata->finishedcb.callback) {
-		commdata->finishedcb.callback(commdata->commctx, &commdata->portinfo, commdata->finishedcb.usr);
+		commdata->finishedcb.callback(commdata->commctx, &commdata->commtcp, commdata->finishedcb.usr);
 	}
 
-	if (commdata->portinfo.stat == FD_CLOSE) {
+	if (commdata->commtcp.stat == FD_CLOSE) {
 		log("close fd :%d\n", fd);
 		comm_close(commdata->commctx, fd);
 		log("after close:%d\n", (int)commdata->commctx->data[fd]);

@@ -6,7 +6,7 @@ static bool send_data(struct comm_context *commctx, struct comm_message *message
 
 static bool recv_data(struct comm_context *commctx, struct comm_message *message, int fd);
 
-void event_fun(struct comm_context* commctx, struct portinfo *portinfo, void* usr);
+void event_fun(struct comm_context* commctx, struct comm_tcp* commtcp, void* usr);
 
 int main(int argc, char* argv[])
 {
@@ -181,8 +181,8 @@ void read_fun(void *usr)
 
 void accept_fun(void *usr)
 {
-	struct portinfo *portinfo = (struct portinfo*)usr;
-	printf("server here is accept_fun(): %d\n", portinfo->fd);
+	struct comm_tcp* commtcp = (struct comm_tcp*)usr;
+	printf("server here is accept_fun(): %d\n", commtcp->fd);
 }
 
 void timeout_fun(void *usr)
@@ -190,10 +190,9 @@ void timeout_fun(void *usr)
 	printf("server here is timeout_fun()\n");
 }
 
-void event_fun(struct comm_context* commctx, struct portinfo *portinfo, void* usr)
+void event_fun(struct comm_context* commctx, struct comm_tcp* commtcp, void* usr)
 {
-	//log("server %d fd have action\n", portinfo->fd);
-	switch (portinfo->stat)
+	switch (commtcp->stat)
 	{
 		case FD_CLOSE:
 			close_fun(usr);
@@ -205,9 +204,8 @@ void event_fun(struct comm_context* commctx, struct portinfo *portinfo, void* us
 			read_fun(usr);
 			break;
 		case FD_INIT: 
-			/* 当fd的类型为COMM_ACCEPT时才是accept事件 */
-			if (portinfo->type == COMM_ACCEPT) {
-				accept_fun(portinfo);
+			if (commtcp->type == COMM_ACCEPT) {
+				accept_fun(commtcp);
 			}
 		default:
 			timeout_fun(usr);

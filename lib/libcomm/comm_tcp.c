@@ -4,190 +4,212 @@
 /*********************************************************************************************/
 #include "comm_tcp.h"
 
-#define  LISTENQ  1024	/* 能够监听的描述符的个数 */
+#define  LISTENFDS  1024	/* 能够监听的描述符的个数 */
 
-int get_address(int fd, char *paddr, size_t plen)
+#define	 CLOSEFD(fd)		({ close(fd);	\
+				   fd = -1;	})
+
+static bool _get_portinfo(struct comm_tcp* commtcp);
+
+static bool _get_addrinfo(struct addrinfo** ai, const char* host, const char* service);
+
+static bool _bind_listen(struct comm_tcp* commtcp, struct addrinfo* ai);
+
+static bool _connect(struct comm_tcp *commtcp, struct addrinfo *ai);
+
+
+bool socket_listen(struct comm_tcp* commtcp, const char* host, const char* service)
 {
-	assert(paddr && plen);
+	assert(commtcp && host && service);
+	memset(commtcp, 0, sizeof(*commtcp));
 
-	int		retval = -1;
-	const char*	ptr = NULL;
-	struct sockaddr sockaddr = {};
-	socklen_t	len = sizeof(sockaddr);
-
-	retval = getsockname(fd, &sockaddr, &len);
-	if (unlikely(retval == -1)) {
-		return retval;
-	}
-
-	switch (sockaddr.sa_family)
-	{
-		case AF_INET: {
-				struct sockaddr_in *inaddr = (struct sockaddr_in*)&sockaddr;
-				ptr = inet_ntop(AF_INET, &inaddr->sin_addr, paddr, plen);
-			      }
-				break;
-
-		case AF_INET6: {
-				struct sockaddr_in6 *inaddr6 = (struct sockaddr_in6*)&sockaddr;
-				ptr = inet_ntop(AF_INET6, &inaddr6->sin6_addr, paddr, plen);
-			       }
-				break;
-
-		case AF_UNIX: {
-				struct sockaddr_un *unaddr = (struct sockaddr_un*)&sockaddr;
-				snprintf(paddr, plen, "%s", unaddr->sun_path);
-				ptr = paddr;
-			      }
-				break;
-
-		default:
-			break;
-	}
-
-	if (unlikely(ptr == NULL)) {
-		return -1;;
-	}
-
-	return 0;
-}
-
-uint16_t get_port(int fd)
-{
-	int		retval = -1;
-	uint16_t	port = 0;
-	struct sockaddr sockaddr = {};
-	socklen_t	len = sizeof(sockaddr);
-
-	retval = getsockname(fd, &sockaddr, &len);
-	if (unlikely(retval == -1)) {
-		return retval;
-	}
-
-	switch (sockaddr.sa_family)
-	{
-		case AF_INET: {
-				struct sockaddr_in *inaddr = (struct sockaddr_in*)&sockaddr;
-				port = inaddr->sin_port;
-			      }
-				break;
-
-		case AF_INET6: {
-				struct sockaddr_in6 *inaddr6 = (struct sockaddr_in6*)&sockaddr;
-				port = inaddr6->sin6_port;
-			       }
-				break;
-
-		default:
-			break;
-	}
-
-	return ntohs(port);
-}
-
-int socket_listen(const char* host, const char* service)
-{
-	assert(host && service);
-
-	int			fd = -1;
-	int			optval = 1;
-	int			retval = -1;
-	struct addrinfo*	aiptr = NULL;
 	struct addrinfo*	ai = NULL;
-	struct addrinfo		hints = {};
+	if (_get_addrinfo(&ai, host, service)) {
+		if (_bind_listen(commtcp, ai)) {
+			if (_get_portinfo(commtcp)) {
+				commtcp->type = COMM_BIND;
+				commtcp->stat = FD_INIT;
+			} else {
+				CLOSEFD(commtcp->fd);
+			} 
+		}
+		freeaddrinfo(ai);
+	} else {
+		commtcp->fd = -1;
+	}
+	return (commtcp->fd != -1);
+}
+
+bool socket_connect(struct comm_tcp* commtcp, const char* host, const char* service)
+{
+	assert(commtcp && host && service);
+	memset(commtcp, 0, sizeof(*commtcp));
+
+	struct addrinfo*	ai = NULL;
+	if (_get_addrinfo(&ai, host, service)) {
+		if (_connect(commtcp, ai)) {
+			if (_get_portinfo(commtcp)) {
+				commtcp->type = COMM_CONNECT;
+				commtcp->stat = FD_INIT;
+			} else {
+				CLOSEFD(commtcp->fd);
+			}
+		}
+		freeaddrinfo(ai);
+	} else {
+		commtcp->fd = -1;
+	}
+	return (commtcp->fd != -1);
+}
+
+int socket_accept(const struct comm_tcp* lsncommtcp, struct comm_tcp* acptcommtcp)
+{
+	assert(lsncommtcp && acptcommtcp);
+	memset(acptcommtcp, 0, sizeof(*acptcommtcp));
+
+	acptcommtcp->fd = accept(lsncommtcp->fd, NULL, NULL);
+	if (acptcommtcp->fd > 0) {
+		if (fd_setopt(acptcommtcp->fd, O_NONBLOCK)) {
+			if (_get_portinfo(acptcommtcp)) {
+				acptcommtcp->type = COMM_ACCEPT;
+				acptcommtcp->stat = FD_INIT;
+				return acptcommtcp->fd;	/* 成功接收到新连接并设置完毕 */
+			} else {
+				CLOSEFD(acptcommtcp->fd);
+			}
+		} else {
+			CLOSEFD(acptcommtcp->fd);
+		}
+	} else {
+		return -1;	/* -1代表accept出错，可以检测errno*/
+	}
+
+	return -2;	/* 代表设置出错 */
+}
+
+/* 获取端口相关信息:获得是本地字节序 */
+static bool _get_portinfo(struct comm_tcp* commtcp)
+{
+	assert(commtcp && commtcp->fd > 0);
+
+	int		retval		= -1;
+	const char*	pointer		= NULL;
+	struct sockaddr sockaddr	= {};
+	socklen_t	len		= sizeof(sockaddr);
+	size_t		plen		= sizeof(commtcp->addr);
+
+	if (!getsockname(commtcp->fd, &sockaddr, &len)) {
+		switch (sockaddr.sa_family)
+		{
+			case AF_INET: {
+					struct sockaddr_in *inaddr = (struct sockaddr_in*)&sockaddr;
+					pointer = inet_ntop(AF_INET, &inaddr->sin_addr, commtcp->addr, plen);
+					commtcp->port = inaddr->sin_port;
+				      }
+					break;
+
+			case AF_INET6: {
+					struct sockaddr_in6 *inaddr6 = (struct sockaddr_in6*)&sockaddr;
+					pointer = inet_ntop(AF_INET6, &inaddr6->sin6_addr, commtcp->addr, plen);
+					commtcp->port = inaddr6->sin6_port;
+				       }
+					break;
+
+			case AF_UNIX: {
+					struct sockaddr_un *unaddr = (struct sockaddr_un*)&sockaddr;
+					snprintf(commtcp->addr, plen, "%s", unaddr->sun_path);
+					pointer = commtcp->addr;
+				      }
+					break;
+
+			default:
+				break;
+		}
+	} 
+
+	if (pointer != NULL) {
+		return true;
+	} else {
+		return false;
+	}
+}
+
+/* 获取地址信息 */
+static bool _get_addrinfo(struct addrinfo** ai, const char* host, const char* service)
+{
+	assert(ai && host && service);
+	int		retval= -1;
+	struct addrinfo	hints = {};
 
 	hints.ai_flags = AI_PASSIVE | AI_CANONNAME;
 	hints.ai_family = AF_UNSPEC;
 	hints.ai_socktype = SOCK_STREAM;
-
-	while (1) {
-		retval = getaddrinfo(host, service, &hints, &ai);
+	do {
+		retval = getaddrinfo(host, service, &hints, ai);
 		if (likely(retval == 0)) {
 			/* 函数成功返回 */
-			break ;
+			return true;
 		} else if (likely(retval == EAI_AGAIN)) {
 			continue ;
 		} else {
-			return -1;
+			return false;
 		}
-	}
-	for (aiptr = ai; aiptr != NULL; aiptr = aiptr->ai_next) {
-		fd = socket(aiptr->ai_family, aiptr->ai_socktype, aiptr->ai_protocol);
-		if ( unlikely(fd < 0) ) {
-			continue;
-		}
-		/* 允许地址的立即重用 */
-		if (unlikely(setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &optval, (socklen_t)sizeof(int)) == -1)) {
-			close(fd);
-			fd = -1;
-			break;
-		}
+	} while(1);
+}
 
-		retval = bind(fd, aiptr->ai_addr, aiptr->ai_addrlen);
-		if (likely(retval == 0)) {
-			/* 绑定成功 */
-			if (unlikely(listen(fd, LISTENQ) == -1)) {
-				close(fd);
-				fd = -1;
-				break;
+/* 根据地址信息绑定和监听 */
+static bool _bind_listen(struct comm_tcp* commtcp, struct addrinfo* ai)
+{
+	int		 optval = 0;
+	bool		 flag = false;
+	struct addrinfo* aiptr = NULL;
+	for (aiptr = ai; aiptr != NULL; aiptr = aiptr->ai_next) {
+		commtcp->fd = socket(aiptr->ai_family, aiptr->ai_socktype, aiptr->ai_protocol);
+		if (commtcp->fd > 0) {
+			if (bind(commtcp->fd, aiptr->ai_addr, aiptr->ai_addrlen) == 0) {
+				if (unlikely(listen(commtcp->fd, LISTENFDS) == -1)) {	/* 监听描述符 */
+					CLOSEFD(commtcp->fd);
+					break ;
+				}
+				if (unlikely(setsockopt(commtcp->fd, SOL_SOCKET, SO_REUSEADDR, &optval, (socklen_t)sizeof(int)))) {	/* 设置地址可重用 */
+					CLOSEFD(commtcp->fd);
+					break ;
+				}
+				if (unlikely(!fd_setopt(commtcp->fd, O_NONBLOCK))) {	/* 将套接字设置为非阻塞模式 */
+					CLOSEFD(commtcp->fd);
+					break ;
+				}
+				flag = true;
+				break ;
+			} else {						/* 绑定失败 忽略此描述符,继续循环下一个 */
+				CLOSEFD(commtcp->fd);
 			}
-			/* 将套接字设置为非阻塞模式 */
-			if (unlikely(!fd_setopt(fd, O_NONBLOCK))) {	
-				close(fd);
-				fd = -1;
-			}
-			break;
 		}
-		close(fd); /* 绑定失败，忽略此描述符 */
-		fd = -1;
 	}
-	freeaddrinfo(ai);
-	return fd;
+	return flag;
 }
 
 
-int socket_connect(const char* host, const char* service)
+static inline bool _connect(struct comm_tcp *commtcp, struct addrinfo *ai) 
 {
-	assert(host && service);
+	assert(commtcp && ai);
+	bool		 flag = false;
+	struct addrinfo* aiptr = NULL;
 
-	int			fd = -1;
-	int			retval = -1;
-	struct addrinfo*	aiptr = NULL;
-	struct addrinfo*	ai = NULL;
-	struct addrinfo		hints = {};
-
-	hints.ai_flags = AI_CANONNAME;
-	hints.ai_family = AF_UNSPEC;
-	hints.ai_socktype = SOCK_STREAM;
-
-	while (1) {
-		retval = getaddrinfo(host, service, &hints, &ai);
-		if (likely(retval == 0)) {
-			break ;
-		} else if (likely(retval == EAI_AGAIN)) {
-			continue ;
-		} else {
-			return -1;
-		}
-	}
 	for (aiptr = ai; aiptr != NULL; aiptr = aiptr->ai_next) {
-		fd = socket(aiptr->ai_family, aiptr->ai_socktype, aiptr->ai_protocol);
-		if (unlikely(fd < 0)) {
-			continue;
-		}
-
-		retval = connect(fd, aiptr->ai_addr, aiptr->ai_addrlen);
-		if (likely(retval == 0)) {
-			/* 设置套接字为非阻塞状态 */
-			if (unlikely(!fd_setopt(fd, O_NONBLOCK))) {
-				close(fd);
-				fd = -1;
+		commtcp->fd = socket(aiptr->ai_family, aiptr->ai_socktype, aiptr->ai_protocol);
+		if (commtcp->fd > 0) {
+			if (connect(commtcp->fd, aiptr->ai_addr, aiptr->ai_addrlen) == 0) {
+				if (fd_setopt(commtcp->fd, O_NONBLOCK)) {	/* 将套接字设置为非阻塞模式 */
+					flag = true;
+				} else {
+					CLOSEFD(commtcp->fd);
+				}
+				break ;
+			} else {						/* 连接失败 忽略此描述符,继续循环下一个 */
+				CLOSEFD(commtcp->fd);
 			}
-			break;
 		}
-		close(fd);
-		fd = -1;
 	}
-	freeaddrinfo(ai);
-	return fd;
+	return flag;
 }

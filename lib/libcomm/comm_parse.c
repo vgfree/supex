@@ -22,7 +22,7 @@ bool parse_data(struct comm_data *commdata)
 		if (likely(size > 0 && commdata->parser.ms.error == MFPTP_OK)) {	/* 解析成功 */
 			message = new_commmsg(commdata->parser.package.dsize);
 			if (likely(message)) {
-				message->fd = commdata->portinfo.fd;
+				message->fd = commdata->commtcp.fd;
 				memcpy(message->content, &commdata->parser.ms.cache.buffer[commdata->parser.ms.cache.start], commdata->parser.package.dsize);
 				_fill_message_package(message, &commdata->parser);
 				commdata->parser.ms.cache.start += commdata->parser.package.dsize;

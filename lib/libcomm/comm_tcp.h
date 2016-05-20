@@ -5,6 +5,7 @@
 #ifndef __COMM_TCP_H__
 #define __COMM_TCP_H__
 
+#include <sys/select.h>
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <arpa/inet.h>
@@ -16,6 +17,29 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+
+#define MAXIPADDRLEN	128	/* IP地址的最大长度 */
+
+
+/* 端口的相关信息 */
+struct comm_tcp {
+	int		fd;			/* 套接字描述符 */
+	uint16_t	port;			/* 本地端口 */
+	char		addr[MAXIPADDRLEN];	/* 本地IP地址 */
+	enum {
+		COMM_CONNECT = 0x01,
+		COMM_BIND,
+		COMM_ACCEPT
+	}		type;			/* 套接字的类型*/
+	enum {
+		FD_INIT = 0x01,
+		FD_READ,
+		FD_WRITE,
+		FD_CLOSE
+	}		stat;			/* 套接字的状态 */
+};
+
 
 /* 检查描述符是否可写 */
 static inline bool check_writeable(int fd)
@@ -43,17 +67,16 @@ static inline bool check_readable(int fd)
 	}
 }
 
-/* 通过套接字描述符获取本地的IP地址:本地字节序 */
-int get_address(int fd, char *paddr, size_t plen);
-
-/* 通过套接字描述符获取本地的端口:本地字节序 */
-uint16_t get_port(int fd);
 
 /* 绑定监听一个指定地址端口号 */
-int socket_listen(const char* host, const char* service);
+bool socket_listen(struct comm_tcp* commtcp, const char* host, const char* service);
 
 /* 连接一个指定的地址端口号 */
-int socket_connect(const char* host, const char* service);
+bool socket_connect(struct comm_tcp* commtcp, const char* host, const char* service);
+
+/* 接收一个新的连接 @lsncommtcp:监听描述符相关信息 @acptcommtcp:接收新的描述符的相关信息 */
+int socket_accept(const struct comm_tcp* lsncommtcp, struct comm_tcp* acptcommtcp);
+
 
 
 #ifdef __cplusplus

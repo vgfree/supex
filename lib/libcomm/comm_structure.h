@@ -36,36 +36,15 @@ extern "C" {
 				})				
 
 struct comm_context ;
-struct portinfo	;
-/* 回调函数的原型 */
-typedef void (*CommCB)(struct comm_context* commctx, struct portinfo *portinfo, void* usr);
 
-/* 套接字的类型 */
-enum {
-	COMM_CONNECT = 0x01,
-	COMM_BIND,
-	COMM_ACCEPT
-};
+typedef void (*CommCB)(struct comm_context* commctx, struct comm_tcp* commtcp, void* usr);
+
 
 /* 回调函数的相关信息 */
 struct cbinfo {
 	int			timeout;
 	CommCB			callback;	/* 相关的回调函数 */
 	void*			usr;		/* 用户的参数 */
-};
-
-/* 端口的相关信息 */
-struct portinfo {
-	int		fd;			/* 套接字描述符 */
-	int		type;			/* 套接字的类型 */
-	enum {
-		FD_INIT = 0x01,
-		FD_READ,
-		FD_WRITE,
-		FD_CLOSE
-	}		stat;			/* 套接字的状态 */
-	uint16_t	port;			/* 本地端口 */
-	char		addr[IPADDR_MAXSIZE];	/* 本地IP地址 */
 };
 
 /* 此结构体保存发送接收时没成功处理完的fd */
@@ -84,7 +63,7 @@ struct comm_data {
 	struct comm_cache	send_cache;	/* 存放需要发送并已经打包的数据 */
 	struct comm_lock	sendlock;	/* send_queue的锁 */
 	struct cbinfo		finishedcb;	/* 此描述符监听事件发生时相应的回调函数信息 */
-	struct portinfo		portinfo;	/* 端口的相关信息 */
+	struct comm_tcp		commtcp;	/* 套接字相关信息 */
 	struct mfptp_parser	parser;		/* 解析器 */
 	struct mfptp_packager	packager;	/* 打包器 */
 	struct comm_context*	commctx;	/* 通信上下文的结构体 */
@@ -97,7 +76,7 @@ struct listenfd {
 	int		counter;			/* 监听fd的计数器 */
 	int		fd[LISTEN_SIZE];		/* 监听的每个fd */
 	struct cbinfo	finishedcb[LISTEN_SIZE];	/* 每个fd对应的回调函数 */
-	struct portinfo portinfo[LISTEN_SIZE];		/* 每个fd对应的端口信息 */
+	struct comm_tcp	commtcp[LISTEN_SIZE];		/* 套接字的相关信息 */
 	struct comm_context* commctx;
 };
 
@@ -142,7 +121,7 @@ struct comm_message {
 	struct comm_list	list;			/* 链表节点 */
 };
 
-struct comm_data*  commdata_init(struct comm_context* commctx, struct portinfo* portinfo,  struct cbinfo*  finishedcb);
+struct comm_data*  commdata_init(struct comm_context* commctx, struct comm_tcp* commtcp,  struct cbinfo*  finishedcb);
 
 void commdata_destroy(struct comm_data *commdata);
 
@@ -152,13 +131,12 @@ void copy_commmsg(struct comm_message* destmsg, const struct comm_message* srcms
 
 void free_commmsg(void* arg);
 
-bool get_portinfo( struct portinfo* portinfo, int fd, int type, int status);
 
 void listenfd_init(struct listenfd *listenfd, struct comm_context *commctx);
 
 void listenfd_destroy(struct listenfd *listenfd);
 
-bool add_listenfd(struct listenfd *listenfd, struct cbinfo *finishedcb, struct portinfo *portinfo, int fd);
+bool add_listenfd(struct listenfd *listenfd, struct cbinfo *finishedcb, struct comm_tcp *commtcp, int fd);
 
 bool del_listenfd(struct listenfd *listenfd, int fdidx);
 

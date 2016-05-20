@@ -20,7 +20,7 @@ bool package_data(struct comm_data *commdata)
 	} else if (likely(commlist_pull(&commctx->head, &list))) {
 		/* 无数据可打包的时候 应该直接退出 */
 		message = (struct comm_message*)get_container_addr(list, COMMMSG_OFFSET);
-		if (message->fd == commdata->portinfo.fd) {
+		if (message->fd == commdata->commtcp.fd) {
 			flag = true;
 		} else {
 			flag = false;
