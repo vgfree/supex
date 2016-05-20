@@ -34,7 +34,12 @@ void *pull_thread(void *usr)
     } while (more);
     char *cid = get_first_cid();
 	while (cid) {
+      char downstream[20] = "downstream\0";
+      char cid_str[10] = "cid\0";
+      send_message(downstream, ZMQ_SNDMORE);
+      send_message(cid_str, ZMQ_SNDMORE);
       send_message(cid, ZMQ_SNDMORE);
+      printf("send cid:%s\n", cid);
       free(cid);
 	  for (int i = 0; i < frames - 1; i++) {
         send_message(test[i], ZMQ_SNDMORE);
@@ -55,6 +60,7 @@ void init_push_server()
   push_server = zmq_socket(g_ctx, ZMQ_PUSH);
   int rc = zmq_connect(push_server, "tcp://127.0.0.1:8090");
   assert(rc == 0);
+  printf("connect push server success.");
 }
 
 void send_message(char *str, int flag)

@@ -12,4 +12,5 @@ void destroy_api_server();
 void send_to_api(char *str, int flag);
 void *pull_thread(void *usr);
 void init_push_server();
+void destroy_push_server();
 #endif

@@ -30,7 +30,7 @@ static int zmq_pull_init(char *host, int port)
   char addr[64] = {};
   sprintf(addr, "tcp://%s:%d", host, port);
   log("addr:%s.", addr);
-  int rc = zmq_connect(g_pull, addr);
+  int rc = zmq_bind(g_pull, addr);
   log("rc:%d", rc);
   return rc;
 }
