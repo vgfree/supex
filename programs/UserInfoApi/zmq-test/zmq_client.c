@@ -18,13 +18,13 @@ void recive_some_data(struct skt_device *devc)
 {
 	size_t  count = MAX_SPILL_DEPTH;
 	int rc = zmq_recviov(devc->skt, devc->ibuffer, &count, 0);
-	//printf("after zmq_recv, count = %d\n", count);
+	printf("after zmq_recv, count = %d\n", count);
 	devc->idx = count;
 	
-	for(int i = 0; i < devc->idx; i ++) {
-		printf("Data length : %d\n",  devc->ibuffer[i].iov_len);
-		printf("Data : %s\n", devc->ibuffer[i].iov_base);
-	}
+	//for(int i = 0; i < devc->idx; i ++) {
+	//	printf("Data length : %d\n",  devc->ibuffer[i].iov_len);
+	//	printf("Data : %s\n", devc->ibuffer[i].iov_base);	
+	//}
 }
 
 int main (void)  
