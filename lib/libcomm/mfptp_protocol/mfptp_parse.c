@@ -27,16 +27,17 @@ int mfptp_parse(struct mfptp_parser *parser)
 
 	int		size_f_size = 0;			/* f_size字段占几位 */
 	int		frame_size = 0;				/* 解压解密之后的帧数据大小 */
-	int		frame_offset = parser->ms.cache.size;	/* 每帧在cache里面的偏移 */
+	int		frame_offset = parser->ms.cache.end;	/* 每帧在cache里面的偏移 */
 	int		dsize = *(parser->ms.dsize);		/* 待解析数据的大小 */
-	const char*	data = *(parser->ms.data);		/* 待解析的数据缓冲区 */
+	const char*	data = *parser->ms.data;		/* 待解析的数据缓冲区 */
 	struct mfptp_frame_info* frame = NULL;			/* 帧的相关信息 */
 	char decryptbuff[MFPTP_MAX_FRAMESIZE] = {0};		/* 用于保存解密之后的数据 */
 	char decompressbuff[MFPTP_MAX_FRAMESIZE] = {0};		/* 用于保存解压之后的数据 */
 
-	if (parser->ms.step == MFPTP_PARSER_OVER) {
-		/* 外部需要检测error的状态，为MFPTP_PARSER_OVER时就必须清理一下cache */
-		parser->ms.error = MFPTP_PARSE_INIT;
+	if (parser->ms.step == MFPTP_PARSE_OVER) {
+		/* 外部需要检测error的状态，为MFPTP_PARSE_OVER时就必须清理一下cache */
+		//parser->ms.error = MFPTP_PARSE_INIT;
+		parser->ms.step = MFPTP_PARSE_INIT;
 		parser->ms.dosize = 0;
 		memset(&parser->package, 0, sizeof(parser->package));
 		//memset(&parser->header, 0 , sizeof(parser->header));

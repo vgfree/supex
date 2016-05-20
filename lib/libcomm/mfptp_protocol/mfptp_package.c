@@ -90,6 +90,7 @@ void mfptp_fill_package(struct mfptp_packager *packager, const int *frame_offset
 	int dsize	= 0;	/* 数据的总大小 */
 	int pckidx	= 0;	/* 包的索引 */
 	int frmidx	= 0;	/* 帧的索引 */
+	//memset(packager->package, 0, sizeof(packager->package));
 	for (pckidx = 0; pckidx < packages; pckidx++) {
 		for (frmidx = 0; frmidx < frames_of_package[pckidx]; frmidx++, index++) {
 			packager->package.frame[pckidx].frame_offset[frmidx] = frame_offset[index];
@@ -115,8 +116,8 @@ static void _make_package(struct mfptp_packager *packager, struct mfptp_frame_in
 	/* 开始组装帧 */
 	for(frmidx = 0; frmidx < frame->frames; frmidx++) {
 		/* 先加密 再压缩 */
-		memset(encryptbuff, 0,  MFPTP_MAX_FRAMESIZE);
-		memset(compressbuff, 0, MFPTP_MAX_FRAMESIZE);
+		//memset(encryptbuff, 0,  MFPTP_MAX_FRAMESIZE);
+		//memset(compressbuff, 0, MFPTP_MAX_FRAMESIZE);
 		if (packager->encryptcb) {
 			frame_size = packager->encryptcb(encryptbuff, &data[frame->frame_offset[frmidx]], MFPTP_MAX_FRAMESIZE, frame->frame_size[frmidx]);
 		} else {
