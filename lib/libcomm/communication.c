@@ -168,6 +168,7 @@ int comm_send(struct comm_context *commctx, const struct comm_message *message, 
 			if (likely(flag)) {
 				/* 数据写入成功 往此管道写入fd 触发子线程的写事件 */
 				commpipe_write(&commctx->commpipe, (void*)&message->fd, sizeof(message->fd));
+				log("comm_send data in comm_send\n");
 				return message->package.dsize;
 			} else {
 				free_commmsg(commmsg);		/* push数据失败则需要释放commmsg */

@@ -197,7 +197,7 @@ static  bool _read_data(struct comm_data *commdata, int fd)
 	assert(commdata);
 	int bytes = 0;
 	bool flag = false;
-	char buff[1024] = {};
+	char buff[COMM_READ_MIOU] = {};
 	commdata->commtcp.stat = FD_READ;
 	do {
 		bytes = read(fd, buff, COMM_READ_MIOU);
@@ -239,6 +239,7 @@ static  bool _read_data(struct comm_data *commdata, int fd)
 	/* 目前暂定只要接收到数据就解析一次 */
 	if (flag) {
 		flag = parse_data(commdata);
+		commcache_restore(&commdata->recv_cache);
 	}
 
 	return true;

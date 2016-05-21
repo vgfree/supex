@@ -66,5 +66,6 @@ void commqueue_destroy(struct comm_queue* commqueue)
 			}
 		}
 		Free(commqueue->buffer);
+		commqueue->init = false;
 	}
 }

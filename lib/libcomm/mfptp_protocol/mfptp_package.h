@@ -17,7 +17,7 @@ typedef int (*Encryption_CallBack)(char *dest, const char *src, int d_len, int s
 
 /* MFPTP打包器的状态 */
 struct mfptp_pack_stat {
-	char*			buff;	/* 用于存放打包好的数据的缓冲区 */
+	char**			buff;	/* 用于存放打包好的数据缓冲区的地址 */
 	int*			size;	/* 缓冲区已有数据大小 */
 	int			dosize;	/* 目前打包的字节数 */
 	enum mfptp_error	error;	/* MFPTP打包出错信息 */
@@ -39,7 +39,7 @@ struct mfptp_packager {
  * @buff:用于存放打包好的数据的缓冲区  @size：缓冲区中已有的数据大小
  * @返回值：true:初始化成功 false：初始化失败
 ************************************************************************************/
-void mfptp_package_init(struct mfptp_packager *packager, char *buff, int *size);
+void mfptp_package_init(struct mfptp_packager *packager,  char** buff, int *size);
 
 /***********************************************************************************
  * 功能：开始打包数据

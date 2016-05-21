@@ -40,6 +40,8 @@ inline int commpipe_read(struct comm_pipe *commpipe, void *buff, int size)
 
 	int bytes = 0;
 	if ((bytes = read(commpipe->rfd, buff, PIPE_READ_MIOU)) > 0) {
+		int test = bytes/size;
+		log("commpipe read :%d\n", test);
 		return bytes/size;
 	} else {
 		return bytes;

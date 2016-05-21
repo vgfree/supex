@@ -80,7 +80,7 @@ bool commepoll_wait(struct comm_epoll *commepoll, int timeout)
 	assert(commepoll && commepoll->init);
 	memset(commepoll->events, 0, (sizeof(struct epoll_event)) * commepoll->epollsize);
 	commepoll->eventcnt = epoll_wait(commepoll->epfd, commepoll->events, commepoll->watchcnt, timeout);
-	if (commepoll->eventcnt != -1) {
+	if (commepoll->eventcnt > 0) {
 		return true;
 	} else {
 		return false;

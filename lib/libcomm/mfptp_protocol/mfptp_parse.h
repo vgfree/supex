@@ -42,9 +42,8 @@ struct mfptp_parser {
 /***********************************************************************************
  * 功能：初始化解析结构体
  * @data:待解析数据缓冲区地址  @size:待解析数据大小的地址
- * 返回值：true:初始化成功 false:初始化失败
 ***********************************************************************************/
-bool mfptp_parse_init(struct mfptp_parser *parser, char* const *data, const int *size);     
+void mfptp_parse_init(struct mfptp_parser *parser, char* const *data, const int *size);     
 
 /***********************************************************************************
  * 功能：开始解析数据
