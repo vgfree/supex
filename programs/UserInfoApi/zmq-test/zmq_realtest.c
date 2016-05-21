@@ -7,7 +7,11 @@
 
 static const char first_frame_data[] = "status";
 static const char second_frame_data[] = "connected";
-static const char third_frame_data[] = "0x7f,0x00,0x00,0x01,0x00,0x09";
+static const char third_frame_data[] = "0x7f,0x10,0x01,0x01,0x10,0x19";
+
+static const char first_frame_data1[] = "status";
+static const char second_frame_data1[] = "closed";
+static const char third_frame_data1[] = "0x7f,0x10,0x01,0x01,0x10,0x19";
 
 static const char first_data[] = "setting";
 static const char second_data[] = "gidmap";
@@ -102,4 +106,5 @@ int main(void)
   SendLoginData(first_frame_data, sizeof(first_frame_data)-1, second_frame_data, sizeof(second_frame_data)-1, third_frame_data, sizeof(third_frame_data)-1);
   SendAppServerData(first_data, sizeof(first_data)-1, second_data, sizeof(second_data)-1,third_data, sizeof(third_data)-1,furth_data, sizeof(furth_data)-1);
   SendAppServerData(first_data1, sizeof(first_data1)-1, second_data1, sizeof(second_data1)-1,third_data1, sizeof(third_data1)-1,furth_data1, sizeof(furth_data1)-1);
+  SendLoginData(first_frame_data1, sizeof(first_frame_data1)-1, second_frame_data1, sizeof(second_frame_data1)-1, third_frame_data1, sizeof(third_frame_data1)-1);
 }
