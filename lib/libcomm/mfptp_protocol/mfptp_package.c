@@ -11,7 +11,7 @@ static inline bool _check_config(struct mfptp_packager *packager);
 
 static void _make_package(struct mfptp_packager *packager, struct mfptp_frame_info *frame, const char *data);
 
-void  mfptp_package_init(struct mfptp_packager *packager, char *buff, int *size)
+void  mfptp_package_init(struct mfptp_packager *packager, char **buff, int *size)
 {
 	assert(packager && buff && size);
 	memset(packager, 0, sizeof(*packager));
@@ -45,25 +45,25 @@ int mfptp_package(struct mfptp_packager *packager, const char *data, unsigned ch
 	_set_callback(packager);
 
 	/* 开始组装包头 */
-	memcpy(&packager->ms.buff[*packager->ms.size], "#MFPTP", 6);
+	memcpy(&((*packager->ms.buff)[*packager->ms.size]), "#MFPTP", 6);
 	*packager->ms.size += 6;
 	packager->ms.dosize += 6;
 	/* 版本号 */
-	packager->ms.buff[*packager->ms.size] = packager->header.major_version << 4 | packager->header.minor_version;
+	(*packager->ms.buff)[*packager->ms.size] = packager->header.major_version << 4 | packager->header.minor_version;
 	*packager->ms.size += 1;
 	packager->ms.dosize += 1;
 	/* 压缩加密设置 */
-	packager->ms.buff[*packager->ms.size] = packager->header.compression | packager->header.encryption;
+	(*packager->ms.buff)[*packager->ms.size] = packager->header.compression | packager->header.encryption;
 	*packager->ms.size += 1;
 	packager->ms.dosize += 1;
 
 	/* socket工作类型 */
-	packager->ms.buff[*packager->ms.size] = packager->header.socket_type;
+	(*packager->ms.buff)[*packager->ms.size] = packager->header.socket_type;
 	*packager->ms.size += 1;
 	packager->ms.dosize += 1;
 
 	/* 设置包数 */
-	packager->ms.buff[*packager->ms.size] = packager->header.packages;
+	(*packager->ms.buff)[*packager->ms.size] = packager->header.packages;
 	*packager->ms.size += 1;
 	packager->ms.dosize += 1;
 
@@ -134,27 +134,27 @@ static void _make_package(struct mfptp_packager *packager, struct mfptp_frame_in
 		/* FP_CONTROL的设置 */
 		if (frmidx == frame->frames-1) {
 			/* 最后一帧 结束帧 */
-			packager->ms.buff[*packager->ms.size] = 0x0;
+			(*packager->ms.buff)[*packager->ms.size] = 0x0;
 		} else {
-			packager->ms.buff[*packager->ms.size] = 0x1;
+			(*packager->ms.buff)[*packager->ms.size] = 0x1;
 		}
 
 		if (frame_size > 0 && frame_size < 256) {
 			/* 一个字节 */
 			packager->header.size_f_size = 1;
-			packager->ms.buff[*packager->ms.size] = packager->ms.buff[*packager->ms.size] << 2 | 0x0;
+			(*packager->ms.buff)[*packager->ms.size] = (*packager->ms.buff)[*packager->ms.size] << 2 | 0x0;
 		} else if (frame_size > 255 && frame_size < 65536 ) {
 			/* 两个字节 */
 			packager->header.size_f_size = 2;
-			packager->ms.buff[*packager->ms.size] = packager->ms.buff[*packager->ms.size] << 2 | 0x1;
+			(*packager->ms.buff)[*packager->ms.size] = (*packager->ms.buff)[*packager->ms.size] << 2 | 0x1;
 		} else if(frame_size > 65535 && frame_size < 16777216) {
 			/* 三个字节 */
 			packager->header.size_f_size = 3;
-			packager->ms.buff[*packager->ms.size] = packager->ms.buff[*packager->ms.size] << 2 | 0x2;
+			(*packager->ms.buff)[*packager->ms.size] = (*packager->ms.buff)[*packager->ms.size] << 2 | 0x2;
 		} else if (frame_size >16777215 && frame_size < 4294967296) {
 			/* 四个字节 */
 			packager->header.size_f_size = 4;
-			packager->ms.buff[*packager->ms.size] = packager->ms.buff[*packager->ms.size] << 2 | 0x3;
+			(*packager->ms.buff)[*packager->ms.size] = (*packager->ms.buff)[*packager->ms.size] << 2 | 0x3;
 		} else {
 			packager->ms.error = MFPTP_DATA_TOOMUCH;
 			break ;
@@ -164,12 +164,12 @@ static void _make_package(struct mfptp_packager *packager, struct mfptp_frame_in
 
 		/*F_SIZE的设置 */
 		for (size_f_size = 0; size_f_size < packager->header.size_f_size; size_f_size++) {
-			packager->ms.buff[*packager->ms.size] = frame_size << (size_f_size*8);
+			(*packager->ms.buff)[*packager->ms.size] = frame_size << (size_f_size*8);
 		}
 		*packager->ms.size += size_f_size;
 		packager->ms.dosize += size_f_size;
 
-		memcpy(&packager->ms.buff[*packager->ms.size], compressbuff, frame_size);
+		memcpy(&((*packager->ms.buff)[*packager->ms.size]), compressbuff, frame_size);
 		*packager->ms.size += frame_size;
 		packager->ms.dosize += frame_size;
 	}

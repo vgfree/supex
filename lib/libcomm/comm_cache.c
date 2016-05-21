@@ -4,85 +4,93 @@
 /*********************************************************************************************/
 #include "comm_cache.h"
 
-#define	CACHE_SIZE		1024
-#define CACHE_INCREASE_SIZE	1024
+#define INCREASE_SIZE	1024
 
 
-bool commcache_init(struct comm_cache* comm_cache, int capacity)
+void commcache_init(struct comm_cache* commcache)
 {
-	assert(comm_cache);
-	memset(comm_cache, 0, sizeof(struct comm_cache));
-	comm_cache->capacity = (capacity > 0 ) ? capacity : CACHE_SIZE;
-	comm_cache->buffer = calloc(comm_cache->capacity, sizeof(char));
-	if (unlikely(!comm_cache->buffer)) {
-		return false;
-	} else {
-		comm_cache->init = true;
-		return true;
-	}
+	assert(commcache);
+	memset(commcache, 0, sizeof(struct comm_cache));
+	commcache->capacity = BASEBUFFERSIZE;
+	commcache->buffer = commcache->base; 
+	commcache->init = true;
+	return ;
 }
 
-void commcache_free(struct comm_cache* comm_cache)
+void commcache_free(struct comm_cache* commcache)
 {
-	if (likely(comm_cache && comm_cache->init)) {
-		Free(comm_cache->buffer);
+	if (commcache && commcache->init && commcache->buffer != commcache->base) {
+		Free(commcache->buffer);
+		commcache->init = false;
 	}
+	return ;
 }
 
-bool commcache_append(struct comm_cache* comm_cache, const char* data, int datasize)
+bool commcache_append(struct comm_cache* commcache, const char* data, int datasize)
 {
-	assert(comm_cache && comm_cache->init);
+	assert(commcache && commcache->init);
 	int size = datasize > 0 ? datasize : strlen(data);
-	if (unlikely(comm_cache->end + datasize > comm_cache->capacity)) { 
+	datasize =  commcache->end + size - commcache->capacity;
+	if (unlikely(datasize > 0)) { 
 		//缓冲区容量不足， 进行扩容
-		bool retval = false;
-		retval = commcache_expend(comm_cache, size);
-		if (unlikely(!retval)) {
+		if (unlikely(!commcache_expend(commcache, datasize))) {
 			return false;
 		}
 	}
 	
-	memcpy(&comm_cache->buffer[comm_cache->end ], data, size);
-	comm_cache->end += size;
-	comm_cache->size += size;
+	memcpy(&commcache->buffer[commcache->end ], data, size);
+	commcache->end += size;
+	commcache->size += size;
 	return true;
 }
 
-void commcache_deccnt(struct comm_cache* comm_cache, int size)
+void commcache_clean(struct comm_cache* commcache)
 {
-	assert(comm_cache && comm_cache->init);
-	comm_cache->start += size;
-	comm_cache->size -= size;
-	commcache_clean(comm_cache);
-}
-
-void commcache_clean(struct comm_cache* comm_cache)
-{
-	assert(comm_cache && comm_cache->init);
-	if (likely(comm_cache->start != 0)) {
-		if (likely( comm_cache->size > 0)) {
-			memmove(comm_cache->buffer, &comm_cache->buffer[comm_cache->start ], comm_cache->size);
+	assert(commcache && commcache->init);
+	if (likely(commcache->start != 0)) {
+		if (likely( commcache->size > 0)) {
+			memmove(commcache->buffer, &commcache->buffer[commcache->start ], commcache->size);
 		}
-		comm_cache->end -= comm_cache->start;
-		comm_cache->start = 0;
+		commcache->end -= commcache->start;
+		commcache->start = 0;
 	}
 }
 
-bool commcache_expend(struct comm_cache* comm_cache, int size)
+bool commcache_expend(struct comm_cache* commcache, int size)
 {
-	assert(comm_cache && comm_cache->init);
-	commcache_clean(comm_cache);
-	if (size <= 0) {
-		size = CACHE_INCREASE_SIZE;
-	}
-	char *temp = comm_cache->buffer;
-	
-	comm_cache->buffer = realloc(comm_cache->buffer, comm_cache->end + size);
-	if (unlikely(!comm_cache->buffer)) {
-		comm_cache->buffer = temp;
-		return false;
-	} else {
-		comm_cache->capacity = size;
+	assert(commcache && commcache->init);
+	int	length	= commcache->size;
+	char*	buffer	= commcache->buffer;
+	int	capacity= commcache->capacity + ((size > 0) ? size : INCREASE_SIZE);
+
+	commcache_clean(commcache);
+
+	NewArray(commcache->buffer, capacity);	
+	if (commcache->buffer) {
+		commcache->capacity = capacity;
+		memcpy(commcache->buffer, buffer, length);
+		if (buffer != commcache->base) {
+			Free(buffer);
+		}
 		return true;
+	} else {
+		commcache->buffer = buffer;
+		return false;
+	}
+}
+
+void commcache_restore(struct comm_cache* commcache)
+{
+	assert(commcache && commcache->init);
+	if (commcache->buffer != commcache->base) {
+		if (commcache->size < BASEBUFFERSIZE) {
+			if (commcache->size > 0) {
+				memcpy(commcache->base, &commcache->buffer[commcache->start], commcache->size);
+			}
+			Free(commcache->buffer);
+			commcache->buffer = commcache->base;
+			commcache->capacity = BASEBUFFERSIZE;
+			printf("restore cache capacity:%d\n", commcache->capacity);
+		}
 	}
 }

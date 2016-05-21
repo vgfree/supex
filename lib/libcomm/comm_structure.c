@@ -28,15 +28,6 @@ struct comm_data*  commdata_init(struct comm_context* commctx, struct comm_tcp* 
 	if (unlikely(!retval)) {
 		goto error;
 	}
-	retval = commcache_init(&commdata->recv_cache, CACHE_SIZE);
-	if (unlikely(!retval)) {
-		goto error;
-	}
-
-	retval = commcache_init(&commdata->send_cache, CACHE_SIZE);
-	if (unlikely(!retval)) {
-		goto error;
-	}
 	retval = commlock_init(&commdata->sendlock);
 	if( unlikely(!retval)) {
 		goto error;
@@ -48,19 +39,18 @@ struct comm_data*  commdata_init(struct comm_context* commctx, struct comm_tcp* 
 		flag = EPOLLIN | EPOLLOUT | EPOLLET;
 	}
 
-
 	/* 监听套接字的时间太晚，可能会出现事件已发生，但是epoll却没监听到 */
 	retval = commepoll_add(&commctx->commepoll, commtcp->fd, flag);
 	if( unlikely(!retval) ){
 		goto error;
 	}
 
-	if (!mfptp_parse_init(&commdata->parser, &commdata->recv_cache.buffer, &commdata->recv_cache.size)) {
-		goto error;
-	}
-	mfptp_package_init(&commdata->packager, commdata->send_cache.buffer, &commdata->send_cache.size);
-
 	commdata->commctx = commctx;
+	commcache_init(&commdata->send_cache);
+	commcache_init(&commdata->recv_cache);
+	mfptp_parse_init(&commdata->parser, &commdata->recv_cache.buffer, &commdata->recv_cache.size);
+	mfptp_package_init(&commdata->packager, &commdata->send_cache.buffer, &commdata->send_cache.size);
+
 	memcpy(&commdata->commtcp, commtcp, sizeof(*commtcp));
 	if (finishedcb) {
 		memcpy(&commdata->finishedcb, finishedcb, sizeof(*finishedcb));

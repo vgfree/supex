@@ -6,19 +6,16 @@
 
 static inline void _set_callback(struct mfptp_parser *parser);
 
-bool mfptp_parse_init(struct mfptp_parser *parser, char* const *data, const int *size)
+void mfptp_parse_init(struct mfptp_parser *parser, char* const *data, const int *size)
 {
-	assert(parser && *data && data && size);
+	assert(parser && data && size);
 	memset(parser, 0, sizeof(*parser));
 	parser->ms.data = data;
 	parser->ms.dsize = size;
 	parser->ms.step = MFPTP_PARSE_INIT;
-	if (commcache_init(&parser->ms.cache, -1)) {
-		parser->init = true;
-	} else {
-		parser->init = false;
-	}
-	return parser->init;
+	commcache_init(&parser->ms.cache);
+	parser->init = true;
+	return ;
 }
 
 int mfptp_parse(struct mfptp_parser *parser)

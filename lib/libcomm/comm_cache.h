@@ -11,34 +11,35 @@
 extern "C" {
 #endif
 
-
+#define	BASEBUFFERSIZE	1024	/*  CACHE里面buff的基本大小 */
      
 struct comm_cache{
-	bool	init;		/* 结构体是否初始化的标志 */
-	int	start;		/* 有效数据的开始下标 */
-	int	end;		/* 有效数据的结束下标 */
-	int	size;		/* 有效数据的大小 */
-	int	capacity;	/* 缓冲区的大小 */
-	char*	buffer;		/* 缓冲区的地址 */
+	bool	init;			/* 结构体是否初始化的标志 */
+	int	start;			/* 有效数据的开始下标 */
+	int	end;			/* 有效数据的结束下标 */
+	int	size;			/* 有效数据的大小 */
+	int	capacity;		/* 缓冲区的大小 */
+	char	base[BASEBUFFERSIZE];	/* 缓冲的基地址 */
+	char*	buffer;			/* 缓冲区的地址 */
 };
 
 /* 初始化cache */
-bool commcache_init(struct comm_cache* comm_cache,  int capacity);
+void commcache_init(struct comm_cache* comm_cache);
 
-/* 往cache里面添加datasize大小的数据 */
+/* 释放cache */
+void commcache_free(struct comm_cache* comm_cache);
+
+/* 往cache里面添加数据 @data:待添加的数据 @datasize:待添加数据的大小 */
 bool commcache_append(struct comm_cache* comm_cache,  const char* data,  int datasize);
 
-/* 减少cache有效数据的计数  @size:解析的数据的多少 */
-void commcache_deccnt(struct comm_cache* comm_cache, int size);
-
-/* 扩展cache的内存， @size：需要增加内存的大小，-1则使用默认值 */
+/* 扩展cache的内存， @size:需要增加内存的大小，-1则使用默认值 */
 bool commcache_expend(struct comm_cache* comm_cache, int size);
 
 /* 清除cache里面的无效数据 */
 void commcache_clean(struct comm_cache* comm_cache);
 
-/* 释放cache */
-void commcache_free(struct comm_cache* comm_cache);
+/* 恢复cache里面的buffer为基地址 */
+void commcache_restore(struct comm_cache* commcache);
 
 
      
