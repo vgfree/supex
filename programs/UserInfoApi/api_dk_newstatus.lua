@@ -22,8 +22,10 @@ local function parseFirstFrame(table)
 end
 
 local function sendToSettingServer(table)
-	s:connect("tcp://localhost:5559")
-	s:send_table(table)
+	if table[1] == 'setting' then
+		s:connect("tcp://localhost:5559")
+		s:send_table(table)
+	end
 end
 
 function handle(table)
