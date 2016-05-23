@@ -16,7 +16,6 @@ MAIN_APP_SERV ?= gdgive
 #CFLAGS +=-DSTORE_USE_UCMQ
 #CFLAGS +=-DSTORE_USE_QUEUE
 CFLAGS += -DSTORE_USE_UCMQ_AND_QUEUE
-CFLAGS += -D_ENCRYPT
 
 ifeq ($(MAIN_APP_SERV), gdgive)
 HANDLE_MODEL = EVUV
@@ -25,6 +24,7 @@ CFLAGS += -D_BJSH
 #CFLAGS += -Wl,rpath=/usr/local/lib
 else
 HANDLE_MODEL = EVUV
+CFLAGS += -D_ENCRYPT
 #CFLAGS += -Wl,rpath=/usr/local/lib
 endif
 #<------------------------>#
