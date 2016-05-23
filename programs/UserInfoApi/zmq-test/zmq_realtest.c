@@ -1,9 +1,10 @@
-#include <zmq.h>  
+#include <zmq.h>
 #include <stdio.h>  
 #include <unistd.h>  
 #include <string.h>  
 #include <assert.h>
 #include <sys/uio.h>
+#include <curses.h>
 
 static const char first_frame_data[] = "status";
 static const char second_frame_data[] = "connected";
@@ -18,10 +19,15 @@ static const char second_data[] = "gidmap";
 static const char third_data[] = "0x7f,0x10,0x01,0x01,0x10,0x19";
 static const char furth_data[] = "gidaa,gidbb,gidcc";
 
+static const char first_data2[] = "setting";
+static const char second_data2[] = "gidmap";
+static const char third_data2[] = "0x7f,0x10,0x01,0x01,0x10,0x19";
+static const char furth_data2[] = "giddd,gidee,gidff";
+
 static const char first_data1[] = "setting";
 static const char second_data1[] = "uidmap";
 static const char third_data1[] = "0x7f,0x10,0x01,0x01,0x10,0x19";
-static const char furth_data1[] = "uidff";
+static const char furth_data1[] = "uidxxxx";
 
 int SendLoginData(const char *firstframedata, int firLen, const char *secondframedata, int secLen, const char *thirdframedata, int thiLen)  
 {
@@ -104,7 +110,8 @@ int SendAppServerData(const char *firstdata, int firLen, const char *seconddata,
 int main(void)
 {
   SendLoginData(first_frame_data, sizeof(first_frame_data)-1, second_frame_data, sizeof(second_frame_data)-1, third_frame_data, sizeof(third_frame_data)-1);
-  SendAppServerData(first_data, sizeof(first_data)-1, second_data, sizeof(second_data)-1,third_data, sizeof(third_data)-1,furth_data, sizeof(furth_data)-1);
   SendAppServerData(first_data1, sizeof(first_data1)-1, second_data1, sizeof(second_data1)-1,third_data1, sizeof(third_data1)-1,furth_data1, sizeof(furth_data1)-1);
+  SendAppServerData(first_data, sizeof(first_data)-1, second_data, sizeof(second_data)-1,third_data, sizeof(third_data)-1,furth_data, sizeof(furth_data)-1);
+  SendAppServerData(first_data2, sizeof(first_data2)-1, second_data2, sizeof(second_data2)-1,third_data2, sizeof(third_data2)-1,furth_data2, sizeof(furth_data2)-1);
   SendLoginData(first_frame_data1, sizeof(first_frame_data1)-1, second_frame_data1, sizeof(second_frame_data1)-1, third_frame_data1, sizeof(third_frame_data1)-1);
 }
