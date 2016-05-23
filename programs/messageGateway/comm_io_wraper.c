@@ -1,7 +1,6 @@
 #include "comm_io_wraper.h"
 #include "config_reader.h"
 #include "loger.h"
-#include "validate_logon.h"
 
 #define CONFIG "messageGateway.conf"
 #define NODE_CONNECT_IP "CoreExchangeNodeIP"

@@ -79,8 +79,14 @@ int remove_cid(char *cid, int size)
     return -1;
   }
   for (; i < g_cid_map.cid_number - 1; i++) {
-    g_cid_map.cid[i]._front = g_cid_map.cid[i+1]._end;
+    g_cid_map.cid[i]._front = g_cid_map.cid[i+1]._front;
     g_cid_map.cid[i]._end = g_cid_map.cid[i+1]._end;
   }
+  g_cid_map.cid_number--;
   return 0;
+}
+
+int get_numbers()
+{
+  return g_cid_map.cid_number;
 }

@@ -266,6 +266,7 @@ static void * _start_new_pthread(void* usr)
 
 				if ((fdidx = search_listenfd(&commctx->listenfd, commctx->commepoll.events[n].data.fd)) > -1) {	/* 新用户连接，触发accept事件 */
 					 accept_event(commctx, fdidx);
+					 log("accept event");
 
 				} else if (commctx->commepoll.events[n].events & EPOLLIN) {					/* 有数据可读，触发读数据事件 */
 				
@@ -273,11 +274,13 @@ static void * _start_new_pthread(void* usr)
 						int array[EPOLL_SIZE] = {0};
 						int cnt = commpipe_read(&commctx->commpipe, array, sizeof(int));
 						if (likely(cnt > 0)) {
+							 log("send event");
 							 send_event(commctx, array, cnt);
 						} else {
 							continue ;
 						}
 					} else {
+						 log("recv event");
 						 recv_event(commctx, commctx->commepoll.events[n].data.fd);
 					}
 				} else if (commctx->commepoll.events[n].events & EPOLLOUT) {					/* 有数据可写， 触发写数据事件 */

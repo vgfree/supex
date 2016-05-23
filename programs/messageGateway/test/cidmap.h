@@ -16,6 +16,7 @@ struct cidmap {
 };
 
 void init_cidmap();
+int get_numbers();
 char *get_first_cid();
 char *get_next_cid();
 int append_cid(char *cid, int size);

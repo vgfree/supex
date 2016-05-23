@@ -12,26 +12,27 @@ void *client_thread_read(void *usr)
   while (1) {
     struct comm_message msg = {};
     init_msg(&msg);
-    printf("start send client.\n");
+    //printf("start send client.\n");
     comm_recv(g_ctx, &msg, true, -1);
     int size = 0;
     char *frame = get_msg_frame(0, &msg, &size);
     char *buf = (char *)malloc((size + 1) * sizeof(char));
     memset(buf, 0, size + 1);
     memcpy(buf, frame, size);
-    printf("recv:%s\n", buf);
+    printf("%s\n", buf);
     free(buf);
     destroy_msg(&msg);
   }
   return NULL;
 }
+
 int test_simulate_client()
 {
   g_ctx = comm_ctx_create(EPOLL_SIZE);
   struct cbinfo callback_info = {};
   callback_info.callback = NULL;
   connectfd = comm_socket(g_ctx, "127.0.0.1", "8082", &callback_info, COMM_CONNECT);
-  printf("connectfd:%d", connectfd);
+  printf("connectfd:%d\n", connectfd);
   if (connectfd == -1) {
     printf("connect error.");
     return -1;

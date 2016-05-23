@@ -27,7 +27,8 @@ void *pull_thread(void *usr)
       assert(rc != -1);
 	  test[frames] = (char *)malloc((zmq_msg_size(&part) + 1) * sizeof(char));
       memcpy(test[frames], zmq_msg_data(&part), zmq_msg_size(&part));
-      printf("recv data:%s.\n", test[frames]);
+      test[frames][zmq_msg_size(&part)] = '\0';
+      printf("recv data:%s\n", test[frames]);
       frames++;
       zmq_getsockopt(server_simulator, ZMQ_RCVMORE, &more, &more_size);
       zmq_msg_close(&part);
@@ -44,7 +45,11 @@ void *pull_thread(void *usr)
 	  for (int i = 0; i < frames - 1; i++) {
         send_message(test[i], ZMQ_SNDMORE);
 	  }
-      send_message(test[frames - 1], 0);
+      printf("the last test[i]:%s.", test[frames - 1]);
+	  char buf[5000] = {};
+	  snprintf(buf, 30, "当前在线人数：%d.\n", get_numbers());
+	  strcat(buf, test[frames - 1]);
+      send_message(buf, 0);
       cid = get_next_cid();
     }
 	for (int i = 0; i < frames; i++) {

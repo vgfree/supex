@@ -1,3 +1,4 @@
+#include "comm_message_operator.h"
 #include "comm_io_wraper.h"
 #include "downstream.h"
 #include "loger.h"
