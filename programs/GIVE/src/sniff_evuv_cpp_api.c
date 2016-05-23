@@ -15,7 +15,7 @@
 
 #define MTP_VERSION     0x10
 #define MTP_FORMAT      0x20
-int sendToother(void *sfd, int size, char *result);
+int send_protocbuff(void *sfd, int size, char *result);
 
 #define REDIS_ERR       -1
 #define REDIS_OK        0
@@ -134,7 +134,7 @@ int sniff_vms_call(void *user, void *task)
 		return GV_ERR;
 	}
 
-	if (sendToother(sfd, size, result) < 0) {
+	if (send_protocbuff(sfd, size, result) < 0) {
 		pool_api_free(cpool, &sfd);
 		free(result);
 		return GV_ERR;
@@ -151,7 +151,7 @@ int sniff_vms_call(void *user, void *task)
 	return GV_OK;
 }
 
-int sendToother(void *sfd, int size, char *result)
+int send_protocbuff(void *sfd, int size, char *result)
 {
 	unsigned int net_size = htonl((unsigned int)size);
 

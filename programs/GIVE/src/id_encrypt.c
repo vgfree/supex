@@ -33,8 +33,8 @@ static int extraction(unsigned char *cipher, int len, unsigned char *fibonacci_t
         int f1 = 0, f2 = 1, f3 = 2, f4 = 3, f5 = 5, f6 = 8, f7 = 13, f8 = 21, f9 = 34;
         //x_printf(D, "after fibobacci %x %x %x %x %x %x %x %x %x %x %x\n", cipher[f1], cipher[f2], cipher[f3], cipher[f4], cipher[f5], cipher[f6], cipher[len-2], cipher[f7], cipher[f8], cipher[f9], cipher[len-1]);
         //snprintf(fibonacci_text, 38, "%x%x%x%x%x%x%x%x%x%x%x", cipher[f1], cipher[f2], cipher[f3], cipher[f4], cipher[f5], cipher[f6], cipher[len-2], cipher[f7], cipher[f8], cipher[f9], cipher[len-1]);        
-        x_printf(D, "after fibobacci %x %x %x %x %x %x %x %x %x\n", cipher[f1], cipher[f2], cipher[f3], cipher[f4], cipher[f5], cipher[f6], cipher[f7], cipher[f8], cipher[f9]);
-        snprintf(fibonacci_text, 38, "%x%x%x%x%x%x%x%x%x", cipher[f1], cipher[f2], cipher[f3], cipher[f4], cipher[f5], cipher[f6], cipher[f7], cipher[f8], cipher[f9]);
+        x_printf(D, "after fibobacci %x %x %x %x %x %x %x %x %x %x\n", cipher[f1], cipher[f2], cipher[f3], cipher[f4], cipher[f5], cipher[f6], cipher[f7], cipher[f8], cipher[f9], cipher[len-1]);
+        snprintf(fibonacci_text, 38, "%x%x%x%x%x%x%x%x%x%X", cipher[f1], cipher[f2], cipher[f3], cipher[f4], cipher[f5], cipher[f6], cipher[f7], cipher[f8], cipher[f9], cipher[len-1]);
         return 0;
 }
 

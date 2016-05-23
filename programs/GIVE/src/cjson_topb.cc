@@ -79,6 +79,7 @@ int cjson_topb(const char *data, char **result, data_count_t *dt)
         unsigned char ciphertext[128]="";
         unsigned char encrypt_text[64]="";
         char id_buff[32] = "";
+        char imei_slice[5] = "";
         struct tm *p;                                                                 
         char get_date[16] = "";
         time_t  u_date;
@@ -109,13 +110,11 @@ int cjson_topb(const char *data, char **result, data_count_t *dt)
 		goto jsonerr;
 	}
 
-#ifdef _ENCRYPT
         imsi = getjsonitem(obj, "IMSI");
         if (!imsi) {
                 x_printf(E, "get IMSI item failed !\n");
                 goto jsonerr;
         }
-#endif
 	// int min_retnum = 2147483;
 	retnum = getjsonarry(obj, latvalue, DATANUM, "latitude");
 
@@ -218,7 +217,10 @@ int cjson_topb(const char *data, char **result, data_count_t *dt)
 
 	memcpy(*result, ret, size);
 
-	dt->IMEI = (ull)atoll(imei->valuestring);
+        memset(id_buff, 0, sizeof(id_buff));
+        strncpy(imei_slice, imei->valuestring+10, 4);
+        snprintf(id_buff, 32, "%s%s", imei_slice, imsi->valuestring);
+	dt->IMEI = strtoull(id_buff, NULL, 10);
 	dt->data_cnt = count;
 	dt->data_size = size;
 	dt->city_code = citycode;
