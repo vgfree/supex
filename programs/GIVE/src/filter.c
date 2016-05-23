@@ -21,8 +21,13 @@ int citycode_filter(kv_handler_t *handler, double lon, double lat)
 	kv_answer_t *ans = kv_ask(handler, cmd, strlen(cmd));
 
 	if (ans->errnum != ERR_NONE) {
+                if (ans->errnum == ERR_NIL) {
+                        kv_answer_release(ans);
+                        x_printf(W, "can't find citycode errnum:%d, errstr:%s\n", ans->errnum, ans->err);
+                        return 10000;
+                }
 		kv_answer_release(ans);
-		x_printf(D, "errnum:%d, errstr:%s\n", ans->errnum, ans->err);
+		x_printf(E, "errnum:%d, errstr:%s\n", ans->errnum, ans->err);
 		return GV_ERR;
 	}
 
@@ -41,7 +46,7 @@ int citycode_filter(kv_handler_t *handler, double lon, double lat)
 		}
 	}
 
-	x_printf(I, "cityCode:%d, lon&lat:[%.7lf, %.7lf]\n", citycode, lon, lat);
+	x_printf(D, "cityCode:%d, lon&lat:[%.7lf, %.7lf]\n", citycode, lon, lat);
 
 	/*
 	 *   int left = 0;

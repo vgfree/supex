@@ -104,10 +104,10 @@ int sniff_vms_call(void *user, void *task)
 	SNIFF_WORKER_PTHREAD    *p_sniff_worker = (SNIFF_WORKER_PTHREAD *)user;
 	time_t                  delay = time(NULL) - p_task->stamp;
 
-	x_printf(I, "channel %d\t|task <shift> %d\t<come> %ld\t<delay> %ld",
+	x_printf(D, "channel %d\t|task <shift> %d\t<come> %ld\t<delay> %ld",
 		p_sniff_worker->genus, p_task->base.shift, p_task->stamp, delay);
 
-	x_printf(D, "%s\n", p_task->data);
+	x_printf(I, "%s\n", p_task->data);
 	struct ev_loop *loop = p_sniff_worker->evuv.loop;
 
 	char            *result = NULL;
@@ -115,7 +115,7 @@ int sniff_vms_call(void *user, void *task)
 	int             size = cjson_topb(p_task->data, &result, &dt);
 
 	if ((size == GV_FILTER) || (size == GV_EMPTY)) {// lon and lat is not in valid city
-		x_printf(I, "filter or empty: %d\n", size);
+		x_printf(W, "filter or empty: %d\n", size);
 		return GV_ERR;
 	}
 
