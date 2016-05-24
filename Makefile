@@ -85,7 +85,7 @@ EXPORT_LIBA += -lmemhook -lmini -ldl
 export EXPORT_CFLAGS
 export EXPORT_LIBA
 
-openIMX := coreExchangeNode messageGateway useroptapi
+openIMX := IMX_coreExchangeNode IMX_messageGateway IMX_loginServer IMX_settingServer IMX_UserInfoApi IMX_useroptapi
 openHLS := rmsapi hlsapi hlsldb
 SRV := $(openIMX) $(openHLS) \
 	drisamp drimode goby rtmiles rta \
@@ -292,7 +292,7 @@ weidb:
 	@echo -e $(GREEN)"【"$(YELLOW) $@ $(GREEN)"】"$(RED)"\n-->OK!\n"$(NONE)
 
 
-useroptapi:
+IMX_useroptapi:
 	$(MAKE) -C ./programs/useroptapi MAIN_APP_SERV=useroptapi
 	@echo -e $(GREEN)"【"$(YELLOW) $@ $(GREEN)"】"$(RED)"\n-->OK!\n"$(NONE)
 
@@ -352,13 +352,26 @@ mfptpServer:
 	$(MAKE) -C ./programs/mfptpServer MAIN_APP_SERV=mfptpServer
 	@echo -e $(GREEN)"【"$(YELLOW) $@ $(GREEN)"】"$(RED)"\n-->OK!\n"$(NONE)
 
-coreExchangeNode:
+IMX_coreExchangeNode:
 	$(MAKE) -C ./programs/CoreExchangeNode MAIN_APP_SERV=coreExchangeNode
 	@echo -e $(GREEN)"【"$(YELLOW) $@ $(GREEN)"】"$(RED)"\n-->OK!\n"$(NONE)
 
-messageGateway:
+IMX_messageGateway:
 	$(MAKE) -C ./programs/messageGateway MAIN_APP_SERV=messageGateway
 	@echo -e $(GREEN)"【"$(YELLOW) $@ $(GREEN)"】"$(RED)"\n-->OK!\n"$(NONE)
+
+IMX_loginServer:
+	$(MAKE) -C ./programs/loginServer MAIN_APP_SERV=loginServer
+	@echo -e $(GREEN)"【"$(YELLOW) $@ $(GREEN)"】"$(RED)"\n-->OK!\n"$(NONE)
+
+IMX_settingServer:
+	$(MAKE) -C ./programs/settingServer MAIN_APP_SERV=settingServer
+	@echo -e $(GREEN)"【"$(YELLOW) $@ $(GREEN)"】"$(RED)"\n-->OK!\n"$(NONE)
+
+IMX_UserInfoApi:
+	$(MAKE) -C ./programs/UserInfoApi MAIN_APP_SERV=UserInfoApi
+	@echo -e $(GREEN)"【"$(YELLOW) $@ $(GREEN)"】"$(RED)"\n-->OK!\n"$(NONE)
+
 
 push:
 	git push origin HEAD:refs/for/devel
@@ -396,6 +409,10 @@ clean:
 	$(MAKE) -C ./programs/loghub clean
 	$(MAKE) -C ./programs/mfptpServer clean
 	$(MAKE) -C ./programs/CoreExchangeNode clean
+	$(MAKE) -C ./programs/messageGateway clean
+	$(MAKE) -C ./programs/settingServer clean
+	$(MAKE) -C ./programs/loginServer clean
+	$(MAKE) -C ./programs/UserInfoApi clean
 
 distclean:
 	$(MAKE) -C ./programs/damR distclean
@@ -419,6 +436,11 @@ distclean:
 	$(MAKE) -C ./programs/mttpServer distclean
 	$(MAKE) -C ./programs/RRDemo/topo distclean
 	$(MAKE) -C ./programs/useroptapi distclean
+	$(MAKE) -C ./programs/UserInfoApi distclean
+	$(MAKE) -C ./programs/CoreExchangeNode distclean
+	$(MAKE) -C ./programs/messageGateway distclean
+	$(MAKE) -C ./programs/loginServer distclean
+	$(MAKE) -C ./programs/settingServer distclean
 	$(MAKE) -C ./programs/adtalk distclean
 	$(MAKE) -C ./programs/loghub distclean
 	$(MAKE) -C ./programs/releaseServer distclean

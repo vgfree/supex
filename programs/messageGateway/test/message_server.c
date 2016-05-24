@@ -33,7 +33,7 @@ void *pull_thread(void *usr)
       zmq_getsockopt(server_simulator, ZMQ_RCVMORE, &more, &more_size);
       zmq_msg_close(&part);
     } while (more);
-	//uid
+    //uid
     char *cid = get_first_cid();
     while (cid) {
       char downstream[20] = "downstream\0";
@@ -49,7 +49,7 @@ void *pull_thread(void *usr)
       printf("the last test[i]:%s.", test[frames - 1]);
       char buf[5000] = {};
       snprintf(buf, 30, "当前在线人数：%d.\n", get_numbers());
-	  strcat(buf, "cid msg,");
+      strcat(buf, "cid msg,");
       strcat(buf, test[frames - 1]);
       send_message(buf, 0);
       cid = get_next_cid();
@@ -60,7 +60,7 @@ void *pull_thread(void *usr)
       char uid_str[10] = "uid\0";
       send_message(downstream, ZMQ_SNDMORE);
       send_message(uid_str, ZMQ_SNDMORE);
-	  char uid_buf[30] = "uid";
+      char uid_buf[30] = "uid";
       strcat(uid_buf, cid);
       send_message(uid_buf, ZMQ_SNDMORE);
       printf("send cid:%s\n", cid);

@@ -1,12 +1,10 @@
-//#include "loger.h"
+#include "loger.h"
 #include "gid_map.h"
 
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
 
-#define error {}
-#define log {}
 static kv_handler_t *g_gid_map = NULL;
 
 void init_gid_map()

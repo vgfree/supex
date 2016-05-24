@@ -1,11 +1,10 @@
-//#include "loger.h"
+#include "loger.h"
 #include "uid_map.h"
 
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
 
-#define error {}
 static kv_handler_t *g_uid_map = NULL;
 
 void init_uid_map()
