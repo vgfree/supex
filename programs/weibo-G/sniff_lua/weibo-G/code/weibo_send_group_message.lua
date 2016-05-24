@@ -3,6 +3,7 @@ local redis_api = require('redis_pool_api')
 local supex = require('supex')
 local Coro = require("coro")
 local luakv_api = require('luakv_pool_api')
+local scan = require('scan')
 
 module('weibo_send_group_message', package.seeall)
 
@@ -13,6 +14,8 @@ local function self_cycle_idle( coro, idleable )
 		only.log('E',"IDLE~~~~")
 	else
 		if coro:isactive() then
+			--print("\x1B[1;35m".."LOOP~~~~".."\x1B[m")
+			--coro:fastswitch()lua_default_switch, supex["__TASKER_SCHEME__"],txt)
 			lua_default_switch(supex["__TASKER_SCHEME__"])
 		else
 			only.log('D',"coro:stop()")
@@ -30,57 +33,83 @@ local function set_userweibo_redis( coro, usr )
 
 	local idle = coro.fastswitch
 	redis_api.reg( idle, coro )
-	local ok, info = redis_api.cmd('weibo', "", 'ZADD', usr.uid .. ":weiboPriority", usr.tasks.level, usr.tasks.label)
+	local ok, info = redis_api.hash_cmd('weibo_hash', usr.uid, 'ZADD', usr.uid .. ":weiboPriority", usr.tasks.level, usr.tasks.label)
 	if not ok then only.log('E','weibo redis error') end
-	if (usr.id==1000) then
-		only.log('D',string.format("1000 usernum ok"))
-	end
-
-        return ok
+        return true
 end
 
 
 local function forward_task_redis(users,tasks)
+	if type(users) == "string" then
+		only.log('E','xxxxxxxxx users type error is %s',users)
+		return
+	end
 	ok, info = redis_api.cmd('weibo', "", 'SETEX', tasks.label .. ':weibo', 300, tasks.message)
-	if not ok then only.log('E','weibo redis error') end
+	if not ok then
+		only.log('E','weibo redis error')
+		return
+	end
+	if not  users[1] then
+			only.log('E',"xxxxxxx users[1] is nil and  = %s",tasks.message)
+			only.log('E',"xxxxx users =  %s",scan.dump(users))
+	end
 	
 	-- #users 为1000的整数倍时，执行相应的倍数次，有余数的，取入一位数
 	local step = 50
-	local j = 0
 	local i = 0
 	while i < #users do
 		local coro = Coro:open(true)
+		local task_data
 		for j = (i + 1), i+step do
 			if (j>#users) then
-				only.log('D',string.format("send %d users",j))
 				break
 			end
-			local task_data = {}
+			task_data = {}
 			task_data.id = j
 			task_data.uid = users[j]
 			task_data.tasks = tasks
-			coro:addtask(set_userweibo_redis, coro, task_data)
+			if task_data.uid then
+				coro:addtask(set_userweibo_redis, coro, task_data)
+			else
+				
+				only.log('E',"uid is nil and  = %s,j=%s",tasks.message,tostring(j))
+				only.log('E',"users =  %s",scan.dump(users))
+			end
 
 		end
+		local ret = coro:startup(self_cycle_idle, coro, true)
 
-		if coro:startup(self_cycle_idle, coro, true) then
+		if ret  then
 			only.log('D',"Tasks execute success.")
 		else
-			only.log('E',"Tasks execute failure.")
+			
+			only.log('E',"Tasks execute failure.ret = %s",tostring(ret))
 		end
 		coro:close()
+		collectgarbage("collect")
 		i = i + step
 	end
+	only.log('S',string.format("label %s send %d users",tasks.label,#users))
 end
 
 function handle()
 	local args = supex.get_our_body_table()
-	GID = args["GID"]
+	local GID = args["GID"]
+	if GID == '000001312' then
+		return
+	end
 	if GID then
-		local ok, users = luakv_api.cmd("owner", GID, "SMEMBERS", GID)
-		if #users == 0 then
-			ok, users = redis_api.cmd('statistic',GID, 'smembers', (GID or '') .. ':channelOnlineUser')
-			if not ok then only.log('E','weibo redis error') end
+		local i = math.random(1,2)
+		local hash_key = {"b0","b1"}
+		redis_api.reg( nil,nil )
+		local ok, users = redis_api.hash_cmd('statistic_hash',hash_key[i], 'smembers', (GID or '') .. ':channelOnlineUser')
+		if not ok then 
+			only.log('E','weibo redis error')
+			return
+		end
+		if type(users) == "string" then
+			only.log('E','users type error is %s',scan.dump(args))
+			return
 		end
 		if ok and #users ~= 0 then
 			local tasks = {
@@ -93,5 +122,6 @@ function handle()
 		end
 		
 	end
+	collectgarbage("collect")
 end
 
