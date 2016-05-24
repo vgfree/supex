@@ -39,14 +39,20 @@ void *login_thread(void *usr)
      continue;
    }
    if (strcmp(test[1], "connected") == 0) {
-     //append_cid(test[2], strlen(test[2]));
-	 send_to_api("setting", ZMQ_SNDMORE); 
-	 send_to_api("gidmap", ZMQ_SNDMORE); 
-	 send_to_api(test[2], ZMQ_SNDMORE); 
-	 send_to_api("gid0", 0); 
+     append_cid(test[2], strlen(test[2]));
+     send_to_api("setting", ZMQ_SNDMORE); 
+     send_to_api("gidmap", ZMQ_SNDMORE); 
+     send_to_api(test[2], ZMQ_SNDMORE); 
+     send_to_api("gid0", 0); 
+     send_to_api("setting", ZMQ_SNDMORE); 
+     send_to_api("uidmap", ZMQ_SNDMORE); 
+     send_to_api(test[2], ZMQ_SNDMORE); 
+     char buf[200] = "uid";
+     strcat(buf, test[2]);
+     send_to_api(buf, 0); 
    }
    else if (strcmp(test[1], "closed") == 0) {
-     //remove_cid(test[2], strlen(test[2]));
+     remove_cid(test[2], strlen(test[2]));
    }
    else {
      printf("wrong 2 frame:%s.\n", test[frames]);

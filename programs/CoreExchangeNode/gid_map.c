@@ -115,9 +115,9 @@ int find_gid_list(int fd, char *gid_list[], int *size)
   kv_answer_rewind_iter(ans, iter);
   while ((value = kv_answer_next(iter)) != NULL) {
     gid_list[gid_count] = (char *)malloc(value->ptrlen * sizeof(char) + 1);
-	strncpy(gid_list[gid_count], (char*)value->ptr, value->ptrlen);
-	gid_list[gid_count][value->ptrlen] = '\0';
-	gid_count++;
+    strncpy(gid_list[gid_count], (char*)value->ptr, value->ptrlen);
+    gid_list[gid_count][value->ptrlen] = '\0';
+    gid_count++;
   }
   kv_answer_release_iter(iter);
   *size = gid_count;
@@ -131,7 +131,7 @@ int remove_gid_list(int fd, char *gid[], int size)
   for (int i = 0; i < size; i++) {
     char cmd[50] = "lrem ";
     strcat(cmd, buf);
-	strcat(cmd, " 0 ");
+    strcat(cmd, " 0 ");
     strcat(cmd, gid[i]);
     kv_answer_t *ans = kv_ask(g_gid_map, cmd, strlen(cmd));
     if (ans->errnum != ERR_NONE) {

@@ -15,8 +15,6 @@ void *client_thread_read(void *usr)
     //printf("start send client.\n");
     comm_recv(g_ctx, &msg, true, -1);
     int size = 0;
-	int n = get_max_msg_frame(&msg);
-	printf("max message:%d\n", n);
     char *frame = get_msg_frame(0, &msg, &size);
     char *buf = (char *)malloc((size + 1) * sizeof(char));
     memset(buf, 0, size + 1);
