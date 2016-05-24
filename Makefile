@@ -85,7 +85,7 @@ EXPORT_LIBA += -lmemhook -lmini -ldl
 export EXPORT_CFLAGS
 export EXPORT_LIBA
 
-openIMX := IMX_coreExchangeNode IMX_messageGateway IMX_loginServer IMX_settingServer IMX_UserInfoApi IMX_useroptapi
+openIMX := IMX_coreExchangeNode IMX_messageGateway IMX_loginServer IMX_settingServer IMX_userInfoApi
 openHLS := rmsapi hlsapi hlsldb
 SRV := $(openIMX) $(openHLS) \
 	drisamp drimode goby rtmiles rta \
@@ -292,7 +292,7 @@ weidb:
 	@echo -e $(GREEN)"【"$(YELLOW) $@ $(GREEN)"】"$(RED)"\n-->OK!\n"$(NONE)
 
 
-IMX_useroptapi:
+useroptapi:
 	$(MAKE) -C ./programs/useroptapi MAIN_APP_SERV=useroptapi
 	@echo -e $(GREEN)"【"$(YELLOW) $@ $(GREEN)"】"$(RED)"\n-->OK!\n"$(NONE)
 
@@ -368,7 +368,7 @@ IMX_settingServer:
 	$(MAKE) -C ./programs/settingServer MAIN_APP_SERV=settingServer
 	@echo -e $(GREEN)"【"$(YELLOW) $@ $(GREEN)"】"$(RED)"\n-->OK!\n"$(NONE)
 
-IMX_UserInfoApi:
+IMX_userInfoApi:
 	$(MAKE) -C ./programs/UserInfoApi MAIN_APP_SERV=UserInfoApi
 	@echo -e $(GREEN)"【"$(YELLOW) $@ $(GREEN)"】"$(RED)"\n-->OK!\n"$(NONE)
 
