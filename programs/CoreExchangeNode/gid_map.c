@@ -5,6 +5,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#define error {}
+#define log {}
 static kv_handler_t *g_gid_map = NULL;
 
 void init_gid_map()
@@ -19,7 +21,7 @@ int find_fd_list(char *gid, int *fd_list)
   strcat(cmd, " 0 -1");
   kv_answer_t *ans = kv_ask(g_gid_map, cmd, strlen(cmd));
   if (ans->errnum != ERR_NONE) {
-//    error("find multi fd error, cmd:%s", cmd);
+    error("find multi fd error, cmd:%s", cmd);
     return -1;
   }
   int i = 0;
@@ -50,7 +52,7 @@ int insert_fd_list(char *gid, int fd_list[], int size)
   }
   kv_answer_t *ans = kv_ask(g_gid_map, cmd, strlen(cmd));
   if (ans->errnum != ERR_NONE) {
-//    error("errnum:%d\terr:%s\n", ans->errnum, ans->err);
+    error("errnum:%d\terr:%s\n", ans->errnum, ans->err);
     return -1;
   }
   return 0;
@@ -61,13 +63,15 @@ int remove_fd_list(char *gid, int fd_list[], int size)
   for (int i = 0; i < size; i++) {
     char cmd[50] = "lrem ";
     strcat(cmd, gid);
+    log("gid:%s, cmd:%s", gid, cmd);
     strcat(cmd, " 0 ");
     char buf[10];
     snprintf(buf, 10, "%d", fd_list[i]);
     strcat(cmd, buf);
     kv_answer_t *ans = kv_ask(g_gid_map, cmd, strlen(cmd));
     if (ans->errnum != ERR_NONE) {
-//      error("errnum:%d\terr:%s\n", ans->errnum, ans->err);
+      error("cmd:%s, errnum:%d\terr:%s\n",
+            cmd, ans->errnum, ans->err);
       return -1;
     }
   }
@@ -84,7 +88,7 @@ int insert_gid_list(int fd, char *gid)
   strcat(cmd, gid);
   kv_answer_t *ans = kv_ask(g_gid_map, cmd, strlen(cmd));
   if (ans->errnum != ERR_NONE) {
-//    error("errnum:%d\terr:%s\n", ans->errnum, ans->err);
+    error("errnum:%d\terr:%s\n", ans->errnum, ans->err);
     return -1;
   }
   return 0;
@@ -99,7 +103,7 @@ int find_gid_list(int fd, char *gid_list[], int *size)
   strcat(cmd, " 0 -1");
   kv_answer_t *ans = kv_ask(g_gid_map, cmd, strlen(cmd));
   if (ans->errnum != ERR_NONE) {
-//    error("find multi gid error, cmd:%s\n", cmd);
+    error("find multi gid error, cmd:%s\n", cmd);
     *size = 0;
     return -1;
   }
@@ -112,6 +116,7 @@ int find_gid_list(int fd, char *gid_list[], int *size)
   while ((value = kv_answer_next(iter)) != NULL) {
     gid_list[gid_count] = (char *)malloc(value->ptrlen * sizeof(char) + 1);
 	strncpy(gid_list[gid_count], (char*)value->ptr, value->ptrlen);
+	gid_list[gid_count][value->ptrlen] = '\0';
 	gid_count++;
   }
   kv_answer_release_iter(iter);
@@ -130,7 +135,7 @@ int remove_gid_list(int fd, char *gid[], int size)
     strcat(cmd, gid[i]);
     kv_answer_t *ans = kv_ask(g_gid_map, cmd, strlen(cmd));
     if (ans->errnum != ERR_NONE) {
-//      error("errnum:%d\terr:%s\n", ans->errnum, ans->err);
+      error("errnum:%d\terr:%s\n", ans->errnum, ans->err);
       return -1;
     }
   }

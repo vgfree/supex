@@ -90,7 +90,7 @@ void *work_task(void *args)
 int main(int argc, char *argv[])
 {
 	skt_register(argv [1]);
-	zmq_srv_init("127.0.0.1", 5558);
+	zmq_srv_init("127.0.0.1", 8102);
 #ifdef SELECT_MULTITHREAD
 	zmq_threadstart((zmq_thread_fn*)work_task, (void *)1);
 #else

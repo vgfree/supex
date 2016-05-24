@@ -55,7 +55,9 @@ static int _handle_gid_message(struct comm_message *msg)
   int fd_list[GROUP_SIZE] = {};
   int size = find_fd_list(gid, fd_list);
   remove_first_nframe(3, msg);
+  log("get_max_msg_frame:%d", get_max_msg_frame(msg));
   for (int i = 0; i < size; i++) {
+    log("sent msg to fd:%d.", fd_list[i]);
     set_msg_fd(msg, fd_list[i]);
     comm_send(g_serv_info.commctx, msg, true, -1);
   }
@@ -76,46 +78,6 @@ static int _handle_uid_message(struct comm_message *msg)
   }
   return 0;
 }
-
-/*
-static int _handle_server_login(struct comm_message *msg)
-{
-  int fsz = 0;
-  char *frame = get_msg_frame(2, msg, &fsz);
-  if (memcmp(frame, "messageGateway", 14) == 0) {
-    struct fd_node node;
-    node.fd = msg->fd;
-    list_push_back(MESSAGE_GATEWAY, &node);
-  }
-  else {
-    char server[30] = {};
-    memcpy(server, frame, fsz);
-    error("frame size:%d, not support this server:%s", fsz, server);
-  }
-}
-
-static int _handle_client_login(struct comm_message *msg)
-{
-  // 即验证当前发送者.
-  // 重新打包生成CID 并告知messageGateway. 
-  // 客户端应在连接上coreChangeNode 时，发送第一个包为身份验证包
-  // 重新组包， 并生成cid , 通知server。
-  int store_fd = msg->fd;
-  // TO DO: 存储到redis.
-  int fd;
-  char cid[6] = {};
-  memcpy(cid, g_serv_info.ip, 4);
-  cid[4] = store_fd / 256;
-  cid[5] = store_fd % 256;
-  find_best_gateway(&fd);
-  remove_first_nframe(2, msg);
-  set_msg_fd(msg, fd);
-  set_msg_frame(0, msg, 6, cid);
-  set_msg_frame(0, msg, 3, "cid");
-  set_msg_frame(0, msg, 5, "login");
-  int ret = comm_send(g_serv_info.commctx, msg, true, -1);
-  return ret;
-}*/
 
 static int _handle_uid_map(struct comm_message *msg)
 {
@@ -150,20 +112,34 @@ static int _handle_gid_map(struct comm_message *msg)
   }
   char *cfd = strtok(NULL, ":");
   int fd = atoi(cfd);
-  char *gid_list = get_msg_frame(3, msg, &fsz);
+  // 删除与此cid 相关的所有群组关系.
+  char *gid_list[30] = {};
+  int size = 0;
+  if (find_gid_list(fd, gid_list, &size) > 0) {
+    remove_gid_list(fd, gid_list, size);
+    for (int i = 0; i < size; i++) {
+      remove_fd_list(gid_list[i], &fd, 1);
+      free(gid_list[i]);
+    }
+  }
+  else {
+    log("first insert gidmap. fd:%d.", fd);
+  }
+  char *gid_frame = get_msg_frame(3, msg, &fsz);
   char gid[20] = {};
   int gid_index = 0;
   for (int i = 0; i < fsz; i++) {
-    if (gid_list[i] == ',') {
-       insert_fd_list(gid, &fd, 1);
-       insert_gid_list(fd, gid);
-       memset(gid, 0, 20);
-       gid_index = 0;
+    if (gid_frame[i] == ',') {
+      insert_fd_list(gid, &fd, 1);
+      insert_gid_list(fd, gid);
+      memset(gid, 0, 20);
+      gid_index = 0;
     }
-	else {
-      gid[gid_index++] = gid_list[i];
+    else {
+      gid[gid_index++] = gid_frame[i];
     } 
   } 
+  log("insert gid:%s, fd:%d.", gid, fd);
   insert_fd_list(gid, &fd, 1);
   insert_gid_list(fd, gid);
   return 0;

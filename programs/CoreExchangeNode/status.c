@@ -12,13 +12,15 @@ int erase_client(int fd)
   remove_fd(uid);
   remove_uid(fd);
   char *gid_list[20] = {};
-  find_gid_list(fd, gid_list, &size);
-  for (int i = 0; i < size; i++) {
-    remove_fd_list(gid_list[i], &fd, 1);
+  if (find_gid_list(fd, gid_list, &size) > 0 ) {
+    remove_gid_list(fd, gid_list, size);
+    for (int i = 0; i < size; i++) {
+      remove_fd_list(gid_list[i], &fd, 1);
+      free(gid_list[i]);
+    }
   }
-  remove_gid_list(fd, gid_list, size);
-  for (int i = 0; i < size; i++) {
-    free(gid_list[i]);
+  else {
+    error("no fd:%d map , is impossible?", fd);
   }
   return size;
 }

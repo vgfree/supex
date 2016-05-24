@@ -34,9 +34,6 @@ int pull_msg(struct comm_message *msg)
     assert(rc == 0);
 	rc = zmq_io_recv(&part, 0);
 //    log("zmq_io_recv, rc:%d.", rc);
-    char test[30] = {};
-    memcpy(test, zmq_msg_data(&part), zmq_msg_size(&part));
-    log("recv data:%s.", test);
     assert(rc != -1);
     log("more_size:%d.", more_size);
     set_msg_frame(i, msg, zmq_msg_size(&part), zmq_msg_data(&part));

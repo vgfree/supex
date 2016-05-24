@@ -11,6 +11,7 @@ module("api_dk_newstatus", package.seeall)
 
 local ctx = zmq.init(1)
 local s = ctx:socket(zmq.PUSH)
+s:bind("tcp://127.0.0.1:8111")
 
 local function parseFirstFrame(table)
 	if table[1] == 'status' then	
@@ -23,12 +24,12 @@ end
 
 local function sendToSettingServer(table)
 	if table[1] == 'setting' then
-		s:connect("tcp://localhost:5559")
 		s:send_table(table)
 	end
 end
 
 function handle(table)
+	print("recv data.");
 	parseFirstFrame(table)
 	sendToSettingServer(table)
 end

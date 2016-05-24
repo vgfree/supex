@@ -23,9 +23,9 @@ void *pull_thread(void *usr)
       zmq_msg_t part;
       int rc = zmq_msg_init(&part);
       assert(rc == 0);
-	  rc = zmq_recvmsg(server_simulator, &part, 0);
+      rc = zmq_recvmsg(server_simulator, &part, 0);
       assert(rc != -1);
-	  test[frames] = (char *)malloc((zmq_msg_size(&part) + 1) * sizeof(char));
+      test[frames] = (char *)malloc((zmq_msg_size(&part) + 1) * sizeof(char));
       memcpy(test[frames], zmq_msg_data(&part), zmq_msg_size(&part));
       test[frames][zmq_msg_size(&part)] = '\0';
       printf("recv data:%s\n", test[frames]);
@@ -33,8 +33,8 @@ void *pull_thread(void *usr)
       zmq_getsockopt(server_simulator, ZMQ_RCVMORE, &more, &more_size);
       zmq_msg_close(&part);
     } while (more);
-    char *cid = get_first_cid();
-	while (cid) {
+/*    char *cid = get_first_cid();
+    while (cid) {
       char downstream[20] = "downstream\0";
       char cid_str[10] = "cid\0";
       send_message(downstream, ZMQ_SNDMORE);
@@ -42,19 +42,26 @@ void *pull_thread(void *usr)
       send_message(cid, ZMQ_SNDMORE);
       printf("send cid:%s\n", cid);
       free(cid);
-	  for (int i = 0; i < frames - 1; i++) {
+      for (int i = 0; i < frames - 1; i++) {
         send_message(test[i], ZMQ_SNDMORE);
-	  }
+      }
       printf("the last test[i]:%s.", test[frames - 1]);
-	  char buf[5000] = {};
-	  snprintf(buf, 30, "当前在线人数：%d.\n", get_numbers());
-	  strcat(buf, test[frames - 1]);
+      char buf[5000] = {};
+      snprintf(buf, 30, "当前在线人数：%d.\n", get_numbers());
+      strcat(buf, test[frames - 1]);
       send_message(buf, 0);
       cid = get_next_cid();
+    } */
+    send_message("downstream", ZMQ_SNDMORE);
+    send_message("gid", ZMQ_SNDMORE);
+    send_message("gid0", ZMQ_SNDMORE);
+    for (int i = 0; i < frames - 1; i++) {
+      send_message(test[i], ZMQ_SNDMORE);
     }
-	for (int i = 0; i < frames; i++) {
+    send_message(test[frames - 1], 0);
+    for (int i = 0; i < frames; i++) {
       free(test[i]);
-	}
+    }
   }
   zmq_close(server_simulator);
 }

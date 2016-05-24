@@ -15,6 +15,8 @@ void *client_thread_read(void *usr)
     //printf("start send client.\n");
     comm_recv(g_ctx, &msg, true, -1);
     int size = 0;
+	int n = get_max_msg_frame(&msg);
+	printf("max message:%d\n", n);
     char *frame = get_msg_frame(0, &msg, &size);
     char *buf = (char *)malloc((size + 1) * sizeof(char));
     memset(buf, 0, size + 1);
@@ -39,8 +41,8 @@ int test_simulate_client()
   }
   pthread_t tid;
   assert(pthread_create(&tid, NULL, client_thread_read, NULL) == 0);
-  char str[300];
-  while (fgets(str, 300, stdin) != NULL) {
+  char str[1024];
+  while (fgets(str, 1024, stdin) != NULL) {
     struct comm_message msg = {};
     init_msg(&msg);
     set_msg_fd(&msg, connectfd);

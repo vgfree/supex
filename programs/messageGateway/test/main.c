@@ -15,6 +15,7 @@ int main(int argc, char *argv[])
   thread_status = malloc(2 * sizeof(pthread_t));
   init_cidmap();
   init_push_server();
+  init_api_server();
 //  assert(pthread_create(&thread_status[0], NULL, push_thread, NULL) == 0);
   assert(pthread_create(&thread_status[0], NULL, pull_thread, NULL) == 0);
   assert(pthread_create(&thread_status[1], NULL, login_thread, NULL) == 0);
@@ -27,5 +28,6 @@ int main(int argc, char *argv[])
   free(thread_status);
   destroy_push_server();
   destroy_cidmap();
+  destroy_api_server();
   zmq_ctx_destroy(g_ctx);
 }

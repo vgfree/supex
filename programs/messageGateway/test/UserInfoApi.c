@@ -10,7 +10,7 @@ static void *api_server = NULL;
 void init_api_server()
 {
   api_server = zmq_socket(g_ctx, ZMQ_PUSH);
-  int rc = zmq_connect(api_server, "tcp://127.0.0.1:8111");
+  int rc = zmq_connect(api_server, "tcp://127.0.0.1:8102");
   assert(rc == 0);
 }
 

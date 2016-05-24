@@ -29,6 +29,7 @@ void skt_register(char *name)
 	g_ctx = zmq_ctx_new();
 }
 
+
 void *zmq_process_start(void *(*fcb)(void *args), void *args)
 {
 	pid_t pid = 0;
@@ -56,7 +57,7 @@ void zmq_srv_init(char *host, int port)
 	g_collecter = zmq_socket(g_ctx, ZMQ_PULL);
 	char addr[64] = {};
 	sprintf(addr, "tcp://%s:%d", host, port);
-	int rc = zmq_bind(g_collecter, "tcp://*:5558");
+	int rc = zmq_bind(g_collecter, addr);
   	assert(rc == 0);
 
 	g_forwarder = zmq_socket(g_ctx, ZMQ_PUSH);
@@ -69,6 +70,7 @@ void zmq_srv_init(char *host, int port)
 #endif
 	assert(rc == 0);
 }
+
 
 void zmq_srv_fetch(struct skt_device *devc)
 {

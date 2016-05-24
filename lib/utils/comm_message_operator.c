@@ -2,7 +2,7 @@
 //#include "loger.h"
 
 #include <assert.h>
-#define MAX_MSG_SIZE 10 * 1024 *1024
+#define MAX_MSG_SIZE 10 * 1024 * 1024
 
 void init_msg(struct comm_message *msg)
 {
