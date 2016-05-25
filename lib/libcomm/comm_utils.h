@@ -26,6 +26,7 @@ extern "C" {
 #define log(fmt, ...) fprintf(stdout, "FILENAME:%s | LINE:%d | FUNCTION:%s | MASSAGE: "  fmt , __FILE__, __LINE__, __FUNCTION__, ##__VA_ARGS__)
 #endif
 
+
 /* 编译器版本 */
 #define GCC_VERSION (__GNUC__ * 10000 + __GNUC_MINOR__ * 100 + __GNUC_PATCHLEVEL__)
 

@@ -13,6 +13,7 @@ extern "C" {
 #endif
 
 
+
 /* 创建一个通信上下文的结构体 */
 struct comm_context* comm_ctx_create(int epollsize);
 
@@ -33,8 +34,6 @@ void comm_close(struct comm_context *commctx, int fd);
 
 /* 设置epoll_wait的超时时间 */
 void comm_settimeout(struct comm_context *commctx, int timeout, CommCB callback, void *usr);
-
-
 
 #ifdef __cplusplus
 	}

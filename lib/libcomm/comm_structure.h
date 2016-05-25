@@ -5,14 +5,13 @@
 #ifndef __COMM_STRUCTURE_H__
 #define __COMM_STRUCTURE_H__
 
-#include "comm_utils.h"
+#include "comm_list.h"
+#include "comm_tcp.h"
 #include "comm_cache.h"
 #include "comm_queue.h"
-#include "comm_tcp.h"
 #include "comm_epoll.h"
 #include "comm_lock.h"
 #include "comm_pipe.h"
-#include "comm_list.h"
 #include "mfptp_protocol/mfptp_parse.h"
 #include "mfptp_protocol/mfptp_package.h"
 
@@ -21,84 +20,28 @@
 extern "C" {
 #endif
 
-#define	EPOLL_SIZE		10000
+#define	EPOLL_SIZE		10000	/* 允许EPOLL能够监听的描述符的最大个数 */
 #define LISTEN_SIZE		10	/* 允许监听fd的最大个数 */
-#define TIMEOUTED		5000	/* 以毫秒(ms)为单位 1s = 1000ms*/
-#define IPADDR_MAXSIZE		128
-#define	CACHE_SIZE		1024
-#define QUEUE_CAPACITY		50000
-#define COMM_READ_MIOU		1024	/* 读取数据大小[getsockopt RCVBUF] */
-#define COMM_WRITE_MIOU		1024	/* 写入数据大小[getsockopt SNDBUF] */
-#define COMM_FRAMES		13
+#define COMM_FRAMES		13	/* 允许一个最大的总帧数 */
 
+/* 获取struct comm_message结构体中成员变量list的偏移大小 */
 #define	COMMMSG_OFFSET		({ struct comm_message message;	\
 				   get_member_offset(&message, &message.list); \
 				})				
 
-struct comm_context ;
 
+struct comm_event;
+struct comm_context;
+/********************************  以下为外部结构体 外部使用需要了解 ****************************************/
+
+/* 回调函数的原型 */
 typedef void (*CommCB)(struct comm_context* commctx, struct comm_tcp* commtcp, void* usr);
-
 
 /* 回调函数的相关信息 */
 struct cbinfo {
 	int			timeout;
 	CommCB			callback;	/* 相关的回调函数 */
 	void*			usr;		/* 用户的参数 */
-};
-
-/* 此结构体保存发送接收时没成功处理完的fd */
-struct  remainfd{
-	int	wfda[EPOLL_SIZE/4];		/* 保存出现意外没有及时发送消息的fd */
-	int	rfda[EPOLL_SIZE/4];		/* 保存出现意外没有及时接收消息的fd */
-	int	wcnt;				/* 没有及时发送消息的fd的计数 */
-	int	rcnt;				/* 没有及时接收消息的fd的计数 */
-};
-
-/* 内部结构体, 外部无需关心 */
-struct comm_data {
-	//struct comm_queue	recv_queue;	/* 存放接收并已经解析完毕的数据 */
-	struct comm_queue	send_queue;	/* 存放用户传递但并未打包的数据 */
-	struct comm_cache	recv_cache;	/* 存放接收但并未解析的数据 */
-	struct comm_cache	send_cache;	/* 存放需要发送并已经打包的数据 */
-	struct comm_lock	sendlock;	/* send_queue的锁 */
-	struct cbinfo		finishedcb;	/* 此描述符监听事件发生时相应的回调函数信息 */
-	struct comm_tcp		commtcp;	/* 套接字相关信息 */
-	struct mfptp_parser	parser;		/* 解析器 */
-	struct mfptp_packager	packager;	/* 打包器 */
-	struct comm_context*	commctx;	/* 通信上下文的结构体 */
-	int			parsepct;	/* 解析数据百分比[根据此值来决定什么时候调用解析函数] */
-	int			packpct;	/* 打包数据百分比[根据此值来决定什么时候调用打包函数]*/
-};
-
-/* 监听描述符的相关信息 */
-struct listenfd {
-	int		counter;			/* 监听fd的计数器 */
-	int		fd[LISTEN_SIZE];		/* 监听的每个fd */
-	struct cbinfo	finishedcb[LISTEN_SIZE];	/* 每个fd对应的回调函数 */
-	struct comm_tcp	commtcp[LISTEN_SIZE];		/* 套接字的相关信息 */
-	struct comm_context* commctx;
-};
-
-/* 通信模块的上下文环境结构体 */
-struct comm_context {
-	pthread_t		ptid;			/* 新线程的pid */
-	intptr_t		data[EPOLL_SIZE];	/* 保存接收发送的相关数据 */
-	struct cbinfo		timeoutcb;		/* 超时回调函数的相关信息 */
-	struct remainfd		remainfd;		/* 遗留下来没有及时处理的fd */
-	struct listenfd		listenfd;		/* 所有监听描述符的信息 */
-	struct comm_queue	recv_queue;		/* 存放已经接收到并解析好的数据 */
-	struct comm_pipe	commpipe;		/* 关于管道的相关信息 */
-	struct comm_lock	recvlock;		/* 用来同步接收队列的锁*/
-	struct comm_lock	statlock;		/* 用来同步stat的状态 */
-	struct comm_epoll	commepoll;		/* epoll监听事件的相关信息 */
-	struct comm_list	head;			/* 存放send */
-	enum {
-		COMM_STAT_NONE,
-		COMM_STAT_INIT,
-		COMM_STAT_RUN,
-		COMM_STAT_STOP
-	}		stat;				/* 线程的状态 */
 };
 
 /* 数据包的设置 */
@@ -121,26 +64,81 @@ struct comm_message {
 	struct comm_list	list;			/* 链表节点 */
 };
 
-struct comm_data*  commdata_init(struct comm_context* commctx, struct comm_tcp* commtcp,  struct cbinfo*  finishedcb);
 
-void commdata_destroy(struct comm_data *commdata);
+/* 通信模块的上下文环境结构体 */
+struct comm_context {
+	pthread_t		ptid;			/* 新线程的pid */
+	struct comm_event*	commevent;		/* 事件驱动的相关信息 */
+	struct comm_queue	recvqueue;		/* 存放已经接收到并解析好的数据 */
+	struct comm_pipe	commpipe;		/* 关于管道的相关信息 */
+	struct comm_lock	recvlock;		/* 用来同步接收队列的锁*/
+	struct comm_lock	statlock;		/* 用来同步stat的状态 */
+	struct comm_epoll	commepoll;		/* epoll监听事件的相关信息 */
+	struct comm_list	msghead;		/* 消息结构体链表的头节点 */
+	enum {
+		COMM_STAT_NONE,
+		COMM_STAT_INIT,
+		COMM_STAT_RUN,
+		COMM_STAT_STOP
+	}		stat;				/* 线程的状态 */
+};
 
-struct comm_message* new_commmsg(int size);
 
+/********************************  以下为内部结构体 外部无需关心 ********************************************/
+
+/* 此结构体保存发送接收时没成功处理完的fd */
+struct  remainfd {
+	int	wfda[EPOLL_SIZE/4];		/* 保存出现意外没有及时发送消息的fd */
+	int	rfda[EPOLL_SIZE/4];		/* 保存出现意外没有及时接收消息的fd */
+	int	wcnt;				/* 没有及时发送消息的fd的计数 */
+	int	rcnt;				/* 没有及时接收消息的fd的计数 */
+};
+
+/* 监听描述符的相关信息 */
+struct listenfd {
+	int		counter;			/* 监听fd的计数器 */
+	struct cbinfo	finishedcb[LISTEN_SIZE];	/* 每个fd对应的回调函数 */
+	struct comm_tcp	commtcp[LISTEN_SIZE];		/* 套接字的相关信息 */
+};
+
+/* 每个fd对应的数据相关信息 */
+struct comm_data {
+	//struct comm_queue	recv_queue;	/* 存放接收并已经解析完毕的数据 */
+	struct comm_queue	send_queue;	/* 存放用户传递但并未打包的数据 */
+	struct comm_cache	recv_cache;	/* 存放接收但并未解析的数据 */
+	struct comm_cache	send_cache;	/* 存放需要发送并已经打包的数据 */
+	struct comm_lock	sendlock;	/* send_queue的锁 */
+	struct cbinfo		finishedcb;	/* 此描述符监听事件发生时相应的回调函数信息 */
+	struct comm_tcp		commtcp;	/* 套接字相关信息 */
+	struct mfptp_parser	parser;		/* 解析器 */
+	struct mfptp_packager	packager;	/* 打包器 */
+};
+
+/* 事件相关信息 */
+struct comm_event {
+	bool		init;			/* 本结构体是否正确初始化 */
+	int		fds;			/* 客户端连接到服务器的fd的总个数 */
+	intptr_t	data[EPOLL_SIZE];	/* 保存接收发送数据的结构体 */
+	struct listenfd	listenfd;		/* 所有监听描述符的信息 */
+	struct remainfd remainfd;		/* 未处理完的fd */
+	struct cbinfo	timeoutcb;		/* epoll_wait超时的回调函数 */
+	struct comm_context* commctx;
+};
+
+
+/*************************************** 数据结构体相关操作 内部使用 ********************************************/
+
+/* 分配一个comm_message的结构体 @size：结构体中消息内容的大小 */
+bool new_commmsg(struct comm_message **message, int size);
+
+/* 拷贝一份comm_message结构体的数据 @destmsg:拷贝的目的结构体 @srcmsg:拷贝的源结构体 */
 void copy_commmsg(struct comm_message* destmsg, const struct comm_message* srcmsg);
 
+/* 销毁comm_message的结构体 @arg:类型为struct comm_message，这里为void是为了符合回调函数的参数模式 */
 void free_commmsg(void* arg);
 
 
-void listenfd_init(struct listenfd *listenfd, struct comm_context *commctx);
 
-void listenfd_destroy(struct listenfd *listenfd);
-
-bool add_listenfd(struct listenfd *listenfd, struct cbinfo *finishedcb, struct comm_tcp *commtcp, int fd);
-
-bool del_listenfd(struct listenfd *listenfd, int fdidx);
-
-int search_listenfd(struct listenfd *listenfd, int fd);
 
 #ifdef __cplusplus
 	}

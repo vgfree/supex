@@ -84,7 +84,7 @@ int socket_accept(const struct comm_tcp* lsncommtcp, struct comm_tcp* acptcommtc
 		return -1;	/* -1代表accept出错，可以检测errno*/
 	}
 
-	return -2;	/* 代表设置出错 */
+	return -2;	/* 代表设置出错,直接忽略错误 */
 }
 
 /* 获取端口相关信息:获得是本地字节序 */

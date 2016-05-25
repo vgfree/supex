@@ -10,6 +10,7 @@
 extern "C" {
 #endif
 
+#include	"comm_utils.h"
 
 #ifndef container_of
 /*
