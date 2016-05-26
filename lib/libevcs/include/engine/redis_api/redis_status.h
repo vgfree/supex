@@ -47,7 +47,7 @@ struct redis_status
 struct redis_parse_info
 {
 	redis_parser            rp;	/**< 分析器*/
-	struct redis_status    rs;	/**< 分析结果*/
+	struct redis_status     rs;	/**< 分析结果*/
 };
 
 /**

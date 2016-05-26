@@ -38,7 +38,7 @@ struct session_api
 /* --------------                      */
 extern struct session_api g_session_api;
 
-//void session_accept_cb(struct ev_loop *loop, ev_io *ev, int revents);
+// void session_accept_cb(struct ev_loop *loop, ev_io *ev, int revents);
 
 bool session_response_clnt(int fd, int tm, const char *fmt, ...);
 

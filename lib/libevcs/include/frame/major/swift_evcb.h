@@ -9,9 +9,6 @@ void swift_all_task_hit(struct adopt_task_node *task, bool synch, int mark);
 
 void swift_one_task_hit(struct adopt_task_node *task, bool synch, int mark, unsigned int step);
 
-
-
-
 void swift_accept_cb(struct accept_module *p_mdl);
 
 void swift_monitor_cb(struct monitor_module *p_mdl);
@@ -31,3 +28,4 @@ void swift_send_cb(struct osend_module *p_mdl);
 void swift_timeout_cb(struct iotime_module *p_mdl);
 
 void swift_fetch_cb(struct pipe_module *p_mdl);
+

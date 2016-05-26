@@ -38,7 +38,7 @@ struct smart_settings
  * and dispatch to SMART_HANDER_PTHREAD.
  */
 
-#define SMART_MASTER_PTHREAD	LISTEN_PTHREAD
+#define SMART_MASTER_PTHREAD LISTEN_PTHREAD
 
 typedef struct
 {
@@ -46,11 +46,11 @@ typedef struct
 #endif
 
 	void                    *data;
-	int                     batch;		/**<*/
-	int                     index;		/**< 所属线程池的下标*/
-	pthread_t               thread_id;	/* unique ID of this thread */
+	int                     batch;	/**<*/
+	int                     index;	/**< 所属线程池的下标*/
+	pthread_t               pid;	/* unique ID of this thread */
 	long                    tid;
-	struct supex_task_list  tlist;		/**< 任务队列*/
+	struct supex_task_list  tlist;	/**< 任务队列*/
 } SMART_WORKER_PTHREAD;
 
 /*
@@ -64,5 +64,5 @@ int smart_mount(struct smart_cfg_list *conf);
 
 int smart_start(void);
 
-
 void smart_section_send_start(char origin, int sfd);
+

@@ -25,9 +25,9 @@ typedef struct sniff_worker_pthread
 	int                             genus;			/*延迟路由、非延迟路由的*/
 
 	int                             index;
-	pthread_t                      	pid;		/* unique ID of this thread */
+	pthread_t                       pid;		/* unique ID of this thread */
 	long                            tid;
-	AO_T                            thave;			/*can't use unsigned int*/
+	AO_T                            thave;		/*can't use unsigned int*/
 	struct supex_task_list          tlist;
 	struct supex_task_list          *glist;
 	struct sniff_worker_pthread     *next;
@@ -39,7 +39,6 @@ extern int G_SNIFF_WORKER_COUNTS;
 int sniff_mount(struct sniff_cfg_list *conf);
 
 SNIFF_WORKER_PTHREAD *sniff_start(void *data, int batch, int genus);
-
 
 void sniff_all_task_hit(SNIFF_WORKER_PTHREAD *head, struct sniff_task_node *task);
 

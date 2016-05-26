@@ -44,7 +44,7 @@ typedef void (*ASYNC_CALL_BACK)(struct async_obj *obj, void *reply, void *data);
 struct command_node
 {
 	int                     sfd;
-	bool			done;//NEW
+	bool                    done;	// NEW
 
 	void                    *ev_work;
 	struct ev_settings      *ev_hook;
@@ -65,7 +65,7 @@ struct command_node
 	ASYNC_CALL_BACK         fcb;
 
 	/*cmd data*/
-	struct cache        cache;
+	struct cache            cache;
 	struct command_node     *next;	/* simple singly linked list */
 };
 struct command_list
@@ -113,7 +113,7 @@ void async_obj_begin(struct async_obj *obj);
 
 int async_obj_free(struct async_obj *obj);
 
-//添加获取当前工作任务函数//TODO
+// 添加获取当前工作任务函数//TODO
 
 /* Handle read/write events */
 void _async_obj_handle_send(struct async_obj *obj, struct command_node *cmd);

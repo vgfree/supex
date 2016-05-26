@@ -12,13 +12,10 @@
 
 #define BIT8_TASK_ORIGIN_HTTP   'p'
 #define BIT8_TASK_ORIGIN_REDIS  'r'
+#define BIT8_TASK_ORIGIN_MTTP   'm'
 #define BIT8_TASK_ORIGIN_MSMQ   'q'
 #define BIT8_TASK_ORIGIN_TIME   'e'
 #define BIT8_TASK_ORIGIN_INIT   'i'
-
-#ifdef _mttptest
-  #define BIT8_TASK_ORIGIN_MTTP 'm'
-#endif
 
 #define TASK_ID_UNUSE           0		/**< 未用*/
 #define TASK_ID_INUSE           1		/**< 在用*/
@@ -38,29 +35,31 @@ struct share_task_view
 };
 
 /*************************************************/
+
 /*==============================================================================================*
 *       任务回调函数                                  *
 *==============================================================================================*/
 typedef int (*TASK_VMS_FCB)(void *user, union virtual_system **VMS, struct adopt_task_node *task);
-
 
 /**
  * 任务模型
  */
 struct adopt_task_node
 {
-	int                     id;	/**< 任务ID，任务ID在任务属性池中对应一组任务额外属性*/
-	int                     sfd;	/**< 套接字描述符*/
+	int             id;		/**< 任务ID，任务ID在任务属性池中对应一组任务额外属性*/
+	int             sfd;		/**< 套接字描述符*/
 
-	char                    type;	/**< 任务类型：线程池中所有线程响应、单个线程响应*/
-	char                    origin;	/**< 任务来源：框架内部、外部接口*/
+	char            type;		/**< 任务类型：线程池中所有线程响应、单个线程响应*/
+	char            origin;		/**< 任务来源：框架内部、外部接口*/
 
-	int                     index;
-	char                    *deal;	/**< 完成标志，指向调用层的局部变量的指针*/
-	void                    *data;	/**< 任务内部资源*/
-	TASK_VMS_FCB 	        func;	/**< 任务回调*/
+	int             index;
+	char            *deal;		/**< 完成标志，指向调用层的局部变量的指针*/
+	TASK_VMS_FCB    func;		/**< 任务回调*/
+	int             last;
 
-	int			last;
+	void            *data;		/**< 任务内部资源*/
+	long            size;		/**< 任务内部资源*/
+	bool            freeable;
 };
 
 /*---------------------------------------------------------*/

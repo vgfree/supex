@@ -12,9 +12,8 @@ void smart_all_task_hit(struct adopt_task_node *task, bool synch, int mark);
 
 void smart_one_task_hit(struct adopt_task_node *task, bool synch, int mark, unsigned int step);
 
-
-
 void smart_accept_cb(struct accept_module *p_mdl);
+
 /*
  * 名  称:smart_monitor_cb
  * 功  能:周期循环事件的回调函数
@@ -37,3 +36,4 @@ void smart_timeout_cb(struct iotime_module *p_mdl);
 void smart_fetch_recv_cb(struct pipe_module *p_mdl);
 
 void smart_fetch_send_cb(struct pipe_module *p_mdl);
+

@@ -17,7 +17,7 @@ __BEGIN_DECLS
 struct http_socket
 {
 	struct tcp_socket       *tcp;
-	struct http_parse_info     parse;
+	struct http_parse_info  parse;
 };
 
 /* ---------------------------------------	*\

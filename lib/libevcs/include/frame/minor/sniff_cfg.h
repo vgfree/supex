@@ -27,13 +27,13 @@ struct sniff_cfg_list
 	bool                    (*task_report)(void *user, void *task);
 
 #if defined(OPEN_SCCO) || defined(OPEN_EVCORO)
-	SNIFF_VMS_FCB	vmsys_init;
-	SNIFF_VMS_FCB	vmsys_exit;
-	SNIFF_VMS_FCB	vmsys_load;
-	SNIFF_VMS_FCB	vmsys_rfsh;
-	SNIFF_VMS_FCB	vmsys_call;
-	SNIFF_VMS_FCB	vmsys_push;
-	SNIFF_VMS_FCB	vmsys_pull;
+	SNIFF_VMS_FCB           vmsys_init;
+	SNIFF_VMS_FCB           vmsys_exit;
+	SNIFF_VMS_FCB           vmsys_load;
+	SNIFF_VMS_FCB           vmsys_rfsh;
+	SNIFF_VMS_FCB           vmsys_call;
+	SNIFF_VMS_FCB           vmsys_push;
+	SNIFF_VMS_FCB           vmsys_pull;
 #endif
 };
 

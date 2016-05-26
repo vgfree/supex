@@ -32,8 +32,8 @@ struct smart_cfg_file
 
 struct smart_cfg_func
 {
-	char                    type;
-	TASK_VMS_FCB     func;
+	char            type;
+	TASK_VMS_FCB    func;
 };
 
 struct smart_cfg_list
@@ -48,10 +48,10 @@ struct smart_cfg_list
 	bool                    (*task_lookup)(void *user, void *task);	/**< 弹出任务回调*/
 	bool                    (*task_report)(void *user, void *task);	/**< 推入任务回调*/
 
-	TASK_VMS_FCB		vmsys_init;	/**< 各个工作线程LUA虚拟机初始化回调*/
-	TASK_VMS_FCB		vmsys_exit;	/**< LUA虚拟机销毁回调*/
-	TASK_VMS_FCB		vmsys_cntl;	/**< */
-	TASK_VMS_FCB		vmsys_rfsh;
-	TASK_VMS_FCB		vmsys_monitor;
+	TASK_VMS_FCB            vmsys_init;				/**< 各个工作线程LUA虚拟机初始化回调*/
+	TASK_VMS_FCB            vmsys_exit;				/**< LUA虚拟机销毁回调*/
+	TASK_VMS_FCB            vmsys_cntl;				/**< */
+	TASK_VMS_FCB            vmsys_rfsh;
+	TASK_VMS_FCB            vmsys_monitor;
 };
 

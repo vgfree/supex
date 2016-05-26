@@ -49,6 +49,12 @@ enum
 	QUIT_FUNC_ORDER,
 	// LIMIT_FUNC_ORDER,
 };
+
+enum
+{
+	UPSTREAM_FUNC_ORDER = 0,
+	// LIMIT_FUNC_ORDER,
+};
 #define LIMIT_FUNC_ORDER 100
 
 // ---> *_api.h
@@ -70,24 +76,22 @@ struct api_list
 	char            type;		/**< 工作模式*/
 	char            *name;		/**< HTTP API URL虚地址*/
 	size_t          len;		/**< HTTP API URL虚地址长度*/
-	TASK_VMS_FCB   func;		/**< HTTP API 工作回调*/
+	TASK_VMS_FCB    func;		/**< HTTP API 工作回调*/
 };
 
 /* USE REDIS PROTOCOL */
 struct cmd_list
 {
 	char            type;
-	TASK_VMS_FCB   func;
+	TASK_VMS_FCB    func;
 };
 
-#ifdef _mttptest
-struct mttp_list
+/* USE MTTP PROTOCOL */
+struct mcb_list
 {
 	char            type;
-	TASK_VMS_FCB   func;
+	TASK_VMS_FCB    func;
 };
-#endif
-
 
 bool check_finish(int ptype, int sfd);
 
@@ -98,3 +102,4 @@ void get_cache_data(int sfd, void *buff, int *size);
 int socket_init(int port);
 
 int get_redis_cmd_order(uint64_t cmd);
+

@@ -43,15 +43,15 @@ struct tcp_socket
 	char            faddr[IPADDR_MAXSIZE];	/**<远端ip地址*/
 	char            laddr[IPADDR_MAXSIZE];	/**<本端ip地址*/
 	/*public: write and read*/
-	struct cache	readcache;		/**<read缓冲*/
-	struct cache	writecache;		/**<write缓冲*/
+	struct cache    readcache;		/**<read缓冲*/
+	struct cache    writecache;		/**<write缓冲*/
 	ssize_t         miou;			/**<最大io单元*/
 	long            timeout;		/**<输入超时，<0时阻塞，=0时仅操作单次，>0时毫秒单位超时，输出流失时间*/
 	void            *usr;			/**<用户层数据*/
 };
 /* ------------------				*/
-#define tcp_isclient(tcp)		(ASSERTOBJ((tcp)), (tcp)->type == TCP_TYPE_CONN)
-#define tcp_islisten(tcp)		(ASSERTOBJ((tcp)), (tcp)->type == TCP_TYPE_LISTEN)
+#define tcp_isclient(tcp)       (ASSERTOBJ((tcp)), (tcp)->type == TCP_TYPE_CONN)
+#define tcp_islisten(tcp)       (ASSERTOBJ((tcp)), (tcp)->type == TCP_TYPE_LISTEN)
 /* ------------------				*/
 
 /**
@@ -67,7 +67,7 @@ struct tcp_socket       *tcp_connect(const char *ipaddr, const char *port, long 
  * @param client 非阻塞连接到客户端套接字
  * @return 0成功连接，>0发生的错误值 EINPROGRESS 正在连接中，需要等待 ；EAGAIN 状态未知，需要继续尝试；其他错误
  */
-int  					tcp_isconnected(struct tcp_socket *client);
+int tcp_isconnected(struct tcp_socket *client);
 
 /**
  * 侦听本地
@@ -86,6 +86,7 @@ struct tcp_socket       *tcp_accept(struct tcp_socket *server);
  * 断开链接或解除绑定
  */
 void tcp_destroy(struct tcp_socket *tcp);
+
 #if 0
 /* ------------------				*/
 /**以fd初始化tcp对象*/

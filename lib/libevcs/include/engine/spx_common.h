@@ -15,11 +15,7 @@
 #define MAX_FILE_NAME_SIZE      32
 #define MAX_FILE_PATH_SIZE      512
 #define MAX_API_COUNTS          255
-
-#ifdef _mttptest
-  #define MAX_MCB_COUNTS        255
-#endif
-
+#define MAX_MCB_COUNTS          255
 #define MAX_CMD_COUNTS          255
 #define MAX_API_NAME_LEN        63
 #define MAX_CONNECT             20000

@@ -126,8 +126,8 @@ void evcoro_destroy(struct evcoro_scheduler *scheduler, evcoro_destroycb destroy
  * @param usr 空闲回调函数的入参
  */
 int evcoro_once(struct evcoro_scheduler *scheduler, evcoro_taskcb idle, void *usr);
-int evcoro_loop(struct evcoro_scheduler *scheduler, evcoro_taskcb idle, void *usr);
 
+int evcoro_loop(struct evcoro_scheduler *scheduler, evcoro_taskcb idle, void *usr);
 
 int evcoro_evdo(struct evcoro_scheduler *scheduler);
 
@@ -158,8 +158,11 @@ void evcoro_fastswitch(struct evcoro_scheduler *scheduler);
 bool evcoro_idleswitch(struct evcoro_scheduler *scheduler, const union evcoro_event *watcher, int event);
 
 void evcoro_deep_chase(struct ev_coro *cursor, int deep);
+
 void evcoro_deep_sleep(struct evcoro_scheduler *scheduler, struct ev_coro *repair);
+
 void evcoro_deep_awake(struct evcoro_scheduler *scheduler, struct ev_coro *repair);
+
 /* ------------------------------------------------------ */
 
 /**
@@ -203,7 +206,7 @@ unsigned evcoro_suspendings(struct evcoro_scheduler *scheduler);
 
 /**当前运作协程数*/
 unsigned evcoro_actives(struct evcoro_scheduler *scheduler);
-	
+
 /*设置携带数据*/
 #define evcoro_set_usrdata(scheduler, usr)      ((scheduler)->user = (usr))
 

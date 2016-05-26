@@ -12,17 +12,16 @@ typedef int (*POOL_ACTION_OPT)(struct pool2 *pool, void **cite, va_list *ap);
 
 struct pool2
 {
-	int						max;
-	int						use;	/*已使用数量*/
-	char      			               tag[128];
-	POOL_ACTION_OPT            cso_open;
-	POOL_ACTION_OPT            cso_exit;
-	POOL_ACTION_OPT            cso_look;
+	int                     max;
+	int                     use;				/*已使用数量*/
+	char                    tag[128];
+	POOL_ACTION_OPT         cso_open;
+	POOL_ACTION_OPT         cso_exit;
+	POOL_ACTION_OPT         cso_look;
 	struct free_queue_list  qlist;
 	bool                    sync;	/*true 同步，false异步*/
-	void	*data;
+	void                    *data;
 };
-
 
 int pool2_create(const char *name, int max, bool sync,
 	POOL_ACTION_OPT cso_open, POOL_ACTION_OPT cso_exit, POOL_ACTION_OPT cso_look, void *data);
@@ -33,7 +32,7 @@ int pool2_create(const char *name, int max, bool sync,
  * @return 池对象，返回null，则表示不存在，但不会设置errno
  * 不能主动释放获取到的指针
  */
-struct pool2     *pool2_gain(const char *name);
+struct pool2    *pool2_gain(const char *name);
 
 /**
  * 销毁池
@@ -68,8 +67,8 @@ int pool2_element_push(struct pool2 *pool, void **cite, void *data);
  */
 int pool2_element_free(struct pool2 *pool, void **cite, void *data);
 
-
 /**
  * 通过池名称获取成员
  */
 int pool2_gain_element(const char *name, void **cite, void *data);
+

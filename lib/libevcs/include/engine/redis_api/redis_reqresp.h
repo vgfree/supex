@@ -17,7 +17,7 @@ __BEGIN_DECLS
 struct redis_socket
 {
 	struct tcp_socket       *tcp;
-	struct redis_parse_info    parse;
+	struct redis_parse_info parse;
 };
 
 /* ---------------------------------------	*\

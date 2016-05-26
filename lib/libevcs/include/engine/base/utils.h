@@ -79,12 +79,12 @@ struct safe_once_init
 };
 
 /* 安全初始化开始 */
-#define SAFE_ONCE_INIT_COME(safe)				 \
-	STMT_BEGIN						 \
-	AO_SpinLock(&(safe)->lock);				 \
-	STMT_BEGIN						 \
+#define SAFE_ONCE_INIT_COME(safe)			     \
+	STMT_BEGIN					     \
+	AO_SpinLock(&(safe)->lock);			     \
+	STMT_BEGIN					     \
 	if (AO_SWAP(&(safe)->magic, OBJMAGIC) == OBJMAGIC) { \
-		break;						 \
+		break;					     \
 	}
 
 /* 安全初始化结束 */

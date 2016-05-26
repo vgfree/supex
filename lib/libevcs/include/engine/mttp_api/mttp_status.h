@@ -17,38 +17,35 @@
 typedef enum mttp_errno
 {
 	MP_ok = 0,
-	MP_head,
-	MP_parse,
 	MP_undo,
-	MP_re,
-	MP_err
+	MP_more,
+	MP_erro
 } MTTP_ERRNO;
 
 struct mttp_status
 {
 	unsigned short  mttp_version    : 8;
 	unsigned short  encryption      : 8;
-	size_t          body_size;
-	unsigned short  headlen;
-	unsigned short  step;
-	bool            over;
-	MTTP_ERRNO      err;
 
-	int             dosize;			// 已分析的长度
-	char *const     *buff;			// 被解析数据起始地址指针
-	int const       *size;			// 当前数据的总长度地址
-	// void            *gps_list;                  //解析完成数据地址
-	int             *current;		// 当前放弃数据长度地址
+	unsigned short  head_len;
+	unsigned int    body_len;
+
+	MTTP_ERRNO      err;				/**< !=0 表示出错*/
+	char *const     *data;				/**< 当前被分析数据首地址的指针*/
+	unsigned const  *size;				/**< 当前被分析数据的长度地址*/
+	bool            over;				/**< 当前分析是否结束*/
+	unsigned        dosize;				/**< 当前已分析长度*/
+	unsigned short  step;				/**< 当前分析进行了多少次*/
 };
 
 struct mttp_parse_info
 {
 	// GZIPDECOMPRESS_CB       ungzip;
 	// PARSEFROMSTRING_CB      unserialize;
-	struct mttp_status mt;		/**< MTTP数据分析器状态*/
+	struct mttp_status ms;		/**< MTTP数据分析器状态*/
 };
 
-void mttp_parse_init(struct mttp_parse_info *info, char *const *buff, int const *size, int *outsize);
+void mttp_parse_init(struct mttp_parse_info *info, char *const *buff, unsigned const *size);
 
 bool mttp_parse(struct mttp_parse_info *parseinfo);
 

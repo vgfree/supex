@@ -3,13 +3,11 @@
 #include <stdint.h>
 #include "../base/utils.h"
 
-
-
 bool pool_api_init(const char *host, int port, int max, bool sync);
 
 void pool_api_destroy(const char *host, int port, ...);
 
-struct pool2 *pool_api_find(const char *host, int port);
+struct pool2    *pool_api_find(const char *host, int port);
 
 int pool_api_pull(struct pool2 *pool, void **cite, ...);
 

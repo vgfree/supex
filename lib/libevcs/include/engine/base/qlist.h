@@ -7,7 +7,7 @@ __BEGIN_DECLS
 typedef struct queue_item QITEM;
 struct queue_item
 {
-	char			come;
+	char                    come;
 	void                    *data;
 	struct queue_item       *next;
 };
@@ -17,16 +17,14 @@ typedef struct queue_list QLIST;
 struct queue_list
 {
 	int             nubs;
-	QITEM         *head;
-	QITEM         *tail;
+	QITEM           *head;
+	QITEM           *tail;
 	X_NEW_LOCK      lock;
 };
 
 QITEM *qitem_init(QITEM *item);
 
 void qitem_free(QITEM *item);
-
-
 
 void qlist_init(QLIST *list);
 

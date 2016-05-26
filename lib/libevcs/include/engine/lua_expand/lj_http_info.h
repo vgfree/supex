@@ -1,6 +1,5 @@
 #pragma once
 
-
 #include "lj_base.h"
 #include "evmdl.h"
 

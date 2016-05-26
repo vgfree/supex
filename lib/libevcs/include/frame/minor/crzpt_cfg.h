@@ -27,13 +27,13 @@ struct crzpt_cfg_list
 	bool                    (*task_report)(void *user, void *task);
 
 #if defined(OPEN_SCCO) || defined(OPEN_EVCORO)
-	TASK_VMS_FCB	vmsys_init;
-	TASK_VMS_FCB	vmsys_exit;
-	TASK_VMS_FCB	vmsys_load;
-	TASK_VMS_FCB	vmsys_rfsh;
-	TASK_VMS_FCB	vmsys_call;
-	TASK_VMS_FCB	vmsys_push;
-	TASK_VMS_FCB	vmsys_pull;
+	TASK_VMS_FCB            vmsys_init;
+	TASK_VMS_FCB            vmsys_exit;
+	TASK_VMS_FCB            vmsys_load;
+	TASK_VMS_FCB            vmsys_rfsh;
+	TASK_VMS_FCB            vmsys_call;
+	TASK_VMS_FCB            vmsys_push;
+	TASK_VMS_FCB            vmsys_pull;
 #endif
 	void                    (*store_firing)(const char *name, size_t block_size, size_t wb_size, size_t lru_size, short bloom_size);
 	int                     (*store_insert)(const char *key, size_t klen, const char *value, size_t vlen);

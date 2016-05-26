@@ -5,7 +5,7 @@
 #include "../major_def.h"
 
 /* JSON格式配置文件 */
-struct swift_cfg_file
+struct alive_cfg_file
 {
 	int     srv_port;
 	short   worker_counts;
@@ -28,17 +28,17 @@ struct swift_cfg_file
 	char    api_names[MAX_API_COUNTS][MAX_API_NAME_LEN + 1];
 };
 
-struct swift_cfg_func
+struct alive_cfg_func
 {
 	char            type;
 	TASK_VMS_FCB    func;
 };
 
-struct swift_cfg_list
+struct alive_cfg_list
 {
 	struct supex_argv       argv_info;
-	struct swift_cfg_file   file_info;
-	struct swift_cfg_func   func_info[LIMIT_FUNC_ORDER];
+	struct alive_cfg_file   file_info;
+	struct alive_cfg_func   func_info[LIMIT_FUNC_ORDER];
 
 	void                    (*entry_init)(void);
 	void                    (*pthrd_init)(void *user);

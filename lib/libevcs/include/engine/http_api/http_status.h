@@ -90,5 +90,5 @@ bool http_parse_request(struct http_parse_info *info);
 bool http_parse_both(struct http_parse_info *info);
 
 __END_DECLS
-#endif
+#endif	/* ifndef http_status_h */
 
