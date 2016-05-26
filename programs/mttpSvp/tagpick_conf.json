@@ -1,0 +1,10 @@
+{
+	"alive_port":4102 ,
+	"alive_worker_counts": 1,
+	"alive_tasker_counts": 10,
+	"alive_protocol": "mttp",
+	"max_req_size": 32768,
+	"log_path": "./logs/",
+	"log_file": "mttpSvp",
+	"log_level": 0
+}
