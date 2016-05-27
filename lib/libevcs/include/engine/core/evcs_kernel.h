@@ -29,7 +29,7 @@ static void kernel_start(void *argv)
 
 		diffms = (end.tv_sec - sta.tv_sec) * 1000;
 		diffms += (end.tv_usec - sta.tv_usec) / 1000;
-		printf("use time %ld\n", diffms);
+	//	printf("use time %ld\n", diffms);
 
 		if (diffms < 2) {
 			usleep(500);

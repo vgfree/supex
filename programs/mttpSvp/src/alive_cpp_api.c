@@ -10,9 +10,6 @@
 int alive_vms_call(void *user, union virtual_system **VMS, struct adopt_task_node *task)
 {
 	printf("size %d data %s\n", task->size, task->data);
-	if (task->freeable) {
-		free(task->data);
-	}
 
 	return 0;
 }
