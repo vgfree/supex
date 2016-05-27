@@ -36,14 +36,14 @@ void evmdl_list_stop(struct ev_loop *loop, struct list_module *p_mdl);
 
 struct accept_module
 {
-	int             port;
+	int             listenfd;
 	struct ev_io    accept_watcher;			/* accept watcher for new connect */
 	void            (*usr_accept_fcb)(struct accept_module *);
 	int             sfd;
 	void            *data;
 };
 
-void evmdl_accept_init(struct accept_module *p_mdl, void (*usr_accept_fcb)(struct accept_module *), void *data, int port);
+void evmdl_accept_init(struct accept_module *p_mdl, void (*usr_accept_fcb)(struct accept_module *), void *data, int listenfd);
 
 void evmdl_accept_call(struct ev_loop *loop, struct accept_module *p_mdl);
 
