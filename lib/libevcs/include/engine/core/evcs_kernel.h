@@ -10,7 +10,7 @@ extern "C" {
 #include "evcs_module.h"
 #include "evcs_events.h"
 
-struct evcs_events g_kernel_evts = {};
+extern struct evcs_events g_kernel_evts = {};
 
 static void kernel_start(void *argv)
 {

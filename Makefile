@@ -94,7 +94,7 @@ SRV := $(openIMX) $(openHLS) \
 	loghub topology crzptX crzptY ACB damS roadRank \
 	gdgive bdgive gopath gomile ashman adcube adcube_v2\
 	spark releaseServer dfsdb tsdb \
-	timport msgimport rtimport simimport PMR dtsync pole-M pole-S tagpick trafficapi mttpServer rrtopo damR BRM mfptpServer pmrhttp weibo-S weibo-G
+	timport msgimport rtimport simimport PMR dtsync pole-M pole-S tagpick trafficapi mttpServer mttpSvp rrtopo damR BRM mfptpServer pmrhttp weibo-S weibo-G
 # weidb club
 
 help:
@@ -263,6 +263,11 @@ mttpServer:
 	$(MAKE) -C ./programs/mttpServer MAIN_APP_SERV=mttpServer
 	@echo -e $(GREEN)"【"$(YELLOW) $@ $(GREEN)"】"$(RED)"\n-->OK!\n"$(NONE)
 
+mttpSvp:
+	$(MAKE) -C ./programs/mttpSvp MAIN_APP_SERV=mttpSvp
+	@echo -e $(GREEN)"【"$(YELLOW) $@ $(GREEN)"】"$(RED)"\n-->OK!\n"$(NONE)
+
+
 rrtopo:
 	$(MAKE) -C ./programs/RRDemo/topo MAIN_APP_SERV=rrtopo
 	@echo -e $(GREEN)"【"$(YELLOW) $@ $(GREEN)"】"$(RED)"\n-->OK!\n"$(NONE)
@@ -383,6 +388,7 @@ clean:
 	$(MAKE) -C ./programs/tagpick clean
 	$(MAKE) -C ./programs/GIVE clean
 	$(MAKE) -C ./programs/mttpServer clean
+	$(MAKE) -C ./programs/mttpSvp clean
 	$(MAKE) -C ./programs/RRDemo/topo clean
 	$(MAKE) -C ./programs/useroptapi clean
 	$(MAKE) -C ./programs/adtalk clean
@@ -417,6 +423,7 @@ distclean:
 	$(MAKE) -C ./programs/tagpick distclean
 	$(MAKE) -C ./programs/GIVE distclean
 	$(MAKE) -C ./programs/mttpServer distclean
+	$(MAKE) -C ./programs/mttpSvp distclean
 	$(MAKE) -C ./programs/RRDemo/topo distclean
 	$(MAKE) -C ./programs/useroptapi distclean
 	$(MAKE) -C ./programs/adtalk distclean

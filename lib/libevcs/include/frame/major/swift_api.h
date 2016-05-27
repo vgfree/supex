@@ -6,7 +6,7 @@
 
 #include "cache/cache.h"
 #include "base/utils.h"
-#include "../lib/libscco/scco.h"
+#include "scco.h"
 #include "adopt_tasks/adopt_task.h"
 #include "swift_cfg.h"
 #include "async_comm.h"
