@@ -27,7 +27,7 @@ void PMR_callback(struct async_obj *ac, void *reply, void *data)
                         road_info.city_code = (road_info.county_code / 100) * 100;
                         road_info.new_roadID = road_info.rr_id * 1000 + road_info.sg_id;
                         //printf("se:%d,sp_se:%d,road_info rr_id %ld,sg_id %d\n",p_pmr->sequence,p_pmr->speed_se,road_info.rr_id,road_info.sg_id);
-                        x_printf(D,"road_info: roadname %s road_rootID %d segmentID %d countycode %d rt %d citycode %d new_roadID %ld len %d\n", road_info.road_name, road_info.rr_id, road_info.sg_id, road_info.county_code, road_info.rt, road_info.city_code, road_info.new_roadID, road_info.len);
+                        x_printf(D,"pmr road_info: roadname %s road_rootID %d segmentID %d countycode %d rt %d citycode %d new_roadID %ld len %d s_lon %lf s_lat %lf e_lon %lf e_lat %lf\n", road_info.road_name, road_info.rr_id, road_info.sg_id, road_info.county_code, road_info.rt, road_info.city_code, road_info.new_roadID, road_info.len, road_info.start_lon, road_info.start_lat, road_info.end_lon, road_info.end_lat);
                         struct ev_loop *loop = ac->settings.loop;
                         p_pmr->pmr_callback(loop,&(p_pmr->p_gps),&road_info);
                 }
@@ -79,7 +79,7 @@ int get_road_info(pmr_info_t *p_pmr)
 
         x_printf(D, "before get road    IMEI:%s max_speed:%d min_speed:%d avg_speed:%d start_time:%ld end_time:%ld longitude:%lf latitude:%lf direction:%d tokencode:%s", (p_pmr->p_gps).IMEI, (p_pmr->p_gps).max_speed, (p_pmr->p_gps).min_speed, (p_pmr->p_gps).avg_speed, (p_pmr->p_gps).start_time, (p_pmr->p_gps).end_time, (p_pmr->p_gps).longitude, (p_pmr->p_gps).latitude, (p_pmr->p_gps).direction, (p_pmr->p_gps).tokenCode);
 
-        sprintf(buff,"hmget MLOCATE %s %lf %lf %d %d %d %ld", (p_pmr->p_gps).IMEI, (p_pmr->p_gps).longitude,(p_pmr->p_gps).latitude, (p_pmr->p_gps).direction, (p_pmr->p_gps).altitude, (p_pmr->p_gps).avg_speed, (p_pmr->p_gps).end_time);
+        sprintf(buff,"hmget MLOCATE %sroadRank %lf %lf %d %d %d %ld", (p_pmr->p_gps).IMEI, (p_pmr->p_gps).longitude,(p_pmr->p_gps).latitude, (p_pmr->p_gps).direction, (p_pmr->p_gps).altitude, (p_pmr->p_gps).avg_speed, (p_pmr->p_gps).end_time);
         x_printf(D, "redis command: %s", buff);
         cmd_to_proto(&proto, buff);
 

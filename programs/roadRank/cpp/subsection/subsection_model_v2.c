@@ -1,3 +1,9 @@
+/*
+ * *@author: shumenghui@mirrtalk.com
+ * *@date: 2016_0400
+ * *@description: 分段路况
+ */
+
 #include "subsection_model_v2.h"
 #include "async_api.h"
 #include "rr_def.h"
@@ -10,7 +16,7 @@
 #include <math.h>
 #include <time.h> 
 
-#define NEAR_TIME 30
+#define NEAR_TIME 180
 extern struct rr_cfg_file g_rr_cfg_file;
 
 static unsigned int dist_p2p(double from_lon, double from_lat, double to_lon, double to_lat)
@@ -71,17 +77,74 @@ static void set_used_time( SITE *sec, int flag, unsigned short used )
                 sec->used_time += used;
         }
 }
-
-static void delete_roadsection(SITE *sec, int B, int E, int num)
+/*
+ * 比较前一段路况更新时间与GPS时间
+ * @param  front：前段路况更新时间 back：当前GPS时间 fac：阈值
+ * @return 2：front比back新 1：在阈值内 0：路况过期
+ * */
+static int comparing_front_and_back_t(long front, long back, int fac)
 {
-        if( B > E )
-                return;
-        int i;
-        for( i = E + 1; i < num; i++ ) {
-                set_roadsection( &sec[B], sec[i].begin, sec[i].end, sec[i].avg_speed, sec[i].max_speed, sec[i].endtime, sec[i].longitude, sec[i].latitude );
-                set_used_time(&sec[B], 1, sec[i].used_time);
-                B += 1;
+        long dis = back - front;
+        if(dis < fac) {
+                if(dis < 0)
+                        return 2;
+                else return 1;
         }
+        else return 0;
+}
+
+/*
+ * 删除超过过期时间的路况 以下注释n=new o=old N=now b=back
+ * 默认路况只能是
+ *
+ * n n o o  or  o o o o  or n n n n
+ * _ _ _ _      _ _ _ _     _ _ _ _
+ *
+ * 1）在delete前已经产生了分段路况，更新0 1 2段后 车行驶到 6 段，此时只能删除3 4 5段
+ * @param  kv_road：道路句柄 B：删除的起点 E：终点 now_time：最新时间戳 expire_time：过期时间
+ * @return 需要更新的段编号
+ * */
+static int delete_roadsection(SECKV_ROAD *kv_road, int B, int E, long now_time, int expire_time)
+{
+        int result = -1;
+        int num = kv_road->sec_num;
+        SITE *sec = kv_road->road_sec;
+        if( B > E ) {
+                return result;
+        }
+        int i, j;
+        for( i = B; i < E + 1; i++ ) {
+                int ret = comparing_front_and_back_t(sec[B].endtime, now_time, expire_time);
+                if(1 == ret) {
+                        /* o o o o N 堵  
+                        *  _ _ _ _ _ _
+                        *  防止在n点堵住过长时间后，如果没有更新n点前的路段时间，删除过期
+                        *  路况时，会把n点前刚走过但是因为没有更新时间 删除
+                        */
+                        sec[B].endtime = now_time;
+                }
+                /*
+                 * 发现过期路况 删除 过期点到E之间的路况
+                 * */
+                else if(0 == ret){
+                        result = i;
+                        kv_road->sec_num -= (E-i);
+                        if(E+1 >= num) {
+                                return result;
+                        }
+                        for(j=E+1; j<num; j++) {
+                                /* i+1 表示 将2段留下给当前gps点增加路况
+                                 * n n o o b b b
+                                 * 0 1 2 3 4 5 6
+                                 */
+                                set_roadsection( &sec[i+1], sec[j].begin, sec[i].end, sec[j].avg_speed, sec[j].max_speed, sec[j].endtime, sec[j].longitude, sec[j].latitude );
+                                set_used_time(&sec[i+1], 1, sec[j].used_time);
+                                i++;
+                        }
+                        break;
+                }
+        }
+        return result;
 }
 
 static void expend_roadsection(SITE *sec, int B, int num)
@@ -117,6 +180,7 @@ void init_SECROAD_data(gps_info_t *gps_info, road_info_t *road_info, SECKV_ROAD 
         x_printf(D, "init highway road sec B:%d E:%d A:%d\n", kv_road->road_sec[0].begin, kv_road->road_sec[0].end, kv_road->road_sec[0].avg_speed);
 }
 
+//分段道路初始化
 void init_SECROAD_data2(gps_info_t *gps_info, road_info_t *road_info, SECKV_ROAD *kv_road, int max_limit)
 {
         kv_road->IMEI = atoll(gps_info->IMEI);
@@ -144,6 +208,7 @@ void init_SECROAD_data2(gps_info_t *gps_info, road_info_t *road_info, SECKV_ROAD
         kv_road->road_sec[99].longitude = road_info->end_lon;
         kv_road->road_sec[99].latitude  = road_info->end_lat;
 
+//出现在道路的初始距离 超过最大值 不予分段
         unsigned short end = get_begin_lenth(gps_info->longitude, gps_info->latitude, road_info->start_lon, road_info->start_lat, road_info->end_lon, road_info->end_lat, road_info->len);
         if( end > max_limit) {
                 x_printf(W, "drift point lon:%f lat:%f dis:%d\n", gps_info->longitude, gps_info->latitude, end);
@@ -210,18 +275,27 @@ static int comparing_t(long a, int b)
         x_printf(D, "now - end: %d", interval);
         return (interval < b) ? 1 : 0;
 }
+/*
+ * @param
+ * @return 
+ * */
+typedef long long ll;
+inline int is_same_imei(ll r_imei, ll n_imei)
+{
+        return (r_imei == n_imei) ? 1 : 0;
+}
 
+//更新道路分段信息
 void update_roadsection( SECKV_ROAD *kv_road, gps_info_t *gps_info, road_info_t *road_info, int merged_speed_limit_l, int merged_speed_limit_h, int replace_limit, int expire_time )
 {
         int B = get_begin_lenth(gps_info->longitude, gps_info->latitude, road_info->start_lon, road_info->start_lat, road_info->end_lon, road_info->end_lat, road_info->len);
         unsigned short avg_speed = gps_info->avg_speed;
         unsigned short max_speed = gps_info->max_speed;
         unsigned short used_time = gps_info->end_time - gps_info->start_time;
-        set_road_data(gps_info, road_info, kv_road);
         SITE *road_sec = kv_road->road_sec;
         long et = gps_info->end_time;
-        int num     = kv_road->sec_num;
-        int retnumB = get_interval(kv_road, 0, B);
+        int num     = kv_road->sec_num;//段数
+        int retnumB = get_interval(kv_road, 0, B);//所在段
         int merged_speed = 0;
         if( road_sec[retnumB - 1].avg_speed < 15 )
                 merged_speed = merged_speed_limit_l;
@@ -233,6 +307,7 @@ void update_roadsection( SECKV_ROAD *kv_road, gps_info_t *gps_info, road_info_t 
                 set_roadsection(&kv_road->road_sec[0], 0, B, avg_speed, max_speed, et, gps_info->longitude, gps_info->latitude);
                 set_end_roadsection(&kv_road->road_sec[99], avg_speed, et, max_speed);
                 set_used_time( &kv_road->road_sec[0], 1, used_time );
+                set_road_data(gps_info, road_info, kv_road);
                 x_printf(W, "section num = 0\n");
                 return;
         }
@@ -242,12 +317,28 @@ void update_roadsection( SECKV_ROAD *kv_road, gps_info_t *gps_info, road_info_t 
                 return;       
         } 
         x_printf(D, "sec num: %d\n", num);
-
+        
+        //车行驶到所有段的前方
         if( retnumB == num ) {
+                // 道路起始只有两段短距离的路段 车直接越过两段，这时需删除过期路段，由于比较的是kv_road->end_time道路时间，当一辆车在路上一直堵着，
+                // kv_road->end_time会不断更新，则不会进入此条件内
+                if(!comparing_front_and_back_t(kv_road->end_time, et, expire_time)) {
+                        int ret_sec_num = delete_roadsection(kv_road, 0, num-1, et, expire_time);
+                        if(ret_sec_num >= 0) {
+                                set_roadsection(&kv_road->road_sec[ret_sec_num], 0, B, avg_speed, max_speed, et, gps_info->longitude, gps_info->latitude);
+                                set_used_time( &kv_road->road_sec[ret_sec_num], 1, used_time );
+                                set_end_roadsection(&kv_road->road_sec[99], avg_speed, et, max_speed);
+                                x_printf(D, "del and add road sec B:%d A:%d\n", B, avg_speed);
+                                set_road_data(gps_info, road_info, kv_road);
+                                return;
+                        }
+                }
 
+                // 获取当前点和上点的距离
                 int Distance = dist_p2p(road_sec[retnumB-1].longitude, road_sec[retnumB-1].latitude, gps_info->longitude, gps_info->latitude);
-                //if( comparing_t(road_sec[retnumB - 1].endtime, expire_time) && comparing_d(abs(road_sec[retnumB - 1].avg_speed - avg_speed), merged_speed_limit) && comparing_d( abs(road_sec[retnumB-1].end - B), replace_limit ) ) {
-                if( comparing_t(road_sec[retnumB - 1].endtime, expire_time) && comparing_d(abs(road_sec[retnumB - 1].avg_speed - avg_speed), merged_speed) && comparing_d( Distance, replace_limit ) ) {
+                // 距离前段时间 平均速度 距离 满足要求 --> 合并
+                //if( comparing_t(road_sec[retnumB - 1].endtime, expire_time) && comparing_d(abs(road_sec[retnumB - 1].avg_speed - avg_speed), merged_speed) && comparing_d( Distance, replace_limit ) ) {
+                if( comparing_front_and_back_t(road_sec[retnumB - 1].endtime, et, NEAR_TIME) && comparing_d(abs(road_sec[retnumB - 1].avg_speed - avg_speed), merged_speed) && comparing_d( Distance, replace_limit ) ) {
                         if( num > 1 ) {
                                 avg_speed = (kv_road->road_sec[retnumB - 1].avg_speed + avg_speed) / 2;
                                 set_roadsection(&kv_road->road_sec[retnumB-1], 0, B, avg_speed, max_speed, et, gps_info->longitude, gps_info->latitude);
@@ -265,34 +356,40 @@ void update_roadsection( SECKV_ROAD *kv_road, gps_info_t *gps_info, road_info_t 
                         
                         }
                 }
-                else {
+                else { //分段
                         kv_road->sec_num += 1;
                         set_roadsection(&kv_road->road_sec[retnumB], 0, B, avg_speed, max_speed, et, gps_info->longitude, gps_info->latitude);
                         set_used_time( &kv_road->road_sec[retnumB], 1, used_time );
                         set_end_roadsection(&kv_road->road_sec[99], avg_speed, et, max_speed);
                         x_printf(D, "add road sec B:%d A:%d\n", B, avg_speed);
                 }
+                set_road_data(gps_info, road_info, kv_road);
         }
+        // 同时有其他车进入分段区间内 或 下一时刻有车更新路况
         else {
                 x_printf(D, "replace retnumB : %d\n", retnumB);
                 if( retnumB > 0 )
                         retnumB -= 1;
 
+                // 当处于最后一段 更新最后一段的路况
                 if( retnumB == num - 2 || num == 1)
                         set_end_roadsection(&kv_road->road_sec[99], avg_speed, et, max_speed);
 
-                int from_now = comparing_t(road_sec[retnumB].endtime, expire_time);
-                if( from_now == 0 ) {
-                        delete_roadsection(road_sec, 0, retnumB, num);
-                        kv_road->sec_num -= (retnumB+1);
-                        set_roadsection(&kv_road->road_sec[0], 0, B, gps_info->avg_speed, max_speed, et, gps_info->longitude, gps_info->latitude);
-                        set_used_time( &kv_road->road_sec[0], 1, used_time );
-                        x_printf(D, "expire replace road sec B:%d A:%d\n", B, avg_speed);
-                        return;
+                // 当前一段时间过期，删除[0-前一段]中的过期路况，FIXME 可能会有
+                if( 0 == comparing_front_and_back_t(road_sec[retnumB].endtime, et, expire_time) ) {
+                        int ret_sec_num = delete_roadsection(kv_road, 0, retnumB, et, expire_time);
+                        if(ret_sec_num >= 0) {
+                                set_roadsection(&kv_road->road_sec[ret_sec_num], 0, B, gps_info->avg_speed, max_speed, et, gps_info->longitude, gps_info->latitude);
+                                set_used_time( &kv_road->road_sec[ret_sec_num], 1, used_time );
+                                x_printf(D, "expire replace road sec B:%d A:%d\n", B, avg_speed);
+                                set_road_data(gps_info, road_info, kv_road);
+                                return;
+                        }
                 }
                 
                 int Distance = dist_p2p(road_sec[retnumB].longitude, road_sec[retnumB].latitude, gps_info->longitude, gps_info->latitude);
-                if( comparing_d( Distance, replace_limit ) && comparing_t(road_sec[retnumB].endtime, NEAR_TIME) && comparing_d(abs(road_sec[retnumB - 1].avg_speed - avg_speed), merged_speed) ) {
+                // FIXME 考虑更新之前的时间
+                if( comparing_d( Distance, replace_limit ) && comparing_front_and_back_t(road_sec[retnumB].endtime, et, NEAR_TIME) && comparing_d(abs(road_sec[retnumB - 1].avg_speed - avg_speed), merged_speed) ) {
                        // if( comparing_t(road_sec[retnumB].endtime, NEAR_TIME) && comparing_d(abs(road_sec[retnumB - 1].avg_speed - avg_speed), merged_speed) ) {
                                 avg_speed = (road_sec[retnumB].avg_speed + avg_speed) / 2;
                                 set_roadsection(&kv_road->road_sec[retnumB], 0, B, avg_speed, max_speed, et, gps_info->longitude, gps_info->latitude);
@@ -306,14 +403,16 @@ void update_roadsection( SECKV_ROAD *kv_road, gps_info_t *gps_info, road_info_t 
                         }*/
                         
                 }
+                // FIXME
                 else {
-                        expend_roadsection(kv_road->road_sec, retnumB + 2, num);
+                        expend_roadsection(kv_road->road_sec, retnumB + 1, num);
                         kv_road->sec_num += 1;
                         set_roadsection(&kv_road->road_sec[retnumB+1], 0, B, avg_speed, max_speed, et, gps_info->longitude, gps_info->latitude);
                         set_used_time( &kv_road->road_sec[retnumB+1], 1, used_time );
                         x_printf(D, "split road sec B:%d A:%d distabce:%d replace_limit%d\n",B, avg_speed, Distance, replace_limit);
                 }
         }
+        set_road_data(gps_info, road_info, kv_road);
 }
 /*
 int sec_new_road(struct ev_loop *loop, KV_IMEI kv_IMEI, SECKV_ROAD kv_road, gps_info_t *gps_info, road_info_t *road_info, int limit) 
@@ -366,6 +465,7 @@ int subsec_calculate( struct ev_loop * p_loop, gps_info_t *gps_info, road_info_t
         SECKV_ROAD      *kv_road = NULL;
         KV_IMEI         kv_IMEI = { 0 };
 
+        //高速 和 低速 对应不同的replace_limit（超过replace_limit需再增加一段）
         unsigned short replace_limit = subsec->subsec_cfg.replace_limit_l;
         if( road_info->rt == HIGHWAY || road_info->rt == EXPRESSWAY )
                 replace_limit = subsec->subsec_cfg.replace_limit_h;
@@ -412,9 +512,11 @@ int subsec_calculate( struct ev_loop * p_loop, gps_info_t *gps_info, road_info_t
         if( ERR_IMEI == ok )
                 return ERR_IMEI;
         else if( SUC_IMEI == ok ) {
+                //判断是否由低速路转入高速分段模型 
                 if( (kv_IMEI.rt != HIGHWAY || kv_IMEI.rt != EXPRESSWAY) &&  kv_IMEI.roadID != road_info->new_roadID && (road_info->rt == HIGHWAY || road_info->rt == EXPRESSWAY) ) {
                         x_printf(D, "lowway:%ld change to EXPRESSWAY:%ld\n", kv_IMEI.roadID, road_info->new_roadID);
                         single_new_road_2(p_loop, kv_IMEI, *kv_road, gps_info, road_info, subsec->subsec_cfg.road_match_limit);
+                        //清除imei
                         delete_IMEI_from_kv( &kv_IMEI );
                 }
         }
@@ -439,7 +541,7 @@ int subsec_calculate( struct ev_loop * p_loop, gps_info_t *gps_info, road_info_t
                         AO_Lock(&kv_road->locker);
                         //init_SECROAD_data(gps_info, road_info, &kv_road);
                         subsec->init_roadsec(gps_info, road_info, kv_road, subsec->subsec_cfg.init_max);
-                        roadsec_info_save(kv_road);
+                        //roadsec_info_save(kv_road);
                         //subsec->section_update(&kv_road, subsec->subsec_cfg.expire_time, p_loop);
                         //AO_SpinUnlock(&kv_road->locker);
                         AO_Unlock(&kv_road->locker);

@@ -183,6 +183,7 @@ static void set_roadID_data(KV_IMEI *kv_IMEI, SECKV_ROAD *kv_roadID)
         kv_roadID->road_sec[1].avg_speed = kv_roadID->avg_speed;
         kv_roadID->road_sec[1].longitude = kv_IMEI->end_lon;
         kv_roadID->road_sec[1].latitude  = kv_IMEI->end_lat;
+        kv_roadID->road_sec[1].endtime   = kv_IMEI->end_time;
 }
 
 static int single_new_road(struct ev_loop *loop, KV_IMEI kv_IMEI, SECKV_ROAD kv_roadID, gps_info_t *gps_info, road_info_t *road_info, struct single_model_t *single)

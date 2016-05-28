@@ -50,15 +50,21 @@ int roadsec_info_get( long roadid, SECKV_ROAD **roadsec)
  
         if (ans->errnum != ERR_NONE) {
                 if (ans->errnum == ERR_NIL) {
-                        x_printf(D, "this road has not section info!\n");
+                        x_printf(D, "this road has not section info! %lu\n", sizeof(SECKV_ROAD));
                         *roadsec = (SECKV_ROAD *)malloc(sizeof(SECKV_ROAD));
+                        if((*roadsec) == NULL) {
+                                x_printf(E, "malloc error\n");
+                                flag = ERR_ROAD;
+                                goto end;
+                        }
                         memset(*roadsec, 0 , sizeof(SECKV_ROAD));
                         (*roadsec)->old_roadID = roadid;
                         //AO_SpinLockInit(&(*roadsec)->locker, false);
                         AO_LockInit(&(*roadsec)->locker, false);
                         //AO_SpinLock(&roadsec->locker);
                         if( roadsec_info_save(*roadsec) == -1 ) {
-                                x_printf(D, "roadsec_info_save error\n");
+                                x_printf(E, "roadsec_info_save error\n");
+                                free(*roadsec);
                                 flag = ERR_ROAD;
                                 goto end;
                         }
@@ -72,15 +78,22 @@ int roadsec_info_get( long roadid, SECKV_ROAD **roadsec)
         
         unsigned long           len = kv_answer_length(ans);
         kv_answer_iter_t        *iter = NULL;
+        /*
         if(len == 0) {
-                x_printf(D, "len ====== 0\n");
+                x_printf(E, "len ====== 0\n");
                 *roadsec = (SECKV_ROAD *)malloc(sizeof(SECKV_ROAD));
+                if((*roadsec) == NULL) {
+                        x_printf(E, "malloc error\n");
+                        flag = ERR_ROAD;
+                        goto end;
+                }
                 memset(*roadsec, 0 , sizeof(SECKV_ROAD));
                 (*roadsec)->old_roadID = roadid;
                 AO_SpinLockInit(&(*roadsec)->locker, false);
                 //AO_SpinLock(&roadsec->locker);
                 if( roadsec_info_save(*roadsec) == -1 ) {
-                        x_printf(D, "roadsec_info_save error\n");
+                        x_printf(E, "roadsec_info_save error\n");
+                        free(*roadsec);
                         flag = ERR_ROAD;
                         goto end;
                 }
@@ -88,13 +101,15 @@ int roadsec_info_get( long roadid, SECKV_ROAD **roadsec)
                 flag = NIL_ROAD;
                 goto end;
         }
-        x_printf(D, "haslen = %ld\n", len);
-        kv_answer_value_t       *value = NULL;
-        iter = kv_answer_get_iter(ans, ANSWER_HEAD);
-        kv_answer_rewind_iter(ans, iter);
-        value = kv_answer_next(iter);
-        unsigned long pt = strtol((char *)(value->ptr), NULL, 10);
-        *roadsec = (SECKV_ROAD *)pt;
+        */
+        if(len == 1) {
+                kv_answer_value_t       *value = NULL;
+                iter = kv_answer_get_iter(ans, ANSWER_HEAD);
+                kv_answer_rewind_iter(ans, iter);
+                value = kv_answer_next(iter);
+                unsigned long pt = strtol((char *)(value->ptr), NULL, 10);
+                *roadsec = (SECKV_ROAD *)pt;
+        }
  
 	kv_answer_release_iter(iter);
 end:
@@ -104,29 +119,48 @@ end:
 
 int roadsec_info_save( SECKV_ROAD *kv_road )
 {
-        char buff[1240] = { 0 };
- 
-        memset(buff, '\0', sizeof(buff));
-        kv_answer_t     *ans = NULL;
-        sprintf(buff,  "set %ld:road_info %ld", kv_road->old_roadID, (unsigned long)kv_road);
-	char kv_hash[128];
+        char buff[1240] = "";
+	char kv_hash[128] = "";
+
+        // 存之前 先取一次 保证不分配两次内存
+        kv_answer_t     *ans2 = NULL;
+        sprintf(buff, "get %ld:road_info", kv_road->old_roadID);
 	sprintf(kv_hash, "%ld", kv_road->old_roadID);
-	ans = kv_cache_ask(g_kv_cache, kv_hash, buff);
-
-        if (ans->errnum != ERR_NONE) {
-                x_printf(E, "Failed to set redis roadsec, errnum is %d, err is %s !\n", ans->errnum, ans->err);
-                kv_answer_release(ans);
-                return -1;
-        }
+	ans2 = kv_cache_ask(g_kv_cache, kv_hash, buff);
  
-        kv_answer_release(ans);
+        if (ans2->errnum != ERR_NONE) {
+                if (ans2->errnum == ERR_NIL) {
+                        memset(buff, '\0', sizeof(buff));
+                        memset(kv_hash, '\0', sizeof(kv_hash));
+                        kv_answer_t     *ans = NULL;
+                        sprintf(buff,  "set %ld:road_info %ld", kv_road->old_roadID, (unsigned long)kv_road);
+                        sprintf(kv_hash, "%ld", kv_road->old_roadID);
+                        ans = kv_cache_ask(g_kv_cache, kv_hash, buff);
 
-        return 0;
+                        if (ans->errnum != ERR_NONE) {
+                                x_printf(E, "Failed to set redis roadsec, errnum is %d, err is %s !\n", ans->errnum, ans->err);
+                                kv_answer_release(ans);
+                                kv_answer_release(ans2);
+                                return -1;
+                        }
+                        x_printf(D, "save road_info succ\n");
+                        kv_answer_release(ans);
+                        kv_answer_release(ans2);
+                        return 0;
+                }
+                x_printf(E, "Failed to set redis roadsec, errnum is %d, err is %s !\n", ans2->errnum, ans2->err);
+                kv_answer_release(ans2);
+                return -1;
+
+        }
+        x_printf(E, "atomic save road:%ld\n", kv_road->old_roadID);
+        kv_answer_release(ans2);
+        return -1;
 }
 
 int set_roadID_to_kv( SECKV_ROAD *kv_roadID )
 {
-        char            buff[10240] = { 0 };
+        char            buff[1024] = { 0 };
         kv_answer_t     *ans = NULL;
 
         memset(buff, '\0', sizeof(buff));
