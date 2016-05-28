@@ -1,6 +1,7 @@
 #include "list_node.h"
-#include "async_api.h"
-#include "pool_api.h"
+#include "async_tasks/async_api.h"
+#include "pools/pool2.h"
+#include "redis_api/redis_status.h"
 #include "redis_parse.h"
 #define REDIS_ERR       -1
 #define REDIS_OK        0
@@ -177,6 +178,18 @@ void creat_time_node(struct t_node *t_head, struct d_node *d_new)
 	creat_location_node(l_head, d_new);
 }
 
+void fcb_distory(struct async_obj *obj, void *reply, void *data)
+{
+	struct cnt_pool         *cpool = data;
+	if (obj->replies.work->done) {
+		pool_api_push(cpool, obj->replies.work->sfd);
+	} else {
+		x_printf(E, "Disconnected...");
+		pool_api_free(cpool, obj->replies.work->sfd);
+	}
+
+}
+
 int import_to_redis(char command[], void *loop, char host[], unsigned short port)
 {
 	struct cnt_pool         *cpool = NULL;
@@ -184,7 +197,7 @@ int import_to_redis(char command[], void *loop, char host[], unsigned short port
 
 	// x_printf(D,"import_to_redis: %s\n",command);
 
-	ac = async_initial(loop, QUEUE_TYPE_FIFO, NULL, NULL, NULL, 1);
+	ac = async_initial(loop, QUEUE_TYPE_FIFO, NEXUS_TYPE_TEAM, NULL, NULL, NULL, 1);
 
 	if (ac) {
 		void    *sfd = (void *)(intptr_t)-1;
@@ -207,7 +220,7 @@ int import_to_redis(char command[], void *loop, char host[], unsigned short port
 		}
 
 		/*send*/
-		async_command(ac, PROTO_TYPE_REDIS, (int)(intptr_t)sfd, cpool, NULL, NULL, proto, strlen(proto));
+		async_command(ac, PROTO_TYPE_REDIS, (int)(intptr_t)sfd, fcb_distory, cpool, proto, strlen(proto));
 		free(proto);
 
 		async_startup(ac);

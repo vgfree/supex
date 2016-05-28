@@ -28,7 +28,7 @@ function app_line_init()
 	--> init zmq
 	zmq_api.init( )
 	--> init luakv
-	luakv_api.init()
+	--luakv_api.init()
 	--> init apply
 	APP_APPLY.apply_init( )
 	--> load apply

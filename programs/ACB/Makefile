@@ -1,18 +1,25 @@
 BASE_SRC=./src
-INC_DIR=-I/usr/local/include/luajit-2.0 -I../../lib/libev -I../../lib/json-c -I../../lib/http-parser \
-	-I../../lib/libscco -I../../engine \
-	-I../../engine/major -I../../engine/minor -I./src \
-	-I../../lib/libmemhook/src/
+INC_DIR=-I/usr/local/include/luajit-2.0 -I../../lib/libev -I../../lib/json-c \
+	-I../../lib/libkv/release \
+	-I../../lib/libmemhook/src \
+	-I../../lib/libscco/include \
+	-I../../lib/libcoro/include \
+	-I../../lib/libevcoro/include \
+	-I../../lib/libevcs/include/engine \
+	-I../../lib/libevcs/include/frame \
+	-I./src
 
-LIB_DIR=-L/usr/local/lib -L../../lib -L../../engine/
-LIBS=-lluajit-5.1 -lpthread -lrt -lm -lstdc++ 
-LIBA=-ljson-c
+
+
+LIB_DIR=-L/usr/local/lib -L../../lib
+LIBS=-lluajit-5.1 -lstdc++ -lpthread -lrt -lm
+LIBA=-ljson-c -lkv
 
 #[=========>MARK<=========]#
 MAIN_APP_SERV ?= ACB
 
 ifeq ($(MAIN_APP_SERV), ACB)
-HANDLE_MODEL = EVUV
+HANDLE_MODEL = EVCORO
 endif
 #<------------------------>#
 -include $(HOME_PATH)/programs/link.mk
@@ -24,6 +31,7 @@ BIN=./bin_$(MAIN_APP_SERV)
 BASE_OBJ = $(addprefix $(BIN)/, \
 	   $(ADD_OBJ) \
 	   main.o \
+	   redis_parse.o \
 	   load_child_cfg.o \
 	   load_swift_cfg.o \
 	   swift_lua_api.o \
