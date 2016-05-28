@@ -297,15 +297,11 @@ useroptapi:
 	@echo -e $(GREEN)"【"$(YELLOW) $@ $(GREEN)"】"$(RED)"\n-->OK!\n"$(NONE)
 
 
-adcube:
-	$(MAKE) -C ./programs/adtalk MAIN_APP_SERV=adcube
-	@echo -e $(GREEN)"【"$(YELLOW) $@ $(GREEN)"】"$(RED)"\n-->OK!\n"$(NONE)
-
 adcube_v2:
 	$(MAKE) -C ./programs/adtalk_v2 MAIN_APP_SERV=adcube_v2
 	@echo -e $(GREEN)"【"$(YELLOW) $@ $(GREEN)"】"$(RED)"\n-->OK!\n"$(NONE)
 spark:
-	$(MAKE) -C ./programs/adtalk MAIN_APP_SERV=spark
+	$(MAKE) -C ./programs/adtalk_v2 MAIN_APP_SERV=spark
 	@echo -e $(GREEN)"【"$(YELLOW) $@ $(GREEN)"】"$(RED)"\n-->OK!\n"$(NONE)
 
 tsdb:
@@ -385,7 +381,6 @@ clean:
 	$(MAKE) -C ./programs/mttpSvp clean
 	$(MAKE) -C ./programs/RRDemo/topo clean
 	$(MAKE) -C ./programs/useroptapi clean
-	$(MAKE) -C ./programs/adtalk clean
 	$(MAKE) -C ./programs/releaseServer clean
 	$(MAKE) -C ./programs/TSDB clean
 	$(MAKE) -C ./programs/timport clean
@@ -419,7 +414,6 @@ distclean:
 	$(MAKE) -C ./programs/mttpSvp distclean
 	$(MAKE) -C ./programs/RRDemo/topo distclean
 	$(MAKE) -C ./programs/useroptapi distclean
-	$(MAKE) -C ./programs/adtalk distclean
 	$(MAKE) -C ./programs/loghub distclean
 	$(MAKE) -C ./programs/releaseServer distclean
 	$(MAKE) -C ./programs/TSDB distclean
