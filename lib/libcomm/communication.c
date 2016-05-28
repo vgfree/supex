@@ -11,6 +11,9 @@
 
 static void * _start_new_pthread(void* usr);
 
+static bool _set_remainfd(struct remainfd *remainfd, int array[], int n);
+
+static bool _quick_sort(int array[], int n);
 
 struct comm_context* comm_ctx_create(int epollsize)
 {
@@ -220,6 +223,7 @@ static void * _start_new_pthread(void* usr)
 	assert(usr);
 	int			n = 0;
 	int			fdidx = 0;	/* 监听fd在结构体struct listenfd中数组的下标 */
+	bool			retval = false;
 	struct comm_context*	commctx = (struct comm_context*)usr;
 
 	/* 等待主线程将状态设置为COMM_STAT_RUN，才被唤醒继续执行以下代码 */
@@ -238,40 +242,123 @@ static void * _start_new_pthread(void* usr)
 			commctx->commevent->timeoutcb.timeout = TIMEOUTED;
 		}
 
-		if (likely(commepoll_wait(&commctx->commepoll, commctx->commevent->timeoutcb.timeout))) {
+		if ((retval = commepoll_wait(&commctx->commepoll, commctx->commevent->timeoutcb.timeout))) {
 			for (n = 0; n < commctx->commepoll.eventcnt; n++) {
 				if (likely(commctx->commepoll.events[n].data.fd > 0)) {
 					if ((fdidx = gain_listenfd_fdidx(&commctx->commevent->listenfd, commctx->commepoll.events[n].data.fd)) > -1) {	/* 新用户连接，触发accept事件 */
-						 //accept_event(commctx, fdidx);
 						 commevent_accept(commctx->commevent, fdidx);
 
 					} else if (commctx->commepoll.events[n].events & EPOLLIN) {					/* 有数据可读，触发读数据事件 */
 					
-						int array[EPOLL_SIZE] = {0};
-						int cnt = 0;
 						if (commctx->commepoll.events[n].data.fd == commctx->commpipe.rfd) {			/* 管道事件被触发， 开始写事件 */
-							cnt = commpipe_read(&commctx->commpipe, array, sizeof(int));
-							if (likely(cnt > 0)) {
-								 //send_event(commctx, array, cnt);
-								 commevent_send(commctx->commevent, array, cnt);
+							int	cnt = 0;
+							int	array[EPOLL_SIZE] = {};
+#if 0
+							struct remainfd* remainfd = &commctx->commevent->remainfd;
+							if ((cnt = commpipe_read(&commctx->commpipe, &remainfd->wfda[remainfd->wcnt], sizeof(int))) > 0) {
+								remainfd->wcnt += cnt;
+								commevent_send(commctx->commevent, remainfd->wfda[remainfd->wcnt-1], true);
+							}
+#endif
+							if ((cnt = commpipe_read(&commctx->commpipe, array, sizeof(int))) > 0) {
+								struct remainfd* remainfd = &commctx->commevent->remainfd;
+								//remainfd->wcnt += cnt;
+								if (_set_remainfd(remainfd, array, cnt)) {
+									commevent_send(commctx->commevent, remainfd->wpfda[remainfd->wpcnt-1], true);
+								}
 							}
 						} else {
-							 //recv_event(commctx, commctx->commepoll.events[n].data.fd);
-							 commevent_recv(commctx->commevent, commctx->commepoll.events[n].data.fd);
+							 commevent_recv(commctx->commevent, commctx->commepoll.events[n].data.fd, false);
 						}
 					} else if (commctx->commepoll.events[n].events & EPOLLOUT) {					/* 有数据可写， 触发写数据事件 */
-						
-						int array[1] = {commctx->commepoll.events[n].data.fd};
-						 //send_event(commctx, array, 1);
-						 commevent_send(commctx->commevent, array, 1);
+
+						commevent_send(commctx->commevent, commctx->commepoll.events[n].data.fd, false);
 					}
 				}
 			}
-		} else {	
-			if (likely(errno == EINTR)) {		/* epoll 超时 */
-				commevent_timeout(commctx->commevent);
-			}
+		}
+		if (retval == false && errno == EINTR) {
+			/* epoll_wait超时调用处理残留fd函数 */
+			commevent_remainfd(commctx->commevent, true);
+		} else {
+			/* epoll_wait每次循环完一次就去处理一次残留的fd */
+			commevent_remainfd(commctx->commevent, false);
 		}
 	}
 	return NULL;
+}
+
+static bool _set_remainfd(struct remainfd *remainfd, int array[], int n)
+{
+	int i =0;
+	if (_quick_sort(array, n)) {
+		for (i = 0; i < n; i++) {
+			if (array[i] != array[i+1]) {
+				remainfd->wpfda[remainfd->wpcnt++] = array[i];
+			}
+		}
+		return true;
+	}
+	return false;
+}
+
+static bool _quick_sort(int array[], int n)
+{
+	struct stack {
+		int start;	/* 数组中第一个元素下标 */
+		int end;	/* 数组中最后一个元素下标*/
+	};
+
+	int index= 0;				/* 栈的下标 */ 
+	int size = sizeof(struct stack);	/* struct stack结构体大小 */
+	int i = 0, j = 0, key = 0;
+	int left = 0, right = 0;
+	struct stack *stack = NULL;
+	char* memory = calloc(n, size);
+	
+	if (memory) {
+		stack = (struct stack*)&(memory[index*size]);
+		stack->start = 0;
+		stack->end = n -1;
+		while (index > -1) {
+			i = left = stack->start;	/* 数组从左开始数据的下标 */
+			j = right = stack->end;		/* 数组从右开始数据的下标 */
+			key = array[left];
+			index --;
+			while (i<j) {
+				while ((i<j) && (key <= array[j])) {j--;}
+				if (i < j) {
+					array[i] = array[i] ^ array[j];
+					array[j] = array[i] ^ array[j];
+					array[i] = array[i] ^ array[j];
+					i++;
+				}
+
+				while ((i<j) && (key >= array[i])) {i++;}
+				if (i < j) {
+					array[i] = array[i] ^ array[j];
+					array[j] = array[i] ^ array[j];
+					array[i] = array[i] ^ array[j];
+					j--;
+				} 
+			}//处理一次  即将比绑定值小的全部放左边  比绑定值大的放右边
+
+			if (left < i-1) {
+				index++;
+				stack = (struct stack*)&memory[index*size];
+				stack->start = left;
+				stack->end = i-1;
+			}
+			if (right>i+1) {
+				index++;
+				stack = (struct stack*)&memory[index*size];
+				stack->start = i+1;
+				stack->end = right;
+			}
+			stack = (struct stack*)&memory[index*size];
+		}
+		free(memory);
+		return true;
+	}
+	return false;
 }

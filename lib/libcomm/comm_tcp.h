@@ -44,6 +44,7 @@ struct comm_tcp {
 /* 检查描述符是否可写 */
 static inline bool check_writeable(int fd)
 {
+	assert(fd > 0);
 	fd_set wfds;
 	FD_ZERO(&wfds);
 	FD_SET(fd, &wfds);
@@ -57,6 +58,7 @@ static inline bool check_writeable(int fd)
 /* 检查描述符是否可读 */
 static inline bool check_readable(int fd)
 {
+	assert(fd > 0);
 	fd_set rfds;
 	FD_ZERO(&rfds);
 	FD_SET(fd, &rfds);
@@ -69,13 +71,13 @@ static inline bool check_readable(int fd)
 
 
 /* 绑定监听一个指定地址端口号 */
-bool socket_listen(struct comm_tcp* commtcp, const char* host, const char* service);
+bool socket_listen(struct comm_tcp *commtcp, const char *host, const char *service);
 
 /* 连接一个指定的地址端口号 */
-bool socket_connect(struct comm_tcp* commtcp, const char* host, const char* service);
+bool socket_connect(struct comm_tcp *commtcp, const char *host, const char *service);
 
 /* 接收一个新的连接 @lsncommtcp:监听描述符相关信息 @acptcommtcp:接收新的描述符的相关信息 */
-int socket_accept(const struct comm_tcp* lsncommtcp, struct comm_tcp* acptcommtcp);
+int socket_accept(const struct comm_tcp *lsncommtcp, struct comm_tcp *acptcommtcp);
 
 
 

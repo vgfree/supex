@@ -6,24 +6,27 @@
 
 #define  LISTENFDS  1024	/* 能够监听的描述符的个数 */
 
-#define	 CLOSEFD(fd)		({ close(fd);	\
-				   fd = -1;	})
+#define	 CLOSEFD(fd)		({		\
+				   close(fd);	\
+				   fd = -1;	\
+				})
 
-static bool _get_portinfo(struct comm_tcp* commtcp);
+static bool _get_portinfo(struct comm_tcp *commtcp);
 
-static bool _get_addrinfo(struct addrinfo** ai, const char* host, const char* service);
+static bool _get_addrinfo(struct addrinfo **ai, const char *host, const char *service);
 
-static bool _bind_listen(struct comm_tcp* commtcp, struct addrinfo* ai);
+static bool _bind_listen(struct comm_tcp *commtcp, struct addrinfo *ai);
 
 static bool _connect(struct comm_tcp *commtcp, struct addrinfo *ai);
 
 
-bool socket_listen(struct comm_tcp* commtcp, const char* host, const char* service)
+bool socket_listen(struct comm_tcp *commtcp, const char *host, const char *service)
 {
 	assert(commtcp && host && service);
-	memset(commtcp, 0, sizeof(*commtcp));
 
-	struct addrinfo*	ai = NULL;
+	struct addrinfo* ai = NULL;
+
+	memset(commtcp, 0, sizeof(*commtcp));
 	if (_get_addrinfo(&ai, host, service)) {
 		if (_bind_listen(commtcp, ai)) {
 			if (_get_portinfo(commtcp)) {
@@ -40,12 +43,13 @@ bool socket_listen(struct comm_tcp* commtcp, const char* host, const char* servi
 	return (commtcp->fd != -1);
 }
 
-bool socket_connect(struct comm_tcp* commtcp, const char* host, const char* service)
+bool socket_connect(struct comm_tcp *commtcp, const char *host, const char *service)
 {
 	assert(commtcp && host && service);
-	memset(commtcp, 0, sizeof(*commtcp));
 
-	struct addrinfo*	ai = NULL;
+	struct addrinfo* ai = NULL;
+
+	memset(commtcp, 0, sizeof(*commtcp));
 	if (_get_addrinfo(&ai, host, service)) {
 		if (_connect(commtcp, ai)) {
 			if (_get_portinfo(commtcp)) {
@@ -62,11 +66,11 @@ bool socket_connect(struct comm_tcp* commtcp, const char* host, const char* serv
 	return (commtcp->fd != -1);
 }
 
-int socket_accept(const struct comm_tcp* lsncommtcp, struct comm_tcp* acptcommtcp)
+int socket_accept(const struct comm_tcp *lsncommtcp, struct comm_tcp *acptcommtcp)
 {
-	assert(lsncommtcp && acptcommtcp);
-	memset(acptcommtcp, 0, sizeof(*acptcommtcp));
+	assert(lsncommtcp && lsncommtcp->fd > 0 && acptcommtcp);
 
+	memset(acptcommtcp, 0, sizeof(*acptcommtcp));
 	acptcommtcp->fd = accept(lsncommtcp->fd, NULL, NULL);
 	if (acptcommtcp->fd > 0) {
 		if (fd_setopt(acptcommtcp->fd, O_NONBLOCK)) {
@@ -88,7 +92,7 @@ int socket_accept(const struct comm_tcp* lsncommtcp, struct comm_tcp* acptcommtc
 }
 
 /* 获取端口相关信息:获得是本地字节序 */
-static bool _get_portinfo(struct comm_tcp* commtcp)
+static bool _get_portinfo(struct comm_tcp *commtcp)
 {
 	assert(commtcp && commtcp->fd > 0);
 
@@ -135,9 +139,10 @@ static bool _get_portinfo(struct comm_tcp* commtcp)
 }
 
 /* 获取地址信息 */
-static bool _get_addrinfo(struct addrinfo** ai, const char* host, const char* service)
+static bool _get_addrinfo(struct addrinfo **ai, const char *host, const char *service)
 {
 	assert(ai && host && service);
+
 	int		retval= -1;
 	struct addrinfo	hints = {};
 
@@ -158,11 +163,14 @@ static bool _get_addrinfo(struct addrinfo** ai, const char* host, const char* se
 }
 
 /* 根据地址信息绑定和监听 */
-static bool _bind_listen(struct comm_tcp* commtcp, struct addrinfo* ai)
+static bool _bind_listen(struct comm_tcp *commtcp, struct addrinfo *ai)
 {
+	assert(commtcp && ai);
+
 	int		 optval = 0;
 	bool		 flag = false;
 	struct addrinfo* aiptr = NULL;
+
 	for (aiptr = ai; aiptr != NULL; aiptr = aiptr->ai_next) {
 		commtcp->fd = socket(aiptr->ai_family, aiptr->ai_socktype, aiptr->ai_protocol);
 		if (commtcp->fd > 0) {
@@ -193,6 +201,7 @@ static bool _bind_listen(struct comm_tcp* commtcp, struct addrinfo* ai)
 static inline bool _connect(struct comm_tcp *commtcp, struct addrinfo *ai) 
 {
 	assert(commtcp && ai);
+
 	bool		 flag = false;
 	struct addrinfo* aiptr = NULL;
 

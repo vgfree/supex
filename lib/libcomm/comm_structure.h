@@ -20,9 +20,9 @@
 extern "C" {
 #endif
 
-#define	EPOLL_SIZE		10000	/* 允许EPOLL能够监听的描述符的最大个数 */
+#define	EPOLL_SIZE		1000	/* 允许EPOLL能够监听的描述符的最大个数 */
 #define LISTEN_SIZE		10	/* 允许监听fd的最大个数 */
-#define COMM_FRAMES		13	/* 允许一个最大的总帧数 */
+#define COMM_FRAMES		13	/* 允许一个包最大的总帧数 */
 
 /* 获取struct comm_message结构体中成员变量list的偏移大小 */
 #define	COMMMSG_OFFSET		({ struct comm_message message;	\
@@ -88,10 +88,16 @@ struct comm_context {
 
 /* 此结构体保存发送接收时没成功处理完的fd */
 struct  remainfd {
-	int	wfda[EPOLL_SIZE/4];		/* 保存出现意外没有及时发送消息的fd */
-	int	rfda[EPOLL_SIZE/4];		/* 保存出现意外没有及时接收消息的fd */
-	int	wcnt;				/* 没有及时发送消息的fd的计数 */
-	int	rcnt;				/* 没有及时接收消息的fd的计数 */
+	int	wpcnt;				/* 没有及时发送消息或没有打包完毕[发送队列里面还存在没有打包完的数据]fd的总计数 */
+	int	rpcnt;				/* 没有及时接收消息或没有解析完毕[接收缓冲里面还存在没有解析完的数据]fd的总计数 */
+	int	wpfda[EPOLL_SIZE/4];		/* 没有及时发送消息或者没有打包完的fd都会先打包然后发送数据， 所以无需区分类型 */
+	struct rpfds{				/* 没有及时接收到消息的fd会去接收消息然后解析，没有解析完毕的fd只需进行解析就行了*/
+		enum {
+			REMAIN_READ = 0x01,	/* 残留的对应fd属于读事件失败，尝试重读 */
+			REMAIN_PARSE		/* 残留的对应fd属于没有解析完毕，继续解析 */
+		}	type[EPOLL_SIZE/4];
+		int	fda[EPOLL_SIZE/4];	/* 保存出现意外没有及时读取消息或没有解析完数据的fd */
+	}rpfds;					/* 读和解析残留的所有fd */
 };
 
 /* 监听描述符的相关信息 */
@@ -103,10 +109,9 @@ struct listenfd {
 
 /* 每个fd对应的数据相关信息 */
 struct comm_data {
-	//struct comm_queue	recv_queue;	/* 存放接收并已经解析完毕的数据 */
 	struct comm_queue	send_queue;	/* 存放用户传递但并未打包的数据 */
-	struct comm_cache	recv_cache;	/* 存放接收但并未解析的数据 */
-	struct comm_cache	send_cache;	/* 存放需要发送并已经打包的数据 */
+	struct comm_cache	recv_cache;	/* 存放接收但并未解析的数据 read函数使用 */
+	struct comm_cache	send_cache;	/* 存放需要发送并已经打包的数据 write函数使用 package函数使用 */
 	struct comm_lock	sendlock;	/* send_queue的锁 */
 	struct cbinfo		finishedcb;	/* 此描述符监听事件发生时相应的回调函数信息 */
 	struct comm_tcp		commtcp;	/* 套接字相关信息 */
@@ -117,7 +122,8 @@ struct comm_data {
 /* 事件相关信息 */
 struct comm_event {
 	bool		init;			/* 本结构体是否正确初始化 */
-	int		fds;			/* 客户端连接到服务器的fd的总个数 */
+	int		fds;			/* 客户端连接到服务器的fd的总个数即数组data里面数据有效个数 */
+	int		fda[EPOLL_SIZE/4];	/* 从管道读取的所有fd，即此次需要发送数据的所有fd */
 	intptr_t	data[EPOLL_SIZE];	/* 保存接收发送数据的结构体 */
 	struct listenfd	listenfd;		/* 所有监听描述符的信息 */
 	struct remainfd remainfd;		/* 未处理完的fd */
