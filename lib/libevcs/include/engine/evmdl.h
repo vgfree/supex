@@ -243,17 +243,12 @@ enum major_proto_type
 
 struct data_node
 {
-	/*whenever can't clean when reset data_node*/
-	/***base attribute***/
-	int                     sfd;		/**< 关联的描述符*/
-
-	/*should clean when reset data_node*/
 	/****************************************************************/
 	/***R***/
 	struct irecv_module     mdl_recv;
 	/***W***/
 	struct osend_module     mdl_send;
-	/****S***/
+	/***S***/
 #ifdef OPEN_TIME_OUT
 	struct iotime_module    mdl_iotime;
 #endif
@@ -268,18 +263,21 @@ struct data_node
 };
 
 /**地址结点*/
-struct addr_node
+struct pool_node
 {
 	struct data_node        *addr;					/**< 关联的数据节点*/
+	uint64_t		cid;
 	int                     port;					/**< 客户端本端端口*/
 	char                    szAddr[INET_ADDRSTRLEN];		/**< 客户端远端地址 */
 };
 
 void pools_init(int proto_type);
 
-struct addr_node        *mapping_addr_node(int fd);
+struct pool_node        *mapping_pool_addr(int fd);
 
-struct data_node        *get_pool_addr(int fd);
+struct data_node        *get_pool_data(int fd);
 
-void del_pool_addr(int fd);
+void del_pool_data(int fd);
 
+/*获取非0的无符号整数*/
+uint64_t make_a_cid(void);

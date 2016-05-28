@@ -59,13 +59,8 @@ enum
 
 // ---> *_api.h
 #include "http_api/http_status.h"
-#include "adopt_tasks/adopt_task.h"
-
-#ifdef _mttptest
-  #include "mttp.h"
-#endif
-
 #include "redis_api/redis_status.h"
+#include "adopt_tasks/adopt_task.h"
 /*************************************************/
 #define FETCH_MAX_CNT_MSG               "-you have time travel!\r\n"
 #define SERVER_BUSY_ALARM_FACTOR        10000
@@ -94,8 +89,6 @@ struct mcb_list
 };
 
 bool check_finish(int ptype, int sfd);
-
-void get_cache_data(int sfd, void *buff, int *size);
 
 #define MAX_LISTEN_COUNTS 10240
 

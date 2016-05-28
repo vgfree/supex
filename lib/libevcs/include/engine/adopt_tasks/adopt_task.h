@@ -47,6 +47,8 @@ typedef int (*TASK_VMS_FCB)(void *user, union virtual_system **VMS, struct adopt
 struct adopt_task_node
 {
 	int             id;		/**< 任务ID，任务ID在任务属性池中对应一组任务额外属性*/
+
+	uint64_t	cid;
 	int             sfd;		/**< 套接字描述符*/
 
 	char            type;		/**< 任务类型：线程池中所有线程响应、单个线程响应*/
