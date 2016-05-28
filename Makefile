@@ -95,7 +95,7 @@ SRV := $(openIMX) $(openHLS) \
 	gdgive bdgive gopath gomile ashman adcube adcube_v2\
 	spark releaseServer dfsdb tsdb \
 	timport msgimport rtimport simimport PMR dtsync pole-M pole-S tagpick trafficapi mttpServer mttpSvp rrtopo damR BRM mfptpServer pmrhttp weibo-S weibo-G
-# weidb club
+# club
 
 help:
 	@echo -e $(GREEN) "make libs first!" $(NONE)
@@ -292,11 +292,6 @@ weibo-G:
 	$(MAKE) -C ./programs/weibo-G MAIN_APP_SERV=weibo-G
 	@echo -e $(GREEN)"【"$(YELLOW) $@ $(GREEN)"】"$(RED)"\n-->OK!\n"$(NONE)
 
-weidb:
-	$(MAKE) -C ./programs/weidb MAIN_APP_SERV=weidb
-	@echo -e $(GREEN)"【"$(YELLOW) $@ $(GREEN)"】"$(RED)"\n-->OK!\n"$(NONE)
-
-
 useroptapi:
 	$(MAKE) -C ./programs/useroptapi MAIN_APP_SERV=useroptapi
 	@echo -e $(GREEN)"【"$(YELLOW) $@ $(GREEN)"】"$(RED)"\n-->OK!\n"$(NONE)
@@ -379,7 +374,6 @@ clean:
 	$(MAKE) -C ./programs/flyKite clean
 	$(MAKE) -C ./programs/ashman clean
 	$(MAKE) -C ./programs/weibo-G clean
-	$(MAKE) -C ./programs/weidb clean
 	$(MAKE) -C ./programs/BRM clean
 	$(MAKE) -C ./programs/roadRank clean
 	$(MAKE) -C ./programs/dtsync clean
@@ -414,7 +408,6 @@ distclean:
 	$(MAKE) -C ./programs/flyKite distclean
 	$(MAKE) -C ./programs/ashman distclean
 	$(MAKE) -C ./programs/weibo-G distclean
-	$(MAKE) -C ./programs/weidb distclean
 	$(MAKE) -C ./programs/BRM distclean
 	$(MAKE) -C ./programs/roadRank distclean
 	$(MAKE) -C ./programs/dtsync distclean
