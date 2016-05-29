@@ -7,7 +7,7 @@ INC_DIR=-I/usr/local/include/luajit-2.0 -I../../lib/libev -I../../lib/json-c \
 	-I../../lib/libevcoro/include \
 	-I../../lib/libevcs/include/engine \
 	-I../../lib/libevcs/include/frame \
-	-I./src
+	-I./src -I../
 
 
 
@@ -63,7 +63,7 @@ endif
 -include $(HOME_PATH)/share.mk
 #<------------------------>#
 
-ADD_OBJ += smart_evcoro_lua_api.o
+ADD_OBJ += smart_evcoro_lua_api.o lj_smart_util.o
 
 #<--------------------------->#
 
@@ -94,6 +94,9 @@ $(BIN)/%.o : $(BASE_SRC)/%.c
 	@-if [ ! -d $(BIN) ];then mkdir $(BIN); fi
 	gcc $(CFLAGS) $(INC_DIR) $(LIB_DIR) $(LIBS) -c $< -o $@
 
+$(BIN)/lj_smart_util.o : ../lj_smart_util.c
+	@-if [ ! -d $(BIN) ];then mkdir $(BIN); fi
+	gcc $(CFLAGS) $(INC_DIR) $(LIB_DIR) $(LIBS) -c $< -o $@
 
 push:
 	git push origin HEAD:refs/for/master

@@ -8,23 +8,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
-#include <lua.h>
-#include <lauxlib.h>
-#include <lualib.h>
+#include "lj_smart_util.h"
 
 int smart_vms_init(void *user, void *task);
-
-int smart_vms_exit(void *user, void *task);
-
-int smart_vms_cntl(void *user, void *task);
-
-int smart_vms_rfsh(void *user, void *task);
-
-int smart_vms_gain(void *user, void *task);
-
-int smart_vms_sync(void *user, void *task);
-
-int smart_vms_call(void *user, void *task);
-
-int smart_vms_exec(void *user, void *task);
 

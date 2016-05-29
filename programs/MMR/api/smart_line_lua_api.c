@@ -6,20 +6,6 @@
 #include "lua_mappoi.h"
 // #include "luakvcore.h"
 
-extern int sync_http(lua_State *L);
-
-extern int app_lua_get_head_data(lua_State *L);
-
-extern int app_lua_get_body_data(lua_State *L);
-
-extern int app_lua_get_path_data(lua_State *L);
-
-extern int app_lua_get_recv_data(lua_State *L);
-
-extern int app_lua_get_uri_args(lua_State *L);
-
-extern int app_lua_add_send_data(lua_State *L);
-
 static int _getProgName(lua_State *L)
 {
 	char            buff[32] = {};
