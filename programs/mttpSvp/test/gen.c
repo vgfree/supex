@@ -11,13 +11,13 @@
 
 void main(void)
 {
-	char head[2] = {0x10,0x20};
+	char head[3] = {0x10,0x00,0x02};
 	int fd = open(DO_FILE, O_WRONLY | O_CREAT, S_IRUSR | S_IWUSR);
 	if (fd == -1) {  
 		fprintf(stderr, "Open %s\n", DO_FILE);  
 		return;  
 	}  
-	int bytes = write(fd, head, 2);
+	int bytes = write(fd, head, sizeof(head));
 	unsigned int size = htonl(4);
 	bytes = write(fd, (char *)&size, 4);
 	bytes = write(fd, DO_DATA, strlen(DO_DATA));

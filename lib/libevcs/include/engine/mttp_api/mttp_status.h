@@ -7,9 +7,9 @@
 #include <string.h>
 #include <ctype.h>
 
-#define HEADLEN         6
+#define HEADLEN         7
 #define MTP_VERSION     0x10
-#define MTP_FORMAT      0x20
+#define MTP_FORMAT      0x00
 
 // typedef int (*GZIPDECOMPRESS_CB)(const char *src, int srcLen, char *dst);
 // typedef int (*PARSEFROMSTRING_CB)(char *src, size_t size, void **gpslist);
@@ -26,6 +26,7 @@ struct mttp_status
 {
 	unsigned short  mttp_version    : 8;
 	unsigned short  encryption      : 8;
+	unsigned short  operation       : 8;
 
 	unsigned short  head_len;
 	unsigned int    body_len;
