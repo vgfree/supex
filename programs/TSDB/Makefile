@@ -1,19 +1,23 @@
 BASE_SRC=./src
-ADDITION_SRC=../../engine
-INC_DIR=-I/usr/local/include/luajit-2.0 -I../../lib/libev \
-	-I../../lib/hiredis -I../../lib/json-c -I../../lib/cJSON \
-	-I../../lib/http-parser -I../../lib/libscco \
-	-I../../lib/libucmq/src -I../../engine \
-	-I../../engine/major -I../../engine/minor -I./src \
+INC_DIR=-I/usr/local/include/luajit-2.0 -I../../lib/libev -I../../lib/json-c \
+	-I../../lib/libkv/release \
+	-I../../lib/libmemhook/src \
+	-I../../lib/libscco/include \
+	-I../../lib/libcoro/include \
+	-I../../lib/libevcoro/include \
+	-I../../lib/libevcs/include/engine \
+	-I../../lib/libevcs/include/frame \
+	-I./src -I../ \
+	-I../../lib/hiredis \
 	-I../../lib/zookeeper-3.4.6/src/c/include \
 	-I../../lib/zookeeper-3.4.6/src/c/generated \
 	-I../../lib/leveldb-1.18/include \
 	-I../../lib/libkv/src
 
-LIB_DIR=-L/usr/local/lib -L../../lib -L../../engine/
+LIB_DIR=-L/usr/local/lib -L../../lib
 
-LIBS=-lluajit-5.1 -lpthread -lrt -lm -luuid -lstdc++ 
-LIBA=-ljson-c -lucmq -lcjson -lzookeeper_mt -lleveldb -lsnappy
+LIBS=-lluajit-5.1 -lstdc++ -lpthread -lrt -lm# -luuid
+LIBA=-ljson-c -lkv -lcjson -lzookeeper_mt -lleveldb -lsnappy
 
 #[=========>MARK<=========]#
 MAIN_APP_SERV ?= tsdb
@@ -23,11 +27,11 @@ CFLAGS += -DOPEN_COMPRESSION
 CFLAGS += -DOPEN_KV_EXPIRE
 
 ifeq ($(MAIN_APP_SERV), tsdb)
-HANDLE_MODEL = EVUV
+HANDLE_MODEL = EVCORO
 endif
 
 ifeq ($(MAIN_APP_SERV), dfsdb)
-HANDLE_MODEL = EVUV
+HANDLE_MODEL = EVCORO
 endif
 #<------------------------>#
 -include $(HOME_PATH)/programs/link.mk
@@ -37,7 +41,7 @@ endif
 
 #<--------------------------->#
 
-BIN=bin_$(MAIN_APP_SERV)
+BIN=./bin_$(MAIN_APP_SERV)
 BASE_OBJ = $(addprefix $(BIN)/, \
 	   $(ADD_OBJ) \
 	   main.o \
@@ -79,7 +83,7 @@ $(BIN)/%.o : $(BASE_SRC)/%.c
 	@-if [ ! -d $(BIN) ];then mkdir $(BIN); fi
 	gcc $(CFLAGS) $(INC_DIR) $(LIB_DIR) $(LIBS) -c $< -o $@
 
-$(BIN)/ldb.o : ../../engine/ldb.c
+$(BIN)/ldb.o : ../ldb.c
 	@-if [ ! -d $(BIN) ];then mkdir $(BIN); fi
 	gcc $(CFLAGS) $(INC_DIR) $(LIB_DIR) $(LIBS) -c $< -o $@
 

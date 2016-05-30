@@ -1,8 +1,8 @@
 #include <string.h>
 #include <stdlib.h>
 
-#include "redis_parse.h"
-#include "utils.h"
+#include "redis_api/redis_status.h"
+#include "base/utils.h"
 #include "tsdb_cfg.h"
 #include "tsdb_ldb.h"
 
@@ -80,21 +80,21 @@ int tsdb_ldb_close(void)
 int tsdb_ldb_set(struct data_node *p_node)
 {
 	int                     ok = 0;
-	char                    *p_buf = p_node->recv.buf_addr;
-	struct redis_status     *p_rst = &p_node->redis_info.rs;
+	char                    *p_buf = cache_data_address(&p_node->mdl_recv.cache);
+	struct redis_status     *p_rst = &p_node->mdl_recv.parse.redis_info.rs;
 
-	if ((LDB_READONLY_SWITCH == 1) || (p_rst->keys != 1) || (p_rst->vals != 1)) {
-		cache_add(&p_node->send, OPT_CMD_ERROR, strlen(OPT_CMD_ERROR));
+	if ((LDB_READONLY_SWITCH == 1) || (p_rst->fields != 2)) {
+		cache_append(&p_node->mdl_send.cache, OPT_CMD_ERROR, strlen(OPT_CMD_ERROR));
 		return X_EXECUTE_ERROR;
 	}
 
-	ok = binlog_put(s_ldb, p_buf + p_rst->key_offset[0], p_rst->klen_array[0], p_buf + p_rst->val_offset[0], p_rst->vlen_array[0]);
+	ok = binlog_put(s_ldb, p_buf + p_rst->field[0].offset, p_rst->field[0].len, p_buf + p_rst->field[1].offset, p_rst->field[1].len);
 
 	if ((ok == 0) || (ok == 1)) {
-		cache_add(&p_node->send, OPT_OK, strlen(OPT_OK));
+		cache_append(&p_node->mdl_send.cache, OPT_OK, strlen(OPT_OK));
 		return X_DONE_OK;
 	} else {
-		cache_add(&p_node->send, OPT_INTERIOR_ERROR, strlen(OPT_INTERIOR_ERROR));
+		cache_append(&p_node->mdl_send.cache, OPT_INTERIOR_ERROR, strlen(OPT_INTERIOR_ERROR));
 		return X_EXECUTE_ERROR;
 	}
 
@@ -106,19 +106,19 @@ int tsdb_ldb_del(struct data_node *p_node)
 	char                    ret_num[16] = { 0 };
 	int                     i = 0;
 	int                     ok = 0;
-	char                    *p_buf = p_node->recv.buf_addr;
-	struct redis_status     *p_rst = &p_node->redis_info.rs;
+	char                    *p_buf = cache_data_address(&p_node->mdl_recv.cache);
+	struct redis_status     *p_rst = &p_node->mdl_recv.parse.redis_info.rs;
 
-	if ((LDB_READONLY_SWITCH == 1) || (p_rst->keys < 1)) {
-		cache_add(&p_node->send, OPT_CMD_ERROR, strlen(OPT_CMD_ERROR));
+	if ((LDB_READONLY_SWITCH == 1) || (p_rst->fields < 1)) {
+		cache_append(&p_node->mdl_send.cache, OPT_CMD_ERROR, strlen(OPT_CMD_ERROR));
 		return X_EXECUTE_ERROR;
 	}
 
-	for (i = 0; i < p_rst->keys; ++i) {
-		ok = binlog_batch_delete(s_ldb, p_buf + p_rst->key_offset[i], p_rst->klen_array[i]);
+	for (i = 0; i < p_rst->fields; ++i) {
+		ok = binlog_batch_delete(s_ldb, p_buf + p_rst->field[i].offset, p_rst->field[i].len);
 
 		if (ok < 0) {
-			cache_add(&p_node->send, OPT_INTERIOR_ERROR, strlen(OPT_INTERIOR_ERROR));
+			cache_append(&p_node->mdl_send.cache, OPT_INTERIOR_ERROR, strlen(OPT_INTERIOR_ERROR));
 			return X_EXECUTE_ERROR;
 		}
 	}
@@ -126,12 +126,12 @@ int tsdb_ldb_del(struct data_node *p_node)
 	ok = binlog_batch_commit(s_ldb);
 
 	if (ok < 0) {
-		cache_add(&p_node->send, OPT_INTERIOR_ERROR, strlen(OPT_INTERIOR_ERROR));
+		cache_append(&p_node->mdl_send.cache, OPT_INTERIOR_ERROR, strlen(OPT_INTERIOR_ERROR));
 		return X_EXECUTE_ERROR;
 	}
 
-	sprintf(ret_num, OPT_NUMBER, p_rst->keys);
-	cache_add(&p_node->send, ret_num, strlen(ret_num));
+	sprintf(ret_num, OPT_NUMBER, p_rst->fields);
+	cache_append(&p_node->mdl_send.cache, ret_num, strlen(ret_num));
 
 	return X_DONE_OK;
 }
@@ -140,19 +140,19 @@ int tsdb_ldb_mset(struct data_node *p_node)
 {
 	int                     i = 0;
 	int                     ok = 0;
-	char                    *p_buf = p_node->recv.buf_addr;
-	struct redis_status     *p_rst = &p_node->redis_info.rs;
+	char                    *p_buf = cache_data_address(&p_node->mdl_recv.cache);
+	struct redis_status     *p_rst = &p_node->mdl_recv.parse.redis_info.rs;
 
-	if ((LDB_READONLY_SWITCH == 1) || (p_rst->keys < 1) || (p_rst->keys != p_rst->vals)) {
-		cache_add(&p_node->send, OPT_CMD_ERROR, strlen(OPT_CMD_ERROR));
+	if ((LDB_READONLY_SWITCH == 1) || (p_rst->fields < 1) || (p_rst->fields % 2 != 0)) {
+		cache_append(&p_node->mdl_send.cache, OPT_CMD_ERROR, strlen(OPT_CMD_ERROR));
 		return X_EXECUTE_ERROR;
 	}
 
-	for (i = 0; i < p_rst->keys; ++i) {
-		ok = binlog_batch_put(s_ldb, p_buf + p_rst->key_offset[i], p_rst->klen_array[i], p_buf + p_rst->val_offset[i], p_rst->vlen_array[i]);
+	for (i = 0; i < p_rst->fields; i = i + 2) {
+		ok = binlog_batch_put(s_ldb, p_buf + p_rst->field[i].offset, p_rst->field[i].len, p_buf + p_rst->field[i + 1].offset, p_rst->field[i + 1].len);
 
 		if (ok < 0) {
-			cache_add(&p_node->send, OPT_INTERIOR_ERROR, strlen(OPT_INTERIOR_ERROR));
+			cache_append(&p_node->mdl_send.cache, OPT_INTERIOR_ERROR, strlen(OPT_INTERIOR_ERROR));
 			return X_EXECUTE_ERROR;
 		}
 	}
@@ -160,11 +160,11 @@ int tsdb_ldb_mset(struct data_node *p_node)
 	ok = binlog_batch_commit(s_ldb);
 
 	if (ok < 0) {
-		cache_add(&p_node->send, OPT_INTERIOR_ERROR, strlen(OPT_INTERIOR_ERROR));
+		cache_append(&p_node->mdl_send.cache, OPT_INTERIOR_ERROR, strlen(OPT_INTERIOR_ERROR));
 		return X_EXECUTE_ERROR;
 	}
 
-	cache_add(&p_node->send, OPT_OK, strlen(OPT_OK));
+	cache_append(&p_node->mdl_send.cache, OPT_OK, strlen(OPT_OK));
 
 	return X_DONE_OK;
 }
@@ -174,39 +174,39 @@ int tsdb_ldb_get(struct data_node *p_node)
 	char                    *result = NULL;
 	int                     size = 0;
 	int                     ret = 0;
-	char                    *p_buf = p_node->recv.buf_addr;
-	struct redis_status     *p_rst = &p_node->redis_info.rs;
+	char                    *p_buf = cache_data_address(&p_node->mdl_recv.cache);
+	struct redis_status     *p_rst = &p_node->mdl_recv.parse.redis_info.rs;
 
-	result = ldb_get(s_ldb, p_buf + p_rst->key_offset[0], p_rst->klen_array[0], &size);
+	result = ldb_get(s_ldb, p_buf + p_rst->field[0].offset, p_rst->field[0].len, &size);
 
 	if (NULL != result) {
 		char tmp[32] = { 0 };
 
 		if (size == 0) {
 			free(result);
-			cache_add(&p_node->send, OPT_INTERIOR_ERROR, strlen(OPT_INTERIOR_ERROR));
+			cache_append(&p_node->mdl_send.cache, OPT_INTERIOR_ERROR, strlen(OPT_INTERIOR_ERROR));
 			return X_EXECUTE_ERROR;
 		}
 
 		sprintf(tmp, "$%d\r\n", size);
-		ret = cache_add(&p_node->send, tmp, strlen(tmp));
-		ret = cache_add(&p_node->send, result, size);
+		ret = cache_append(&p_node->mdl_send.cache, tmp, strlen(tmp));
+		ret = cache_append(&p_node->mdl_send.cache, result, size);
 		free(result);
 
 		if (ret == X_MALLOC_FAILED) {
-			cache_free(&p_node->send);
-			cache_add(&p_node->send, OPT_NO_MEMORY, strlen(OPT_NO_MEMORY));
+			cache_clean(&p_node->mdl_send.cache);
+			cache_append(&p_node->mdl_send.cache, OPT_NO_MEMORY, strlen(OPT_NO_MEMORY));
 			return X_MALLOC_FAILED;
 		}
 
-		ret = cache_add(&p_node->send, "\r\n", 2);
+		ret = cache_append(&p_node->mdl_send.cache, "\r\n", 2);
 		return X_DONE_OK;
 	} else {
 		if (size == 0) {
-			cache_add(&p_node->send, OPT_NULL, strlen(OPT_NULL));
+			cache_append(&p_node->mdl_send.cache, OPT_NULL, strlen(OPT_NULL));
 			return X_DONE_OK;
 		} else {
-			cache_add(&p_node->send, OPT_INTERIOR_ERROR, strlen(OPT_INTERIOR_ERROR));
+			cache_append(&p_node->mdl_send.cache, OPT_INTERIOR_ERROR, strlen(OPT_INTERIOR_ERROR));
 			return X_EXECUTE_ERROR;
 		}
 	}
@@ -218,26 +218,27 @@ int tsdb_ldb_lrange(struct data_node *p_node)
 {
 	char                    *result = NULL;
 	int                     size = 0;
-	char                    *p_buf = p_node->recv.buf_addr;
-	struct redis_status     *p_rst = &p_node->redis_info.rs;
+	char                    *p_buf = cache_data_address(&p_node->mdl_recv.cache);
+	struct redis_status     *p_rst = &p_node->mdl_recv.parse.redis_info.rs;
 
-	if ((p_rst->keys != 1) || (p_rst->vals != 2)) {
-		cache_add(&p_node->send, OPT_CMD_ERROR, strlen(OPT_CMD_ERROR));
+	if (p_rst->fields != 3) {
+		cache_append(&p_node->mdl_send.cache, OPT_CMD_ERROR, strlen(OPT_CMD_ERROR));
 		return X_EXECUTE_ERROR;
 	}
 
-	result = ldb_lrangeget(s_ldb, p_buf + p_rst->key_offset[0], p_rst->klen_array[0], p_buf + p_rst->val_offset[0], p_rst->vlen_array[0],
-			p_buf + p_rst->val_offset[1], p_rst->vlen_array[1], &size);
+	result = ldb_lrangeget(s_ldb, p_buf + p_rst->field[0].offset, p_rst->field[0].len, p_buf + p_rst->field[1].offset, p_rst->field[1].len,
+			p_buf + p_rst->field[2].offset, p_rst->field[2].len, &size);
 
 	if (result) {
-		cache_set(&p_node->send, result, size, size);
+		cache_append(&p_node->mdl_send.cache, result, size);
+		free(result);
 		return X_DONE_OK;
 	} else {
 		if (size == 0) {
-			cache_add(&p_node->send, OPT_EMPTY_MULTI, strlen(OPT_EMPTY_MULTI));
+			cache_append(&p_node->mdl_send.cache, OPT_EMPTY_MULTI, strlen(OPT_EMPTY_MULTI));
 			return X_DONE_OK;
 		} else {
-			cache_add(&p_node->send, OPT_INTERIOR_ERROR, strlen(OPT_INTERIOR_ERROR));
+			cache_append(&p_node->mdl_send.cache, OPT_INTERIOR_ERROR, strlen(OPT_INTERIOR_ERROR));
 			return X_EXECUTE_ERROR;
 		}
 	}
@@ -249,25 +250,26 @@ int tsdb_ldb_keys(struct data_node *p_node)
 {
 	char                    *result = NULL;
 	int                     size = 0;
-	char                    *p_buf = p_node->recv.buf_addr;
-	struct redis_status     *p_rst = &p_node->redis_info.rs;
+	char                    *p_buf = cache_data_address(&p_node->mdl_recv.cache);
+	struct redis_status     *p_rst = &p_node->mdl_recv.parse.redis_info.rs;
 
-	if (p_rst->keys != 1) {
-		cache_add(&p_node->send, OPT_CMD_ERROR, strlen(OPT_CMD_ERROR));
+	if (p_rst->fields != 1) {
+		cache_append(&p_node->mdl_send.cache, OPT_CMD_ERROR, strlen(OPT_CMD_ERROR));
 		return X_EXECUTE_ERROR;
 	}
 
-	result = ldb_keys(s_ldb, p_buf + p_rst->key_offset[0], p_rst->klen_array[0], &size);
+	result = ldb_keys(s_ldb, p_buf + p_rst->field[0].offset, p_rst->field[0].len, &size);
 
 	if (result) {
-		cache_set(&p_node->send, result, size, size);
+		cache_append(&p_node->mdl_send.cache, result, size);
+		free(result);
 		return X_DONE_OK;
 	} else {
 		if (size == 0) {
-			cache_add(&p_node->send, OPT_EMPTY_MULTI, strlen(OPT_EMPTY_MULTI));
+			cache_append(&p_node->mdl_send.cache, OPT_EMPTY_MULTI, strlen(OPT_EMPTY_MULTI));
 			return X_DONE_OK;
 		} else {
-			cache_add(&p_node->send, OPT_INTERIOR_ERROR, strlen(OPT_INTERIOR_ERROR));
+			cache_append(&p_node->mdl_send.cache, OPT_INTERIOR_ERROR, strlen(OPT_INTERIOR_ERROR));
 			return X_EXECUTE_ERROR;
 		}
 	}
@@ -279,25 +281,26 @@ int tsdb_ldb_values(struct data_node *p_node)
 {
 	char                    *result = NULL;
 	int                     size = 0;
-	char                    *p_buf = p_node->recv.buf_addr;
-	struct redis_status     *p_rst = &p_node->redis_info.rs;
+	char                    *p_buf = cache_data_address(&p_node->mdl_recv.cache);
+	struct redis_status     *p_rst = &p_node->mdl_recv.parse.redis_info.rs;
 
-	if (p_rst->keys != 1) {
-		cache_add(&p_node->send, OPT_CMD_ERROR, strlen(OPT_CMD_ERROR));
+	if (p_rst->fields != 1) {
+		cache_append(&p_node->mdl_send.cache, OPT_CMD_ERROR, strlen(OPT_CMD_ERROR));
 		return X_EXECUTE_ERROR;
 	}
 
-	result = ldb_values(s_ldb, p_buf + p_rst->key_offset[0], p_rst->klen_array[0], &size);
+	result = ldb_values(s_ldb, p_buf + p_rst->field[0].offset, p_rst->field[0].len, &size);
 
 	if (result) {
-		cache_set(&p_node->send, result, size, size);
+		cache_append(&p_node->mdl_send.cache, result, size);
+		free(result);
 		return X_DONE_OK;
 	} else {
 		if (size == 0) {
-			cache_add(&p_node->send, OPT_EMPTY_MULTI, strlen(OPT_EMPTY_MULTI));
+			cache_append(&p_node->mdl_send.cache, OPT_EMPTY_MULTI, strlen(OPT_EMPTY_MULTI));
 			return X_DONE_OK;
 		} else {
-			cache_add(&p_node->send, OPT_INTERIOR_ERROR, strlen(OPT_INTERIOR_ERROR));
+			cache_append(&p_node->mdl_send.cache, OPT_INTERIOR_ERROR, strlen(OPT_INTERIOR_ERROR));
 			return X_EXECUTE_ERROR;
 		}
 	}
@@ -313,14 +316,15 @@ int tsdb_ldb_info(struct data_node *p_node)
 	result = ldb_info(s_ldb, &size);
 
 	if (result) {
-		cache_set(&p_node->send, result, size, size);
+		cache_append(&p_node->mdl_send.cache, result, size);
+		free(result);
 		return X_DONE_OK;
 	} else {
 		if (size == 0) {
-			cache_add(&p_node->send, OPT_EMPTY_MULTI, strlen(OPT_EMPTY_MULTI));
+			cache_append(&p_node->mdl_send.cache, OPT_EMPTY_MULTI, strlen(OPT_EMPTY_MULTI));
 			return X_DONE_OK;
 		} else {
-			cache_add(&p_node->send, OPT_INTERIOR_ERROR, strlen(OPT_INTERIOR_ERROR));
+			cache_append(&p_node->mdl_send.cache, OPT_INTERIOR_ERROR, strlen(OPT_INTERIOR_ERROR));
 			return X_EXECUTE_ERROR;
 		}
 	}
@@ -330,7 +334,7 @@ int tsdb_ldb_info(struct data_node *p_node)
 
 int tsdb_ldb_ping(struct data_node *p_node)
 {
-	cache_add(&p_node->send, OPT_PONG, strlen(OPT_PONG));
+	cache_append(&p_node->mdl_send.cache, OPT_PONG, strlen(OPT_PONG));
 
 	return 0;
 }
@@ -339,13 +343,13 @@ int tsdb_ldb_exists(struct data_node *p_node)
 {
 	int                     ok = 0;
 	char                    ret_num[16] = { 0 };
-	char                    *p_buf = p_node->recv.buf_addr;
-	struct redis_status     *p_rst = &p_node->redis_info.rs;
+	char                    *p_buf = cache_data_address(&p_node->mdl_recv.cache);
+	struct redis_status     *p_rst = &p_node->mdl_recv.parse.redis_info.rs;
 
-	ok = ldb_exists(s_ldb, p_buf + p_rst->key_offset[0], p_rst->klen_array[0]);
+	ok = ldb_exists(s_ldb, p_buf + p_rst->field[0].offset, p_rst->field[0].len);
 
 	sprintf(ret_num, OPT_NUMBER, ok);
-	cache_add(&p_node->send, ret_num, strlen(ret_num));
+	cache_append(&p_node->mdl_send.cache, ret_num, strlen(ret_num));
 
 	return 0;
 }
@@ -353,21 +357,21 @@ int tsdb_ldb_exists(struct data_node *p_node)
 int tsdb_ldb_syncset(struct data_node *p_node)
 {
 	int                     ok = 0;
-	char                    *p_buf = p_node->recv.buf_addr;
-	struct redis_status     *p_rst = &p_node->redis_info.rs;
+	char                    *p_buf = cache_data_address(&p_node->mdl_recv.cache);
+	struct redis_status     *p_rst = &p_node->mdl_recv.parse.redis_info.rs;
 
-	if ((p_rst->keys != 1) || (p_rst->vals != 1)) {
-		cache_add(&p_node->send, OPT_CMD_ERROR, strlen(OPT_CMD_ERROR));
+	if (p_rst->fields != 2) {
+		cache_append(&p_node->mdl_send.cache, OPT_CMD_ERROR, strlen(OPT_CMD_ERROR));
 		return X_EXECUTE_ERROR;
 	}
 
-	ok = binlog_syncset(s_ldb, p_buf + p_rst->key_offset[0], p_rst->klen_array[0], p_buf + p_rst->val_offset[0], p_rst->vlen_array[0]);
+	ok = binlog_syncset(s_ldb, p_buf + p_rst->field[0].offset, p_rst->field[0].len, p_buf + p_rst->field[1].offset, p_rst->field[1].len);
 
 	if ((ok == 0) || (ok == 1)) {
-		cache_add(&p_node->send, OPT_OK, strlen(OPT_OK));
+		cache_append(&p_node->mdl_send.cache, OPT_OK, strlen(OPT_OK));
 		return X_DONE_OK;
 	} else {
-		cache_add(&p_node->send, OPT_INTERIOR_ERROR, strlen(OPT_INTERIOR_ERROR));
+		cache_append(&p_node->mdl_send.cache, OPT_INTERIOR_ERROR, strlen(OPT_INTERIOR_ERROR));
 		return X_EXECUTE_ERROR;
 	}
 
@@ -377,21 +381,21 @@ int tsdb_ldb_syncset(struct data_node *p_node)
 int tsdb_ldb_syncdel(struct data_node *p_node)
 {
 	int                     ok = 0;
-	char                    *p_buf = p_node->recv.buf_addr;
-	struct redis_status     *p_rst = &p_node->redis_info.rs;
+	char                    *p_buf = cache_data_address(&p_node->mdl_recv.cache);
+	struct redis_status     *p_rst = &p_node->mdl_recv.parse.redis_info.rs;
 
-	if (p_rst->keys < 1) {
-		cache_add(&p_node->send, OPT_CMD_ERROR, strlen(OPT_CMD_ERROR));
+	if (p_rst->fields < 1) {
+		cache_append(&p_node->mdl_send.cache, OPT_CMD_ERROR, strlen(OPT_CMD_ERROR));
 		return X_EXECUTE_ERROR;
 	}
 
-	ok = binlog_syncdel(s_ldb, p_buf + p_rst->key_offset[0], p_rst->klen_array[0]);
+	ok = binlog_syncdel(s_ldb, p_buf + p_rst->field[0].offset, p_rst->field[0].len);
 
 	if ((ok == 0) || (ok == 1)) {
-		cache_add(&p_node->send, OPT_OK, strlen(OPT_OK));
+		cache_append(&p_node->mdl_send.cache, OPT_OK, strlen(OPT_OK));
 		return X_DONE_OK;
 	} else {
-		cache_add(&p_node->send, OPT_INTERIOR_ERROR, strlen(OPT_INTERIOR_ERROR));
+		cache_append(&p_node->mdl_send.cache, OPT_INTERIOR_ERROR, strlen(OPT_INTERIOR_ERROR));
 		return X_EXECUTE_ERROR;
 	}
 
@@ -402,7 +406,7 @@ int tsdb_ldb_compact(struct data_node *p_node)
 {
 	ldb_compact(s_ldb);
 
-	cache_add(&p_node->send, OPT_OK, strlen(OPT_OK));
+	cache_append(&p_node->mdl_send.cache, OPT_OK, strlen(OPT_OK));
 
 	return X_DONE_OK;
 }

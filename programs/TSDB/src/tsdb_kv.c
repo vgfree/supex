@@ -37,7 +37,9 @@ int tsdb_kv_close(void)
 
 int tsdb_kv_set(struct data_node *p_node)
 {
-	struct redis_status     *p_rst = &p_node->redis_info.rs;
+	char                    *p_buf = cache_data_address(&p_node->mdl_recv.cache);
+	unsigned	u_size = cache_data_length(&p_node->mdl_recv.cache);
+	struct redis_status     *p_rst = &p_node->mdl_recv.parse.redis_info.rs;
 	kv_answer_t             *ans = NULL;
 	kv_answer_value_t       *value = 0;
 	unsigned long           count = 0;
@@ -46,17 +48,17 @@ int tsdb_kv_set(struct data_node *p_node)
 
 	assert(s_kv);
 
-	if ((p_rst->keys != 1) || (p_rst->vals != 1)) {
-		cache_add(&p_node->send, OPT_CMD_ERROR, strlen(OPT_CMD_ERROR));
+	if (p_rst->fields != 2) {
+		cache_append(&p_node->mdl_send.cache, OPT_CMD_ERROR, strlen(OPT_CMD_ERROR));
 		return X_EXECUTE_ERROR;
 	}
 
 	/* SET */
-	ans = kv_ask_proto(s_kv, p_node->recv.buf_addr, (unsigned int)p_node->recv.get_size);
+	ans = kv_ask_proto(s_kv, p_buf, (unsigned int)u_size);
 
 	if ((NULL == ans) || (ERR_NONE != ans->errnum)) {
 		kv_answer_release(ans);
-		cache_add(&p_node->send, OPT_INTERIOR_ERROR, strlen(OPT_INTERIOR_ERROR));
+		cache_append(&p_node->mdl_send.cache, OPT_INTERIOR_ERROR, strlen(OPT_INTERIOR_ERROR));
 		return X_EXECUTE_ERROR;
 	}
 
@@ -64,7 +66,7 @@ int tsdb_kv_set(struct data_node *p_node)
 
 	if (count != 1) {
 		kv_answer_release(ans);
-		cache_add(&p_node->send, OPT_INTERIOR_ERROR, strlen(OPT_INTERIOR_ERROR));
+		cache_append(&p_node->mdl_send.cache, OPT_INTERIOR_ERROR, strlen(OPT_INTERIOR_ERROR));
 		return X_EXECUTE_ERROR;
 	}
 
@@ -72,13 +74,13 @@ int tsdb_kv_set(struct data_node *p_node)
 
 	if ((NULL == value) || (NULL == value->ptr)) {
 		kv_answer_release(ans);
-		cache_add(&p_node->send, OPT_INTERIOR_ERROR, strlen(OPT_INTERIOR_ERROR));
+		cache_append(&p_node->mdl_send.cache, OPT_INTERIOR_ERROR, strlen(OPT_INTERIOR_ERROR));
 		return X_EXECUTE_ERROR;
 	}
 
 	if (strncasecmp("OK", (char *)(value->ptr), value->ptrlen) != 0) {
 		kv_answer_release(ans);
-		cache_add(&p_node->send, OPT_INTERIOR_ERROR, strlen(OPT_INTERIOR_ERROR));
+		cache_append(&p_node->mdl_send.cache, OPT_INTERIOR_ERROR, strlen(OPT_INTERIOR_ERROR));
 		return X_EXECUTE_ERROR;
 	}
 
@@ -87,8 +89,8 @@ int tsdb_kv_set(struct data_node *p_node)
 #ifdef OPEN_KV_EXPIRE
 	/* EXPIRE , err ingnore */
 	len += sprintf(cmd, "EXPIRE ");
-	memcpy(cmd + len, p_node->recv.buf_addr + p_rst->key_offset[0], p_rst->klen_array[0]);
-	len += (int)p_rst->klen_array[0];
+	memcpy(cmd + len, p_buf + p_rst->field[0].offset, p_rst->field[0].len);
+	len += (int)p_rst->field[0].len;
 	len += sprintf(cmd + len, " %d", DEFAULT_EXPIRE_TIME);
 
 	ans = kv_ask(s_kv, cmd, len);
@@ -111,36 +113,38 @@ int tsdb_kv_set(struct data_node *p_node)
 	kv_answer_release(ans);
 #endif	/* ifdef OPEN_KV_EXPIRE */
 
-	cache_add(&p_node->send, OPT_OK, strlen(OPT_OK));
+	cache_append(&p_node->mdl_send.cache, OPT_OK, strlen(OPT_OK));
 	return X_DONE_OK;
 }
 
 int tsdb_kv_del(struct data_node *p_node)
 {
-	struct redis_status     *p_rst = &p_node->redis_info.rs;
+	char                    *p_buf = cache_data_address(&p_node->mdl_recv.cache);
+	unsigned	u_size = cache_data_length(&p_node->mdl_recv.cache);
+	struct redis_status     *p_rst = &p_node->mdl_recv.parse.redis_info.rs;
 	kv_answer_t             *ans = NULL;
 	kv_answer_value_t       *value = 0;
 	unsigned long           count = 0;
 	char                    result[32] = { 0 };
 
-	if (p_rst->keys < 1) {
-		cache_add(&p_node->send, OPT_CMD_ERROR, strlen(OPT_CMD_ERROR));
+	if (p_rst->fields < 1) {
+		cache_append(&p_node->mdl_send.cache, OPT_CMD_ERROR, strlen(OPT_CMD_ERROR));
 		return X_EXECUTE_ERROR;
 	}
 
 	assert(s_kv);
 
-	ans = kv_ask_proto(s_kv, p_node->recv.buf_addr, (unsigned int)p_node->recv.get_size);
+	ans = kv_ask_proto(s_kv, p_buf, (unsigned int)u_size);
 
 	if ((NULL == ans) || (ERR_NONE != ans->errnum)) {
 		kv_answer_release(ans);
-		cache_add(&p_node->send, OPT_INTERIOR_ERROR, strlen(OPT_INTERIOR_ERROR));
+		cache_append(&p_node->mdl_send.cache, OPT_INTERIOR_ERROR, strlen(OPT_INTERIOR_ERROR));
 		return X_EXECUTE_ERROR;
 	}
 
 	if (ERR_NONE != ans->errnum) {
 		kv_answer_release(ans);
-		cache_add(&p_node->send, OPT_INTERIOR_ERROR, strlen(OPT_INTERIOR_ERROR));
+		cache_append(&p_node->mdl_send.cache, OPT_INTERIOR_ERROR, strlen(OPT_INTERIOR_ERROR));
 		return X_EXECUTE_ERROR;
 	}
 
@@ -148,7 +152,7 @@ int tsdb_kv_del(struct data_node *p_node)
 
 	if (count != 1) {
 		kv_answer_release(ans);
-		cache_add(&p_node->send, OPT_INTERIOR_ERROR, strlen(OPT_INTERIOR_ERROR));
+		cache_append(&p_node->mdl_send.cache, OPT_INTERIOR_ERROR, strlen(OPT_INTERIOR_ERROR));
 		return X_EXECUTE_ERROR;
 	}
 
@@ -156,12 +160,12 @@ int tsdb_kv_del(struct data_node *p_node)
 
 	if ((NULL == value) || (NULL == value->ptr)) {
 		kv_answer_release(ans);
-		cache_add(&p_node->send, OPT_INTERIOR_ERROR, strlen(OPT_INTERIOR_ERROR));
+		cache_append(&p_node->mdl_send.cache, OPT_INTERIOR_ERROR, strlen(OPT_INTERIOR_ERROR));
 		return X_EXECUTE_ERROR;
 	}
 
 	sprintf(result, ":%s\r\n", ((char *)value->ptr));
-	cache_add(&p_node->send, result, strlen(result));
+	cache_append(&p_node->mdl_send.cache, result, strlen(result));
 
 	kv_answer_release(ans);
 
@@ -170,7 +174,9 @@ int tsdb_kv_del(struct data_node *p_node)
 
 int tsdb_kv_mset(struct data_node *p_node)
 {
-	struct redis_status     *p_rst = &p_node->redis_info.rs;
+	char                    *p_buf = cache_data_address(&p_node->mdl_recv.cache);
+	unsigned	u_size = cache_data_length(&p_node->mdl_recv.cache);
+	struct redis_status     *p_rst = &p_node->mdl_recv.parse.redis_info.rs;
 	kv_answer_t             *ans = NULL;
 	kv_answer_value_t       *value = 0;
 	unsigned long           count = 0;
@@ -178,25 +184,25 @@ int tsdb_kv_mset(struct data_node *p_node)
 	char                    cmd[256] = { 0 };
 	int                     i = 0;
 
-	if ((p_rst->keys < 1) || (p_rst->keys != p_rst->vals)) {
-		cache_add(&p_node->send, OPT_CMD_ERROR, strlen(OPT_CMD_ERROR));
+	if ((p_rst->fields < 1) || (p_rst->fields % 2 != 0)) {
+		cache_append(&p_node->mdl_send.cache, OPT_CMD_ERROR, strlen(OPT_CMD_ERROR));
 		return X_EXECUTE_ERROR;
 	}
 
 	assert(s_kv);
 
 	/* MSET */
-	ans = kv_ask_proto(s_kv, p_node->recv.buf_addr, (unsigned int)p_node->recv.get_size);
+	ans = kv_ask_proto(s_kv, p_buf, (unsigned int)u_size);
 
 	if ((NULL == ans) || (ERR_NONE != ans->errnum)) {
 		kv_answer_release(ans);
-		cache_add(&p_node->send, OPT_INTERIOR_ERROR, strlen(OPT_INTERIOR_ERROR));
+		cache_append(&p_node->mdl_send.cache, OPT_INTERIOR_ERROR, strlen(OPT_INTERIOR_ERROR));
 		return X_EXECUTE_ERROR;
 	}
 
 	if (ERR_NONE != ans->errnum) {
 		kv_answer_release(ans);
-		cache_add(&p_node->send, OPT_INTERIOR_ERROR, strlen(OPT_INTERIOR_ERROR));
+		cache_append(&p_node->mdl_send.cache, OPT_INTERIOR_ERROR, strlen(OPT_INTERIOR_ERROR));
 		return X_EXECUTE_ERROR;
 	}
 
@@ -204,7 +210,7 @@ int tsdb_kv_mset(struct data_node *p_node)
 
 	if (count != 1) {
 		kv_answer_release(ans);
-		cache_add(&p_node->send, OPT_INTERIOR_ERROR, strlen(OPT_INTERIOR_ERROR));
+		cache_append(&p_node->mdl_send.cache, OPT_INTERIOR_ERROR, strlen(OPT_INTERIOR_ERROR));
 		return X_EXECUTE_ERROR;
 	}
 
@@ -212,13 +218,13 @@ int tsdb_kv_mset(struct data_node *p_node)
 
 	if ((NULL == value) || (NULL == value->ptr)) {
 		kv_answer_release(ans);
-		cache_add(&p_node->send, OPT_INTERIOR_ERROR, strlen(OPT_INTERIOR_ERROR));
+		cache_append(&p_node->mdl_send.cache, OPT_INTERIOR_ERROR, strlen(OPT_INTERIOR_ERROR));
 		return X_EXECUTE_ERROR;
 	}
 
 	if (strncasecmp("OK", ((char *)value->ptr), value->ptrlen) != 0) {
 		kv_answer_release(ans);
-		cache_add(&p_node->send, OPT_INTERIOR_ERROR, strlen(OPT_INTERIOR_ERROR));
+		cache_append(&p_node->mdl_send.cache, OPT_INTERIOR_ERROR, strlen(OPT_INTERIOR_ERROR));
 		return X_EXECUTE_ERROR;
 	}
 
@@ -226,10 +232,10 @@ int tsdb_kv_mset(struct data_node *p_node)
 
 #ifdef OPEN_KV_EXPIRE
 	/* EXPIRE , err ingnore */
-	for (i = 0; i < p_rst->keys; ++i) {
+	for (i = 0; i < p_rst->fields; i = i + 2) {
 		len = sprintf(cmd, "EXPIRE ");
-		memcpy(cmd + len, p_node->recv.buf_addr + p_rst->key_offset[i], p_rst->klen_array[i]);
-		len += (int)p_rst->klen_array[0];
+		memcpy(cmd + len, p_buf + p_rst->field[i].offset, p_rst->field[i].len);
+		len += (int)p_rst->field[i].len;
 		len += sprintf(cmd + len, " %d", DEFAULT_EXPIRE_TIME);
 		cmd[len] = '\0';
 
@@ -255,42 +261,44 @@ int tsdb_kv_mset(struct data_node *p_node)
 	}
 #endif	/* ifdef OPEN_KV_EXPIRE */
 
-	cache_add(&p_node->send, OPT_OK, strlen(OPT_OK));
+	cache_append(&p_node->mdl_send.cache, OPT_OK, strlen(OPT_OK));
 
 	return X_DONE_OK;
 }
 
 int tsdb_kv_get(struct data_node *p_node)
 {
-	struct redis_status     *p_rst = &p_node->redis_info.rs;
+	char                    *p_buf = cache_data_address(&p_node->mdl_recv.cache);
+	unsigned	u_size = cache_data_length(&p_node->mdl_recv.cache);
+	struct redis_status     *p_rst = &p_node->mdl_recv.parse.redis_info.rs;
 	kv_answer_t             *ans = NULL;
 	kv_answer_value_t       *value = 0;
 	unsigned long           count = 0;
 	char                    tmp[32] = { 0 };
 	int                     ret = 0;
 
-	if (p_rst->keys < 1) {
-		cache_add(&p_node->send, OPT_CMD_ERROR, strlen(OPT_CMD_ERROR));
+	if (p_rst->fields < 1) {
+		cache_append(&p_node->mdl_send.cache, OPT_CMD_ERROR, strlen(OPT_CMD_ERROR));
 		return X_EXECUTE_ERROR;
 	}
 
 	assert(s_kv);
 
-	ans = kv_ask_proto(s_kv, p_node->recv.buf_addr, (unsigned int)p_node->recv.get_size);
+	ans = kv_ask_proto(s_kv, p_buf, (unsigned int)u_size);
 
 	if (NULL == ans) {
 		kv_answer_release(ans);
-		cache_add(&p_node->send, OPT_INTERIOR_ERROR, strlen(OPT_INTERIOR_ERROR));
+		cache_append(&p_node->mdl_send.cache, OPT_INTERIOR_ERROR, strlen(OPT_INTERIOR_ERROR));
 		return X_EXECUTE_ERROR;
 	}
 
 	if (ERR_NIL == ans->errnum) {
 		kv_answer_release(ans);
-		cache_add(&p_node->send, OPT_NULL, strlen(OPT_NULL));
+		cache_append(&p_node->mdl_send.cache, OPT_NULL, strlen(OPT_NULL));
 		return X_DONE_OK;
 	} else if (ERR_NONE != ans->errnum) {
 		kv_answer_release(ans);
-		cache_add(&p_node->send, OPT_INTERIOR_ERROR, strlen(OPT_INTERIOR_ERROR));
+		cache_append(&p_node->mdl_send.cache, OPT_INTERIOR_ERROR, strlen(OPT_INTERIOR_ERROR));
 		return X_EXECUTE_ERROR;
 	}
 
@@ -298,7 +306,7 @@ int tsdb_kv_get(struct data_node *p_node)
 
 	if (count != 1) {
 		kv_answer_release(ans);
-		cache_add(&p_node->send, OPT_INTERIOR_ERROR, strlen(OPT_INTERIOR_ERROR));
+		cache_append(&p_node->mdl_send.cache, OPT_INTERIOR_ERROR, strlen(OPT_INTERIOR_ERROR));
 		return X_EXECUTE_ERROR;
 	}
 
@@ -306,22 +314,22 @@ int tsdb_kv_get(struct data_node *p_node)
 
 	if ((NULL == value) || (NULL == value->ptr) || (0 == value->ptrlen)) {
 		kv_answer_release(ans);
-		cache_add(&p_node->send, OPT_INTERIOR_ERROR, strlen(OPT_INTERIOR_ERROR));
+		cache_append(&p_node->mdl_send.cache, OPT_INTERIOR_ERROR, strlen(OPT_INTERIOR_ERROR));
 		return X_EXECUTE_ERROR;
 	}
 
 	sprintf(tmp, "$%d\r\n", (int)value->ptrlen);
-	ret = cache_add(&p_node->send, tmp, strlen(tmp));
-	ret = cache_add(&p_node->send, ((char *)value->ptr), (int)value->ptrlen);
+	ret = cache_append(&p_node->mdl_send.cache, tmp, strlen(tmp));
+	ret = cache_append(&p_node->mdl_send.cache, ((char *)value->ptr), (int)value->ptrlen);
 
 	if (ret == X_MALLOC_FAILED) {
-		cache_free(&p_node->send);
-		cache_add(&p_node->send, OPT_NO_MEMORY, strlen(OPT_NO_MEMORY));
+		cache_clean(&p_node->mdl_send.cache);
+		cache_append(&p_node->mdl_send.cache, OPT_NO_MEMORY, strlen(OPT_NO_MEMORY));
 		kv_answer_release(ans);
 		return X_MALLOC_FAILED;
 	}
 
-	ret = cache_add(&p_node->send, "\r\n", 2);
+	ret = cache_append(&p_node->mdl_send.cache, "\r\n", 2);
 
 	kv_answer_release(ans);
 

@@ -1,15 +1,12 @@
 #include "major_def.h"
-#include "swift_api.h"
-#include "swift_task.h"
+#include "major/swift_api.h"
 
 #include "tsdb_api.h"
 
 #define DEFINE_SWIFT_LDB_FUNC(name)						     \
-	int swift_ldb_##name(void *W)						     \
+	int swift_ldb_##name(void *user, union virtual_system **VMS, struct adopt_task_node *task) \
 	{									     \
-		SWIFT_WORKER_PTHREAD    *p_swift_worker = (SWIFT_WORKER_PTHREAD *)W; \
-		struct swift_task_node  *swift_task = &p_swift_worker->task;	     \
-		struct data_node        *p_node = get_pool_addr(swift_task->sfd);    \
+		struct data_node        *p_node = get_pool_data(task->sfd);    \
 										     \
 		return tsdb_cmd_##name(p_node);					     \
 	}
