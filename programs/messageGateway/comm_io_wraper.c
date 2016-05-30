@@ -56,61 +56,6 @@ int init_comm_io()
   struct cbinfo callback_info = {};
   callback_info.callback = core_exchange_node_cb;
 
-/*  int count = 1;
-  if (port) {
-    char *ptr = port;
-    while (*ptr != '\0' ) {
-      if (*ptr == ';') {
-        count++;
-      }
-      ptr++;
-    }
-  }
-  else {
-    count = 0;
-  }
-  log("node server number:%d", count);
-  char *ipptr = ip;
-  char *portptr = port;
-  for (int i = 0; i < count; i++) {
-    char ipbuf[20];
-    char portbuf[10];
-    int j = 0;
-    while (*ipptr != ';') {
-      if (*ipptr == '\0') {
-        break;
-      }
-      ipbuf[j] = *ipptr;
-      ipptr++;
-      j++;
-    }
-    ipptr++;
-    ipbuf[j] = '\0';
-    j = 0;
-    while (*portptr != ';') {
-      if (*portptr == '\0') {
-        break;
-      }
-      portbuf[j] = *portptr;
-      portptr++;
-      j++;
-    }
-    portptr++;
-    portbuf[j] = '\0';
-    log("comm_socket before:ip:%s, port:%s.", ipbuf, portbuf);
-    int connectfd = comm_socket(g_commctx, ipbuf, portbuf, &callback_info, COMM_CONNECT);
-    log("connectfd:%d", connectfd);
-    if (connectfd == -1) {
-      error("can't connect socket, ip:%s, port:%s.", ipbuf, portbuf);
-      continue;
-    }
-    if (g_node_ptr->max_size > NODE_SIZE) {
-      error("core exchange node:%d > max size:%d.", g_node_ptr->max_size, NODE_SIZE);
-    }
-    g_node_ptr->fd_array[g_node_ptr->max_size++] = connectfd;
-    log("g_node_ptr->max_size:%d.", g_node_ptr->max_size);
-    //send_validate_logon_package(connectfd);
-  }*/
   char *nodeServer = get_config_name(config, NODE_SERVER_IP);
   char *nodePort = get_config_name(config, NODE_SERVER_PORT);
   log("nodeServer:%s, nodePort:%s.", nodeServer, nodePort);

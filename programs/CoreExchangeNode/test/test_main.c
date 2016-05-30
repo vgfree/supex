@@ -1,11 +1,12 @@
 #include "core_exchange_node_test.h"
-//#include "loger.h"
 
+#include <assert.h>
 #include <string.h>
 #include <stdio.h>
+#include <pthread.h>
 
 #define MAX_LINE_LEN 1024
-char g_cmd_string[10][20] = {};
+/*char g_cmd_string[10][20] = {};
 char g_buf[MAX_LINE_LEN] = {};
 int g_cmd_num = 0;
 
@@ -88,14 +89,18 @@ static int exec_cmd()
     print_help();
   }
   return 0;
-}
+}*/
 
 //struct CSLog *g_imlog = NULL;
 
+void *multi_client(void *usr)
+{
+  test_simulate_client((char*)usr);
+}
 int main(int argc, char *argv[])
 {
 //  g_imlog = CSLog_create("test", WATCH_DELAY_TIME);
-  for (int i = 0; i < argc; i++) {
+  /*for (int i = 0; i < argc; i++) {
     printf("%s\n", argv[i]);
   }
   printf("\n---------------------------------tested start:----------------------------\n");
@@ -111,7 +116,16 @@ int main(int argc, char *argv[])
 	if (exec_cmd() == -1) {
       break;
 	}		
-  }
+  }*/
 //  CSLog_destroy(g_imlog);
+  if (argc != 3) {
+    printf("arg not right\n");
+	return -1;
+  }
+  for (int i = 0; i < atoi(argv[1]); i++) {
+    pthread_t tid;
+    assert(pthread_create(&tid, NULL, multi_client, argv[2]) == 0);
+  }
+  while(1);
   return 0;
 }

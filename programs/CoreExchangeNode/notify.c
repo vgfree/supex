@@ -55,7 +55,6 @@ void message_gateway_event_notify(struct comm_context *commctx,
         return;
       }
       array_remove_fd(portinfo->fd);
-      log("array_remove_fd.");
 
       if (g_serv_info.message_gateway_fd == portinfo->fd) {
         g_serv_info.message_gateway_fd = 0;
@@ -94,7 +93,6 @@ void setting_server_event_notify(struct comm_context *commctx,
         return;
       }
       array_remove_fd(portinfo->fd);
-      log("array_remove_fd.");
 
       if (g_serv_info.setting_server_fd == portinfo->fd) {
         error("setting_server failed.");
@@ -134,7 +132,6 @@ void login_server_event_notify(struct comm_context *commctx,
         return;
       }
       array_remove_fd(portinfo->fd);
-      log("array_remove_fd.");
 
       if (g_serv_info.login_server_fd == portinfo->fd) {
         g_serv_info.login_server_fd = 0;

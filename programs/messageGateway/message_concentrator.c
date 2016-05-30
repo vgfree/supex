@@ -16,7 +16,6 @@ int message_fountain()
   pthread_t ntid;
   pull_thread(&ntid);
   while (1) {
-    log("message_fountain.");
     upstream_msg();
   }
   void *status;
@@ -26,7 +25,6 @@ int message_fountain()
 
 static void *_fountain_thread(void *usr)
 {
-  log("_fountain_thread.\n");
   assert(init_comm_io() == 0);
   assert(init_zmq_io() == 0);
   message_fountain();

@@ -9,7 +9,7 @@ int test_uid_map();
 
 int test_gid_map();
 
-int test_simulate_client();
+int test_simulate_client(char *ip);
 
 int test_simulate_gateway();
 

@@ -54,7 +54,7 @@ int init_comm_io()
   char *nodeServer = get_config_name(config, NODE_SERVER_IP);
   char *nodePort = get_config_name(config, NODE_SERVER_PORT);
   log("nodeServer:%s, nodePort:%s.", nodeServer, nodePort);
-  comm_socket(g_commctx, nodeServer, nodePort, &callback_info, COMM_BIND);
+  assert(comm_socket(g_commctx, nodeServer, nodePort, &callback_info, COMM_BIND) != -1);
   destroy_config_reader(config);
   return 0;
 }

@@ -5,8 +5,8 @@ CFLAG = -O2 -W -Wall
 
 INCLUDE_PATH = -I. -I../ -I../../../lib/libcomm -I../../../lib/utils  -I../../../lib/libkv/src
 TARGET = test
-OBJ = gid_map.o uid_map.o test_uid_map.o test_gid_map.o gateway_simulation.o client_simulation.o test_main.o
-SRC = ../gid_map.c ../uid_map.c test_uid_map.c test_gid_map.c gateway_simulation.c client_simulation.c test_main.c
+OBJ = client_simulation.o test_main.o
+SRC = client_simulation.c test_main.c
 
 all: $(TARGET)
 $(OBJ): $(SRC)

@@ -33,7 +33,6 @@ struct CSLog* g_imlog = NULL;
 
 static int init() {
   g_imlog = CSLog_create(MODULE_NAME, WATCH_DELAY_TIME);
-  log("init");
   struct config_reader *config =
     init_config_reader(CONFIG);
   char *clientIP = get_config_name(config, LISTEN_CLIENT_IP);
@@ -161,10 +160,8 @@ int main(int argc, char* argv[])
     error("server init failed.");
     return -1;
   }
-  log("");
   
   while (1) {
-    log("message loop");
     message_dispatch();
   }
   array_destroy();

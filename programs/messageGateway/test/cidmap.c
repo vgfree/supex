@@ -32,8 +32,8 @@ char *get_first_cid()
   int size = g_cid_map.cid[g_index]._end - g_cid_map.cid[g_index]._front + 1;
   char *cid = malloc(size * sizeof(char));
 
-  memset(cid, 0, size);
   memcpy(cid, g_cid_map.buf + g_cid_map.cid[g_index]._front, size - 1);
+  cid[size - 1] = '\0';
   return cid;
 }
 
@@ -47,8 +47,8 @@ char *get_next_cid()
   int size = g_cid_map.cid[g_index]._end - g_cid_map.cid[g_index]._front + 1;
   char *cid = malloc(size * sizeof(char));
 
-  memset(cid, 0, size);
   memcpy(cid, g_cid_map.buf + g_cid_map.cid[g_index]._front, size - 1);
+  cid[size - 1] = '\0';
   return cid;
 }
 
