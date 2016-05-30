@@ -117,6 +117,7 @@ struct evcoro_scheduler *evcoro_create(int bolt);
 void evcoro_destroy(struct evcoro_scheduler *scheduler, evcoro_destroycb destroy);
 
 /* ------------------------------------------------------ */
+int evcoro_evdo(struct evcoro_scheduler *scheduler);
 
 /**
  * 开始循环调度，如果没有加入协程（任务函数），将空转；
@@ -129,7 +130,6 @@ int evcoro_once(struct evcoro_scheduler *scheduler, evcoro_taskcb idle, void *us
 
 int evcoro_loop(struct evcoro_scheduler *scheduler, evcoro_taskcb idle, void *usr);
 
-int evcoro_evdo(struct evcoro_scheduler *scheduler);
 
 /**
  * 加入一个协程（任务），新加入的协程要待下一次循环才会调度。
