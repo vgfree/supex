@@ -34,6 +34,10 @@ void load_smart_cfg_file(struct smart_cfg_file *p_cfg, char *name)
 		p_cfg->worker_counts = (short)json_object_get_int(obj);
 	} else { goto fail; }
 
+	if (json_object_object_get_ex(cfg, "smart_tasker_counts", &obj)) {
+		p_cfg->tasker_counts = (short)json_object_get_int(obj);
+	} else { goto fail; }
+
 	if (json_object_object_get_ex(cfg, "smart_monitor_times", &obj)) {
 		p_cfg->monitor_times = (short)json_object_get_int(obj);
 	} else { goto fail; }
@@ -47,12 +51,6 @@ void load_smart_cfg_file(struct smart_cfg_file *p_cfg, char *name)
 			p_cfg->ptype = USE_REDIS_PROTO;
 		}
 	} else { goto fail; }
-
-#ifdef OPEN_SCCO
-	if (json_object_object_get_ex(cfg, "smart_tasker_counts", &obj)) {
-		p_cfg->tasker_counts = (short)json_object_get_int(obj);
-	} else { goto fail; }
-#endif
 
 	if (json_object_object_get_ex(cfg, "max_req_size", &obj)) {
 		p_cfg->max_req_size = json_object_get_int(obj);
