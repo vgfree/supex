@@ -7,7 +7,7 @@ INC_DIR=-I/usr/local/include/luajit-2.0 -I../../lib/libev -I../../lib/json-c \
 	-I../../lib/libevcoro/include \
 	-I../../lib/libevcs/include/engine \
 	-I../../lib/libevcs/include/frame \
-	-I./src
+	-I./src -I../
 
 
 
@@ -18,9 +18,6 @@ LIBA=-lucmq -lcjson -lmini -ljson-c
 #[=========>MARK<=========]#
 MAIN_APP_SERV ?= mttpSvp
 
-#CFLAGS +=-DSTORE_USE_UCMQ
-CFLAGS +=-DSTORE_USE_QUEUE
-#CFLAGS += -DSTORE_USE_UCMQ_AND_QUEUE
 
 ifeq ($(MAIN_APP_SERV), mttpSvp)
 HANDLE_MODEL = EVCORO
@@ -39,6 +36,9 @@ BASE_OBJ = $(addprefix $(BIN)/, \
 	   main.o \
 	   load_alive_cfg.o \
 	   alive_cpp_api.o \
+	   load_sniff_cfg.o \
+	   sniff_evcoro_lua_api.o \
+	   lj_sniff_util.o \
 	   )
 
 OBJ ?= $(BASE_OBJ)
@@ -56,6 +56,11 @@ $(SRV):$(OBJ)
 $(BIN)/%.o : $(BASE_SRC)/%.c
 	@-if [ ! -d $(BIN) ];then mkdir $(BIN); fi
 	gcc $(CFLAGS) $(INC_DIR) $(LIB_DIR) $(LIBS) -c $< -o $@
+
+$(BIN)/lj_sniff_util.o : ../lj_sniff_util.c
+	@-if [ ! -d $(BIN) ];then mkdir $(BIN); fi
+	gcc $(CFLAGS) $(INC_DIR) $(LIB_DIR) $(LIBS) -c $< -o $@
+
 
 push:
 	git push origin HEAD:refs/for/master
