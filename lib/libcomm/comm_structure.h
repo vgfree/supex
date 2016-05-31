@@ -23,6 +23,7 @@ extern "C" {
 #define	EPOLL_SIZE		1000	/* 允许EPOLL能够监听的描述符的最大个数 */
 #define LISTEN_SIZE		10	/* 允许监听fd的最大个数 */
 #define COMM_FRAMES		13	/* 允许一个包最大的总帧数 */
+#define	REMAINFD_INCREASE_SIZE	10	/* remainfd扩容时的增加幅度 */
 
 /* 获取struct comm_message结构体中成员变量list的偏移大小 */
 #define	COMMMSG_OFFSET		({ struct comm_message message;	\
@@ -70,11 +71,11 @@ struct comm_context {
 	pthread_t		ptid;			/* 新线程的pid */
 	struct comm_event*	commevent;		/* 事件驱动的相关信息 */
 	struct comm_queue	recvqueue;		/* 存放已经接收到并解析好的数据 */
+	struct comm_list	recvlist;		/* 当recvqueue已满时放入此链表中 */
 	struct comm_pipe	commpipe;		/* 关于管道的相关信息 */
 	struct comm_lock	recvlock;		/* 用来同步接收队列的锁*/
 	struct comm_lock	statlock;		/* 用来同步stat的状态 */
 	struct comm_epoll	commepoll;		/* epoll监听事件的相关信息 */
-	struct comm_list	msghead;		/* 消息结构体链表的头节点 */
 	enum {
 		COMM_STAT_NONE,
 		COMM_STAT_INIT,
@@ -86,18 +87,26 @@ struct comm_context {
 
 /********************************  以下为内部结构体 外部无需关心 ********************************************/
 
+/* 残留的fd的类型 */
+enum remainfd_type {
+	REMAINFD_WRITE = 0x01,
+	REMAINFD_READ,
+	REMAINFD_PARSE,
+	REMAINFD_PACK
+};
+
 /* 此结构体保存发送接收时没成功处理完的fd */
 struct  remainfd {
-	int	wpcnt;				/* 没有及时发送消息或没有打包完毕[发送队列里面还存在没有打包完的数据]fd的总计数 */
-	int	rpcnt;				/* 没有及时接收消息或没有解析完毕[接收缓冲里面还存在没有解析完的数据]fd的总计数 */
-	int	wpfda[EPOLL_SIZE/4];		/* 没有及时发送消息或者没有打包完的fd都会先打包然后发送数据， 所以无需区分类型 */
-	struct rpfds{				/* 没有及时接收到消息的fd会去接收消息然后解析，没有解析完毕的fd只需进行解析就行了*/
-		enum {
-			REMAIN_READ = 0x01,	/* 残留的对应fd属于读事件失败，尝试重读 */
-			REMAIN_PARSE		/* 残留的对应fd属于没有解析完毕，继续解析 */
-		}	type[EPOLL_SIZE/4];
-		int	fda[EPOLL_SIZE/4];	/* 保存出现意外没有及时读取消息或没有解析完数据的fd */
-	}rpfds;					/* 读和解析残留的所有fd */
+	bool	init;		/* 此结构体是否正确被初始化 */
+	int	capacity;	/* 能够保存未处理完毕的fd的总数 */
+	int	wcnt;		/* 写事件没有处理完的fd的总计数 */
+	int	rcnt;		/* 读事件没有处理完的fd的总计数 */
+	int	packcnt;	/* 打包没有处理完的fd的总计数 */
+	int	parscnt;	/* 解析没有处理完的fd的总计数 */
+	int*	wfda;		/* 用于保存写事件没有处理完的fd的首地址 */
+	int*	rfda;		/* 用于保存读事件没有处理完的fd的首地址 */
+	int*	packfda;	/* 用于保存打包没有处理完的fd的首地址 */
+	int*	parsfda;	/* 用于保存解析没有处理完的fd的首地址 */
 };
 
 /* 监听描述符的相关信息 */
@@ -110,6 +119,7 @@ struct listenfd {
 /* 每个fd对应的数据相关信息 */
 struct comm_data {
 	struct comm_queue	send_queue;	/* 存放用户传递但并未打包的数据 */
+	struct comm_list	send_list;	/* 当send_queue队列已满时放入此链表中 */
 	struct comm_cache	recv_cache;	/* 存放接收但并未解析的数据 read函数使用 */
 	struct comm_cache	send_cache;	/* 存放需要发送并已经打包的数据 write函数使用 package函数使用 */
 	struct comm_lock	sendlock;	/* send_queue的锁 */
@@ -143,8 +153,20 @@ void copy_commmsg(struct comm_message* destmsg, const struct comm_message* srcms
 /* 销毁comm_message的结构体 @arg:类型为struct comm_message，这里为void是为了符合回调函数的参数模式 */
 void free_commmsg(void* arg);
 
+/* 初始化一个struct remainfd结构体 */
+bool init_remainfd(struct remainfd *remainfd);
 
+/* 将扩容的部分恢复到原始的大小 */
+bool restore_remainfd(struct remainfd *remainfd);
 
+/* 释放struct remainfd里面分配的内存 */
+void free_remainfd(struct remainfd *remainfd);
+
+/* 添加一个未处理完的fd @fd:待添加的fd @type:待添加的fd的类型[remainfd_type] */
+bool add_remainfd(struct remainfd *remainfd, int fd, int type);
+
+/* 删除一个未处理完的fd @fd:待删除的fd @type:待添加的fd的类型[remainfd_type] */
+void del_remainfd(struct remainfd *remainfd, int fd, int type);
 
 #ifdef __cplusplus
 	}

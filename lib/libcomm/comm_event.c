@@ -27,6 +27,9 @@ bool commevent_init(struct comm_event **commevent, struct comm_context *commctx)
 
 	New(*commevent);
 	if (*commevent) {
+		if (unlikely(!init_remainfd(&((*commevent)->remainfd)))) {
+			return false;
+		}
 		(*commevent)->init = true;
 		(*commevent)->commctx = commctx;
 	}
@@ -56,6 +59,7 @@ void commevent_destroy(struct comm_event *commevent)
 		commevent->init = false;
 		Free(commevent);
 	}
+	free_remainfd(&commevent->remainfd);
 	return ;
 }
 
@@ -98,22 +102,19 @@ void commevent_recv(struct comm_event *commevent, int fd, bool remainfd)
 	struct comm_data *commdata = NULL;
 
 	if ((commdata = (struct comm_data*)commevent->data[fd])) {
-		if (_read_data(commevent, commdata)) {
-			/* 返回真，判断commevent->data[fd]不为0说明读取数据成功 再进行解析 */
-			if (commevent->data[fd] && commdata_parse(commdata, commevent, false)) {
-				/* 解析成功之后恢复cache的缓冲区 */
-				commcache_restore(&commdata->recv_cache);
-			}
-			if (remainfd) {
-				commevent->remainfd.rpcnt -= 1;
-			}
-		} else {
-			/* 读取数据失败 */
-			commevent->remainfd.rpfds.fda[commevent->remainfd.rpcnt] = fd;
-			commevent->remainfd.rpfds.type[commevent->remainfd.rpcnt] = REMAIN_READ;
-			commevent->remainfd.rpcnt += 1;
+		if (unlikely(!_read_data(commevent, commdata))) {
+			add_remainfd(&commevent->remainfd, fd, REMAINFD_READ);
+		} else if (commevent->data[fd] && remainfd) {
+			del_remainfd(&commevent->remainfd, fd, REMAINFD_READ);
 		}
+
+		if (commevent->data[fd]) {
+			commdata_parse(commdata, commevent);
+		}
+	} else if (remainfd) {
+		del_remainfd(&commevent->remainfd, fd, REMAINFD_READ);
 	}
+	log("commevent_recv rcnt:%d wcnt:%d packcnt:%d parscnt:%d\n",commevent->remainfd.rcnt, commevent->remainfd.wcnt, commevent->remainfd.packcnt, commevent->remainfd.parscnt);
 	return ;
 }
 
@@ -126,22 +127,16 @@ void  commevent_send(struct comm_event *commevent, int fd, bool remainfd)
 
 	if ((commdata = (struct comm_data*)commevent->data[fd])) {
 		/* 先进行打包数据 打包成功再发送数据 */
-		if (commdata_package(commdata, commevent)) {
-			if (commdata->commtcp.stat == FD_WRITE) {
-				if (!_write_data(commevent, commdata)) {
-					/* 数据发送失败 将此fd保存起来 下次进行处理 */
-					commevent->remainfd.wpfda[commevent->remainfd.wpcnt] = fd;
-					commevent->remainfd.wpcnt += 1;
-				} else if (remainfd) {
-					/* 处理的是残留的fd并且成功处理完毕 */
-					commevent->remainfd.wpcnt -= 1;
-				}
-			} else {
-				/* 强制性触发的第一次，将FD_INIT状态改为FD_WRITE*/
-				commdata->commtcp.stat = FD_WRITE;
-			}
+		commdata_package(commdata, commevent);
+		if (unlikely(!_write_data(commevent, commdata))) {
+			add_remainfd(&commevent->remainfd, fd, REMAINFD_WRITE);
+		} else if (commevent->data[fd] && remainfd) {
+			del_remainfd(&commevent->remainfd, fd, REMAINFD_WRITE);
 		}
+	} else if (remainfd) {
+		del_remainfd(&commevent->remainfd, fd, REMAINFD_WRITE);
 	}
+	log("commevent_send rcnt:%d wcnt:%d packcnt:%d parscnt:%d\n",commevent->remainfd.rcnt, commevent->remainfd.wcnt, commevent->remainfd.packcnt, commevent->remainfd.parscnt);
 	return ;
 }
 
@@ -151,30 +146,32 @@ void commevent_remainfd(struct comm_event *commevent, bool timeout)
 	int fd = -1;
 	int counter = 0;	/* 处理fd个数的计数 */
 	/* 先处理需要读取数据的fd */
-	while (counter < MAX_DISPOSE_FDS && counter < commevent->remainfd.rpcnt) {
-		fd = commevent->remainfd.rpfds.fda[commevent->remainfd.rpcnt-1];
-		if (commevent->remainfd.rpfds.type[commevent->remainfd.rpcnt-1] == REMAIN_PARSE) {
-			struct comm_data *commdata = (struct comm_data*)commevent->data[fd];
-			if (commdata) {
-				commdata_parse(commdata, commevent, true);
-			} else {
-				commevent->remainfd.rpcnt -= 1;
-			}
-		} else {
+	while (counter < MAX_DISPOSE_FDS && (commevent->remainfd.rcnt || commevent->remainfd.wcnt || commevent->remainfd.parscnt || commevent->remainfd.packcnt)) {
+		if (commevent->remainfd.rcnt > 0) {
+			fd = commevent->remainfd.rfda[commevent->remainfd.rcnt-1];
 			commevent_recv(commevent, fd, true);
 		}
-		counter ++;
-		log("here in timeout event dispose readable fds\n");
-	}
-	counter = 0;
 
-	/* 再处理需要发送数据的fd */
-	while (counter < MAX_DISPOSE_FDS && counter < commevent->remainfd.wpcnt) {
-		commevent_send(commevent, commevent->remainfd.wpfda[commevent->remainfd.wpcnt-1], true);
+		if (commevent->remainfd.parscnt > 0) {
+			fd = commevent->remainfd.parsfda[commevent->remainfd.parscnt-1];
+			commdata_parse((struct comm_data*)commevent->data[fd], commevent);
+		}
+
+		if (commevent->remainfd.wcnt > 0) {
+			fd = commevent->remainfd.wfda[commevent->remainfd.wcnt-1];
+			commevent_send(commevent, fd, true);
+		}
+
+		if (commevent->remainfd.packcnt > 0) {
+			fd = commevent->remainfd.packfda[commevent->remainfd.packcnt-1];
+			commdata_package((struct comm_data*)commevent->data[fd], commevent);
+			commevent_send(commevent, fd, true);
+		}
+
 		counter ++;
-		log("here in timeout event dispose writeable fds\n");
 	}
 
+	log("commevent_remainfd rcnt:%d wcnt:%d packcnt:%d parscnt:%d\n",commevent->remainfd.rcnt, commevent->remainfd.wcnt, commevent->remainfd.packcnt, commevent->remainfd.parscnt);
 	/* 超时调用该函数则调用用户层的回调函数 */
 	if (timeout && commevent->timeoutcb.callback) { 
 		commevent->timeoutcb.callback(commevent->commctx, NULL, commevent->timeoutcb.usr);
@@ -242,7 +239,7 @@ static  bool _write_data(struct comm_event *commevent, struct comm_data *commdat
 		if (commdata->send_cache.size > 0) {
 			bytes = write(commdata->commtcp.fd, &commdata->send_cache.buffer[commdata->send_cache.start], commdata->send_cache.size);
 			if (bytes > 0) {
-				if (bytes < commdata->send_cache.size) {
+				if (unlikely(bytes < commdata->send_cache.size)) {
 					/* 数据没有一次性发送完毕，说明系统缓冲区已满，返回false，下次继续发送剩下的数据 */
 					flag = false;
 				} else {

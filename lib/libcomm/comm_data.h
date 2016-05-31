@@ -22,7 +22,7 @@ void commdata_destroy(struct comm_data *commdata);
 bool  commdata_package(struct comm_data *commdata, struct comm_event *commevent);
 
 /* 开始解析一个fd的数据 */
-bool commdata_parse(struct comm_data *commdata, struct comm_event *commevent, bool remainfd);
+bool commdata_parse(struct comm_data *commdata, struct comm_event *commevent);
 
 
 

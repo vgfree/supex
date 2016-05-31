@@ -39,8 +39,9 @@ typedef void (*DestroyCB)(void *data);
 /* 链表结构体 */
 struct comm_list {
 	DestroyCB	destroy;	/* 销毁数据的回调函数 */
-	struct comm_list *next;		/* 指向链表中的下一个节点 */
-	struct comm_list *tail;		/* 指向链表的尾节点 */
+	int		nodes;		/* 链表中有效数据的节点数 */
+	struct comm_list* next;		/* 指向链表中的下一个节点 */
+	struct comm_list* tail;		/* 指向链表的尾节点 */
 };
 
 /* 初始化链表，设置链表的头节点 */
@@ -48,6 +49,7 @@ static inline void commlist_init(struct comm_list *list, DestroyCB destroy) {
 	assert(list);
 	list->tail = list;
 	list->next = list;
+	list->nodes = 0;
 	list->destroy = destroy;
 }
 
@@ -58,6 +60,7 @@ static inline bool commlist_push(struct comm_list *head, struct comm_list *list)
 	head->tail = list;
 	head->tail->tail = head->tail;
 	head->tail->next = head;
+	head->nodes += 1;
 	return true;
 }
 
@@ -71,6 +74,7 @@ static inline bool commlist_pull(struct comm_list *head, struct comm_list **data
 			head->tail = head;
 		}
 		*data = list;
+		head->nodes -= 1;
 		return true;
 	} else {
 		return false;

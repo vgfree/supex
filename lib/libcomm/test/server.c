@@ -34,10 +34,10 @@ int main(int argc, char* argv[])
 				memset(&recvmsg, 0, sizeof(recvmsg));
 				retval = recv_data(commctx, &recvmsg, -1);
 				if (likely(retval > 0)) {
-					//log("server recv_data successed\n");
+					log("server recv_data successed\n");
 				} else {
 				//	log("server recv_data failed\n");
-					sleep(1);
+				//	sleep(1);
 				}
 				if (recvmsg.fd > 0) {
 					memset(&sendmsg, 0, sizeof(sendmsg));
@@ -46,7 +46,7 @@ int main(int argc, char* argv[])
 						log("server send_data successed\n");
 						//break ;
 					} else {
-						log("server send_data failed\n");
+					//	log("server send_data failed\n");
 					}
 				}
 			}
@@ -141,7 +141,7 @@ static bool recv_data(struct comm_context *commctx, struct comm_message *message
 	int i = 0, j = 0, k = 0; 
 	int size = 0;
 	message->content = content;
-	retval = comm_recv(commctx, message, true, 5000);
+	retval = comm_recv(commctx, message, false, 5000);
 	if( unlikely(retval < 0) ){
 		return false;
 	} else {

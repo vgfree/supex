@@ -17,6 +17,7 @@ bool commpipe_init(struct comm_pipe *commpipe)
 		commpipe->rfd = fda[0];
 		commpipe->wfd = fda[1];
 		commpipe->init = true;
+		log("commpipe read fd:%d commpipe write fd:%d\n",commpipe->rfd, commpipe->wfd);
 		return true;
 	} else {
 		return false;
@@ -29,6 +30,7 @@ void commpipe_destroy(struct comm_pipe *commpipe)
 		close(commpipe->rfd);
 		close(commpipe->wfd);
 		commpipe->init = false;
+		log("destroy commpipe\n");
 	}
 	return ;
 }
@@ -42,6 +44,8 @@ inline int commpipe_read(struct comm_pipe *commpipe, void *buff, int size)
 	if ((bytes = read(commpipe->rfd, buff, PIPE_READ_MIOU)) > 0) {
 		int test = bytes/size;
 		log("commpipe read :%d\n", test);
+		commpipe->rcnt += test;
+		log("commpipe read total:%d\n", commpipe->rcnt);
 		return bytes/size;
 	} else {
 		return bytes;
@@ -52,6 +56,9 @@ inline int commpipe_read(struct comm_pipe *commpipe, void *buff, int size)
 inline int commpipe_write(struct comm_pipe *commpipe, void *buff, int size)
 {
 	assert(commpipe && commpipe->init);
-
+	int test = size/(sizeof(int));
+	commpipe->wcnt += test;
+	log("commpipe write: %d\n",test);
+	log("commpipe write total:%d\n", commpipe->wcnt);
 	return write(commpipe->wfd, buff, size);
 }

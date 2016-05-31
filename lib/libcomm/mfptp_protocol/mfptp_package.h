@@ -29,6 +29,7 @@ struct mfptp_packager {
 	bool				init;		/* 判断此结构体是否被正确初始化 */
 	struct mfptp_header_info	header;		/* MFPTP协议头相关信息 */
 	struct mfptp_package_info	package;	/* MFPTP协议包的具体信息 */
+	//struct mfptp_bodyer_info	bodyer;		/* MFPTP协议数据的具体信息 */
 	Encryption_CallBack		encryptcb;	/* MFPTP协议加密的回调函数 */
 	Compression_CallBack		compresscb;	/* MFPTP协议压缩的回调函数 */
 	struct mfptp_pack_stat		ms;		/* 打包器的状态 */

@@ -114,14 +114,29 @@ struct mfptp_frame_info {
 	int frames;				/* 一共有多少帧 */
 	int frame_size[MFPTP_MAX_FRAMES];	/* 每一帧的数据大小 */
 	int frame_offset[MFPTP_MAX_FRAMES];	/* 每帧的偏移 */
+#if 0
+	int frame_size;				/* 帧的大小 */
+	int frame_offset;			/* 帧的偏移 */
+#endif
 };
 
 /* MFPTP协议包的相关信息 */
 struct mfptp_package_info {
-	//bool			init;
 	int			packages;			/* 总包数 */
 	int			dsize;				/* 数据总大小 */
 	struct mfptp_frame_info frame[MFPTP_MAX_PACKAGES];	/* 包里面帧的相关信息 */
+#if 0
+	int			frames;				/* 帧的总数 */
+	struct mfptp_frame_info frame[MFPTP_MAX_FRMAS]		/* 每帧的相关信息 */
+#endif
+};
+
+
+/* MFPTP协议消息的相关信息 */
+struct mfptp_bodyer_info {
+	int			  disize;			/* 消息的总大小 */
+	int			  packages;			/* 包的总数 */
+	struct mfptp_package_info package[MFPTP_MAX_PACKAGES];	/* 每个包的相关信息 */
 };
 
 /* MFPTP协议的包头相关信息 */

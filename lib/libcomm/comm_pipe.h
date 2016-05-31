@@ -18,6 +18,8 @@ extern "C" {
 
 struct comm_pipe {
 	bool init;			/* 用于判断此结构体是否被初始化 */
+	int  wcnt;
+	int  rcnt;
 	int  wfd;			/* PIPE打开用于读的描述符 */
 	int  rfd;			/* PIPE打开用于写的描述符 */
 };
