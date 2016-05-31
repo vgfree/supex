@@ -1,5 +1,5 @@
 #include "config_reader.h"
-#include "loger.h"
+//#include "loger.h"
 
 #include <assert.h>
 #include <malloc.h>
@@ -43,7 +43,7 @@ int get_ip(const char *src, char *dest)
 
 struct config_reader* init_config_reader(const char* filename)
 {
-  log("init_config_reader.");
+//  log("init_config_reader.");
   struct config_reader *config = (struct config_reader*)malloc(sizeof(struct config_reader));
   config->m_config_map.pair = (struct string_pair*)
     calloc(MAP_CAPCITY, sizeof(struct string_pair));
@@ -62,15 +62,15 @@ void destroy_config_reader(struct config_reader *config)
 
 char* get_config_name(struct config_reader *config, const char* name)
 {
-  log("config address:%p", config);
+//  log("config address:%p", config);
   assert(config);
-  log("get_config_name, m_load_ok: %d.", config->m_load_ok);
+//  log("get_config_name, m_load_ok: %d.", config->m_load_ok);
   if (config->m_load_ok == 0)
     return NULL;
 
   char* value = NULL;
   int valid = config->m_config_map.max_valid;
-  log("get_config_name, valid: %d.", valid);
+//  log("get_config_name, valid: %d.", valid);
   for (int i = 0; i < valid; i++) {
     if (strcmp(config->m_config_map.pair[i].key.buf, name) == 0) {
       value = config->m_config_map.pair[i].value.buf;
@@ -108,7 +108,7 @@ static void _load_file(struct config_reader *config,
   strcpy(config->m_config_file, filename);
   FILE* fp = fopen(filename, "r");
   if (!fp) {
-    log("can not open %s", filename);
+//    log("can not open %s", filename);
     return;
   }
   char buf[256];
@@ -129,7 +129,7 @@ static void _load_file(struct config_reader *config,
 
   fclose(fp);
   config->m_load_ok = 1;
-  log("m_load_ok:%d", config->m_load_ok);
+//  log("m_load_ok:%d", config->m_load_ok);
 }
 
 static int _write_file(struct config_reader *config, const char* filename)

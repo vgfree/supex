@@ -207,9 +207,11 @@ static void _handle_status(struct comm_message *msg)
 
 static void _classified_message(struct comm_message *msg)
 {
-  log("max msg:%d.", get_max_msg_frame(msg));
   int frame_size;
   char *frame = get_msg_frame(0, msg, &frame_size);
+  char frame_buf[100] = {};
+  memcpy(frame_buf, frame, frame_size);
+  log("max msg:%d, frame:%s", get_max_msg_frame(msg), frame_buf);
   if (!frame) {
     error("wrong frame, and frame is NULL.");
   }

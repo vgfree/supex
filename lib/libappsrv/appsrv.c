@@ -18,7 +18,7 @@ void destroy_io()
 {
   assert(g_ctx);
   destroy_send();
-  destroy_send();
+  destroy_recv();
   zmq_ctx_destroy(g_ctx);
 }
 
