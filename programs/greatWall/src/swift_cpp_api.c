@@ -19,26 +19,7 @@
 
 extern struct sniff_cfg_list g_sniff_cfg_list;
 
-int swift_vms_init(void *W)
-{
-	/*
-	 *   SWIFT_WORKER_PTHREAD *p_swift_worker = (SWIFT_WORKER_PTHREAD *)W;
-	 *   struct swift_task_node *swift_task = &p_swift_worker->task;
-	 *
-	 *   struct sniff_task_node sniff_task = {};
-	 *   sniff_task.sfd = swift_task->sfd;
-	 *   sniff_task.type = swift_task->type;
-	 *   sniff_task.origin = swift_task->origin;
-	 *   sniff_task.func = g_sniff_cfg_list.vmsys_init;
-	 *   sniff_task.last = false;//FIXME
-	 *   sniff_task.size = 0;
-	 *
-	 *   sniff_all_task_hit( (SNIFF_WORKER_PTHREAD *)p_swift_worker->mount, &sniff_task );
-	 */
-	return 0;
-}
-
-static int swift_vms_call_common(void *W, SUPEX_TASK_CALLBACK vms_cb)
+static int swift_vms_call_common(void *W, SNIFF_VMS_FCB vms_cb)
 {
 	SWIFT_WORKER_PTHREAD    *p_swift_worker = (SWIFT_WORKER_PTHREAD *)W;
 	struct swift_task_node  *swift_task = &p_swift_worker->task;
@@ -68,13 +49,10 @@ static int swift_vms_call_common(void *W, SUPEX_TASK_CALLBACK vms_cb)
 
 	memcpy(p_rmsg->flows, p_buf + p_rst->val_offset[0], sniff_task.size);
 
-	struct mount_info *mnt = (struct mount_info *)p_swift_worker->mount;
-
-	while (mnt) {
-		sniff_one_task_hit(mnt->list, &sniff_task);
-		mnt->list = mnt->list->next;
-		mnt = mnt->next;
-	}
+	/*如果有多通道，复制发给所以通道*/
+	SNIFF_WORKER_PTHREAD *p_sniff_worker = (SNIFF_WORKER_PTHREAD *)p_swift_worker->mount;
+	sniff_one_task_hit(p_sniff_worker, &sniff_task);
+	p_swift_worker->mount = p_sniff_worker->next;
 
 	const char sndcnt[] = ":1\r\n";
 	cache_add(&p_node->send, sndcnt, sizeof(sndcnt) - 1);
@@ -82,37 +60,13 @@ static int swift_vms_call_common(void *W, SUPEX_TASK_CALLBACK vms_cb)
 	return 0;
 }
 
-int swift_vms_call_rpushx(void *W)
+int swift_vms_call_rlpushx(void *user, union virtual_system **VMS, struct adopt_task_node *task)
 {
-	return swift_vms_call_common(W, (SUPEX_TASK_CALLBACK)sniff_vms_call_rpushx);
+	return swift_vms_call_common(user, (SNIFF_VMS_FCB)sniff_vms_call_rlpushx);
 }
 
-int swift_vms_call_publish(void *W)
+int swift_vms_call_publish(void *user, union virtual_system **VMS, struct adopt_task_node *task)
 {
-	return swift_vms_call_common(W, (SUPEX_TASK_CALLBACK)sniff_vms_call_publish);
-}
-
-#define BIT8_TASK_ORIGIN_IDLE 'd'
-int swift_vms_idle(void *W)
-{
-	SWIFT_WORKER_PTHREAD *p_swift_worker = (SWIFT_WORKER_PTHREAD *)W;
-
-	struct sniff_task_node sniff_task = {};
-
-	sniff_task.sfd = 0;
-	sniff_task.type = BIT8_TASK_TYPE_WHOLE;
-	sniff_task.origin = BIT8_TASK_ORIGIN_IDLE;
-	sniff_task.func = (SUPEX_TASK_CALLBACK)sniff_vms_idle;	// fix to use xxxx;
-	sniff_task.last = false;				// FIXME
-	sniff_task.size = 0;
-
-	struct mount_info *mnt = (struct mount_info *)p_swift_worker->mount;
-
-	while (mnt) {
-		sniff_all_task_hit(mnt->list, &sniff_task);
-		mnt = mnt->next;
-	}
-
-	return 0;
+	return swift_vms_call_common(user, (SNIFF_VMS_FCB)sniff_vms_call_publish);
 }
 

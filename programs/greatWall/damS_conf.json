@@ -1,10 +1,11 @@
 {
 	"swift_port": 4210,
 	"swift_worker_counts": 2,
+	"swift_tasker_counts": 2,
 	"swift_protocol": "redis",
 	"max_req_size": 32768,
 	"sniff_worker_counts": 5,
-	"sharer_counts": 64,
+	"sniff_tasker_counts": 64,
 	"log_path": "./logs/",
 	"log_file": "damS",
 	"log_level": 0,
@@ -17,6 +18,7 @@
 	"api_merge": "/damSMerge.json",
 	"api_custom": ["/dams_transit_gpsinfo","/dams_transit_poweron"],
 	"per_peak_cnt_count": 1000,
+	"qtype": "fresh",
 	"fresh": [0,1,2,3,4,5,6,7,8,9,10,11,12,13],
 	"delay": [],
 	"links":

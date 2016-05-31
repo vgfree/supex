@@ -23,8 +23,7 @@ endif
 -include $(HOME_PATH)/share.mk
 #<------------------------>#
 
-#ADD_OBJ += sniff_line_cpp_api.o
-ADD_OBJ += sniff_evuv_cpp_api.o
+ADD_OBJ += sniff_evcoro_cpp_api.o
 
 #<--------------------------->#
 

@@ -42,7 +42,6 @@ static bool tasks(void *user, void *data)
 	struct swift_task_node  *task = NULL;
 	struct session_task     *service = NULL;
 	SWIFT_WORKER_PTHREAD    *p_swift_worker = NULL;
-	struct mount_info       *link = NULL;
 
 	assert(user);
 	assert(data);
@@ -57,29 +56,27 @@ static bool tasks(void *user, void *data)
 		goto over;
 	}
 
-	for (link = p_swift_worker->mount; link; link = link->next) {
-		SNIFF_WORKER_PTHREAD    *p_sniff_worker = link->list;
-		SNIFF_WORKER_PTHREAD    *ptr = NULL;
+	SNIFF_WORKER_PTHREAD    *p_sniff_worker = p_swift_worker->mount;
+	SNIFF_WORKER_PTHREAD    *ptr = NULL;
 
-		for (ptr = p_sniff_worker; ptr; ) {
-			x_printf(D, "thread(%20p) : %ld",
+	for (ptr = p_sniff_worker; ptr; ) {
+		x_printf(D, "thread(%20p) : %ld",
 				(void *)ptr->thread_id,
 				ATOMIC_GET(&ptr->thave));
 
-			flag = session_response_clnt(service->fd, SESSION_IO_TIMEOUT,
-					"thread(%10ld) : %d\n",
-					ptr->tid,
-					ATOMIC_GET(&ptr->thave));
+		flag = session_response_clnt(service->fd, SESSION_IO_TIMEOUT,
+				"thread(%10ld) : %d\n",
+				ptr->tid,
+				ATOMIC_GET(&ptr->thave));
 
-			if (!flag) {
-				goto over;
-			}
+		if (!flag) {
+			goto over;
+		}
 
-			ptr = ptr->next;
+		ptr = ptr->next;
 
-			if (ptr == p_sniff_worker) {
-				break;
-			}
+		if (ptr == p_sniff_worker) {
+			break;
 		}
 	}
 

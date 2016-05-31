@@ -17,15 +17,7 @@
 #include "dams_cfg.h"
 #include "switch_queue.h"
 
-#ifdef OPEN_SCCO
-  #include "sniff_scco_lua_api.h"
-#endif
-#ifdef OPEN_LINE
-  #include "sniff_line_cpp_api.h"
-#endif
-#ifdef OPEN_EVUV
-  #include "sniff_evuv_cpp_api.h"
-#endif
+#include "sniff_evcoro_cpp_api.h"
 
 #include "add_session_cmd.h"
 
@@ -37,7 +29,7 @@ static void swift_pthrd_init(void *user)
 {
 	SWIFT_WORKER_PTHREAD *p_swift_worker = user;
 
-	p_swift_worker->mount = sniff_start(p_swift_worker, p_swift_worker->index, 0);
+	p_swift_worker->mount = sniff_start(p_swift_worker, p_swift_worker->index, g_dams_cfg_file.qtype);
 }
 
 
@@ -100,17 +92,9 @@ static void swift_shut_down(void)
 
 	/*通过每个swift_worker挂起sniff_worker的所有线程*/
 	for (i = 0; i < swift_worker_total; i++) {
-		struct mount_info *link = NULL;
+		thds++;
 
-		int j = 0;
-
-		link = (struct mount_info *)swift_worker[i].mount;
-
-		for (j = 0; j < LIMIT_CHANNEL_KIND; j++) {
-			thds++;
-
-			sniff_suspend_thread(link[j].list, cond);
-		}
+		sniff_suspend_thread(swift_worker[i].mount, cond);
 	}
 
 	/*
@@ -142,17 +126,9 @@ static void swift_reload_cfg(void)
 
 	/*通过每个swift_worker挂起sniff_worker的所有线程*/
 	for (i = 0; i < swift_worker_total; i++) {
-		struct mount_info *link = NULL;
+		thds++;
 
-		int j = 0;
-
-		link = (struct mount_info *)swift_worker[i].mount;
-
-		for (j = 0; j < LIMIT_CHANNEL_KIND; j++) {
-			thds++;
-
-			sniff_suspend_thread(link[j].list, &cond);
-		}
+		sniff_suspend_thread(swift_worker[i].mount, &cond);
 	}
 
 	/*
@@ -205,9 +181,9 @@ int main(int argc, char **argv)
 	}
 
 	g_swift_cfg_list.func_info[LPUSHX_FUNC_ORDER].type = BIT8_TASK_TYPE_ALONE;
-	g_swift_cfg_list.func_info[LPUSHX_FUNC_ORDER].func = (TASK_CALLBACK)swift_vms_call_lpushx;
+	g_swift_cfg_list.func_info[LPUSHX_FUNC_ORDER].func = (TASK_CALLBACK)swift_vms_call_rlpushx;
 	g_swift_cfg_list.func_info[RPUSHX_FUNC_ORDER].type = BIT8_TASK_TYPE_ALONE;
-	g_swift_cfg_list.func_info[RPUSHX_FUNC_ORDER].func = (TASK_CALLBACK)swift_vms_call_rpushx;
+	g_swift_cfg_list.func_info[RPUSHX_FUNC_ORDER].func = (TASK_CALLBACK)swift_vms_call_rlpushx;
 	g_swift_cfg_list.func_info[PUBLISH_FUNC_ORDER].type = BIT8_TASK_TYPE_ALONE;
 	g_swift_cfg_list.func_info[PUBLISH_FUNC_ORDER].func = (TASK_CALLBACK)swift_vms_call_publish;
 
@@ -215,19 +191,11 @@ int main(int argc, char **argv)
 
 	g_swift_cfg_list.pthrd_init = swift_pthrd_init;
 
-	g_swift_cfg_list.vmsys_init = swift_vms_init;
-
 	g_swift_cfg_list.reload_cfg = swift_reload_cfg;
 
 	g_swift_cfg_list.shut_down = swift_shut_down;
 
-#ifdef STORE_USE_UCMQ_AND_QUEUE
-  #if 0
-	g_swift_cfg_list.vmsys_idle = swift_vms_idle;
-  #else
-	/*have bug when tasks pile up*/
-  #endif
-#endif
+	/*have bug when tasks pile up if use idle task*/
 
 	swift_mount(&g_swift_cfg_list);
 
@@ -260,8 +228,6 @@ int main(int argc, char **argv)
 	 */
 	g_sniff_cfg_list.task_lookup = sniff_task_lookup;
 	g_sniff_cfg_list.task_report = sniff_task_report;
-
-	g_sniff_cfg_list.vmsys_init = sniff_vms_init;
 
 	sniff_mount(&g_sniff_cfg_list);
 

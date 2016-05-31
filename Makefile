@@ -16,36 +16,9 @@ LIGHT_CYAN      = "\x1B[1;36m"
 WHITE           = "\x1B[0;37m"
 LIGHT_WHITE     = "\x1B[1;37m"
 ######################################
-str_kernel_version = $(shell uname -r)
-get_kernel_version = $(shell echo $1 | sed 's/\./ /g' | sed 's/-/ /g')
-fix_kernel_version = $(call get_kernel_version, $(str_kernel_version))
-
-v_major = $(word 1, $(fix_kernel_version))
-v_minor = $(word 2, $(fix_kernel_version))
-v_emend = $(word 3, $(fix_kernel_version))
-
-OPTIMIZE = 0
-
-compare = $(shell if [ $1 -eq $2 ]; then echo ?; elif [ $1 -gt $2 ]; then echo 1; else echo 0; fi)
-OPTIMIZE = $(call compare, $(v_major), 2)
-
-ifeq ($(OPTIMIZE), ?)
-OPTIMIZE = $(call compare, $(v_minor), 6)
-ifeq ($(OPTIMIZE), ?)
-OPTIMIZE = $(call compare, $(v_emend), 35)
-endif
-endif
-ifeq ($(OPTIMIZE), ?)
-OPTIMIZE = 1
-endif
-
-ifeq ($(OPTIMIZE), 1)
-EXCESS_CFLAGS += -DOPEN_OPTIMIZE
-endif
 ######################################
 
 export OBJECT_SCENE ?= ONLINE
-export SCCO_STACK_TYPE ?= -DSCCO_USE_STATIC_STACK
 
 export HOME_PATH = $(shell pwd)
 EXPORT_CFLAGS = -g
@@ -107,13 +80,6 @@ libs:
 	$(MAKE) -C ./lib
 	#sleep 1
 #	$(MAKE) -C ./engine distclean
-#	$(MAKE) -j8 -C ./engine MAIN_SUPEX=supex_base
-#	$(MAKE) -j8 -C ./engine MAIN_SUPEX=supex_scco
-#	$(MAKE) -j8 -C ./engine MAIN_SUPEX=supex_line
-#	$(MAKE) -j8 -C ./engine MAIN_SUPEX=supex_evuv
-#	$(MAKE) -j8 -C ./engine MAIN_SUPEX=supex_evcoro
-#	$(MAKE) -C ./engine xctl
-#	$(MAKE) -C ./engine sclnt
 	#sleep 1
 	$(MAKE) -C ./open/lib clean
 	$(MAKE) -C ./open/lib/
