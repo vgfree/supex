@@ -141,8 +141,9 @@ static bool recv_data(struct comm_context *commctx, struct comm_message *message
 	int i = 0, j = 0, k = 0; 
 	int size = 0;
 	message->content = content;
-	retval = comm_recv(commctx, message, false, 5000);
+	retval = comm_recv(commctx, message, true, -1);
 	if( unlikely(retval < 0) ){
+		log("comm_recv failed\n");
 		return false;
 	} else {
 		for (i = 0; i < message->package.packages; i++) {
@@ -156,6 +157,7 @@ static bool recv_data(struct comm_context *commctx, struct comm_message *message
 			log("%s\n", buff);
 
 		}
+		log("comm_recv successed\n");
 		return true;
 	}
 }

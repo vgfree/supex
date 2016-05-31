@@ -219,6 +219,23 @@ static inline bool _connect(struct comm_tcp *commtcp, struct addrinfo *ai)
 				CLOSEFD(commtcp->fd);
 			}
 		}
+#if 0
+		if (commtcp->fd > 0) {
+			if (fd_setopt(commtcp->fd, O_NONBLOCK)) {	/* 将套接字设置为非阻塞模式,先于connect,为了以防万一服务器已有问题而导致connect75秒之后才能返回 */
+				while(unlikely(!connect(commtcp->fd, aiptr->ai_addr, aiptr->ai_addrlen) == 0)) {
+					/* 连接失败，则查看错误值 */
+					if (errno == EINPROGRESS) {
+						/* 没有错误，连接正在进行中 */
+						return true;
+					} else {}
+				}
+				return true;
+				flag = true;
+			} else {
+				CLOSEFD(commtcp->fd);
+			}
+		}
+#endif
 	}
 	return flag;
 }

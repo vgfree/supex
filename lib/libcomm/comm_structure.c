@@ -126,18 +126,26 @@ bool add_remainfd(struct remainfd *remainfd, int fd, int type)
 	int i = 0;
 	int* cnt = 0;
 	int **fda = NULL;
-	if (type == REMAINFD_READ) {
-		cnt = &remainfd->rcnt;
-		fda = &remainfd->rfda;
-	} else if (type == REMAINFD_WRITE) {
-		cnt = &remainfd->wcnt;
-		fda = &remainfd->wfda;
-	} else if (type == REMAINFD_PARSE) {
-		cnt = &remainfd->parscnt;
-		fda = &remainfd->parsfda;
-	} else {
-		cnt = &remainfd->packcnt;
-		fda = &remainfd->packfda;
+
+	switch (type) {
+		case REMAINFD_READ:
+			cnt = &remainfd->rcnt;
+			fda = &remainfd->rfda;
+			break ;
+		case REMAINFD_WRITE:
+			cnt = &remainfd->wcnt;
+			fda = &remainfd->wfda;
+			break ;
+		case REMAINFD_PARSE:
+			cnt = &remainfd->parscnt;
+			fda = &remainfd->parsfda;
+			break ;
+		case REMAINFD_PACK:
+			cnt = &remainfd->packcnt;
+			fda = &remainfd->packfda;
+			break ;
+		default:
+			break ;
 	}
 
 	if (*cnt == 0) {
@@ -197,18 +205,26 @@ void del_remainfd(struct remainfd *remainfd, int fd, int type)
 	int   i = 0;
 	int*  cnt = 0;
 	int** fda = NULL;
-	if (type == REMAINFD_READ) {
-		cnt = &remainfd->rcnt;
-		fda = &remainfd->rfda;
-	} else if (type == REMAINFD_WRITE) {
-		cnt = &remainfd->wcnt;
-		fda = &remainfd->wfda;
-	} else if (type == REMAINFD_PARSE) {
-		cnt = &remainfd->parscnt;
-		fda = &remainfd->parsfda;
-	} else {
-		cnt = &remainfd->packcnt;
-		fda = &remainfd->packfda;
+
+	switch (type) {
+		case REMAINFD_READ:
+			cnt = &remainfd->rcnt;
+			fda = &remainfd->rfda;
+			break ;
+		case REMAINFD_WRITE:
+			cnt = &remainfd->wcnt;
+			fda = &remainfd->wfda;
+			break ;
+		case REMAINFD_PARSE:
+			cnt = &remainfd->parscnt;
+			fda = &remainfd->parsfda;
+			break ;
+		case REMAINFD_PACK:
+			cnt = &remainfd->packcnt;
+			fda = &remainfd->packfda;
+			break ;
+		default:
+			break ;
 	}
 
 	if (*cnt > 0) {
@@ -221,5 +237,6 @@ void del_remainfd(struct remainfd *remainfd, int fd, int type)
 			}
 		}
 	}
+	return ;
 }
 

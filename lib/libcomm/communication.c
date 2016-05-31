@@ -176,6 +176,7 @@ int comm_recv(struct comm_context *commctx, struct comm_message *message, bool b
 			struct comm_list* list = NULL;
 			if (commlist_pull(&commctx->recvlist, (void*)&list)) {
 				commmsg = (struct comm_message*)get_container_addr(list, COMMMSG_OFFSET);
+				break ;
 			} else if (block) {
 				commctx->recvqueue.readable = 0;
 				if (commlock_wait(&commctx->recvlock, &commctx->recvqueue.readable, 1, timeout, true)) {
@@ -184,6 +185,8 @@ int comm_recv(struct comm_context *commctx, struct comm_message *message, bool b
 			} else {
 				commctx->recvqueue.readable = 1;	/* 不进行堵塞就设置为1不需要唤醒 */
 			};
+		} else {
+			break ;
 		}
 	}while(flag);							/* flag为true说明成功等待到数据 尝试再去取一次数据 */
 	commlock_unlock(&commctx->recvlock);

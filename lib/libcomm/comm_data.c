@@ -149,11 +149,14 @@ bool commdata_parse(struct comm_data *commdata, struct comm_event *commevent)
 					if (unlikely(!commqueue_push(&commevent->commctx->recvqueue, (void*)&message))) {
 						/* 队列已满，则放入链表中 */
 						if (commlist_push(&commevent->commctx->recvlist, &message->list)) {
-							if (commevent->commctx->recvqueue.readable) {			/* 为0代表有线程在等待可读 */
+							if (commevent->commctx->recvqueue.readable == 0) {			/* 为0代表有线程在等待可读 */
 								/* 唤醒在commctx->recv_queue.readable上等待的线程并设置其为1 */
 								commlock_wake(&commevent->commctx->recvlock, &commevent->commctx->recvqueue.readable, 1, true);
 							}
 						}
+					} else if (commevent->commctx->recvqueue.readable == 0) {	/* 为0不可读，代表有线程在等待可读 */
+						/* 唤醒在commctx->recv_queue.readable上等待的线程并设置其为1 */
+						commlock_wake(&commevent->commctx->recvlock, &commevent->commctx->recvqueue.readable, 1, true);
 					}
 					commlock_unlock(&commevent->commctx->recvlock);
 					flag = true;	/* 只要有一个数据数据解析成功便返回真 */
