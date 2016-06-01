@@ -72,7 +72,7 @@ static inline void push_alist(int val)
 
 	barrier();
 
-	while (!ATOMIC_CASB(next, NULL, newnode)) {
+	while (!AO_CASB(next, NULL, newnode)) {
 		barrier();
 		next = &(*next)->next;
 	}
@@ -86,7 +86,7 @@ static void *work(void *usr)
 	ThreadSuspendStart(cond);
 
 	while (i-- > 0) {
-		int val = (int)ATOMIC_F_ADD(&g_counter, 1);
+		int val = (int)AO_F_ADD(&g_counter, 1);
 		//                printf("-> %d", val);
 		sched_yield();
 		sched_yield();

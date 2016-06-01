@@ -74,7 +74,7 @@ static void *qpush(void *arg)
 	BindCPUCore(-1);
 
 	while (i > 0) {
-		AO_T cnt = ATOMIC_F_ADD(&counter, 1);
+		AO_T cnt = AO_F_ADD(&counter, 1);
 
 		if (DQueuePush(queue, cnt)) {
 			fprintf(stderr,
@@ -148,7 +148,7 @@ static void *qprioritypush(void *arg)
 	BindCPUCore(-1);
 
 	while (i > 0) {
-		intptr_t cnt = ATOMIC_F_SUB(&specify, 1);
+		intptr_t cnt = AO_F_SUB(&specify, 1);
 
 		if (DQueuePriorityPush(queue, cnt)) {
 			fprintf(stderr,

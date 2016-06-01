@@ -87,7 +87,7 @@ int main(int argc, char const *argv[])
 			}
 		} else if (strcasecmp(argv[2], "push") == 0) {
 			//                        ky->key = RandInt(1, 100);
-			ky->key = ATOMIC_GET(counter);
+			ky->key = AO_GET(counter);
 			snprintf(ky->value, sizeof(ky->value), "-%d", ky->key);
 
 			if (!SHM_QueuePush(queue, buff, sizeof(buff), &size)) {
@@ -107,7 +107,7 @@ int main(int argc, char const *argv[])
 					futex_wake(&queue->data->nodes, 1);
 				}
 
-				ATOMIC_INC(counter);
+				AO_INC(counter);
 			}
 		} else {
 			x_printf(E, "Usage %s <create/load> <pull/push> <#loops>", prg);

@@ -85,7 +85,7 @@ static void *insert_test(DHashT arg)
 	char    key[KEY_LEN] = {};
 	char    *value = NULL;
 
-	while (ATOMIC_F_SUB(&g_insertTotal, 1) > 0) {
+	while (AO_F_SUB(&g_insertTotal, 1) > 0) {
 		//
 		int     len = (int)RandInt(1, DIM(key) - 1);
 		int     i = 0;
@@ -126,7 +126,7 @@ static void *get_test(DHashT arg)
 	char            *value = NULL;
 	unsigned        size = 0;
 
-	while (ATOMIC_F_SUB(&g_getTotal, 1) > 0) {
+	while (AO_F_SUB(&g_getTotal, 1) > 0) {
 		int     len = (int)RandInt(1, DIM(key) - 1);
 		int     i = 0;
 
@@ -155,7 +155,7 @@ static void *del_test(DHashT arg)
 {
 	char key[KEY_LEN] = {};
 
-	while (ATOMIC_F_SUB(&g_delTotal, 1) > 0) {
+	while (AO_F_SUB(&g_delTotal, 1) > 0) {
 		int     len = (int)RandInt(1, DIM(key) - 1);
 		int     i = 0;
 

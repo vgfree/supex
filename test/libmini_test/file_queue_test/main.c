@@ -93,7 +93,7 @@ int main(int argc, char const *argv[])
 			struct KY *ky = (struct KY *)&buff[0];
 
 			//                        ky->key = RandInt(1, 100);
-			ky->key = ATOMIC_GET(counter);
+			ky->key = AO_GET(counter);
 
 			snprintf(ky->value, sizeof(ky->value), "-%d", ky->key);
 
@@ -114,7 +114,7 @@ int main(int argc, char const *argv[])
 					futex_wake(&queue->data->nodes, 1);
 				}
 
-				ATOMIC_INC(counter);
+				AO_INC(counter);
 			}
 		} else {
 			x_printf(E, "usage %s <create/load> <pull/push> <#loops>.", prg);

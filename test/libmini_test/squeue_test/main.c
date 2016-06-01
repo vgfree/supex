@@ -87,7 +87,7 @@ static void *qpush(void *arg)
 				PALETTE_NULL
 				"\n"
 				, counter);
-			ATOMIC_INC(&counter);
+			AO_INC(&counter);
 			futex_wake(&queue->nodes, -1);
 #ifdef NON_THREAD_TEST
 			i--;
@@ -157,7 +157,7 @@ static void *qprioritypush(void *arg)
 				PALETTE_NULL
 				"\n"
 				, specify);
-			ATOMIC_DEC(&specify);
+			AO_DEC(&specify);
 			futex_wake(&queue->nodes, -1);
 #ifdef NON_THREAD_TEST
 			i--;
