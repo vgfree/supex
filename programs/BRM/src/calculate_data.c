@@ -53,7 +53,7 @@ void start_calculate_data(struct taskdata *data)
 			data->caldata[i].host = &calgrp->host[i];
 			/*gain and store data to netdata*/
 			int rc = 0;
-			rc = pool_api_gain(&data->caldata[i].cntpool,
+			rc = conn_xpool_gain(&data->caldata[i].cntpool,
 					calgrp->host[i].ip,
 					calgrp->host[i].port,
 					(void **)&data->caldata[i].fd);
@@ -61,8 +61,8 @@ void start_calculate_data(struct taskdata *data)
 
 			/*保证描述符没有被对端关闭*/
 			while (unlikely(ischeckfd && SF_IsClosed((int)data->caldata[i].fd))) {
-				pool_api_free(data->caldata[i].cntpool, (void **)&data->caldata[i].fd);
-				rc = pool_api_pull(data->caldata[i].cntpool,
+				conn_xpool_free(data->caldata[i].cntpool, (void **)&data->caldata[i].fd);
+				rc = conn_xpool_pull(data->caldata[i].cntpool,
 						(void **)&data->caldata[i].fd);
 				AssertError(rc == POOL_API_OK, ECONNREFUSED);
 			}
@@ -233,7 +233,7 @@ static void _calculate_one_finish(struct async_obj *obj, void *reply, void *usr)
 
 				if (unlikely(!keepalive)) {
 					/*close connection*/
-					pool_api_free(data->cntpool, (void **)&data->fd);
+					conn_xpool_free(data->cntpool, (void **)&data->fd);
 				}
 #endif
 				body = &cache->buf_addr[obj->replies.work->parse.http_info.hs.body_offset];

@@ -50,7 +50,7 @@ static void swift_entry_init(void)
 	 */
 	init_session_cmd();
 
-	pool_api_init(g_rr_cfg_file.map_server_host, g_rr_cfg_file.map_server_port, 1000, false);
+	conn_xpool_init(g_rr_cfg_file.map_server_host, g_rr_cfg_file.map_server_port, 1000, false);
 }
 
 static void swift_shut_down(void)

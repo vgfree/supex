@@ -207,7 +207,7 @@ static inline bool _hostentry_connect(struct hostentry *host, int poolsize)
 
 	x_printf(D, "connect to `%s:%d`", host->ip, host->port);
 
-	ret = pool_api_init(host->ip, host->port, poolsize, false);
+	ret = conn_xpool_init(host->ip, host->port, poolsize, false);
 
 	if (unlikely(!ret)) x_perror("connect to `%s:%d` fail.", host->ip, host->port);
 

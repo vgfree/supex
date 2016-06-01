@@ -59,10 +59,10 @@ int import_to_redis(char command[], void *loop, char host[], unsigned short port
 
 	if (ac) {
 		void    *sfd = (void *)-1;
-		int     rc = pool_api_gain(&cpool, host, port, &sfd);
+		int     rc = conn_xpool_gain(&cpool, host, port, &sfd);
 
 		if (rc) {
-			//                        pool_api_free ( cpool, &sfd );
+			//                        conn_xpool_free ( cpool, &sfd );
 			async_distory(ac);
 			return -1;
 		}
@@ -72,7 +72,7 @@ int import_to_redis(char command[], void *loop, char host[], unsigned short port
 		int     ok = cmd_to_proto(&proto, command);
 
 		if (ok == REDIS_ERR) {
-			pool_api_push(cpool, &sfd);
+			conn_xpool_push(cpool, &sfd);
 			async_distory(ac);
 			return -1;
 		}
@@ -114,17 +114,17 @@ int sniff_vms_call(void *user, void *task)
 	/*
 	 *    struct cnt_pool *cpool = NULL;
 	 *        void *sfd = (void*)-1;
-	 *        int rc = pool_api_gain(&cpool, g_rr_cfg_file.map_server_host, g_rr_cfg_file.map_server_port, &sfd);
+	 *        int rc = conn_xpool_gain(&cpool, g_rr_cfg_file.map_server_host, g_rr_cfg_file.map_server_port, &sfd);
 	 *    if (rc){
 	 *        return -1;
 	 *    }
 	 *
 	 *        if (sendToother(sfd, p_task->size, p_task->data) < 0) {
-	 *                pool_api_free ( cpool, &sfd );
+	 *                conn_xpool_free ( cpool, &sfd );
 	 *                return -1;
 	 *        }
 	 *
-	 *    pool_api_push ( cpool, &sfd );
+	 *    conn_xpool_push ( cpool, &sfd );
 	 */
 	return 0;
 }

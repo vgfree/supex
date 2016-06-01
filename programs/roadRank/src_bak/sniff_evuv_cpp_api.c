@@ -60,7 +60,7 @@ int import_to_redis(char command[], void *loop, char host[], unsigned short port
 
 	if (ac) {
 		void    *sfd = (void *)-1;
-		int     rc = pool_api_gain(&cpool, host, port, &sfd);
+		int     rc = conn_xpool_gain(&cpool, host, port, &sfd);
 
 		if (rc) {
 			//                        cnt_free ( cpool, &sfd );
@@ -73,7 +73,7 @@ int import_to_redis(char command[], void *loop, char host[], unsigned short port
 		int     ok = cmd_to_proto(&proto, command);
 
 		if (ok == REDIS_ERR) {
-            pool_api_push(cpool, &sfd);
+            conn_xpool_push(cpool, &sfd);
 			async_distory(ac);
 			return -1;
 		}

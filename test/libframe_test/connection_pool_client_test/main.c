@@ -18,7 +18,7 @@ struct client
 	char            *server;
 	bool            end;	// 文件是否已经读到结尾
 	int             fd;	// 读取的文件描述符
-	struct connpool *pool;
+	struct conn_ypool *pool;
 };
 
 void send_data(struct evcoro_scheduler *scheduler, void *usr);
@@ -59,7 +59,7 @@ int main(int argc, char *argv[])
 		AssertError(scheduler, ENOMEM);
 
 		// 创建一个连接池
-		ret = connpool_create(client->host, client->server, POOLSIZE, true);
+		ret = conn_ypool_create(client->host, client->server, POOLSIZE, true);
 		RAISE_SYS_ERROR(ret);
 
 		// 启动协程
@@ -91,7 +91,7 @@ void send_data(struct evcoro_scheduler *scheduler, void *usr)
 		evcoro_cleanup_push(scheduler, _free_client, (void *)client);	// 压入一个清理函数
 
 		// 从连接池中取出一个tcp发送数据
-		ret = connpool_pull(client->host, client->server, client->pool);
+		ret = conn_ypool_pull(client->host, client->server, client->pool);
 		RAISE_SYS_ERROR(ret);
 		bytes = read(client->fd, &Cache_Buff[Cache_End], 256);
 		RAISE_SYS_ERROR(bytes);
@@ -111,7 +111,7 @@ void send_data(struct evcoro_scheduler *scheduler, void *usr)
 
 		if (likely(ret > 0)) {
 			x_printf(D, "%s:%s:%d send data successed", client->host, client->server, client->pool->conn->fd);
-			connpool_push(client->pool);	// tcp用完之后放回池中
+			conn_ypool_push(client->pool);	// tcp用完之后放回池中
 			cache_cutmem(&Cache);		// 清理cache中的无效数据[已使用过无需再使用]
 			evcoro_push(scheduler, recv_data, (void *)client, STACK_SIZE);
 			evcoro_fastswitch(scheduler);
@@ -142,7 +142,7 @@ void recv_data(struct evcoro_scheduler *scheduler, void *usr)
 		evcoro_cleanup_push(scheduler, _free_client, (void *)client);
 
 		// 从连接池中取出一个tcp发送数据
-		ret = connpool_pull(client->host, client->server, client->pool);
+		ret = conn_ypool_pull(client->host, client->server, client->pool);
 		RAISE_SYS_ERROR(ret);
 
 		client->pool->conn->usr = scheduler;
@@ -158,7 +158,7 @@ void recv_data(struct evcoro_scheduler *scheduler, void *usr)
 				evcoro_cleanup_pop(scheduler, true);				// 弹出清理任务并执行清理任务
 			} else {
 				cache_clean(&Cache);						// 清空cache
-				connpool_push(client->pool);					// tcp用完之后放回池中
+				conn_ypool_push(client->pool);					// tcp用完之后放回池中
 				evcoro_push(scheduler, send_data, (void *)client, STACK_SIZE);	// 添加一个发送数据的任务
 				evcoro_fastswitch(scheduler);
 				evcoro_cleanup_pop(scheduler, false);
@@ -251,7 +251,7 @@ static void _free_client(void *usr)
 	}
 
 	if (likely(client->pool)) {
-		connpool_disconn(client->pool);
+		conn_ypool_disconn(client->pool);
 	}
 
 	Free(client->pool);

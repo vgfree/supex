@@ -16,9 +16,9 @@ int main(int argc, char **argv)
 	 */
 	init_session_cmd();
 
-	pool_api_init("127.0.0.1", 6000, 2000, true);
+	conn_xpool_init("127.0.0.1", 6000, 2000, true);
 
-	pool_api_init("www.sina.com", 80, 2000, true);
+	conn_xpool_init("www.sina.com", 80, 2000, true);
 }
 
 #if 0

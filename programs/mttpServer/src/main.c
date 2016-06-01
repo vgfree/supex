@@ -66,8 +66,8 @@ static void swift_entry_init(void)
 	 */
 	init_session_cmd();
 
-	// pool_api_init(g_rr_cfg_file.gaode_host, g_rr_cfg_file.gaode_port, 200, true);
-	pool_api_init(g_rr_cfg_file.tsdb_host, g_rr_cfg_file.tsdb_port, 2000, false);
+	// conn_xpool_init(g_rr_cfg_file.gaode_host, g_rr_cfg_file.gaode_port, 200, true);
+	conn_xpool_init(g_rr_cfg_file.tsdb_host, g_rr_cfg_file.tsdb_port, 2000, false);
 
 	// init grid file
 	loadGridkv("Hkeys-ct");

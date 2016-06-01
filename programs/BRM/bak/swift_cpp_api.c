@@ -100,10 +100,10 @@ int swift_vms_idle(void *W)
 
 	if (ac) {
 		void    *sfd = (void *)(intptr_t)-1;
-		int     rc = pool_api_gain(&cpool, "127.0.0.1", 6000, &sfd);
+		int     rc = conn_xpool_gain(&cpool, "127.0.0.1", 6000, &sfd);
 
 		if (rc) {
-			//			pool_api_free ( cpool, &sfd );
+			//			conn_xpool_free ( cpool, &sfd );
 			async_distory(ac);
 			return -1;
 		}
@@ -113,7 +113,7 @@ int swift_vms_idle(void *W)
 		int     ok = cmd_to_proto(&proto, "SET key value");
 
 		if (ok == REDIS_ERR) {
-			pool_api_push(cpool, &sfd);
+			conn_xpool_push(cpool, &sfd);
 			async_distory(ac);
 			return -1;
 		}
@@ -132,10 +132,10 @@ int swift_vms_idle(void *W)
 
 	if (ac) {
 		void    *sfd = (void *)(intptr_t)-1;
-		int     rc = pool_api_gain(&cpool, "www.sina.com", 80, &sfd);
+		int     rc = conn_xpool_gain(&cpool, "www.sina.com", 80, &sfd);
 
 		if (rc) {
-			//			pool_api_free ( cpool, &sfd );
+			//			conn_xpool_free ( cpool, &sfd );
 			async_distory(ac);
 			return -1;
 		}
@@ -145,7 +145,7 @@ int swift_vms_idle(void *W)
 		snprintf(buff, MAX_LEN_STRING - 1, TEST_HTTP_FORMAT, "", "www.sina.com", 80, "Keep-Alive", 0, "");
 
 		if (0) {
-			pool_api_push(cpool, &sfd);
+			conn_xpool_push(cpool, &sfd);
 			async_distory(ac);
 			return -1;
 		}

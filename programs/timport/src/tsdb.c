@@ -37,24 +37,24 @@ static void add_dn_to_pool(tsdb_t *tsdb, data_node_t *dn)
 			}
 
 			if (tsdb->status == NO_READY) {
-				if (!pool_api_init(dn->ip, dn->w_port, MAX_CONNS_PER_TSDB, true)) {
-					x_printf(F, "pool_api_init failed, host = %s, port = %d", dn->ip, dn->w_port);
+				if (!conn_xpool_init(dn->ip, dn->w_port, MAX_CONNS_PER_TSDB, true)) {
+					x_printf(F, "conn_xpool_init failed, host = %s, port = %d", dn->ip, dn->w_port);
 					raise(SIGQUIT);
 					return;
 				}
 			} else {
 				struct cnt_pool *cpool = NULL;
 				void            *cite = NULL;
-				rc = pool_api_gain(&cpool, dn->ip, dn->w_port, &cite);
+				rc = conn_xpool_gain(&cpool, dn->ip, dn->w_port, &cite);
 
 				if (POOL_API_OK != rc) {
-					if (!pool_api_init(dn->ip, dn->w_port, MAX_CONNS_PER_TSDB, true)) {
-						x_printf(F, "pool_api_init failed, host = %s, port = %d", dn->ip, dn->w_port);
+					if (!conn_xpool_init(dn->ip, dn->w_port, MAX_CONNS_PER_TSDB, true)) {
+						x_printf(F, "conn_xpool_init failed, host = %s, port = %d", dn->ip, dn->w_port);
 						raise(SIGQUIT);
 						return;
 					}
 				} else {
-					pool_api_push(cpool, &cite);
+					conn_xpool_push(cpool, &cite);
 				}
 			}
 
@@ -99,9 +99,9 @@ static void del_dn_from_pool(tsdb_t *tsdb, data_node_t *dn)
 				struct cnt_pool *cpool = NULL;
 				void            *cite = NULL;
 
-				while (POOL_API_OK == pool_api_gain(&cpool, dn->ip, dn->w_port, &cite)) {
-					x_printf(I, "(%s:%d) ==> pool_api_free (cite = %d)", dn->ip, (int)dn->w_port, (int)(long)cite);
-					pool_api_free(cpool, &cite);
+				while (POOL_API_OK == conn_xpool_gain(&cpool, dn->ip, dn->w_port, &cite)) {
+					x_printf(I, "(%s:%d) ==> conn_xpool_free (cite = %d)", dn->ip, (int)dn->w_port, (int)(long)cite);
+					conn_xpool_free(cpool, &cite);
 				}
 #endif
 

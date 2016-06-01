@@ -11,7 +11,7 @@
 #include "load_child_cfg.h"
 #include "share_evcb.h"
 #include "list_node.h"
-#include "pools/pool2.h"
+#include "pools/xpool.h"
 #include "minor/crzpt_api.h"
 #include "base/utils.h"
 #include "share_evcb.h"
@@ -40,7 +40,7 @@ static void child_init(void)
 	//	struct swift_cfg_file *p_cfg_file = &(g_swift_cfg_list.file_info);
 	// printf("child init, host:%s, port:%d\n", g_child_cfg_list.app_redis_host[g_child_index], g_child_cfg_list.app_redis_port[g_child_index]);
 
-	pool_api_init(g_child_cfg_list.app_redis_host[g_child_index], g_child_cfg_list.app_redis_port[g_child_index], 200000, true);
+	conn_xpool_init(g_child_cfg_list.app_redis_host[g_child_index], g_child_cfg_list.app_redis_port[g_child_index], 200000, true);
 
 	//	snprintf(path, sizeof(path), "%s/%s.log", p_cfg_file->log_path, p_cfg_file->log_file);
 

@@ -125,10 +125,10 @@ void handle_statistics(struct ev_loop *loop, statistics_t *p_stat)
 		goto fail;
 	}
 
-	rc = pool_api_gain(&cpool, p_stat->host, p_stat->port, &cite);
+	rc = conn_xpool_gain(&cpool, p_stat->host, p_stat->port, &cite);
 
 	if (POOL_API_OK != rc) {
-		x_printf(F, "pool_api_gain failed rc = %d, host = %s, port = %d", rc, p_stat->host, p_stat->port);
+		x_printf(F, "conn_xpool_gain failed rc = %d, host = %s, port = %d", rc, p_stat->host, p_stat->port);
 		goto fail;
 	}
 
@@ -196,7 +196,7 @@ void handle_statistics(struct ev_loop *loop, statistics_t *p_stat)
 	if (has_cmd) {
 		async_startup(ac);
 	} else {
-		pool_api_push(cpool, &cite);
+		conn_xpool_push(cpool, &cite);
 		statistics_finish_cb(NULL, (void *)ac);
 
 		if (NULL != ac) {
@@ -355,10 +355,10 @@ static void tsdb_set_finish_cb(const struct async_obj *obj, void *data)
 	}
 
 	if (NULL != rds_link) {
-		rc = pool_api_gain(&cpool, rds_link->host, rds_link->port, &cite);
+		rc = conn_xpool_gain(&cpool, rds_link->host, rds_link->port, &cite);
 
 		if (POOL_API_OK != rc) {
-			x_printf(F, "pool_api_gain failed rc = %d, host = %s, port = %d", rc, rds_link->host, rds_link->port);
+			x_printf(F, "conn_xpool_gain failed rc = %d, host = %s, port = %d", rc, rds_link->host, rds_link->port);
 			goto fail;
 		}
 
@@ -368,10 +368,10 @@ static void tsdb_set_finish_cb(const struct async_obj *obj, void *data)
 	} else {
 		for (i = 0; i < p_cfg->redis_cnt; ++i) {
 			rds_link = &p_cfg->redis[i];
-			rc = pool_api_gain(&cpool, rds_link->host, rds_link->port, &cite);
+			rc = conn_xpool_gain(&cpool, rds_link->host, rds_link->port, &cite);
 
 			if (POOL_API_OK != rc) {
-				x_printf(F, "pool_api_gain failed rc = %d, host = %s, port = %d", rc, rds_link->host, rds_link->port);
+				x_printf(F, "conn_xpool_gain failed rc = %d, host = %s, port = %d", rc, rds_link->host, rds_link->port);
 				goto fail;
 			}
 
@@ -504,10 +504,10 @@ static void handle_string(timport_task_t *p_ttask)
 			goto fail;
 		}
 
-		rc = pool_api_gain(&cpool, rlink.host, rlink.port, &cite);
+		rc = conn_xpool_gain(&cpool, rlink.host, rlink.port, &cite);
 
 		if (POOL_API_OK != rc) {
-			x_printf(F, "(%s) pool_api_gain failed rc = %d, host = %s, port = %d!", p_ttask->key, rc, rlink.host, rlink.port);
+			x_printf(F, "(%s) conn_xpool_gain failed rc = %d, host = %s, port = %d!", p_ttask->key, rc, rlink.host, rlink.port);
 			goto fail;
 		}
 
@@ -519,10 +519,10 @@ static void handle_string(timport_task_t *p_ttask)
 			AO_ThreadSpinLock(&((g_timport_mgr.tsdb)->lock));
 			list_for_each_entry(p, &((g_timport_mgr.tsdb)->pool), list)
 			{
-				rc = pool_api_gain(&cpool, p->dn.ip, p->dn.w_port, &cite);
+				rc = conn_xpool_gain(&cpool, p->dn.ip, p->dn.w_port, &cite);
 
 				if (POOL_API_OK != rc) {
-					x_printf(F, "(%s %s) pool_api_gain failed rc = %d, host = %s, port = %d!", p_ttask->tkey->key, p_ttask->ftime, rc, p->dn.ip, p->dn.w_port);
+					x_printf(F, "(%s %s) conn_xpool_gain failed rc = %d, host = %s, port = %d!", p_ttask->tkey->key, p_ttask->ftime, rc, p->dn.ip, p->dn.w_port);
 					AO_ThreadSpinUnlock(&((g_timport_mgr.tsdb)->lock));
 					goto fail;
 				}
@@ -537,10 +537,10 @@ static void handle_string(timport_task_t *p_ttask)
 
 			for (i = 0; i < p_tsdb_in_cfg->kset_cnt; ++i) {
 				redis_link_t *q = &p_tsdb_in_cfg->key_set[i].data_node[0];
-				rc = pool_api_gain(&cpool, q->host, q->port, &cite);
+				rc = conn_xpool_gain(&cpool, q->host, q->port, &cite);
 
 				if (POOL_API_OK != rc) {
-					x_printf(F, "(%s %s) pool_api_gain failed rc = %d, host = %s, port = %d!", p_ttask->tkey->key, p_ttask->ftime, rc, q->host, q->port);
+					x_printf(F, "(%s %s) conn_xpool_gain failed rc = %d, host = %s, port = %d!", p_ttask->tkey->key, p_ttask->ftime, rc, q->host, q->port);
 					goto fail;
 				}
 
@@ -698,10 +698,10 @@ static void handle_single_step_index(timport_task_t *p_ttask)
 		return;
 	}
 
-	rc = pool_api_gain(&cpool, rds_link->host, rds_link->port, &cite);
+	rc = conn_xpool_gain(&cpool, rds_link->host, rds_link->port, &cite);
 
 	if (POOL_API_OK != rc) {
-		x_printf(F, "(%s) pool_api_gain failed rc = %d, host = %s, port = %d!", p_ttask->key, rc, rds_link->host, rds_link->port);
+		x_printf(F, "(%s) conn_xpool_gain failed rc = %d, host = %s, port = %d!", p_ttask->key, rc, rds_link->host, rds_link->port);
 		goto fail;
 	}
 
@@ -735,10 +735,10 @@ static void handle_single_step_index(timport_task_t *p_ttask)
 				int idx = p_new_ttask->tkey->redis_filter(p_new_ttask->tkey, p_new_ttask->param, p_new_ttask->param_len, p_cfg->redis_cnt);
 
 				if (sfd_list[idx] < 0) {
-					rc = pool_api_gain(&cpool, p_cfg->redis[idx].host, p_cfg->redis[idx].port, &cite);
+					rc = conn_xpool_gain(&cpool, p_cfg->redis[idx].host, p_cfg->redis[idx].port, &cite);
 
 					if (POOL_API_OK != rc) {
-						x_printf(F, "(%s) pool_api_gain failed, host = %s, port = %d!", p_ttask->key, p_cfg->redis[idx].host, p_cfg->redis[idx].port);
+						x_printf(F, "(%s) conn_xpool_gain failed, host = %s, port = %d!", p_ttask->key, p_cfg->redis[idx].host, p_cfg->redis[idx].port);
 						goto fail;
 					}
 
@@ -927,10 +927,10 @@ static void timport_task_start(struct ev_loop *loop, time_t tmstamp)
 				goto fail;
 			}
 
-			rc = pool_api_gain(&cpool, p_cfg->redis[j].host, p_cfg->redis[j].port, &cite);
+			rc = conn_xpool_gain(&cpool, p_cfg->redis[j].host, p_cfg->redis[j].port, &cite);
 
 			if (POOL_API_OK != rc) {
-				x_printf(F, "(%s) pool_api_gain failed rc = %d, host = %s, port = %d", p_ttask->key, rc, p_cfg->redis[j].host, p_cfg->redis[j].port);
+				x_printf(F, "(%s) conn_xpool_gain failed rc = %d, host = %s, port = %d", p_ttask->key, rc, p_cfg->redis[j].host, p_cfg->redis[j].port);
 				goto fail;
 			}
 
@@ -1011,14 +1011,14 @@ void timport_task_init(void)
 
 	/* redis connection pool init */
 	for (i = 0; i < p_cfg->redis_cnt; ++i) {
-		if (!pool_api_init(p_cfg->redis[i].host, p_cfg->redis[i].port, MAX_CONNS_PER_REDIS, true)) {
+		if (!conn_xpool_init(p_cfg->redis[i].host, p_cfg->redis[i].port, MAX_CONNS_PER_REDIS, true)) {
 			raise(SIGQUIT);
 			return;
 		}
 	}
 
 	if (p_cfg->statistics.keys_cnt > 0) {
-		if (!pool_api_init(p_cfg->statistics.host, p_cfg->statistics.port, MAX_CONNS_PER_REDIS, true)) {
+		if (!conn_xpool_init(p_cfg->statistics.host, p_cfg->statistics.port, MAX_CONNS_PER_REDIS, true)) {
 			raise(SIGQUIT);
 			return;
 		}
@@ -1026,7 +1026,7 @@ void timport_task_init(void)
 
 	for (i = 0; i < p_cfg->tsdb.kset_cnt; ++i) {
 		for (j = 0; j < p_cfg->tsdb.key_set[i].dn_cnt; ++j) {
-			if (!pool_api_init(p_cfg->tsdb.key_set[i].data_node[j].host, p_cfg->tsdb.key_set[i].data_node[j].port, MAX_CONNS_PER_TSDB, true)) {
+			if (!conn_xpool_init(p_cfg->tsdb.key_set[i].data_node[j].host, p_cfg->tsdb.key_set[i].data_node[j].port, MAX_CONNS_PER_TSDB, true)) {
 				raise(SIGQUIT);
 				return;
 			}

@@ -41,12 +41,12 @@
  *        struct ev_loop *main_loop = ev_default_loop(0);
  *        struct async_ctx *ac = NULL;
  *
- *        pool_api_init("127.0.0.1", 30001, 2000, true);
+ *        conn_xpool_init("127.0.0.1", 30001, 2000, true);
  *
  *        ac = async_initial(main_loop, QUEUE_TYPE_FIFO, NULL, NULL, NULL, 0);
  *        if (ac) {
  *                void *sfd = (void*)(intptr_t)-1;
- *                int rc = pool_api_gain( &cpool, "127.0.0.1", 30001, &sfd);
+ *                int rc = conn_xpool_gain( &cpool, "127.0.0.1", 30001, &sfd);
  *                if (rc){
  *                        async_distory(ac);
  *                        return -1;

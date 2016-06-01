@@ -57,7 +57,7 @@ v1.0.5 (2015-01-30)
 		- Fix only use static g_data_pool to support dynamic allocation.(2015-01-30)
 		- Coro add OPEN_LESS_SWITCH control.(2015-02-02)
 		- Fix bug:memory leak in lrucache.(2015-06-30)
-		- Fix pool_api_gain return value changes by no include called function head file.(2015-09-12)
+		- Fix conn_xpool_gain return value changes by no include called function head file.(2015-09-12)
 
 v1.0.4 (2014-12-30)
 	* New features:

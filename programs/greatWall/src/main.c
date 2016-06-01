@@ -11,8 +11,8 @@
 #include "load_swift_cfg.h"
 
 #include "minor/sniff_api.h"
-#include "pools/pool2.h"
-#include "pool_api/connpool2_api.h"
+#include "pools/xpool.h"
+#include "pool_api/connxpool_api.h"
 #include "load_sniff_cfg.h"
 #include "apply_def.h"
 #include "dams_cfg.h"
@@ -42,7 +42,7 @@ void init_service_cnt(void)
 	for (i = 0; i < g_dams_cfg_file.count && i < MAX_LINK_INDEX; i++) {
 		char    *host = g_dams_cfg_file.links[i].host;
 		int     port = g_dams_cfg_file.links[i].port;
-		bool    ret = pool_api_init(host, port, g_dams_cfg_file.per_peak_cnt_count, false);
+		bool    ret = conn_xpool_init(host, port, g_dams_cfg_file.per_peak_cnt_count, false);
 
 		if (!ret) {
 			x_printf(E, "link %s:%d ERROR!", host, port);

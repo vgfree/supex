@@ -5,8 +5,8 @@
 #include "sniff_evcoro_cpp_api.h"
 #include "dams_cfg.h"
 #include "tcp_api/tcp_api.h"
-#include "pools/pool2.h"
-#include "pool_api/connpool2_api.h"
+#include "pools/xpool.h"
+#include "pool_api/connxpool_api.h"
 #include "async_tasks/async_api.h"
 #include "apply_def.h"
 #include "base/utils.h"
@@ -18,26 +18,26 @@ extern struct dams_cfg_file g_dams_cfg_file;
 #if 1
 static void do_over_clean(struct async_obj *obj, void *reply, void *data)
 {
-	struct pool2         *cpool = data;
+	struct xpool         *cpool = data;
 	if (obj->replies.work->done) {
-		pool_api_push(cpool, obj->replies.work->sfd);
+		conn_xpool_push(cpool, obj->replies.work->sfd);
 	} else {
 		x_printf(E, "Disconnected...");
-		pool_api_free(cpool, obj->replies.work->sfd);
+		conn_xpool_free(cpool, obj->replies.work->sfd);
 	}
 
 }
 
 static int forward_to_server(char *host, int port, const char *data, size_t size, struct ev_loop *loop)
 {
-	struct pool2         *cpool = NULL;
+	struct xpool         *cpool = NULL;
 	struct async_ctx        *ac = NULL;
 
 	ac = async_initial(loop, QUEUE_TYPE_FIFO, NEXUS_TYPE_TEAM, NULL, NULL, NULL, 1);
 
 	if (ac) {
 		void    *sfd = (void *)(intptr_t)-1;
-		int     rc = pool_api_gain(&cpool, host, port, &sfd);
+		int     rc = conn_xpool_gain(&cpool, host, port, &sfd);
 
 		if (rc) {
 			async_distory(ac);
@@ -91,7 +91,7 @@ static int safe_fresh_http(const char *host, int port, const char *data, size_t 
 
 static int safe_delay_http(const char *host, int port, const char *data, size_t size, int mark)
 {
-	struct pool2         *cpool = NULL;
+	struct xpool         *cpool = NULL;
 	struct async_ctx        *ac = NULL;
 	unsigned int            idx = 0;
 	int                     rc = 0;
@@ -102,7 +102,7 @@ static int safe_delay_http(const char *host, int port, const char *data, size_t 
 	if (ac) {
 		void *sfd = (void *)(intptr_t)-1;
 		do {
-			rc = pool_api_gain(&cpool, host, port, &sfd);
+			rc = conn_xpool_gain(&cpool, host, port, &sfd);
 
 			if (rc) {
 				if (0 == ++idx % 3) {

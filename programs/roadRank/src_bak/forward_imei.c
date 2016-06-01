@@ -40,7 +40,7 @@ bool forward_data(const char *data, struct ev_loop *loop, char *host, int port)
 
     if (ac) {
         void    *sfd = (void *)(intptr_t)-1;
-        int     rc = pool_api_gain(&cpool, host, port, &sfd);
+        int     rc = conn_xpool_gain(&cpool, host, port, &sfd);
 
         if (rc) {
             async_distory(ac);

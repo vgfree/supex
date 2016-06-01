@@ -1,7 +1,7 @@
 #include "list_node.h"
 #include "async_tasks/async_api.h"
-#include "pools/pool2.h"
-#include "pool_api/connpool2_api.h"
+#include "pools/xpool.h"
+#include "pool_api/connxpool_api.h"
 #include "redis_api/redis_status.h"
 #include "redis_parse.h"
 #define REDIS_ERR       -1
@@ -181,19 +181,19 @@ void creat_time_node(struct t_node *t_head, struct d_node *d_new)
 
 void fcb_distory(struct async_obj *obj, void *reply, void *data)
 {
-	struct pool2         *cpool = data;
+	struct xpool         *cpool = data;
 	if (obj->replies.work->done) {
-		pool_api_push(cpool, obj->replies.work->sfd);
+		conn_xpool_push(cpool, obj->replies.work->sfd);
 	} else {
 		x_printf(E, "Disconnected...");
-		pool_api_free(cpool, obj->replies.work->sfd);
+		conn_xpool_free(cpool, obj->replies.work->sfd);
 	}
 
 }
 
 int import_to_redis(char command[], void *loop, char host[], unsigned short port)
 {
-	struct pool2 		*cpool = NULL;
+	struct xpool 		*cpool = NULL;
 	struct async_ctx        *ac = NULL;
 
 	// x_printf(D,"import_to_redis: %s\n",command);
@@ -202,10 +202,10 @@ int import_to_redis(char command[], void *loop, char host[], unsigned short port
 
 	if (ac) {
 		void    *sfd = (void *)(intptr_t)-1;
-		int     rc = pool_api_gain(&cpool, host, port, &sfd);
+		int     rc = conn_xpool_gain(&cpool, host, port, &sfd);
 
 		if (rc) {
-			//                        pool_api_free ( cpool, &sfd );
+			//                        conn_xpool_free ( cpool, &sfd );
 			async_distory(ac);
 			return -1;
 		}
@@ -215,7 +215,7 @@ int import_to_redis(char command[], void *loop, char host[], unsigned short port
 		int     ok = cmd_to_proto(&proto, command);
 
 		if (ok == REDIS_ERR) {
-			pool_api_push(cpool, &sfd);
+			conn_xpool_push(cpool, &sfd);
 			async_distory(ac);
 			return -1;
 		}
