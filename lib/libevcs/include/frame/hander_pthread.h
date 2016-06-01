@@ -5,6 +5,7 @@
 #include "supex.h"
 #include "adopt_tasks/adopt_task.h"
 #include "spx_evcs.h"
+#include "base/free_queue.h"
 
 typedef struct
 {

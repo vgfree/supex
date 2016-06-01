@@ -196,32 +196,6 @@ struct safe_init_step
 
 void safe_start_pthread(void *func, int num, void *addr, void *data);
 
-/*==============================================================================================*
-*       free queue                                  *
-*==============================================================================================*/
-struct free_queue_list
-{
-	unsigned int    max;
-	unsigned int    all;
-	unsigned int    dsz;
-	unsigned int    isz;
-	unsigned int    osz;
-	AO_T            tasks;	/*tasks > 0 时代表有新增任务*/
-	void            *slots;
-
-	unsigned int    head;
-	unsigned int    tail;
-
-	AO_SpinLockT    w_lock;
-	AO_SpinLockT    r_lock;
-};
-
-void free_queue_init(struct free_queue_list *list, unsigned int dsz, unsigned int max);
-
-bool free_queue_push(struct free_queue_list *list, void *data);
-
-bool free_queue_pull(struct free_queue_list *list, void *data);
-
 /*
  * 给lua的分配函数
  */

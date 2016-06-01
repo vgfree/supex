@@ -8,6 +8,7 @@
 #include "crzpt_cfg.h"
 #include "adopt_tasks/adopt_task.h"
 #include "supex.h"
+#include "base/free_queue.h"
 
 #define SIG_APP_ADD     36
 #define SIG_APP_SET     37

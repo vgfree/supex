@@ -12,6 +12,7 @@
 #include "async_comm.h"
 #include "supex.h"
 #include "../listen_pthread.h"
+#include "base/free_queue.h"
 
 struct alive_settings
 {

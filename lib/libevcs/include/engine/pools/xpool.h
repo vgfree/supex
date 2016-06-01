@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../base/utils.h"
+#include "../base/free_queue.h"
 
 #define POOL_API_OK             0
 #define POOL_API_ERR_NO_POOL    -1
