@@ -29,8 +29,8 @@ TOBJ_DIR =		lib
 #######
 BUILD_CFLAGS =		-fPIC -Wall -Wno-unused-function -Wno-unused-variable -g -std=c99
 #BUILD_LIBS =		-lpthread -lm
-BUILD_INC_DIR = 	-I/usr/include -I/usr/local/include -I../liblog -I../libcomm
-BUILD_LIB_DIR =		-L/usr/local/lib -L/usr/lib -L/usr/libexec
+BUILD_INC_DIR = 	-I/usr/include -I/usr/local/include -I../liblog -I../libcomm -I../libmini/include
+BUILD_LIB_DIR =		-L/usr/local/lib -L/usr/lib -L/usr/libexec 
 
 #######
 ifeq ($(BUILD_HOST), darwin)
@@ -83,6 +83,7 @@ SOBJ = $(addprefix $(SOBJ_DIR)/, \
 	timer.o \
 	router.o \
 	comm_message_operator.o \
+	free_queue_list.o \
 	)
 
 

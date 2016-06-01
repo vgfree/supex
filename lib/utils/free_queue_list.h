@@ -1,7 +1,10 @@
 #ifndef _FREE_QUEUE_LIST_H_
 #define _FREE_QUEUE_LIST_H_
 
+#include "libmini.h"
+
 #include <stdint.h>
+
 
 /*==============================================================================================*
  * *       free queue                                  *
