@@ -13,7 +13,7 @@ $(OBJ): $(SRC)
 	$(CC) $(CFLAG) $(INCLUDE_PATH) -c $(SRC)
 
 $(TARGET) : $(OBJ)
-	$(CC) $(OBJ) -lm -ldl ../lib/libutils.a ../../libmini.a -o $(TARGET)
+	$(CC) $(OBJ) -lm -ldl ../lib/libutils.a -lpthread ../../libmini.a -o $(TARGET)
 
 clean:
 	rm -f *.o $(TARGET)

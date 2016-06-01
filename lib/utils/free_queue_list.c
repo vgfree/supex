@@ -23,7 +23,7 @@ static void _expand_queue(struct free_queue_list *list)
   assert(list); 
   unsigned int swap_all =
     (list->all - 1) * 2 < list->max ? (list->all - 1) * 2 + 1 : list->max + 1;
-  void *swap_slots = calloc(list->all, list->dsz);
+  void *swap_slots = calloc(swap_all, list->dsz);
   assert(swap_slots);
   if (list->tail > list->head) {
     memcpy(swap_slots, &((char *)list->slots)[list->head * list->dsz], (list->tail - list->head) * list->dsz);
