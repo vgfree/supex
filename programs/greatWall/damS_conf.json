@@ -1,11 +1,11 @@
 {
 	"swift_port": 4210,
-	"swift_worker_counts": 2,
-	"swift_tasker_counts": 2,
+	"swift_worker_counts": 1,
+	"swift_tasker_counts": 1,
 	"swift_protocol": "redis",
 	"max_req_size": 32768,
-	"sniff_worker_counts": 5,
-	"sniff_tasker_counts": 64,
+	"sniff_worker_counts": 1,
+	"sniff_tasker_counts": 1,
 	"log_path": "./logs/",
 	"log_file": "damS",
 	"log_level": 0,
@@ -26,8 +26,8 @@
 		{
 			"slot": 0,
 			"serv": "driView",
-			"host": "172.16.21.175",
-			"port": 4040
+			"host": "127.0.0.1",
+			"port": 6666
 		},{
 			"slot": 1,
 			"serv": "goby",

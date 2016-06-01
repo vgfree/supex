@@ -12,7 +12,7 @@
 
 #include "minor/sniff_api.h"
 #include "pools/xpool.h"
-#include "pool_api/connxpool_api.h"
+#include "pool_api/conn_xpool_api.h"
 #include "load_sniff_cfg.h"
 #include "apply_def.h"
 #include "dams_cfg.h"
@@ -72,9 +72,7 @@ static void swift_entry_init(void)
 	 * 初始化支持的命令
 	 */
 	init_session_cmd();
-#ifdef OPEN_EVUV
 	init_service_cnt();
-#endif
 }
 
 static void swift_shut_down(void)
@@ -159,9 +157,7 @@ static void swift_reload_cfg(void)
 		x_printf(D, "reload configure file [%s] success.", argv->conf_name);
 	}
 
-#ifdef OPEN_EVUV
 	init_service_cnt();
-#endif
 
 	/*
 	 * 复位 sniff_worker

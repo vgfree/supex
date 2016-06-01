@@ -6,7 +6,7 @@
 #include "dams_cfg.h"
 #include "tcp_api/tcp_api.h"
 #include "pools/xpool.h"
-#include "pool_api/connxpool_api.h"
+#include "pool_api/conn_xpool_api.h"
 #include "async_tasks/async_api.h"
 #include "apply_def.h"
 #include "base/utils.h"
