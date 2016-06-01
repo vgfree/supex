@@ -36,6 +36,7 @@ void send_status_msg(int clientfd, int status)
   snprintf(buf, 10, "%d", clientfd);
   strcat(cid, buf);
   set_msg_frame(0, &msg, strlen(cid), cid);
+  log("send status:%d", status);
   if (status == FD_INIT) {
     set_msg_frame(0, &msg, 9, "connected");
   }

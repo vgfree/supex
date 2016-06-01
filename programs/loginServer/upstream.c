@@ -8,6 +8,7 @@ int upstream_msg()
 {
   struct comm_message msg = {};
   init_msg(&msg);
+  log("start to recv msg");
   recv_msg(&msg);
   log("get_max_msg_frame, :%d", get_max_msg_frame(&msg));
   for (int i = 0; i < get_max_msg_frame(&msg); i++) {

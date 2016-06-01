@@ -12,14 +12,15 @@ int main(int argc, char *argv[])
     struct app_msg msg = {};
     int more = 0;
     recv_app_msg(&msg, &more, -1);
-    printf("msg size:%d\n", msg.vector_size);
+    printf("msg size:%d, [0]iov_len:%d\n",
+           msg.vector_size, msg.vector[0].iov_len);
     assert(msg.vector_size > 0);
 	if (memcmp(msg.vector[0].iov_base, "status", 6) == 0) {
       if (memcmp(msg.vector[1].iov_base, "connected", 9) == 0) {
         char setting[] = "setting";
 		char gidmap[] = "gidmap";
         char cid[20] = {}; memcpy(cid, msg.vector[2].iov_base, msg.vector[2].iov_len);
-        char gid[] = "gid";
+        char gid[] = "gid0";
 		struct app_msg send_msg = {};
         send_msg.vector_size = 4;
         send_msg.vector[0].iov_base = setting;

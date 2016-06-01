@@ -26,8 +26,10 @@ int send_app_msg(struct app_msg *msg)
 {
   assert(msg && msg->vector_size > 0);
   int rc = -1;
-  if (msg->vector[0].iov_len == 9 &&
-      memcmp("setting", msg->vector[0].iov_base, 9) == 0) {
+  printf("iov_len:%u\n", msg->vector[0].iov_len);
+  if (msg->vector[0].iov_len == 7 &&
+      memcmp("setting", msg->vector[0].iov_base, 7) == 0) {
+     printf("send to _api.\n");
     rc = send_to_api(msg);
   }
   else {

@@ -44,12 +44,12 @@ void destroy_send()
 int send_to_api(struct app_msg *msg)
 {
   assert(msg && s_api);
-  return zmq_sendiov(s_api, msg->vector, msg->vector_size, ZMQ_DONTWAIT);
+  return zmq_sendiov(s_api, msg->vector, msg->vector_size, ZMQ_SNDMORE|ZMQ_DONTWAIT);
 }
 
 int send_to_gateway(struct app_msg *msg)
 {
   assert(msg && s_gateway);
-  return zmq_sendiov(s_gateway, msg->vector, msg->vector_size, ZMQ_DONTWAIT);
+  return zmq_sendiov(s_gateway, msg->vector, msg->vector_size, ZMQ_SNDMORE|ZMQ_DONTWAIT);
 }
 

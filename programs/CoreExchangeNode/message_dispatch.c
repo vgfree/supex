@@ -55,7 +55,7 @@ static int _handle_gid_message(struct comm_message *msg)
   int fd_list[GROUP_SIZE] = {};
   int size = find_fd_list(gid, fd_list);
   remove_first_nframe(3, msg);
-  log("get_max_msg_frame:%d", get_max_msg_frame(msg));
+  log("get_max_msg_frame:%d, fd size:%d", get_max_msg_frame(msg), size);
   for (int i = 0; i < size; i++) {
     log("sent msg to fd:%d.", fd_list[i]);
     set_msg_fd(msg, fd_list[i]);
