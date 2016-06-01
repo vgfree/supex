@@ -277,7 +277,7 @@ static int _vms_sync(lua_State **L, int last, struct sniff_task_node *task)
 	long    *addr = task->data;
 	int     *all = *addr;
 
-	ATOMIC_F_SUB(all, 1);
+	AO_F_SUB(all, 1);
 
 	lua_getglobal(*L, "app_push");
 	lua_pushboolean(*L, last);
@@ -302,7 +302,7 @@ static int _vms_gain(lua_State **L, int last, struct sniff_task_node *task)
 
 	long    *addr = task->data;
 	int     *all = *addr;
-	ATOMIC_F_SUB(all, 1);
+	AO_F_SUB(all, 1);
 
 	return ret;
 }

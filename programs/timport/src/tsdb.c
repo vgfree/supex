@@ -68,7 +68,7 @@ static void add_dn_to_pool(tsdb_t *tsdb, data_node_t *dn)
 
 			AO_ThreadSpinUnlock(&tsdb->lock);
 
-			ATOMIC_CASB(&tsdb->status, NO_READY, IS_READY);
+			AO_CASB(&tsdb->status, NO_READY, IS_READY);
 		}
 	}
 }

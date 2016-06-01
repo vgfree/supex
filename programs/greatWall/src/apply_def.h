@@ -1,6 +1,6 @@
 #pragma once
 
-#include "sniff_api.h"
+#include "minor/sniff_api.h"
 
 #define OVERLOOK_DELAY_LIMIT    3
 #define RESEND_PROTECT_TIME_DELAY 2

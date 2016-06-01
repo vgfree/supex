@@ -98,7 +98,7 @@ void statistics_finish_cb(const struct async_obj *obj, void *data)
 	g_timport_mgr.start_tmstamp += g_timport_mgr.interval;
 	set_stime(g_timport_mgr.stfd, (int64_t)g_timport_mgr.start_tmstamp);
 
-	if (ATOMIC_CASB(&(g_timport_mgr.work_status), IS_WORKING, NO_WORKING)) {
+	if (AO_CASB(&(g_timport_mgr.work_status), IS_WORKING, NO_WORKING)) {
 		timport_task_check(loop);
 		return;
 	}
@@ -278,7 +278,7 @@ static void task_finish(timport_task_t *p_ttask)
 						g_timport_mgr.start_tmstamp += g_timport_mgr.interval;
 						set_stime(g_timport_mgr.stfd, (int64_t)g_timport_mgr.start_tmstamp);
 
-						if (ATOMIC_CASB(&(g_timport_mgr.work_status), IS_WORKING, NO_WORKING)) {
+						if (AO_CASB(&(g_timport_mgr.work_status), IS_WORKING, NO_WORKING)) {
 							timport_task_check(p->loop);
 							return;
 						}
@@ -1076,7 +1076,7 @@ void timport_task_check(void *user)
 	x_printf(I, "=== (work_status = %d, start_tmstamp = %d, diff_time = %d, delay_time = %d) ===", (int)g_timport_mgr.work_status, (int)g_timport_mgr.start_tmstamp, (int)(now - g_timport_mgr.start_tmstamp), p_cfg->delay_time);
 
 	if (now - g_timport_mgr.start_tmstamp > (time_t)p_cfg->delay_time) {
-		if (ATOMIC_CASB(&(g_timport_mgr.work_status), NO_WORKING, IS_WORKING)) {
+		if (AO_CASB(&(g_timport_mgr.work_status), NO_WORKING, IS_WORKING)) {
 			x_printf(I, "====== timport_task_start(%d) ======", (int)g_timport_mgr.start_tmstamp);
 			timport_task_start(loop, g_timport_mgr.start_tmstamp);
 		}

@@ -15,8 +15,8 @@ unsigned int mfptp_log(char *imei, char *buf, int len, int up);
 
 /*************************************************/
 
-#define ATOMIC_UNLOCK           0
-#define ATOMIC_INLOCK           1
+#define AO_UNLOCK           0
+#define AO_INLOCK           1
 
 #define X_DATA_NO_ALL           2
 #define X_DATA_IS_ALL           1

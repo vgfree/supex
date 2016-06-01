@@ -1,25 +1,39 @@
 #include <assert.h>
 #include <unistd.h>
 
-#include "sniff_api.h"
+#include "minor/sniff_api.h"
 #include "sniff_evcoro_cpp_api.h"
 #include "dams_cfg.h"
-#include "tcp_api.h"
-#include "pool_api.h"
-#include "async_api.h"
+#include "tcp_api/tcp_api.h"
+#include "pools/pool2.h"
+#include "pool_api/connpool2_api.h"
+#include "async_tasks/async_api.h"
 #include "apply_def.h"
-#include "utils.h"
+#include "base/utils.h"
+#include "spx_evcs.h"
 
 extern struct dams_cfg_file g_dams_cfg_file;
 
 
 #if 1
+static void do_over_clean(struct async_obj *obj, void *reply, void *data)
+{
+	struct pool2         *cpool = data;
+	if (obj->replies.work->done) {
+		pool_api_push(cpool, obj->replies.work->sfd);
+	} else {
+		x_printf(E, "Disconnected...");
+		pool_api_free(cpool, obj->replies.work->sfd);
+	}
+
+}
+
 static int forward_to_server(char *host, int port, const char *data, size_t size, struct ev_loop *loop)
 {
-	struct cnt_pool         *cpool = NULL;
+	struct pool2         *cpool = NULL;
 	struct async_ctx        *ac = NULL;
 
-	ac = async_initial(loop, QUEUE_TYPE_FIFO, NULL, NULL, NULL, 1);
+	ac = async_initial(loop, QUEUE_TYPE_FIFO, NEXUS_TYPE_TEAM, NULL, NULL, NULL, 1);
 
 	if (ac) {
 		void    *sfd = (void *)(intptr_t)-1;
@@ -31,7 +45,7 @@ static int forward_to_server(char *host, int port, const char *data, size_t size
 		}
 
 		/*send*/
-		async_command(ac, PROTO_TYPE_HTTP, (int)(intptr_t)sfd, cpool, NULL, NULL, data, size);
+		async_command(ac, PROTO_TYPE_HTTP, (int)(intptr_t)sfd, do_over_clean, cpool, data, size);
 
 		async_startup(ac);
 		return 0;
@@ -43,7 +57,7 @@ static int forward_to_server(char *host, int port, const char *data, size_t size
 static int safe_fresh_http(const char *host, int port, const char *data, size_t size, int mark)
 {
 	static __thread time_t status[MAX_LINK_INDEX] = { 0 };
-	struct ev_loop          *loop = p_sniff_worker->evuv.loop;
+	struct ev_loop          *loop = supex_get_default()->scheduler->listener;
 
 	int     ok = 0;
 	time_t  now = 0;
@@ -57,7 +71,7 @@ static int safe_fresh_http(const char *host, int port, const char *data, size_t 
 		if (RESEND_PROTECT_TIME_DELAY > now - old) {
 			return -1;
 		} else {
-			ATOMIC_CLEAR(&status[mark]);
+			AO_CLEAR(&status[mark]);
 			ok = forward_to_server(host, port, data, size, loop);
 		}
 	}
@@ -67,7 +81,7 @@ static int safe_fresh_http(const char *host, int port, const char *data, size_t 
 			x_printf(W, "links[%d] is busy now, pool is full!", mark);
 		} else {
 			now = time(NULL);
-			ATOMIC_SET(&status[mark], now);
+			AO_SET(&status[mark], now);
 			x_printf(W, "links[%d] is forbid to forward data for %d second!", mark, RESEND_PROTECT_TIME_DELAY);
 		}
 	}
@@ -77,13 +91,13 @@ static int safe_fresh_http(const char *host, int port, const char *data, size_t 
 
 static int safe_delay_http(const char *host, int port, const char *data, size_t size, int mark)
 {
-	struct cnt_pool         *cpool = NULL;
+	struct pool2         *cpool = NULL;
 	struct async_ctx        *ac = NULL;
 	unsigned int            idx = 0;
 	int                     rc = 0;
-	struct ev_loop          *loop = p_sniff_worker->evuv.loop;
+	struct ev_loop          *loop = supex_get_default()->scheduler->listener;
 
-	ac = async_initial(loop, QUEUE_TYPE_FIFO, NULL, NULL, NULL, 1);
+	ac = async_initial(loop, QUEUE_TYPE_FIFO, NEXUS_TYPE_TEAM, NULL, NULL, NULL, 1);
 
 	if (ac) {
 		void *sfd = (void *)(intptr_t)-1;
@@ -98,7 +112,7 @@ static int safe_delay_http(const char *host, int port, const char *data, size_t 
 		} while (rc);
 
 		/*send*/
-		async_command(ac, PROTO_TYPE_HTTP, (int)(intptr_t)sfd, cpool, NULL, NULL, data, size);
+		async_command(ac, PROTO_TYPE_HTTP, (int)(intptr_t)sfd, do_over_clean, cpool, data, size);
 
 		async_startup(ac);
 		return 0;
@@ -123,14 +137,14 @@ static int safe_fresh_http(const char *host, int port, const char *data, size_t 
 		if (RESEND_PROTECT_TIME_DELAY > now - old) {
 			return -1;
 		} else {
-			ATOMIC_CLEAR(&status[mark]);
+			AO_CLEAR(&status[mark]);
 			ok = sync_tcp_ask(host, port, data, size, NULL, 0, -1);
 		}
 	}
 
 	if (ok < 0) {
 		now = time(NULL);
-		ATOMIC_SET(&status[mark], now);
+		AO_SET(&status[mark], now);
 		x_printf(W, "links[%d] is forbid to forward data for %d second!", mark, RESEND_PROTECT_TIME_DELAY);
 	}
 

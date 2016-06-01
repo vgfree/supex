@@ -61,7 +61,7 @@ static bool tasks(void *user, void *data)
 	session_response_clnt(service->fd, SESSION_IO_TIMEOUT,
 		"tasks(0x%20x) : %ld\n",
 		g_tasks_shmqueue->shmkey,
-		ATOMIC_GET(&g_tasks_shmqueue->list->nodes));
+		AO_GET(&g_tasks_shmqueue->list->nodes));
 
 #else
 	SNIFF_WORKER_PTHREAD    *p_sniff_worker = (SNIFF_WORKER_PTHREAD *)p_swift_worker->mount;
@@ -71,7 +71,7 @@ static bool tasks(void *user, void *data)
 		flag = session_response_clnt(service->fd, SESSION_IO_TIMEOUT,
 				"thread(%20ld) : %ld\n",
 				ptr->tid,
-				ATOMIC_GET(&ptr->thave));
+				AO_GET(&ptr->thave));
 
 		if (!flag) {
 			goto over;

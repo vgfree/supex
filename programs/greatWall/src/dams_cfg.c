@@ -4,6 +4,7 @@
 #include <stdio.h>
 
 #include "dams_cfg.h"
+#include "apply_def.h"
 
 static void init_dams_cfg(struct dams_cfg_file *p_cfg)
 {

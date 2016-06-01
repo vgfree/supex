@@ -36,11 +36,11 @@ int swift_vms_init(void *W)
 SNIFF_WORKER_PTHREAD *get_idle_thread(SNIFF_WORKER_PTHREAD *p_list)
 {
 	SNIFF_WORKER_PTHREAD    *p_idle = p_list;
-	AO_T                    idle = ATOMIC_GET(&p_idle->thave);
+	AO_T                    idle = AO_GET(&p_idle->thave);
 	SNIFF_WORKER_PTHREAD    *p_temp = p_list->next;
 
 	while (p_temp != p_list) {
-		AO_T temp = ATOMIC_GET(&p_temp->thave);
+		AO_T temp = AO_GET(&p_temp->thave);
 
 		if (temp < idle) {
 			p_idle = p_temp;

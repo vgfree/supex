@@ -12,7 +12,7 @@ INC_DIR=-I/usr/local/include/luajit-2.0 -I../../lib/libev -I../../lib/json-c \
 
 
 LIB_DIR=-L/usr/local/lib -L../../lib
-LIBS=-lluajit-5.1 -lstdc++ -lpthread -lrt -lm
+LIBS=-lluajit-5.1 -lpthread -lrt -lm -lstdc++
 LIBA=-ljson-c -lkv
 
 #[=========>MARK<=========]#

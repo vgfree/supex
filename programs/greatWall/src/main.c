@@ -6,16 +6,18 @@
 
 #include "mq_api.h"
 
-#include "swift_api.h"
+#include "major/swift_api.h"
 #include "swift_cpp_api.h"
 #include "load_swift_cfg.h"
 
-#include "sniff_api.h"
-#include "pool_api.h"
+#include "minor/sniff_api.h"
+#include "pools/pool2.h"
+#include "pool_api/connpool2_api.h"
 #include "load_sniff_cfg.h"
 #include "apply_def.h"
 #include "dams_cfg.h"
 #include "switch_queue.h"
+#include "app_queue.h"
 
 #include "sniff_evcoro_cpp_api.h"
 
@@ -78,7 +80,7 @@ static void swift_entry_init(void)
 static void swift_shut_down(void)
 {
 	const SWIFT_WORKER_PTHREAD      *swift_worker = g_swift_worker_pthread;
-	const int                       swift_worker_total = SWIFT_WORKER_COUNTS;
+	const int                       swift_worker_total = G_SWIFT_WORKER_COUNTS;
 	int                             i = 0;
 	int                             thds = 0;
 
@@ -100,7 +102,7 @@ static void swift_shut_down(void)
 	/*
 	 * 等待所有sniff_worker挂起
 	 */
-	ThreadSuspendWait(cond, thds * SNIFF_WORKER_COUNTS);
+	ThreadSuspendWait(cond, thds * G_SNIFF_WORKER_COUNTS);
 
 	/*
 	 * 由于 sniff_worker 线程还在挂起状态，所以不能释放挂起条件
@@ -117,7 +119,7 @@ static void swift_reload_cfg(void)
 	struct swift_cfg_file   *fileinfo = &g_swift_cfg_list.file_info;
 
 	const SWIFT_WORKER_PTHREAD      *swift_worker = g_swift_worker_pthread;
-	const int                       swift_worker_total = SWIFT_WORKER_COUNTS;
+	const int                       swift_worker_total = G_SWIFT_WORKER_COUNTS;
 	int                             i = 0;
 	int                             thds = 0;
 	bool                            ok = false;
@@ -134,7 +136,7 @@ static void swift_reload_cfg(void)
 	/*
 	 * 等待所有sniff_worker挂起
 	 */
-	ThreadSuspendWait(&cond, thds * SNIFF_WORKER_COUNTS);
+	ThreadSuspendWait(&cond, thds * G_SNIFF_WORKER_COUNTS);
 
 	/*
 	 * 重新加载配置文件
@@ -181,11 +183,11 @@ int main(int argc, char **argv)
 	}
 
 	g_swift_cfg_list.func_info[LPUSHX_FUNC_ORDER].type = BIT8_TASK_TYPE_ALONE;
-	g_swift_cfg_list.func_info[LPUSHX_FUNC_ORDER].func = (TASK_CALLBACK)swift_vms_call_rlpushx;
+	g_swift_cfg_list.func_info[LPUSHX_FUNC_ORDER].func = (TASK_VMS_FCB)swift_vms_call_rlpushx;
 	g_swift_cfg_list.func_info[RPUSHX_FUNC_ORDER].type = BIT8_TASK_TYPE_ALONE;
-	g_swift_cfg_list.func_info[RPUSHX_FUNC_ORDER].func = (TASK_CALLBACK)swift_vms_call_rlpushx;
+	g_swift_cfg_list.func_info[RPUSHX_FUNC_ORDER].func = (TASK_VMS_FCB)swift_vms_call_rlpushx;
 	g_swift_cfg_list.func_info[PUBLISH_FUNC_ORDER].type = BIT8_TASK_TYPE_ALONE;
-	g_swift_cfg_list.func_info[PUBLISH_FUNC_ORDER].func = (TASK_CALLBACK)swift_vms_call_publish;
+	g_swift_cfg_list.func_info[PUBLISH_FUNC_ORDER].func = (TASK_VMS_FCB)swift_vms_call_publish;
 
 	g_swift_cfg_list.entry_init = swift_entry_init;
 
@@ -224,7 +226,7 @@ int main(int argc, char **argv)
 
 	/*
 	 *        g_sniff_cfg_list.func_info[ APPLY_FUNC_ORDER ].type = BIT8_TASK_TYPE_ALONE;
-	 *        g_sniff_cfg_list.func_info[ APPLY_FUNC_ORDER ].func = (TASK_CALLBACK)sniff_vms_call;
+	 *        g_sniff_cfg_list.func_info[ APPLY_FUNC_ORDER ].func = (TASK_VMS_FCB)sniff_vms_call;
 	 */
 	g_sniff_cfg_list.task_lookup = sniff_task_lookup;
 	g_sniff_cfg_list.task_report = sniff_task_report;

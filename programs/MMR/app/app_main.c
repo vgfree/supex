@@ -51,7 +51,7 @@ static bool sniff_task_report(void *user, void *task)
 
 	if (ok) {
 		x_printf(D, "push queue ok!");
-		ATOMIC_INC(&((SNIFF_WORKER_PTHREAD *)user)->thave);
+		AO_INC(&((SNIFF_WORKER_PTHREAD *)user)->thave);
 	} else {
 		x_printf(D, "push queue fail!");
 	}
@@ -67,7 +67,7 @@ static bool sniff_task_lookup(void *user, void *task)
 
 	if (ok) {
 		x_printf(D, "pull queue ok!");
-		ATOMIC_DEC(&((SNIFF_WORKER_PTHREAD *)user)->thave);
+		AO_DEC(&((SNIFF_WORKER_PTHREAD *)user)->thave);
 	}
 
 	return ok;
@@ -88,7 +88,7 @@ static bool sniff_task_report(void *user, void *task)
 
 	if (ok) {
 		x_printf(D, "push queue ok!");
-		ATOMIC_INC(&((SNIFF_WORKER_PTHREAD *)user)->thave);
+		AO_INC(&((SNIFF_WORKER_PTHREAD *)user)->thave);
 	} else {
 		x_printf(D, "push queue fail!");
 	}
@@ -106,7 +106,7 @@ static bool sniff_task_lookup(void *user, void *task)
 
 	if (ok) {
 		x_printf(D, "pull queue ok!");
-		ATOMIC_DEC(&((SNIFF_WORKER_PTHREAD *)user)->thave);
+		AO_DEC(&((SNIFF_WORKER_PTHREAD *)user)->thave);
 	}
 
 	return ok;
@@ -123,7 +123,7 @@ static bool sniff_task_report(void *user, void *task)
 	bool ok = mq_store_put(temp, task, sizeof(struct sniff_task_node));
 
 	if (ok) {
-		ATOMIC_INC(&((SNIFF_WORKER_PTHREAD *)user)->thave);
+		AO_INC(&((SNIFF_WORKER_PTHREAD *)user)->thave);
 		x_printf(D, "push queue ok!");
 	} else {
 		x_printf(D, "push queue fail!");
@@ -142,7 +142,7 @@ static bool sniff_task_lookup(void *user, void *task)
 
 	if (ok) {
 		x_printf(D, "pull queue ok!");
-		ATOMIC_DEC(&((SNIFF_WORKER_PTHREAD *)user)->thave);
+		AO_DEC(&((SNIFF_WORKER_PTHREAD *)user)->thave);
 	}
 
 	return ok;
@@ -219,7 +219,7 @@ static bool sniff_task_lookup(void *user, void *task)
 	struct switch_queue_info        *p_stat = &g_queue_stat_list[p_sniff_worker->batch * g_sniff_cfg_list.file_info.worker_counts + p_sniff_worker->index];
 
   #if 1
-	AO_T have = ATOMIC_GET(&p_sniff_worker->thave);
+	AO_T have = AO_GET(&p_sniff_worker->thave);
 
 	if ((have <= 0) && (p_stat->step_lookup == 2)) {
 		ok = supex_task_pull(p_sniff_worker->glist, p_task);
@@ -277,7 +277,7 @@ static void main_entry_init(void)
 static void swift_shut_down()
 {
 	SWIFT_WORKER_PTHREAD    *swift_worker = g_swift_worker_pthread;
-	const int               swift_worker_total = SWIFT_WORKER_COUNTS;
+	const int               swift_worker_total = G_SWIFT_WORKER_COUNTS;
 	int                     i = 0;
 	int                     thds = 0;
 
@@ -297,7 +297,7 @@ static void swift_shut_down()
 	/*
 	 * 等待所有sniff_worker挂起
 	 */
-	ThreadSuspendWait(cond, thds * SNIFF_WORKER_COUNTS);
+	ThreadSuspendWait(cond, thds * G_SNIFF_WORKER_COUNTS);
 
 	/*
 	 * 由于 sniff_worker 线程还在挂起状态，所以不能释放挂起条件

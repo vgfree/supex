@@ -35,7 +35,7 @@ static void swift_reload_cfg(void)
 	struct swift_cfg_file   *fileinfo = &g_swift_cfg_list.file_info;
 
 	const SWIFT_WORKER_PTHREAD      *swift_worker = g_swift_worker_pthread;
-	const int                       swift_worker_total = SWIFT_WORKER_COUNTS;
+	const int                       swift_worker_total = G_SWIFT_WORKER_COUNTS;
 	int                             i = 0;
 	int                             thds = 0;
 	bool                            ok = false;
@@ -60,7 +60,7 @@ static void swift_reload_cfg(void)
 	/*
 	 * 等待所有sniff_worker挂起
 	 */
-	ThreadSuspendWait(&cond, thds * SNIFF_WORKER_COUNTS);
+	ThreadSuspendWait(&cond, thds * G_SNIFF_WORKER_COUNTS);
 
 	/*
 	 * 重新加载配置文件

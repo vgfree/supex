@@ -88,7 +88,7 @@ void run()
 
 void stop()
 {
-	ATOMIC_SET((int *)&g_framentry.stat, FRAME_STAT_STOP);
+	AO_SET((int *)&g_framentry.stat, FRAME_STAT_STOP);
 	kill(0, SIGINT);
 }
 
@@ -237,7 +237,7 @@ static void _kill_procentry(struct procentry *proc)
 
 static void _deal_signal(int signo)
 {
-	ATOMIC_CAS((int *)&g_framentry.stat, FRAME_STAT_RUN, FRAME_STAT_STOP);
+	AO_CAS((int *)&g_framentry.stat, FRAME_STAT_RUN, FRAME_STAT_STOP);
 
 	int i = 0;
 

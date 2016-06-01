@@ -1,6 +1,7 @@
 #include "list_node.h"
 #include "async_tasks/async_api.h"
 #include "pools/pool2.h"
+#include "pool_api/connpool2_api.h"
 #include "redis_api/redis_status.h"
 #include "redis_parse.h"
 #define REDIS_ERR       -1
@@ -180,7 +181,7 @@ void creat_time_node(struct t_node *t_head, struct d_node *d_new)
 
 void fcb_distory(struct async_obj *obj, void *reply, void *data)
 {
-	struct cnt_pool         *cpool = data;
+	struct pool2         *cpool = data;
 	if (obj->replies.work->done) {
 		pool_api_push(cpool, obj->replies.work->sfd);
 	} else {
@@ -192,7 +193,7 @@ void fcb_distory(struct async_obj *obj, void *reply, void *data)
 
 int import_to_redis(char command[], void *loop, char host[], unsigned short port)
 {
-	struct cnt_pool         *cpool = NULL;
+	struct pool2 		*cpool = NULL;
 	struct async_ctx        *ac = NULL;
 
 	// x_printf(D,"import_to_redis: %s\n",command);

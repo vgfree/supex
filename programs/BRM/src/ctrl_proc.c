@@ -90,7 +90,7 @@ void main_loop(struct framentry *frame)
 	}
 	FINALLY
 	{
-		ATOMIC_SET(&frame->stat, FRAME_STAT_STOP);
+		AO_SET(&frame->stat, FRAME_STAT_STOP);
 	}
 	END;
 }
@@ -125,7 +125,7 @@ static void _ctrl_reload_cfg(struct ev_loop *loop, ev_stat *stat, int event)
 		/*
 		 * 暂停任务，将并发任务数变为零，路由线程因此不会从队列中弹出任务
 		 */
-		ATOMIC_SET(&frame->cfg->paralleltasks, 0);
+		AO_SET(&frame->cfg->paralleltasks, 0);
 
 		/*发送异步事件，唤醒挂起任务*/
 		for (counter = 0; counter < frame->routeprocs; counter++) {
@@ -169,7 +169,7 @@ static void _ctrl_reload_cfg(struct ev_loop *loop, ev_stat *stat, int event)
 		/*结束挂起*/
 		ThreadSuspendEnd((struct ThreadSuspend *)&cond);
 
-		ATOMIC_SET(&frame->cfg->paralleltasks, ptasks);
+		AO_SET(&frame->cfg->paralleltasks, ptasks);
 
 		for (counter = 0; counter < frame->routeprocs; counter++) {
 			struct procentry *ptr = &frame->routeproc[counter];
@@ -241,7 +241,7 @@ static void _ctrl_timeout(struct ev_loop *loop, ev_timer *timer, int event)
 //			fd = _connect_noblock(hent[i].ip, hent[i].port, cfg->idlesleep);
 			fd = x_connect(hent[i].ip, hent[i].port, cfg->idlesleep);
 			if (unlikely(fd < 0)) continue;
-			ATOMIC_CAS(&hent[i].errconn, errconn, 0);
+			AO_CAS(&hent[i].errconn, errconn, 0);
 			close(fd);
 		}
 		
@@ -258,7 +258,7 @@ static void _ctrl_timeout(struct ev_loop *loop, ev_timer *timer, int event)
 //				fd = _connect_noblock(hent[j].ip, hent[j].port, cfg->idlesleep);
 				fd = x_connect(hent[j].ip, hent[j].port, cfg->idlesleep);
 				if (unlikely(fd < 0)) continue;
-				ATOMIC_CAS(&hent[j].errconn, errconn, 0);
+				AO_CAS(&hent[j].errconn, errconn, 0);
 				close(fd);
 			}
 		}
@@ -284,7 +284,7 @@ static void _ctrl_signal_hdl(struct ev_loop *loop, ev_signal *signal, int event)
 		x_printf(W, "receive SIGPIPE !!!");
 		return;
 	} else if (signal->signum == SIGINT) {
-		return_if_fail(ATOMIC_CASB((int *)&frame->stat,
+		return_if_fail(AO_CASB((int *)&frame->stat,
 			FRAME_STAT_RUN,
 			FRAME_STAT_STOP));
 		int i = 0;

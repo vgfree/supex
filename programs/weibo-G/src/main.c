@@ -42,7 +42,7 @@ static void swift_entry_init(void)
 static void swift_shut_down()
 {
 	SWIFT_WORKER_PTHREAD    *swift_worker = g_swift_worker_pthread;
-	const int               swift_worker_total = SWIFT_WORKER_COUNTS;
+	const int               swift_worker_total = G_SWIFT_WORKER_COUNTS;
 	int                     i = 0;
 	int                     thds = 0;
 
@@ -62,7 +62,7 @@ static void swift_shut_down()
 	/*
 	 * 等待所有sniff_worker挂起
 	 */
-	ThreadSuspendWait(cond, thds * SNIFF_WORKER_COUNTS);
+	ThreadSuspendWait(cond, thds * G_SNIFF_WORKER_COUNTS);
 
 	/*
 	 * 由于 sniff_worker 线程还在挂起状态，所以不能释放挂起条件

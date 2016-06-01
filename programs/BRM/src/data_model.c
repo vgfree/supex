@@ -194,8 +194,8 @@ void taghash_destroy(struct taghash *tag)
 void procentry_stop(struct procentry *proc)
 {
 	return_if_fail(proc);
-	ATOMIC_SET((int *)&proc->stat, PROC_STAT_STOP);
-	ATOMIC_SET(&proc->frame->stat, FRAME_STAT_STOP);
+	AO_SET((int *)&proc->stat, PROC_STAT_STOP);
+	AO_SET(&proc->frame->stat, FRAME_STAT_STOP);
 }
 
 /* --------             */
