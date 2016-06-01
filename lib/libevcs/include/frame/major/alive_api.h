@@ -39,7 +39,7 @@ typedef struct
 
 	void                    *mount;
 	void                    *data;
-	struct supex_task_list  tlist;		/**< 任务队列*/
+	struct free_queue_list  tlist;		/**< 任务队列*/
 } ALIVE_WORKER_PTHREAD;
 
 /*******************************************/

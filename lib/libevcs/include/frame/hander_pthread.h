@@ -28,7 +28,7 @@ typedef struct
 #ifdef OPEN_EVCORO
 	struct supex_evcoro     *p_evcs;
 #endif
-	struct supex_task_list  tlist;		/* use prepare_watcher to do manage task */
+	struct free_queue_list  tlist;		/* use prepare_watcher to do manage task */
 	void                    *mount;
 } HANDER_PTHREAD;
 

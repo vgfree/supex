@@ -52,7 +52,7 @@ typedef struct
 	// int batch;//FIXME
 	int                     index;
 	pthread_t               thread_id;	/* unique ID of this thread */
-	struct supex_task_list  tlist;
+	struct free_queue_list  tlist;
 } CRZPT_WORKER_PTHREAD;
 
 int crzpt_mount(struct crzpt_cfg_list *conf);

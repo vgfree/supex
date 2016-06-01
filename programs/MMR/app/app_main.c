@@ -47,7 +47,7 @@ static bool sniff_task_report(void *user, void *task)
 {
 	bool ok = false;
 
-	ok = supex_task_push(&((SNIFF_WORKER_PTHREAD *)user)->tlist, task);
+	ok = free_queue_push(&((SNIFF_WORKER_PTHREAD *)user)->tlist, task);
 
 	if (ok) {
 		x_printf(D, "push queue ok!");
@@ -63,7 +63,7 @@ static bool sniff_task_lookup(void *user, void *task)
 {
 	bool ok = false;
 
-	ok = supex_task_pull(&((SNIFF_WORKER_PTHREAD *)user)->tlist, task);
+	ok = free_queue_pull(&((SNIFF_WORKER_PTHREAD *)user)->tlist, task);
 
 	if (ok) {
 		x_printf(D, "pull queue ok!");
@@ -82,7 +82,7 @@ static bool sniff_task_report(void *user, void *task)
 {
 	bool ok = false;
 
-	//        ok = supex_task_push(&((SNIFF_WORKER_PTHREAD *)user)->tlist, task);
+	//        ok = free_queue_push(&((SNIFF_WORKER_PTHREAD *)user)->tlist, task);
 
 	ok = SHM_QueuePush(g_tasks_shmqueue, task, sizeof(struct sniff_task_node), NULL);
 
@@ -100,7 +100,7 @@ static bool sniff_task_lookup(void *user, void *task)
 {
 	bool ok = false;
 
-	//        ok = supex_task_pull(&((SNIFF_WORKER_PTHREAD *)user)->tlist, task);
+	//        ok = free_queue_pull(&((SNIFF_WORKER_PTHREAD *)user)->tlist, task);
 
 	ok = SHM_QueuePull(g_tasks_shmqueue, task, sizeof(struct sniff_task_node), NULL);
 
@@ -158,7 +158,7 @@ static bool major_push_call(struct switch_queue_info *p_stat, struct supex_task_
 	void                    *user = va_arg(*ap, void *);
 	SNIFF_WORKER_PTHREAD    *p_sniff_worker = (SNIFF_WORKER_PTHREAD *)user;
 
-	return supex_task_push(&p_sniff_worker->tlist, p_node->data);
+	return free_queue_push(&p_sniff_worker->tlist, p_node->data);
 }
 
 static bool minor_push_call(struct switch_queue_info *p_stat, struct supex_task_node *p_node, va_list *ap)
@@ -180,7 +180,7 @@ static bool major_pull_call(struct switch_queue_info *p_stat, struct supex_task_
 	void                    *user = va_arg(*ap, void *);
 	SNIFF_WORKER_PTHREAD    *p_sniff_worker = (SNIFF_WORKER_PTHREAD *)user;
 
-	return supex_task_pull(&p_sniff_worker->tlist, p_node->data);
+	return free_queue_pull(&p_sniff_worker->tlist, p_node->data);
 }
 
 static bool minor_pull_call(struct switch_queue_info *p_stat, struct supex_task_node *p_node, va_list *ap)
@@ -222,7 +222,7 @@ static bool sniff_task_lookup(void *user, void *task)
 	AO_T have = AO_GET(&p_sniff_worker->thave);
 
 	if ((have <= 0) && (p_stat->step_lookup == 2)) {
-		ok = supex_task_pull(p_sniff_worker->glist, p_task);
+		ok = free_queue_pull(p_sniff_worker->glist, p_task);
 
 		if (ok) {
 			x_printf(D, "pull queue ok!");

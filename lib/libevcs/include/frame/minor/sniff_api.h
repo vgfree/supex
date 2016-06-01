@@ -28,8 +28,8 @@ typedef struct sniff_worker_pthread
 	pthread_t                       pid;		/* unique ID of this thread */
 	long                            tid;
 	AO_T                            thave;		/*can't use unsigned int*/
-	struct supex_task_list          tlist;
-	struct supex_task_list          *glist;
+	struct free_queue_list          tlist;
+	struct free_queue_list          *glist;
 	struct sniff_worker_pthread     *next;
 } SNIFF_WORKER_PTHREAD;
 

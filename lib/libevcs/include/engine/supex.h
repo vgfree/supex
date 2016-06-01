@@ -45,7 +45,7 @@ struct supex_line
 	void                    *data;					/**< 所属线程的线程句柄*/
 
 	union virtual_system    VMS;					/**< 所属线程的LUA虚拟机*/
-	bool                    (*task_lookup)(void *data, void *addr);	/**< 取任务回调 supex_task_pull()*/
+	bool                    (*task_lookup)(void *data, void *addr);	/**< 取任务回调 free_queue_pull()*/
 	void                    (*task_handle)(void *data, void *addr);	/**< 处理任务回调函数 smart_task_handle()*/
 };
 
@@ -93,7 +93,7 @@ struct supex_task_node
 	};
 };
 /** 任务队列*/
-struct supex_task_list
+struct free_queue_list
 {
 	unsigned int    max;	/**< 最大容量*/
 	unsigned int    all;	/**< 最大空间*/
@@ -120,7 +120,7 @@ void supex_node_copy(struct supex_task_node *dst, struct supex_task_node *src);
  * @param tsz  元素大小
  * @param max  最大容量
  */
-void supex_task_init(struct supex_task_list *list, unsigned int tsz, unsigned int max);
+void free_queue_init(struct free_queue_list *list, unsigned int tsz, unsigned int max);
 
 /**
  * 将元素的副本压入队列尾部
@@ -128,7 +128,7 @@ void supex_task_init(struct supex_task_list *list, unsigned int tsz, unsigned in
  * @param task 被压入队列的元素
  * @return 是否推入成功true/false
  */
-bool supex_task_push(struct supex_task_list *list, void *task);
+bool free_queue_push(struct free_queue_list *list, void *task);
 
 /**
  * 从队列的头部弹出一个元素的副本
@@ -136,17 +136,17 @@ bool supex_task_push(struct supex_task_list *list, void *task);
  * @param task 被弹出队列的元素
  * @return 是否获取成功true/false
  */
-bool supex_task_pull(struct supex_task_list *list, void *task);
+bool free_queue_pull(struct free_queue_list *list, void *task);
 
 /**
  * 查看队列头数据
  */
-bool supex_task_top(struct supex_task_list *list, void *task);
+bool supex_task_top(struct free_queue_list *list, void *task);
 
 /**
  * 遍历队列
  */
-void supex_task_travel(struct supex_task_list *list, bool (*travel)(void *, size_t size, void *), void *data);
+void supex_task_travel(struct free_queue_list *list, bool (*travel)(void *, size_t size, void *), void *data);
 
 /* ------------                            */
 

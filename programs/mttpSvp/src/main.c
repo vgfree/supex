@@ -20,7 +20,7 @@ bool sniff_task_report(void *user, void *task)
 {
 	bool ok = false;
 
-	ok = supex_task_push(&((SNIFF_WORKER_PTHREAD *)user)->tlist, task);
+	ok = free_queue_push(&((SNIFF_WORKER_PTHREAD *)user)->tlist, task);
 
 	if (ok) {
 		x_printf(D, "push queue ok!");
@@ -36,7 +36,7 @@ bool sniff_task_lookup(void *user, void *task)
 {
 	bool ok = false;
 
-	ok = supex_task_pull(&((SNIFF_WORKER_PTHREAD *)user)->tlist, task);
+	ok = free_queue_pull(&((SNIFF_WORKER_PTHREAD *)user)->tlist, task);
 
 	if (ok) {
 		x_printf(D, "pull queue ok!");

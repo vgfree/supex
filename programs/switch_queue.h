@@ -21,7 +21,7 @@ struct switch_queue_info
 	int                     step_lookup;
 
 	struct supex_task_node  temp;
-	struct supex_task_list  swap;
+	struct free_queue_list  swap;
 
 	volatile long           *major_have;
 	QUEUE_ENTITY_CALL       major_push;

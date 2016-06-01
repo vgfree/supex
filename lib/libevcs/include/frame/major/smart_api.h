@@ -50,7 +50,7 @@ typedef struct
 	int                     index;	/**< 所属线程池的下标*/
 	pthread_t               pid;	/* unique ID of this thread */
 	long                    tid;
-	struct supex_task_list  tlist;	/**< 任务队列*/
+	struct free_queue_list  tlist;	/**< 任务队列*/
 } SMART_WORKER_PTHREAD;
 
 /*
