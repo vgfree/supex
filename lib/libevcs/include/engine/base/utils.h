@@ -115,17 +115,6 @@ int get_current_time(void);
 /*==============================================================================================*
 *       fifo function                                   *
 *==============================================================================================*/
-#ifdef OPEN_OPTIMIZE
-  #define PIPE_MAX_SIZE         ((1 << 8) * 1024)
-#else
-  #ifndef PIPE_BUFFERS
-    #define PIPE_BUFFERS        (16)
-  #endif
-  #define PIPE_MAX_SIZE         (PIPE_BUF * PIPE_BUFFERS)
-#endif
-#define PIPE_SIZE_TOP           (PIPE_MAX_SIZE / sizeof(int))
-#define LOOP_SIZE_TOP           (8 * PIPE_SIZE_TOP)
-
 #define FIFO_DATA               "-DATA"
 #define FIFO_COMD               "-COMD"
 
