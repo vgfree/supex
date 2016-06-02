@@ -2,10 +2,10 @@
 
 void free_queue_init(struct free_queue_list *list, unsigned int dsz, unsigned int max)
 {
+	assert(max >= 1);
 	memset(list, 0, sizeof(struct free_queue_list));
 	list->max = max;
-	assert(max >= 256);// change if else
-	list->all = max/256 + 1;//must > 1
+	list->all = max / 256 + 1 > 1 ?  max / 256 + 1 : 2; //must > 1
 	list->dsz = dsz;
 	list->isz = 0;
 	list->osz = 0;
@@ -25,7 +25,7 @@ static void _expand_queue(struct free_queue_list *list)
 		(list->all - 1) * 2 < list->max ? (list->all - 1) * 2 + 1 : list->max + 1;
 	void *swap_slots = calloc(swap_all, list->dsz);
 	assert(swap_slots);
-	if (list->tail > list->head) {//FIXME >=
+	if (list->tail >= list->head) {
 		memcpy(swap_slots, &((char *)list->slots)[list->head * list->dsz], (list->tail - list->head) * list->dsz);
 		list->tail = list->tail - list->head;
 	}
@@ -59,7 +59,7 @@ bool free_queue_push(struct free_queue_list *list, void *data)
 		ATOMIC_INC(&list->tasks);
 	}
 	else {
-		if (list->all < list->max) {//??? ==   FIXME to <=
+		if (list->all <= list->max) {
 			AO_SpinLock(&list->r_lock);
 			_expand_queue(list);
 			memcpy(&((char *)list->slots)[list->tail * list->dsz], (char *)data, list->dsz);

@@ -61,14 +61,14 @@ int main (int argc, char *argv[]) {
   free_queue_init(&list, 1, 256);
   printf("list init after\n");
   _print_list_info(&list);
-/*  _insert_queue(&list, 8);
+  _insert_queue(&list, 8);
   _print_list_info(&list);
   _pop_queue(&list, 8);
   _print_list_info(&list);
   _insert_queue(&list, 27);
   _print_list_info(&list);
   _pop_queue(&list, 27);
-  _print_list_info(&list);*/
+  _print_list_info(&list);
   srand(235);
   pthread_t tid1, tid2;
   pthread_create(&tid1, NULL, _produce, &list);
