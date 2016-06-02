@@ -14,9 +14,7 @@ local scan = require('scan')
 local func_search_poi = require('func_search_poi')
 local mysql_pool_api = require('mysql_pool_api')
 local domile = require('domile')
-
-local THIRTY    = 3600 * 24 * 30
-local time 
+local ONEDAY = 60 *60*24
 
 module('dotoken', package.seeall)
 
@@ -46,64 +44,116 @@ local function check_parameter(args)
         args['imei'] = args['accountID']
         args['accountID'] = accountID›  
     end
-    if not  args['tokenCode'] then
+    if not args['tokenCode'] then
             only.log('E', "requrie json have nil of \"tokenCode\"")
             gosay.go_false(url_tab, msg['MSG_ERROR_REQ_ARG'],"tokenCode")
     end
         args['startTime'] = tonumber(args['startTime'])
         args['endTime'] = tonumber(args['endTime'])
-    if not args['startTime'] then
+    if not args['endTime'] then
             only.log('E', "requrie json have nil of \"time\"")
-            gosay.go_false(url_tab, msg['MSG_ERROR_REQ_ARG'],"startTime")
+            gosay.go_false(url_tab, msg['MSG_ERROR_REQ_ARG'],"endTime")
     end
+        args['count'] = tonumber(args['count'])  
+    if not args['count'] then
+            only.log('E', "requrie json have nil of \"count\"")
+            gosay.go_false(url_tab, msg['MSG_ERROR_REQ_ARG'],"count")
+    end    
     return args
 end
 
-function Time (t)
+local function mileageinfo_of_time(t)    
     local tab = os.date("*t",t)
-    tab.day = tab.day - 1
-    tab.hour = 23
-    tab.min = 59
-    tab.sec = 59
-    time = os.time(tab)
+    tab.hour = 0
+    tab.min = 0
+    tab.sec = 0
+    et = os.time(tab)
+    et = et -1
+    return et
 end
 
-function sleep(n)
-   os.execute("sleep " .. n)
+local function from_mileagetable_get_tokenCodeinfo(args) 
+
+    local tokenCodeinfo = {}
+    local etdate = os.date("*t",args['endTime']) 
+    local st = args['endTime'] - args['count'] * ONEDAY
+    local stdate = os.date("*t",st)
+    local count = etdate.month - stdate.month 
+    if count < 0 then
+        count = (etdate.month + 12) - stdate.month 
+    end
+        count = count + 1 
+    local monthcount = etdate.month
+    local et = mileageinfo_of_time(args['endTime'])
+    if etdate.year < 2016 then
+        return
+    end
+    for i = count,1,-1 do
+        if  monthcount >= 10 and monthcount <= 12 then     
+            monthinfo = string.format("mileageInfo%s%s",etdate.year,monthcount)
+        else
+            monthinfo = string.format("mileageInfo%s0%s",etdate.year,monthcount)
+        end
+        local dotokenType = "SELECT tokenCode,startTime,endTime FROM %s WHERE imei = %s and startTime >= %s and startTime <= %s"
+        local ok,retdata = mysql_pool_api.cmd("dotoken","select",string.format(dotokenType,monthinfo,args['imei'],st,et)) 
+       only.log('D',"retdata"..scan.dump(retdata))
+	    if not ok and not retdata then
+            only.log('E', "select mysql retdata  FROM mileageInfo error!")
+            gosay.go_false(url_tab, msg['MSG_DO_MYSQL_FAILED'])
+        end
+        table.insert(tokenCodeinfo,retdata)
+        monthcount = monthcount - 1
+        if monthcount == 0 then
+           etdate.year = etdate.year - 1
+           monthcount = 12    
+        end
+
+    end 
+    only.log('D',"tokenCodeinfo"..scan.dump(tokenCodeinfo))
+    return true,tokenCodeinfo
 end
+
+function http_send_mileageinfo(imei,startTime,endTime,tokenCode)
+
+    local body_info = {imei = imei,startTime = startTime,endTime = endTime,tokenCode = tokenCode,}
+    local serv = link["OWN_DIED"]["http"]["mileageinfopost"]
+    local body = utils.gen_url(body_info)
+    only.log('D',"body"..scan.dump(body))
+    local data = "POST /domile HTTP/1.0\r\n" ..                                                                                                                     
+    "User-Agent: curl/7.33.0\r\n" ..
+    "Content-Type: application/x-www-form-urlencoded\r\n" ..
+    "Connection: close\r\n" ..
+    "Content-Length:" .. #body .. "\r\n" ..
+    "Accept: */*\r\n\r\n" ..
+    body
+    local ok,ret = supex.http(serv['host'],serv['port'],data,#data)
+    if not ok or not ret then return nil end
+end
+
+
+function do_tokenCodeinfo_get_mileagedata(args,tokencodeinfo)  
+    for k1,v1 in pairs(tokencodeinfo) do
+        for k,v in pairs(v1) do          
+           http_send_mileageinfo(args['imei'],v["startTime"],v["endTime"],v["tokenCode"]) 
+        end      
+    end
+    return true 
+end
+
 
 function handle()
 
     local args = supex.get_our_body_table()
     only.log('D', "args" .. scan.dump(args))
-    check_parameter(args)
-    local starttime = args['startTime']
-    Time(args['startTime'])
-    local i,sum = 1,0
-    local dotokenType = "SELECT tokenCode,startTime,endTime FROM mileageInfo201604 WHERE imei = %s and startTime <= %s union SELECT tokenCode ,startTime ,endTime FROM mileageInfo201603 WHERE imei = %s and startTime >= %s"
-    dotokenType  = string.format(dotokenType,args['imei'],time,args['imei'],starttime -THIRTY)
-    local ok,retdata = mysql_pool_api.cmd("dotoken","select",dotokenType)
-    only.log('D', "retdata" .. scan.dump(retdata))
+    local args = check_parameter(args)
+    local ok,tokencodeinfo = from_mileagetable_get_tokenCodeinfo(args)
+    only.log('D',"tokencodeinfo"..scan.dump(tokencodeinfo))
     if not ok then
-        only.log('E', "select mysql retdata  FROM mileageInfo201604 error!")
-        gosay.go_false(url_tab, msg['MSG_DO_MYSQL_FAILED'])
-    else
-            local retcount = table.maxn(retdata)
-            local x1 = os.clock()
-            for k,v in pairs(retdata) do
-                    local ok,miledata = domile.mileage_time_handle(args['imei'],tonumber(v["startTime"]),tonumber(v["endTime"]))
-                    if ok and miledata then
-                        local d = domile.get_data()
-                        sleep(5)    
-                        sum = sum + d   
-                    end
-               	    if i == retcount then
-                   	     break
-                    end
-                    i = i + 1
-            end 
-            local x2 = os.clock() 
-            local p = x2 -x1
-            only.log('D', string.format("p = :%s", scan.dump(p)))    
+    only.log('D', "get tokenCodeinfo is failed")
+    end
+   local ok = do_tokenCodeinfo_get_mileagedata(args,tokencodeinfo)
+    if ok then
+    only.log('D', "get whole mileagedata is succeed")
     end
 
+end
