@@ -52,3 +52,4 @@ void alive_suspend_thread(struct ThreadSuspend *cond);
 
 void alive_send_data(bool self, uint64_t cid, int sfd, char *data, long size);
 
+void alive_close_conn(bool self, uint64_t cid, int sfd);
