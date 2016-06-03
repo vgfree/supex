@@ -8,7 +8,6 @@ local path_list ={
         "../../../open/spxonly/?.lua;",
         "../../../open/linkup/?.lua;",
         "../../../open/public/?.lua;",
-	"../../../open/lib/lua-coro/?.lua;",
         "open/?.lua;",
 }
 
@@ -21,9 +20,11 @@ local cjson     = require('cjson')
 local redis_api = require('redis_pool_api')
 local http_api  = require('http_short_api')
 local libhttps  = require("libhttps")
-local Coro 	= require("coro")
 
 redis_api.init()
+
+local str = 'ssssssssssssa;dsadasfqwwwwwwwww99999999999999999999bbbbbbbbbbbbbkkkkkkkkkkkdddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmm2222222222222222222222222222222222222222222222222222222222222222222222222222222222222222222333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333300000000000000000000000---------------------------======================================================[[[[[[[[[[[[[[[[[[[[[[[[[[[[dddddddddddddddddddddddddddddddd,,,,,,,,,,,,,,,,,,,,,,,,,,,cccccccccccc.................///////////////////////////fffffffffffffffffffffffffffddddddddddddddddddddddddddddd'
+
 
 local function setData(key, data)
 	print(key)
@@ -35,6 +36,7 @@ local function setData(key, data)
 end
 
 local function getData(key)
+	print(key)
 	local ok_status, ok_ret = redis_api.cmd('IdKey', '', 'GET', key)
         if not (ok_status and ok_ret) then
         	print('Get key failed')
@@ -43,40 +45,26 @@ local function getData(key)
 	return ok_ret
 end
 
-local function forward_task_redis(coro, usr)
+local function set_task_redis(usr)
 	assert(usr)
-	local midKey = math.random(888888)
-	local idle = coro.fastswitch
-	redis_api.reg( idle, coro )
 	for i = 0, 100000 do
-		setData('hamster:' .. midKey .. ':'  .. tostring(i) .. ':' .. usr, 'GPS' .. tostring(i))
+		setData('lawrence:' .. usr .. ':' .. tostring(i), str)
 	end
 end
 
-local function self_cycle_idle( coro, idleable )
-        if not idleable then
-                only.log('E',"IDLE~~~~")
-        else
-                if coro:isactive() then
-                        lua_default_switch(supex["__TASKER_SCHEME__"])
-                else
-                        only.log('D',"coro:stop()")
-                        coro:stop()
-                        return
-                end
+local function get_task_redis(usr)
+	assert(usr)
+	local ret_str
+        for i = 0, 100000 do
+                ret_str = getData('lawrence:' .. usr .. ':' .. tostring(i))
+		if ret_str ~= str then
+			print('check data failed')
+			return
+		end
         end
 end
 
-function handle()
-	print('begin to set data to tsdb!')
-	local coro = Coro:open(true)
-	coro:addtask(forward_task_redis, coro, 'user')
-	if coro:startup(self_cycle_idle, coro, true) then
-        	only.log('D',"Tasks execute success.")
-        else
-        	only.log('E',"Tasks execute failure.")
-        end
-        coro:close()
+function handle(num)
+	get_task_redis(num)
+	--set_task_redis(num)
 end
-
-handle = handle()

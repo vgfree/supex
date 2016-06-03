@@ -16,8 +16,12 @@ void *work_task (void* args) {
   lua_State* L;
   L = luaL_newstate();  
   luaL_openlibs(L);  
-  luaL_dofile(L, "test.lua");  
-  int iError = lua_pcall(L, 0, 0, 0);  
+  luaL_dofile(L, "test.lua"); 
+ 
+  lua_getglobal(L, "handle");
+  lua_pushnumber(L, (int)args);
+ 
+  int iError = lua_pcall(L, 1, 0, 0);  
   if (iError)  
   {  
     lua_close(L);  
@@ -46,7 +50,8 @@ void *process_start(void *(*fcb)(void *args), void *args)
 }
 
 int main() {
-  for (int i = 0; i < 100; i++)	{
+  int i;
+  for (i = 0; i < 100; i++)	{
     process_start(work_task, (void *)(i));
   }
   return 0;

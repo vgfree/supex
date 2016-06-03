@@ -4,7 +4,7 @@ OWN_POOL = {
 	redis = {
                 IdKey = {
                         host = '192.168.1.12',
-                        port = 7998,
+                        port = 7403,
                 },
         },
 }
