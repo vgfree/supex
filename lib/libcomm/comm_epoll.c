@@ -74,7 +74,7 @@ bool commepoll_mod(struct comm_epoll *commepoll, int fd, int flag)
 		return false ;
 	}
 }
-
+#if 0
 bool commepoll_wait(struct comm_epoll *commepoll, int timeout)
 {
 	assert(commepoll && commepoll->init);
@@ -85,4 +85,48 @@ bool commepoll_wait(struct comm_epoll *commepoll, int timeout)
 	} else {
 		return false;
 	}
+}
+#endif
+
+bool commepoll_wait(struct comm_epoll *commepoll, int timeout)
+{
+	assert(commepoll && commepoll->init);
+	int n = 0, i = 0, cnt = 0;
+	memset(commepoll->events, 0, (sizeof(struct epoll_event)) * commepoll->epollsize);
+	commepoll->eventcnt = epoll_wait(commepoll->epfd, commepoll->events, commepoll->watchcnt, timeout);
+	if (commepoll->eventcnt > 0) {
+#if	0 
+		for (n = 0; n < commepoll->eventcnt; n++) {
+			if (commepoll->events[n].data.fd > 0) {
+				/* 新的客户端连接， 触发accept事件 */
+				if ((fdidx = gain_listenfd_fdidx(&commctx->commevent->listenfd, commctx->commepoll.events[n].data.fd)) > -1) {
+					 //commevent_accept(commctx->commevent, fdidx);
+					 /* 将fd所在的索引号保存进去而不是fd */ 
+					add_remainfd(&commevent->remainfd, fdidx, REMAINFD_LISTEN);
+
+				} else if (commepoll->events[n].events & EPOLLIN) {			/* 有数据可读，触发读数据事件 */
+					/* 管道事件被触发，则开始写事件 */
+					if (commepoll->events[n].data.fd == commevent->commctx->commpipe.rfd) {
+						int array[EPOLL_SIZE] = {};
+						if ((cnt = commpipe_read(&commevent->commctx->commpipe, array, sizeof(int))) > 0) {
+							for (i = 0; i < cnt; i++) {
+								add_remainfd(&commevent->remainfd, array[i], REMAINFD_WRITE);
+							}
+						//	_set_remainfd(&commevent->remainfd, array, cnt);
+							//commevent_send(commctx->commevent, remainfd->wfda[remainfd->wcnt-1], true);
+						}
+					} else {	/* 非pipe的fd读事件被触发，则代表是socket的fd触发了读事件 */
+						add_remainfd(&commevent->remainfd, fd, REMAINFD_READ);
+						// commevent_recv(commctx->commevent, commctx->commepoll.events[n].data.fd, false);
+					}
+				} else if (commepoll->events[n].events & EPOLLOUT) {			/* 有数据可写， 触发写数据事件 */
+					//commevent_send(commctx->commevent, commctx->commepoll.events[n].data.fd, false);
+					add_remainfd(&commevent->remainfd, fd, REMAINFD_WRITE);
+				}
+			}
+		}
+#endif
+		return true;
+	}
+	return false;
 }

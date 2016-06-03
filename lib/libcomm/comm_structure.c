@@ -5,6 +5,39 @@
 
 #include "comm_structure.h"
 
+#define set_parameter(type, capacity, cnt,fda )				\
+		({							\
+		 switch (type) {					\
+			case REMAINFD_LISTEN:				\
+				cnt = &remainfd->cnt[0];		\
+				fda = remainfd->fda[0];			\
+				capacity = &remainfd->capacity[0];	\
+				break ;					\
+			case REMAINFD_READ:				\
+				cnt = &remainfd->cnt[1];		\
+				fda = remainfd->fda[1];			\
+				capacity = &remainfd->capacity[1];	\
+				break ;					\
+			case REMAINFD_PARSE:				\
+				cnt = &remainfd->cnt[2];		\
+				fda = remainfd->fda[2];			\
+				capacity = &remainfd->capacity[2];	\
+				break ;					\
+			case REMAINFD_PACKAGE:				\
+				cnt = &remainfd->cnt[3];		\
+				fda = remainfd->fda[3];			\
+				capacity = &remainfd->capacity[3];	\
+				break ;					\
+			case REMAINFD_WRITE:				\
+				cnt = &remainfd->cnt[4];		\
+				fda = remainfd->fda[4];			\
+				capacity = &remainfd->capacity[4];	\
+				break ;					\
+			default:					\
+				break ;					\
+		}							\
+		})		
+
 inline bool new_commmsg(struct comm_message** message, int size)
 {
 	assert(message);
@@ -40,81 +73,60 @@ inline void free_commmsg(void* arg)
 	}
 }
 
+
 bool init_remainfd(struct remainfd *remainfd)
 {
 	assert(remainfd);
 
+	int i = 0, j = 0;
 	memset(remainfd, 0, sizeof(*remainfd));
-	remainfd->capacity = EPOLL_SIZE/6;
+	remainfd->capacity[0] = LISTEN_SIZE;	/* REMAINFD_LISTEN类型的fd大小一定，不可以扩容 */
 
-	remainfd->wfda = calloc(remainfd->capacity, sizeof(int));
-	if (unlikely(!remainfd->wfda)) {
-		return false;
-	}
-	remainfd->rfda = calloc(remainfd->capacity, sizeof(int));
-	if (unlikely(!remainfd->rfda)) {
-		free(remainfd->wfda);
-		return false;
-	}
-	remainfd->packfda = calloc(remainfd->capacity, sizeof(int));
-	if (unlikely(!remainfd->packfda)) {
-		free(remainfd->wfda);
-		free(remainfd->rfda);
-		return false;
-	}
-	remainfd->parsfda = calloc(remainfd->capacity, sizeof(int));
-	if (unlikely(!remainfd->parsfda)) {
-		free(remainfd->wfda);
-		free(remainfd->rfda);
-		free(remainfd->packfda);
-		return false;
+	for(i = 0; i < 5; i++) {
+		if (i != 0) {
+			remainfd->capacity[i] = EPOLL_SIZE/2;
+		}
+		remainfd->fda[i] = calloc(remainfd->capacity[i], sizeof(int));
+		if (unlikely(!remainfd->fda[i])) {
+			for(j = 0; j < i; j++) {
+				free(remainfd->fda[j]);
+			}
+			remainfd->init = false;
+		}
 	}
 	remainfd->init = true;
-	return true;
+	return remainfd->init;
 }
 
-bool restore_remainfd(struct remainfd *remainfd) 
+void restore_remainfd(struct remainfd *remainfd) 
 {
 	assert(remainfd && remainfd->init);
+	int  i = 0;
 	int* ptr = NULL;
-	int capacity = remainfd->capacity;
-	if (remainfd->capacity > EPOLL_SIZE/6) {
-		remainfd->capacity = EPOLL_SIZE/6;
-		ptr = remainfd->wfda;
-		remainfd->wfda = realloc(ptr, remainfd->capacity);
-		if (unlikely(!remainfd->wfda)) {
-			remainfd->wfda = ptr;
-			return false;
+	int  capacity = 0;
+
+	/* REMAINFD_LISTEN类型的fd不进行扩容，所以不用恢复 */
+	for(i = 1; i < 5; i++) {
+		ptr = remainfd->fda[i];
+		capacity = remainfd->capacity[i];
+		remainfd->fda[i] = realloc(ptr, capacity);
+		if (unlikely(!remainfd->fda[i])) {
+			remainfd->fda[i] = ptr;
+		} else {
+			remainfd->capacity[i] = EPOLL_SIZE/2;
 		}
-		ptr = remainfd->rfda;
-		remainfd->rfda = realloc(ptr, remainfd->capacity);
-		if (unlikely(!remainfd->rfda)) {
-			remainfd->rfda = ptr;
-			return false;
-		}
-		ptr = remainfd->packfda;
-		remainfd->packfda = realloc(ptr, remainfd->capacity);
-		if (unlikely(!remainfd->packfda)) {
-			remainfd->packfda = ptr;
-			return false;
-		}
-		ptr = remainfd->parsfda;
-		remainfd->parsfda = realloc(ptr, remainfd->capacity);
-		if (unlikely(!remainfd->parsfda)) {
-			remainfd->parsfda = ptr;
-			return false;
-		}
+
 	}
-	return true;
+	return ;
 }
 
 void free_remainfd(struct remainfd *remainfd) 
 {
 	if (remainfd && remainfd->init) {
-		free(remainfd->wfda);
-		free(remainfd->rfda);
-		free(remainfd->packfda);
-		free(remainfd->parsfda);
+		int i = 0;
+		for (i = 0; i < 5; i++) {
+			free(remainfd->fda[i]);
+		}
 		remainfd->init = false;
 	}
 	return ;
@@ -122,121 +134,57 @@ void free_remainfd(struct remainfd *remainfd)
 
 bool add_remainfd(struct remainfd *remainfd, int fd, int type) 
 {
-	assert(remainfd && remainfd->init && fd > 0);
-	int i = 0;
-	int* cnt = 0;
-	int **fda = NULL;
+	assert(remainfd && remainfd->init);
+	int	i = 0;
+	int*	capacity = NULL;
+	int*	cnt = NULL;
+	int*	fda = NULL;
+	bool	flag = true;
 
-	switch (type) {
-		case REMAINFD_READ:
-			cnt = &remainfd->rcnt;
-			fda = &remainfd->rfda;
-			break ;
-		case REMAINFD_WRITE:
-			cnt = &remainfd->wcnt;
-			fda = &remainfd->wfda;
-			break ;
-		case REMAINFD_PARSE:
-			cnt = &remainfd->parscnt;
-			fda = &remainfd->parsfda;
-			break ;
-		case REMAINFD_PACK:
-			cnt = &remainfd->packcnt;
-			fda = &remainfd->packfda;
-			break ;
-		default:
-			break ;
-	}
+	set_parameter(type, capacity, cnt, fda);
 
-	if (*cnt == 0) {
-		(*fda)[*cnt] = fd;
-		*cnt += 1;
-		return true;
-	} else if (*cnt == 1) {
-		if ((*fda)[0] != fd) {
-			(*fda)[1] = fd;
-			*cnt += 1;
+	if (unlikely(*capacity < *cnt + 1)) {
+		/* 容量不够，则进行扩容 */
+		int *ptr = fda;
+		fda = realloc(ptr, *capacity + REMAINFD_INCREASE_SIZE);
+		if (fda) {
+			*capacity += REMAINFD_INCREASE_SIZE;
+		} else {
+			/* 扩容失败,直接返回false */
+			fda = ptr;
+			return false;
 		}
-		return true;
-	}
 
-	if (unlikely(remainfd->capacity < *cnt + 1)) {
-		/* 扩容的时候会同时全部扩容 */
-		int *ptr = remainfd->wfda;
-		remainfd->wfda = realloc(ptr, remainfd->capacity + REMAINFD_INCREASE_SIZE);
-		if (unlikely(!remainfd->wfda)) {
-			remainfd->wfda = ptr;
-			return false;
-		}
-		ptr = remainfd->rfda;
-		remainfd->rfda = realloc(ptr, remainfd->capacity + REMAINFD_INCREASE_SIZE);
-		if (unlikely(!remainfd->rfda)) {
-			remainfd->rfda = ptr;
-			return false;
-		}
-		ptr = remainfd->packfda;
-		remainfd->packfda = realloc(ptr, remainfd->capacity + REMAINFD_INCREASE_SIZE);
-		if (unlikely(!remainfd->packfda)) {
-			remainfd->packfda = ptr;
-			return false;
-		}
-		ptr = remainfd->parsfda;
-		remainfd->parsfda = realloc(ptr, remainfd->capacity + REMAINFD_INCREASE_SIZE);
-		if (unlikely(!remainfd->parsfda)) {
-			remainfd->parsfda = ptr;
-			return false;
-		}
 	}
 	for (i = 0; i < *cnt; i++) {
-		if ((*fda)[i] < fd && (*fda)[i+1] > fd ) {
-			if (i+1 != *cnt) {
-				memmove(&((*fda)[i+2]), &((*fda)[i+1]), (*cnt-(i+1))*sizeof(int));
-			}
-			(*fda)[i+1] = fd;
-			*cnt += 1;
+		if (fda[i] == fd) {
+			flag = false;
+			break ;
 		}
 	}
-	return true;
+	if (flag) {
+		fda[*cnt] = fd;
+		*cnt += 1;
+	}
+	return flag;
 }
 
 void del_remainfd(struct remainfd *remainfd, int fd, int type)
 {
-	assert(remainfd && fd > 0);
-	int   i = 0;
-	int*  cnt = 0;
-	int** fda = NULL;
+	assert(remainfd && remainfd->init);
+	int	i = 0;
+	int*	capacity = NULL;
+	int*	cnt = NULL;
+	int*	fda = NULL;
 
-	switch (type) {
-		case REMAINFD_READ:
-			cnt = &remainfd->rcnt;
-			fda = &remainfd->rfda;
-			break ;
-		case REMAINFD_WRITE:
-			cnt = &remainfd->wcnt;
-			fda = &remainfd->wfda;
-			break ;
-		case REMAINFD_PARSE:
-			cnt = &remainfd->parscnt;
-			fda = &remainfd->parsfda;
-			break ;
-		case REMAINFD_PACK:
-			cnt = &remainfd->packcnt;
-			fda = &remainfd->packfda;
-			break ;
-		default:
-			break ;
-	}
-
-	if (*cnt > 0) {
-		for (i = *cnt - 1; i > -1; i--) {
-			if ( (*fda)[i] == fd ) {
-				if (i != *cnt -1) {
-					memmove(&((*fda)[i]), &((*fda)[i+1]), (*cnt-(i+1))*sizeof(int));
-				}
-				*cnt -= 1;
+	set_parameter(type, capacity, cnt, fda);
+	for (i = *cnt-1; i > -1; i--) {
+		if (fda[i] == fd) {
+			if (i != *cnt-1) {
+				memmove(&(fda[i]), &(fda[i+1]), (*cnt-(i+1))*sizeof(int));
 			}
+			*cnt -= 1;
 		}
 	}
 	return ;
 }
-

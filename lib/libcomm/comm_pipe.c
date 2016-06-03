@@ -15,9 +15,18 @@ bool commpipe_init(struct comm_pipe *commpipe)
 	if (pipe(fda) == 0) {
 		/* 创建成功 */
 		commpipe->rfd = fda[0];
+		if (unlikely(!fd_setopt(commpipe->rfd, O_NONBLOCK))) {
+			close(commpipe->rfd);
+			return false;
+		}
 		commpipe->wfd = fda[1];
+		if (unlikely(!fd_setopt(commpipe->wfd, O_NONBLOCK))) {
+			close(commpipe->rfd);
+			close(commpipe->wfd);
+			return false;
+		}
 		commpipe->init = true;
-		log("commpipe read fd:%d commpipe write fd:%d\n",commpipe->rfd, commpipe->wfd);
+		//log("commpipe read fd:%d commpipe write fd:%d\n",commpipe->rfd, commpipe->wfd);
 		return true;
 	} else {
 		return false;
@@ -40,16 +49,14 @@ inline int commpipe_read(struct comm_pipe *commpipe, void *buff, int size)
 {
 	assert(commpipe && commpipe->init);
 
+	int n = 0;
 	int bytes = 0;
-	if ((bytes = read(commpipe->rfd, buff, PIPE_READ_MIOU)) > 0) {
-		int test = bytes/size;
-		log("commpipe read :%d\n", test);
-		commpipe->rcnt += test;
-		log("commpipe read total:%d\n", commpipe->rcnt);
-		return bytes/size;
-	} else {
-		return bytes;
-	}
+
+	bytes = read(commpipe->rfd, buff, PIPE_READ_MIOU);
+	n = bytes/size;
+	commpipe->rcnt += n;
+	log("read one time:%d total read times:%d total write times:%d\n",n, commpipe->rcnt, commpipe->wcnt);
+	return n > 0 ? n : -1;
 }
 
 /* @buff:待发送数据的首地址 @size:待发送数据的大小 @返回值为发送出去的数据的大小 */
@@ -58,7 +65,7 @@ inline int commpipe_write(struct comm_pipe *commpipe, void *buff, int size)
 	assert(commpipe && commpipe->init);
 	int test = size/(sizeof(int));
 	commpipe->wcnt += test;
-	log("commpipe write: %d\n",test);
-	log("commpipe write total:%d\n", commpipe->wcnt);
+	//log("commpipe write: %d\n",test);
+	//log("commpipe write total:%d\n", commpipe->wcnt);
 	return write(commpipe->wfd, buff, size);
 }

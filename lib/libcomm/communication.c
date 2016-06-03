@@ -111,7 +111,7 @@ int comm_socket(struct comm_context *commctx, const char *host, const char *serv
 	assert(commctx && host && service);
 
 	struct comm_tcp	  commtcp = {};
-	struct comm_data* commdata = NULL;
+	struct comm_data* connfd = NULL;
 
 	if (type == COMM_BIND) {
 		if (unlikely(!socket_listen(&commtcp, host, service))) {
@@ -141,21 +141,23 @@ int comm_send(struct comm_context *commctx, const struct comm_message *message, 
 	assert(commctx && message && message->content);
 	assert(message->fd > 0 && message->fd < EPOLL_SIZE); /* 保证描述符在范围内 */
 
-	struct comm_data*    commdata = NULL;
+	struct connfd_info*    connfd = NULL;
 	struct comm_message* commmsg = NULL;
 
-	if ((commdata = (struct comm_data*)commctx->commevent->data[message->fd])) {
+	if ((connfd = commctx->commevent->connfd[message->fd])) {
 		if (new_commmsg(&commmsg, message->package.dsize)){
 			copy_commmsg(commmsg, message);
 
-			commlock_lock(&commdata->sendlock);
-			if (unlikely(!commqueue_push(&commdata->send_queue, (void*)&commmsg))) {
+			commlock_lock(&connfd->sendlock);
+			if (unlikely(!commqueue_push(&connfd->send_queue, (void*)&commmsg))) {
 				/* 队列已满，则存放到链表中 */
-				commlist_push(&commdata->send_list, &commmsg->list);
+				commlist_push(&connfd->send_list, &commmsg->list);
 			}
-			commlock_unlock(&commdata->sendlock);
+			commlock_unlock(&connfd->sendlock);
 
-			commpipe_write(&commctx->commpipe, (void*)&message->fd, sizeof(message->fd));
+			if (unlikely(commpipe_write(&commctx->commpipe, (void*)&message->fd, sizeof(message->fd)) == -1)) {
+				/* 管道已写满,发送一个信号去读取数据  */
+			}
 			//log("comm_send data in comm_send\n");
 			return message->package.dsize;
 		} 
@@ -243,34 +245,23 @@ static void * _start_new_pthread(void *usr)
 			for (n = 0; n < commctx->commepoll.eventcnt; n++) {
 				if (commctx->commepoll.events[n].data.fd > 0) {
 					/* 新的客户端连接， 触发accept事件 */
-					if ((fdidx = gain_listenfd_fdidx(&commctx->commevent->listenfd, commctx->commepoll.events[n].data.fd)) > -1) {
-						 commevent_accept(commctx->commevent, fdidx);
+					if ((fdidx = gain_bindfd_fdidx(commctx->commevent, commctx->commepoll.events[n].data.fd)) > -1) {
+						add_remainfd(&commctx->commevent->remainfd, fdidx, REMAINFD_LISTEN);
 
 					} else if (commctx->commepoll.events[n].events & EPOLLIN) {			/* 有数据可读，触发读数据事件 */
-						/* 管道事件被触发，则开始写事件 */
-						if (commctx->commepoll.events[n].data.fd == commctx->commpipe.rfd) {
-							int cnt = 0;
+						if (commctx->commepoll.events[n].data.fd == commctx->commpipe.rfd) {	/* 管道事件被触发，则触发打包事件 */
+							int cnt = 0, i = 0;
 							int array[EPOLL_SIZE] = {};
 							if ((cnt = commpipe_read(&commctx->commpipe, array, sizeof(int))) > 0) {
-							//	int i = 0;
-								//struct remainfd* remainfd = &commctx->commevent->remainfd;
-								_set_remainfd(&commctx->commevent->remainfd, array, cnt);
-#if 0
 								for(i = 0; i < cnt; i++) {
-									add_remainfd(&commctx->commevent->remainfd, array[i], REMAINFD_WRITE);
+									add_remainfd(&commctx->commevent->remainfd, array[i], REMAINFD_PACKAGE);
 								}
-								/* 将从管道中读取到的重复的fd去除，只保留一个，即相同的fd只触发一次写事件 */
-								if (_set_remainfd(remainfd, array, cnt)) {
-									commevent_send(commctx->commevent, remainfd->wfda[remainfd->wcnt-1], true);
-								}
-#endif
 							}
 						} else {	/* 非pipe的fd读事件被触发，则代表是socket的fd触发了读事件 */
-							 commevent_recv(commctx->commevent, commctx->commepoll.events[n].data.fd, false);
+							 add_remainfd(&commctx->commevent->remainfd, commctx->commepoll.events[n].data.fd, REMAINFD_READ);
 						}
 					} else if (commctx->commepoll.events[n].events & EPOLLOUT) {			/* 有数据可写， 触发写数据事件 */
-
-						commevent_send(commctx->commevent, commctx->commepoll.events[n].data.fd, false);
+						add_remainfd(&commctx->commevent->remainfd, commctx->commepoll.events[n].data.fd, REMAINFD_WRITE);
 					}
 				}
 			}

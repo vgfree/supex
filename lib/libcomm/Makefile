@@ -111,6 +111,7 @@ distclean : clean
 	@-rm -rf $(INSTALL_HEAD_DIR)
 	@-rm -rf client
 	@-rm -rf server
+	@-rm -rf core*
 	$(ECHO) $(COLOR_TXT)"\n\tCLEAN\t >>> "$(COLOR_RED)"$@"$(COLOR_TXT)" <<< COMPLETE"$(COLOR_NONE)
 
 install : $(TARGET)

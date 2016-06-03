@@ -89,35 +89,30 @@ struct comm_context {
 
 /* 残留的fd的类型 */
 enum remainfd_type {
-	REMAINFD_WRITE = 0x01,
+	REMAINFD_LISTEN = 0x01,
+	REMAINFD_WRITE,
 	REMAINFD_READ,
 	REMAINFD_PARSE,
-	REMAINFD_PACK
+	REMAINFD_PACKAGE
 };
 
-/* 此结构体保存发送接收时没成功处理完的fd */
-struct  remainfd {
-	bool	init;		/* 此结构体是否正确被初始化 */
-	int	capacity;	/* 能够保存未处理完毕的fd的总数 */
-	int	wcnt;		/* 写事件没有处理完的fd的总计数 */
-	int	rcnt;		/* 读事件没有处理完的fd的总计数 */
-	int	packcnt;	/* 打包没有处理完的fd的总计数 */
-	int	parscnt;	/* 解析没有处理完的fd的总计数 */
-	int*	wfda;		/* 用于保存写事件没有处理完的fd的首地址 */
-	int*	rfda;		/* 用于保存读事件没有处理完的fd的首地址 */
-	int*	packfda;	/* 用于保存打包没有处理完的fd的首地址 */
-	int*	parsfda;	/* 用于保存解析没有处理完的fd的首地址 */
+/* 数组的每个元素分别代表的是:读，写，解析，打包，监听的相关fd的信息 */
+struct remainfd {
+	bool	init;		/* 此结构体是否被正确的初始化 */
+	int	capacity[5];	/* 每个元素分别代表能够保存LISTEN,REDA,PARSE,PACKAGE,WRITE类型的fd的容量 */
+	int	cnt[5];		/* 每个元素分别代表已保存LISTEN,READ,PARSE,PACKAGE,WRITE类型的fd的总数 */
+	int	circle[5];	/* 每个元素分别代表此次已处理LISTEN,READ,PARSE,PACKAGE,WRITE类型的fd的下标,下一次继续执行下一个相关fd */
+	int*	fda[5];		/* 每个元素分别代表用于保存LISTEN,READ,PARSE,PACKAGE,WRITE类型的fd的首地址 */
 };
 
-/* 监听描述符的相关信息 */
-struct listenfd {
-	int		counter;			/* 监听fd的计数器 */
-	struct cbinfo	finishedcb[LISTEN_SIZE];	/* 每个fd对应的回调函数 */
-	struct comm_tcp	commtcp[LISTEN_SIZE];		/* 套接字的相关信息 */
+/* 绑定监听描述符的相关信息[fd类型为COMM_BIND] */
+struct bindfd_info {
+	struct cbinfo	finishedcb;	/* 每个fd对应的回调函数 */
+	struct comm_tcp	commtcp;	/* 套接字的相关信息 */
 };
 
-/* 每个fd对应的数据相关信息 */
-struct comm_data {
+/* 主动链接或被动连接的fd相关信息[fd的类型为COMM_CONNECT, COMM_ACCEPT] */
+struct connfd_info {
 	struct comm_queue	send_queue;	/* 存放用户传递但并未打包的数据 */
 	struct comm_list	send_list;	/* 当send_queue队列已满时放入此链表中 */
 	struct comm_cache	recv_cache;	/* 存放接收但并未解析的数据 read函数使用 */
@@ -129,18 +124,18 @@ struct comm_data {
 	struct mfptp_packager	packager;	/* 打包器 */
 };
 
+
 /* 事件相关信息 */
 struct comm_event {
-	bool		init;			/* 本结构体是否正确初始化 */
-	int		fds;			/* 客户端连接到服务器的fd的总个数即数组data里面数据有效个数 */
-	int		fda[EPOLL_SIZE/4];	/* 从管道读取的所有fd，即此次需要发送数据的所有fd */
-	intptr_t	data[EPOLL_SIZE];	/* 保存接收发送数据的结构体 */
-	struct listenfd	listenfd;		/* 所有监听描述符的信息 */
-	struct remainfd remainfd;		/* 未处理完的fd */
-	struct cbinfo	timeoutcb;		/* epoll_wait超时的回调函数 */
-	struct comm_context* commctx;
+	bool			init;			/* 本结构体是否正确初始化 */
+	int			connfdcnt;		/* 主动[connect]或被动[accept]连接的fd的总数  */
+	int			bindfdcnt;		/* 绑定监听[bind&&listen]fd的总数 */
+	struct connfd_info*	connfd[EPOLL_SIZE];	/* 主动或被动连接fd的所有信息 */
+	struct bindfd_info	bindfd[LISTEN_SIZE];	/* 绑定监听fd的所有信息 */
+	struct remainfd		remainfd;		/* 所有待处理事件的fd */
+	struct cbinfo		timeoutcb;		/* epoll_wait超时的回调函数 */
+	struct comm_context*	commctx;
 };
-
 
 /*************************************** 数据结构体相关操作 内部使用 ********************************************/
 
@@ -157,7 +152,7 @@ void free_commmsg(void* arg);
 bool init_remainfd(struct remainfd *remainfd);
 
 /* 将扩容的部分恢复到原始的大小 */
-bool restore_remainfd(struct remainfd *remainfd);
+void restore_remainfd(struct remainfd *remainfd);
 
 /* 释放struct remainfd里面分配的内存 */
 void free_remainfd(struct remainfd *remainfd);

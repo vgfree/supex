@@ -13,16 +13,16 @@ extern "C" {
 
 
 /* 初始化一个fd的数据结构体struct comm_data */
-bool commdata_init(struct comm_data **commdata, struct comm_tcp* commtcp,  struct cbinfo*  finishedcb);
+bool commdata_init(struct connfd_info **connfd, struct comm_tcp* commtcp,  struct cbinfo*  finishedcb);
 
 /* 销毁一个fd的数据结构体struct comm_data*/
-void commdata_destroy(struct comm_data *commdata);
+void commdata_destroy(struct connfd_info *connfd);
 
 /* 开始打包一个fd的数据 */
-bool  commdata_package(struct comm_data *commdata, struct comm_event *commevent);
+bool  commdata_package(struct connfd_info *connfd, struct comm_event *commevent);
 
 /* 开始解析一个fd的数据 */
-bool commdata_parse(struct comm_data *commdata, struct comm_event *commevent);
+bool commdata_parse(struct connfd_info *connfd, struct comm_event *commevent);
 
 
 

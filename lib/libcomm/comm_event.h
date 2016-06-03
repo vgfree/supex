@@ -13,12 +13,12 @@ extern "C" {
 #endif
 
 /* 检测fd是否为COMM_BIND类型的fd并保存于struct listenfd结构体中的数组中  @返回值：-1代表不是，否则返回fd所在数组的下标 */
-static inline int gain_listenfd_fdidx(struct listenfd *listenfd, int fd)
+static inline int gain_bindfd_fdidx(struct comm_event *commevent, int fd)
 {
-	assert(listenfd && fd > 0);
+	assert(commevent && commevent->init && fd > 0);
 	int fdidx = 0;
-	for (fdidx = 0; fdidx < listenfd->counter; fdidx++) {
-		if (fd == listenfd->commtcp[fdidx].fd) {
+	for (fdidx = 0; fdidx < commevent->bindfdcnt; fdidx++) {
+		if (fd == commevent->bindfd[fdidx].commtcp.fd) {
 			return fdidx;
 		}
 	}

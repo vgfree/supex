@@ -3,8 +3,10 @@
 /*********	 Copyright © 2016年 xuli. All rights reserved.	******************************/
 /*********************************************************************************************/
 #include "comm_tcp.h"
+#include <sys/time.h>
 
 #define  LISTENFDS  1024	/* 能够监听的描述符的个数 */
+#define	 TIMEOUTTIME  5		/* select的超时事件[单位:s],超时就判定connect连接失败 */
 
 #define	 CLOSEFD(fd)		({		\
 				   close(fd);	\
@@ -167,31 +169,29 @@ static bool _bind_listen(struct comm_tcp *commtcp, struct addrinfo *ai)
 {
 	assert(commtcp && ai);
 
-	int		 optval = 0;
+	int		 optval = SO_REUSEADDR;
 	bool		 flag = false;
 	struct addrinfo* aiptr = NULL;
 
 	for (aiptr = ai; aiptr != NULL; aiptr = aiptr->ai_next) {
 		commtcp->fd = socket(aiptr->ai_family, aiptr->ai_socktype, aiptr->ai_protocol);
 		if (commtcp->fd > 0) {
-			if (bind(commtcp->fd, aiptr->ai_addr, aiptr->ai_addrlen) == 0) {
-				if (unlikely(listen(commtcp->fd, LISTENFDS) == -1)) {	/* 监听描述符 */
-					CLOSEFD(commtcp->fd);
+			if (setsockopt(commtcp->fd, SOL_SOCKET, SO_REUSEADDR, &optval, (socklen_t)sizeof(int)) == 0) { /* 设置地址可重用 */
+				if (bind(commtcp->fd, aiptr->ai_addr, aiptr->ai_addrlen) == 0) {
+					if (unlikely(listen(commtcp->fd, LISTENFDS) == -1)) {	/* 监听描述符 */
+						CLOSEFD(commtcp->fd);
+						continue ;
+					}
+					if (unlikely(!fd_setopt(commtcp->fd, O_NONBLOCK))) {	/* 将套接字设置为非阻塞模式 */
+						CLOSEFD(commtcp->fd);
+						continue ;
+					}
+					flag = true;
 					break ;
 				}
-				if (unlikely(setsockopt(commtcp->fd, SOL_SOCKET, SO_REUSEADDR, &optval, (socklen_t)sizeof(int)))) {	/* 设置地址可重用 */
-					CLOSEFD(commtcp->fd);
-					break ;
-				}
-				if (unlikely(!fd_setopt(commtcp->fd, O_NONBLOCK))) {	/* 将套接字设置为非阻塞模式 */
-					CLOSEFD(commtcp->fd);
-					break ;
-				}
-				flag = true;
-				break ;
-			} else {						/* 绑定失败 忽略此描述符,继续循环下一个 */
-				CLOSEFD(commtcp->fd);
+				log("%d\n", errno);
 			}
+			CLOSEFD(commtcp->fd);	/* 发生错误，忽略此描述符，继续下一个描述符 */
 		}
 	}
 	return flag;
@@ -208,6 +208,7 @@ static inline bool _connect(struct comm_tcp *commtcp, struct addrinfo *ai)
 	for (aiptr = ai; aiptr != NULL; aiptr = aiptr->ai_next) {
 		commtcp->fd = socket(aiptr->ai_family, aiptr->ai_socktype, aiptr->ai_protocol);
 		if (commtcp->fd > 0) {
+#if 0
 			if (connect(commtcp->fd, aiptr->ai_addr, aiptr->ai_addrlen) == 0) {
 				if (fd_setopt(commtcp->fd, O_NONBLOCK)) {	/* 将套接字设置为非阻塞模式 */
 					flag = true;
@@ -218,24 +219,34 @@ static inline bool _connect(struct comm_tcp *commtcp, struct addrinfo *ai)
 			} else {						/* 连接失败 忽略此描述符,继续循环下一个 */
 				CLOSEFD(commtcp->fd);
 			}
-		}
-#if 0
-		if (commtcp->fd > 0) {
-			if (fd_setopt(commtcp->fd, O_NONBLOCK)) {	/* 将套接字设置为非阻塞模式,先于connect,为了以防万一服务器已有问题而导致connect75秒之后才能返回 */
-				while(unlikely(!connect(commtcp->fd, aiptr->ai_addr, aiptr->ai_addrlen) == 0)) {
-					/* 连接失败，则查看错误值 */
-					if (errno == EINPROGRESS) {
-						/* 没有错误，连接正在进行中 */
-						return true;
-					} else {}
-				}
-				return true;
-				flag = true;
-			} else {
-				CLOSEFD(commtcp->fd);
-			}
-		}
 #endif
+			if (fd_setopt(commtcp->fd, O_NONBLOCK)) {
+				if (connect(commtcp->fd, aiptr->ai_addr, aiptr->ai_addrlen) == -1) {
+					/* 非堵塞情况下一般都会失败 */
+					if (errno == EINPROGRESS) {
+						/* 连接正在进程中 检测是否会连接成功 */
+						int error = -1;
+						int len = sizeof(int);
+						struct timeval tm = {TIMEOUTTIME, 0};
+						fd_set set;
+						FD_ZERO(&set);
+						FD_SET(commtcp->fd, &set);
+						if (select(commtcp->fd+1, NULL, &set, NULL, &tm) > 0) {
+							getsockopt(commtcp->fd, SOL_SOCKET, SO_ERROR, &error, (socklen_t *)&len);
+							if (error == 0) {
+								flag = true;
+								break ;
+							}
+						}
+					}
+				} else {
+					/* 当服务器和客户端为同一台机器的时候，会立刻返回并成功连接 */
+					flag = true;
+					break ;
+				}
+			}
+			CLOSEFD(commtcp->fd);	/* 发生其他的任何错误，都忽略此描述符，继续下一个 */
+		}
 	}
 	return flag;
 }

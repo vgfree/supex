@@ -122,3 +122,6 @@ int comm_startup(struct comm *commctx);
 
 2.libcomm的功能:主要功能就是进行socket通信，将socket通信的一套函数进行包装并且另开一个线程用来
 专门处理IO操作，
+
+PS:用户如果不忽略SIGPIPE信号，当对端关闭的时候，服务器没有及时处理读事件，还往对端写数据，则会服务器可能会被直接终止
+

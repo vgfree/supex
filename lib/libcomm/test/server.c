@@ -1,4 +1,5 @@
 #include "../communication.h"
+#include <signal.h>
 
 #define		EPOLLSIZE	1024
 
@@ -22,6 +23,7 @@ int main(int argc, char* argv[])
 		return retval;
 	}
 
+	signal(SIGPIPE, SIG_IGN);
 	commctx = comm_ctx_create(EPOLLSIZE);
 	if (likely(commctx)) {
 		log("server comm_ctx_create successed\n");
@@ -83,7 +85,7 @@ int main(int argc, char* argv[])
 		}
 #endif
 	}
-
+	log("goint to detroy everything here\n");
 	comm_ctx_destroy(commctx);
 	return retval;
 }
@@ -141,9 +143,10 @@ static bool recv_data(struct comm_context *commctx, struct comm_message *message
 	int i = 0, j = 0, k = 0; 
 	int size = 0;
 	message->content = content;
-	retval = comm_recv(commctx, message, true, -1);
+	//retval = comm_recv(commctx, message, true, -1);
+	retval = comm_recv(commctx, message, false, -1);
 	if( unlikely(retval < 0) ){
-		log("comm_recv failed\n");
+		//log("comm_recv failed\n");
 		return false;
 	} else {
 		for (i = 0; i < message->package.packages; i++) {
@@ -155,6 +158,7 @@ static bool recv_data(struct comm_context *commctx, struct comm_message *message
 				buff[size++] = ' ';
 			}
 			log("%s\n", buff);
+			sleep(1);
 
 		}
 		log("comm_recv successed\n");
