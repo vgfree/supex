@@ -16,38 +16,21 @@ extern struct dams_cfg_file g_dams_cfg_file;
 
 
 #if 1
-static void do_over_clean(struct async_obj *obj, void *reply, void *data)
-{
-	struct xpool         *cpool = data;
-	if (obj->replies.work->done) {
-		conn_xpool_push(cpool, obj->replies.work->sfd);
-	} else {
-		x_printf(E, "Disconnected...");
-		conn_xpool_free(cpool, obj->replies.work->sfd);
-	}
-
-}
-
 static int forward_to_server(char *host, int port, const char *data, size_t size, struct ev_loop *loop)
 {
-	struct xpool         *cpool = NULL;
-	struct async_ctx        *ac = NULL;
 
-	ac = async_initial(loop, QUEUE_TYPE_FIFO, NEXUS_TYPE_TEAM, NULL, NULL, NULL, 1);
-
-	if (ac) {
-		void    *sfd = (void *)(intptr_t)-1;
-		int     rc = conn_xpool_gain(&cpool, host, port, &sfd);
-
-		if (rc) {
-			async_distory(ac);
-			return (POOL_API_ERR_IS_FULL == rc) ? -2 : -1;
+	struct xpool    *cpool = conn_xpool_find(host, port);
+	struct async_api *api = async_api_initial(loop, 1, true, QUEUE_TYPE_FIFO, NEXUS_TYPE_TEAM, NULL, NULL, NULL);
+	if (api && cpool) {
+		/*send*/
+		struct command_node *cmd = async_api_command(api, PROTO_TYPE_HTTP, cpool, data, size, NULL, NULL);
+		if (cmd == NULL) {
+			async_api_distory(api);
+			return (POOL_API_ERR_IS_FULL == errno) ? -2 : -1;
 		}
 
-		/*send*/
-		async_command(ac, PROTO_TYPE_HTTP, (int)(intptr_t)sfd, do_over_clean, cpool, data, size);
 
-		async_startup(ac);
+		async_api_startup(api);
 		return 0;
 	}
 
@@ -89,32 +72,31 @@ static int safe_fresh_http(const char *host, int port, const char *data, size_t 
 	return (ok >= 0) ? 0 : -1;
 }
 
+
+
 static int safe_delay_http(const char *host, int port, const char *data, size_t size, int mark)
 {
-	struct xpool         *cpool = NULL;
-	struct async_ctx        *ac = NULL;
 	unsigned int            idx = 0;
-	int                     rc = 0;
 	struct ev_loop          *loop = supex_get_default()->scheduler->listener;
 
-	ac = async_initial(loop, QUEUE_TYPE_FIFO, NEXUS_TYPE_TEAM, NULL, NULL, NULL, 1);
+	struct xpool    *cpool = conn_xpool_find(host, port);
+	struct async_api *api = async_api_initial(loop, 1, true, QUEUE_TYPE_FIFO, NEXUS_TYPE_TEAM, NULL, NULL, NULL);
 
-	if (ac) {
-		void *sfd = (void *)(intptr_t)-1;
+	if (api && cpool) {
 		do {
-			rc = conn_xpool_gain(&cpool, host, port, &sfd);
-
-			if (rc) {
+			/*send*/
+			struct command_node *cmd = async_api_command(api, PROTO_TYPE_HTTP, cpool, data, size, NULL, NULL);
+			if (cmd == NULL) {
 				if (0 == ++idx % 3) {
 					usleep(MIN(5000 * idx, 5000000));
 				}
+			} else {
+				break;
 			}
-		} while (rc);
+		} while (1);
 
-		/*send*/
-		async_command(ac, PROTO_TYPE_HTTP, (int)(intptr_t)sfd, do_over_clean, cpool, data, size);
 
-		async_startup(ac);
+		async_api_startup(api);
 		return 0;
 	}
 

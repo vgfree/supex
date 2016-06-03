@@ -5,14 +5,15 @@
 
 struct async_evtasker
 {
-	struct async_ctx        *ctx;
+	struct async_api        *api;
 	struct evcoro_scheduler *scheduler;
 	struct ev_coro          *repair;
 };
 
-struct async_evtasker   *evtask_initial(struct evcoro_scheduler *scheduler, enum queue_type qtype, enum nexus_type ntype, int peak);
+struct async_evtasker   *evtask_initial(struct evcoro_scheduler *scheduler, int peak, enum queue_type qtype, enum nexus_type ntype);
 
-struct command_node     *evtask_command(struct async_evtasker *sevt, enum proto_type ptype, int sfd, const char *data, size_t size);
+struct command_node     *evtask_command(struct async_evtasker *sevt, enum proto_type ptype, struct xpool *pool, const char *data, size_t size);
+
 
 void evtask_install(struct async_evtasker *sevt);
 

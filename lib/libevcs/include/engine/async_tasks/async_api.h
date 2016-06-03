@@ -1,28 +1,39 @@
 #pragma once
 
-#include "async_obj.h"
-#include "async_evt.h"
+#include "../pool_api/conn_xpool_api.h"
+#include "async_ctx.h"
 
-struct async_ctx
+typedef void (LINK_CALL_BACK)(const struct async_api *, void *data);
+typedef void (RECY_CALL_BACK)(const struct async_api *, void *data);
+
+struct _async_cnt;
+
+struct async_api
 {
-	struct async_obj        obj;
+	struct async_ctx        *ctx;
+	bool			auto_clean;
+
+	LINK_CALL_BACK          *usr_midway_stop;
+	RECY_CALL_BACK          *usr_finish_work;
 
 	void                    *data;
+
+	struct _async_cnt	*list;
 };
 
-struct async_ctx        *async_initial(struct ev_loop *loop, enum queue_type qtype, enum nexus_type ntype,
+
+struct async_api        *async_api_initial(struct ev_loop *loop, int peak, bool auto_clean, enum queue_type qtype, enum nexus_type ntype,
 	LINK_CALL_BACK *usr_midway_stop_cb,
 	RECY_CALL_BACK *usr_finish_work_cb,
-	void *data, int peak);
+	void *data);
 
-struct command_node     *async_command(struct async_ctx *ctx,
-	enum proto_type ptype, int sfd,
-	ASYNC_CALL_BACK fcb, void *privdata,
-	const char *data, size_t size);
+struct command_node     *async_api_command(struct async_api *api, enum proto_type ptype, struct xpool            *pool,
+		const char *data, size_t size,
+		ASYNC_CALL_BACK fcb, void *usr);
 
-void async_startup(struct async_ctx *ctx);
+void async_api_startup(struct async_api *api);
 
-void async_suspend(struct async_ctx *ctx);
+void async_api_suspend(struct async_api *api);
 
-void async_distory(struct async_ctx *ctx);
+void async_api_distory(struct async_api *api);
 

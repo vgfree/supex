@@ -1,6 +1,7 @@
 #pragma once
 
 #include "supex.h"
+#include "base/free_queue.h"
 
 struct switch_queue_info;
 

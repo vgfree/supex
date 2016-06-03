@@ -3,8 +3,6 @@
 #include "../async_comm.h"
 #include "../cache/cache.h"
 
-#define ASYNC_OK        0
-#define ASYNC_ERR       -1
 
 enum proto_type
 {
@@ -24,36 +22,40 @@ enum nexus_type
 
 struct ev_settings
 {
-	// void *data;
 	void    *loop;
-
 	/* Hooks that are called when the library expects to start
 	 * reading/writing. These functions should be idempotent. */
-	void    (*add_recv)(void *privdata);
-	void    (*del_recv)(void *privdata);
-	void    (*add_send)(void *privdata);
-	void    (*del_send)(void *privdata);
-	void    (*cleanup)(void *privdata);
-	void    (*produce)(void *privdata);
+	void    (*add_recv)(void **ev_impl);
+	void    (*del_recv)(void **ev_impl);
+	void    (*add_send)(void **ev_impl);
+	void    (*del_send)(void **ev_impl);
+	void    (*produce)(void **ev_impl);
+	void    (*cleanup)(void **ev_impl);
 };
 
 struct async_obj;
 
-typedef void (*ASYNC_CALL_BACK)(struct async_obj *obj, void *reply, void *data);
+typedef void (*ASYNC_CALL_BACK)(struct async_obj *obj, struct command_node *cmd, void *data);
 
 struct command_node
 {
 	int                     sfd;
-	bool                    done;	// NEW
+	bool                    ok;
+	//enum	{
+	//}			step;
+	enum	{
+		ASYNC_OK = 0,
+		ASYNC_ER_SOCKET,
+		ASYNC_ER_PARSE,
+	}			err;
 
-	void                    *ev_work;
+	void                    *ev_impl;
 	struct ev_settings      *ev_hook;
 	/*cmd dispose*/
 	char                    ptype;
 	PROTO_CALL_BACK         *proto_handler_work;
-	PROTO_CALL_BACK         *proto_handler_init;
+	PROTO_CALL_BACK         *proto_handler_init;//引入到外部
 	/*cmd parser*/
-	int                     control;
 	union
 	{
 		struct http_parse_info  http_info;
@@ -61,8 +63,9 @@ struct command_node
 	}                       parse;
 
 	/*cmd callback*/
-	void                    *privdata;
 	ASYNC_CALL_BACK         fcb;
+	void                    *usr;
+	bool			hit;
 
 	/*cmd data*/
 	struct cache            cache;
@@ -81,37 +84,36 @@ struct command_list
 };
 
 /* Connection callback prototypes */
-typedef void (LINK_CALL_BACK)(const struct async_obj *, void *data);
-typedef void (RECY_CALL_BACK)(const struct async_obj *, void *data);
+typedef void (__LINK_CALL_BACK)(const struct async_obj *, void *data);
+typedef void (__RECY_CALL_BACK)(const struct async_obj *, void *data);
 
 /* Context for an async connection to Redis */
 struct async_obj
 {
+	__LINK_CALL_BACK        *__midway_stop;
+	__RECY_CALL_BACK        *__finish_work;
+	void                    *data;
+
 	/* Event library data and hooks */
 	struct ev_settings      settings;
-	int                     efd;
-
-	void                    *data;
-	LINK_CALL_BACK          *sys_midway_stop;
-	RECY_CALL_BACK          *sys_finish_work;
-	LINK_CALL_BACK          *usr_midway_stop;
-	RECY_CALL_BACK          *usr_finish_work;
 
 	/* Regular command callbacks */
 	char                    qtype;
 	char                    ntype;
-	struct command_list     replies;
+	struct command_list     replies;//TODO:fixname
 };
 
-void async_obj_init_list(struct async_obj *obj, enum queue_type qtype, enum nexus_type ntype, int peak);
+void async_obj_initial(struct async_obj *obj, int peak, enum queue_type qtype, enum nexus_type ntype, struct ev_settings *settings);
 
-void async_obj_bind_hook(struct async_obj *obj, struct ev_settings *settings);
+struct command_node *async_obj_command(struct async_obj *obj, enum proto_type ptype, int sfd,
+		const char *data, size_t size,
+		ASYNC_CALL_BACK fcb, void *usr);
 
-struct command_node     *async_obj_append_cmd(struct async_obj *obj, enum proto_type ptype, int sfd, ASYNC_CALL_BACK fcb, void *privdata, const char *data, size_t size);
+void async_obj_startup(struct async_obj *obj);
 
-void async_obj_begin(struct async_obj *obj);
+void async_obj_suspend(struct async_obj *obj);
 
-int async_obj_free(struct async_obj *obj);
+int async_obj_distory(struct async_obj *obj);
 
 // 添加获取当前工作任务函数//TODO
 
