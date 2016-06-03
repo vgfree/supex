@@ -335,7 +335,7 @@ static  bool _read_data(struct comm_event *commevent, struct connfd_info *connfd
 		if (bytes < 0) {
 			if (errno == EINTR) {					/* fd被打断，返回false，留到下一次进行处理 */
 				flag = false;
-			} else if (errno != EAGAIN || errno != EWOULDBLOCK){	/* 发生致命错误，则删除fd的相关信息 */
+			} else if (errno != EAGAIN || errno != EWOULDBLOCK || errno != EINTR){	/* 发生致命错误，则删除fd的相关信息 */
 				DELETEFD(commevent, connfd->commtcp.fd);
 				return true;
 			}
