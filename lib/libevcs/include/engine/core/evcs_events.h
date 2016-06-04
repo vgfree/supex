@@ -75,7 +75,7 @@ static inline
 void event_work(struct evcs_events *evts, int type, void *data)
 {
 	if (evts && evts->evcb[type]) {
-		//printf("\t\t\tEVENT[%s]\t\t\thappend!\n", event_getinfo(type));
+		// printf("\t\t\tEVENT[%s]\t\t\thappend!\n", event_getinfo(type));
 		evts->evcb[type](data);
 	}
 }

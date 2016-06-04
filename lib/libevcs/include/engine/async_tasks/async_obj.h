@@ -3,7 +3,6 @@
 #include "../async_comm.h"
 #include "../cache/cache.h"
 
-
 enum proto_type
 {
 	PROTO_TYPE_HTTP = 0,
@@ -23,6 +22,7 @@ enum nexus_type
 struct ev_settings
 {
 	void    *loop;
+
 	/* Hooks that are called when the library expects to start
 	 * reading/writing. These functions should be idempotent. */
 	void    (*add_recv)(void **ev_impl);
@@ -34,6 +34,7 @@ struct ev_settings
 };
 
 struct async_obj;
+struct command_node;
 
 typedef void (*ASYNC_CALL_BACK)(struct async_obj *obj, struct command_node *cmd, void *data);
 
@@ -41,20 +42,21 @@ struct command_node
 {
 	int                     sfd;
 	bool                    ok;
-	//enum	{
-	//}			step;
-	enum	{
+	// enum	{
+	// }			step;
+	enum
+	{
 		ASYNC_OK = 0,
 		ASYNC_ER_SOCKET,
 		ASYNC_ER_PARSE,
-	}			err;
+	}                       err;
 
 	void                    *ev_impl;
 	struct ev_settings      *ev_hook;
 	/*cmd dispose*/
 	char                    ptype;
 	PROTO_CALL_BACK         *proto_handler_work;
-	PROTO_CALL_BACK         *proto_handler_init;//引入到外部
+	PROTO_CALL_BACK         *proto_handler_init;	// 引入到外部
 	/*cmd parser*/
 	union
 	{
@@ -65,7 +67,7 @@ struct command_node
 	/*cmd callback*/
 	ASYNC_CALL_BACK         fcb;
 	void                    *usr;
-	bool			hit;
+	bool                    hit;
 
 	/*cmd data*/
 	struct cache            cache;
@@ -100,14 +102,14 @@ struct async_obj
 	/* Regular command callbacks */
 	char                    qtype;
 	char                    ntype;
-	struct command_list     replies;//TODO:fixname
+	struct command_list     replies;// TODO:fixname
 };
 
 void async_obj_initial(struct async_obj *obj, int peak, enum queue_type qtype, enum nexus_type ntype, struct ev_settings *settings);
 
-struct command_node *async_obj_command(struct async_obj *obj, enum proto_type ptype, int sfd,
-		const char *data, size_t size,
-		ASYNC_CALL_BACK fcb, void *usr);
+struct command_node     *async_obj_command(struct async_obj *obj, enum proto_type ptype, int sfd,
+	const char *data, size_t size,
+	ASYNC_CALL_BACK fcb, void *usr);
 
 void async_obj_startup(struct async_obj *obj);
 

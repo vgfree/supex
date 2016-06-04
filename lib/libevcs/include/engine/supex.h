@@ -83,7 +83,7 @@ struct supex_task_base
 	unsigned int shift;
 };
 
-struct supex_task_node//FIXME:name 容器
+struct supex_task_node	// FIXME:name 容器
 {
 	unsigned int size;
 	union

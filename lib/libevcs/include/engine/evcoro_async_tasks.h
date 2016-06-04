@@ -14,7 +14,6 @@ struct async_evtasker   *evtask_initial(struct evcoro_scheduler *scheduler, int 
 
 struct command_node     *evtask_command(struct async_evtasker *sevt, enum proto_type ptype, struct xpool *pool, const char *data, size_t size);
 
-
 void evtask_install(struct async_evtasker *sevt);
 
 void evtask_offload(struct async_evtasker *sevt);

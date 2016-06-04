@@ -115,8 +115,8 @@ int get_current_time(void);
 /*==============================================================================================*
 *       fifo function                                   *
 *==============================================================================================*/
-#define FIFO_DATA               "-DATA"
-#define FIFO_COMD               "-COMD"
+#define FIFO_DATA       "-DATA"
+#define FIFO_COMD       "-COMD"
 
 void fifo_init(int size);
 

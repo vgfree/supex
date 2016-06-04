@@ -18,7 +18,7 @@ struct conn_ypool
 {
 	int                     magic;
 	struct tcp_socket       *conn;
-	struct ypool             *pool;
+	struct ypool            *pool;
 };
 
 int conn_ypool_create(const char *host, const char *server, unsigned max, bool sync);

@@ -1,9 +1,10 @@
 #pragma once
 
 #include <libmini.h>
+
 /*==================================================*
-*       free queue                                  *
-*===================================================*/
+ *       free queue                                  *
+ *===================================================*/
 /** 任务队列*/
 struct free_queue_list
 {
@@ -21,6 +22,7 @@ struct free_queue_list
 	AO_SpinLockT    w_lock;	/**< 压入锁*/
 	AO_SpinLockT    r_lock;	/**< 弹出锁*/
 };
+
 /**
  * 初始化
  * @param list 被初始化队列

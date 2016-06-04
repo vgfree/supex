@@ -266,7 +266,7 @@ struct data_node
 struct pool_node
 {
 	struct data_node        *addr;					/**< 关联的数据节点*/
-	uint64_t		cid;
+	uint64_t                cid;
 	int                     port;					/**< 客户端本端端口*/
 	char                    szAddr[INET_ADDRSTRLEN];		/**< 客户端远端地址 */
 };
@@ -281,3 +281,4 @@ void del_pool_data(int fd);
 
 /*获取非0的无符号整数*/
 uint64_t make_a_cid(void);
+

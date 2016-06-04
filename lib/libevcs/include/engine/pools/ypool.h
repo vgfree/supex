@@ -47,7 +47,7 @@ void ypool_destroy(const char *name, void *usr);
  * @return 池对象，返回null，则表示不存在，但不会设置errno
  * 不能主动释放获取到的指针
  */
-struct ypool     *ypool_gain(const char *name);
+struct ypool    *ypool_gain(const char *name);
 
 /**
  * 通过池对象获取成员
