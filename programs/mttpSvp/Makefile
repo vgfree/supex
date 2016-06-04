@@ -1,6 +1,7 @@
 BASE_SRC=./src
 INC_DIR=-I/usr/local/include/luajit-2.0 -I../../lib/libev -I../../lib/json-c \
 	-I../../lib/libkv/release \
+	-I../../lib/hiredis \
 	-I../../lib/libmemhook/src \
 	-I../../lib/libscco/include \
 	-I../../lib/libcoro/include \
@@ -11,8 +12,8 @@ INC_DIR=-I/usr/local/include/luajit-2.0 -I../../lib/libev -I../../lib/json-c \
 
 
 
-LIB_DIR=-L/usr/local/lib -L../../lib
-LIBS=-lluajit-5.1 -lstdc++ -lpthread -lrt -lm
+LIB_DIR=-L/usr/local/lib -L../../lib -L../../lib/hiredis/
+LIBS=-lluajit-5.1 -lstdc++ -lpthread -lrt -lm -lhiredis
 LIBA=-lucmq -lcjson -lmini -ljson-c 
 
 #[=========>MARK<=========]#
@@ -39,6 +40,8 @@ BASE_OBJ = $(addprefix $(BIN)/, \
 	   load_sniff_cfg.o \
 	   sniff_evcoro_lua_api.o \
 	   lj_sniff_util.o \
+		 mttpsvp_libkv.o \
+		 mttpsvp_redis.o \
 	   )
 
 OBJ ?= $(BASE_OBJ)
