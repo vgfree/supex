@@ -251,6 +251,7 @@ struct data_node
 	/***S***/
 #ifdef OPEN_TIME_OUT
 	struct iotime_module    mdl_iotime;
+	int			at_step;
 #endif
 	int                     control;	/*cmd dispose*/
 
