@@ -4,6 +4,9 @@
 #include <unistd.h>
 #include <assert.h>
 
+#include "mttpsvp_libkv.h"
+#include "mttpsvp_redis.h"
+
 #include "major/alive_api.h"
 #include "alive_cpp_api.h"
 #include "load_alive_cfg.h"
@@ -79,8 +82,17 @@ int main(int argc, char **argv)
 		exit(EXIT_FAILURE);
 	}
 
+  mttpsvp_redis_init("127.0.0.1", 6379);
+  mttpsvp_libkv_init();
+
 	g_alive_cfg_list.func_info[UPSTREAM_FUNC_ORDER].type = BIT8_TASK_TYPE_ALONE;
 	g_alive_cfg_list.func_info[UPSTREAM_FUNC_ORDER].func = (TASK_VMS_FCB)alive_vms_call;
+
+	g_alive_cfg_list.func_info[ONLINE_FUNC_ORDER].type = BIT8_TASK_TYPE_ALONE;
+	g_alive_cfg_list.func_info[ONLINE_FUNC_ORDER].func = (TASK_VMS_FCB)alive_vms_online;
+
+	g_alive_cfg_list.func_info[OFFLINE_FUNC_ORDER].type = BIT8_TASK_TYPE_ALONE;
+	g_alive_cfg_list.func_info[OFFLINE_FUNC_ORDER].func = (TASK_VMS_FCB)alive_vms_offline;
 
 	g_alive_cfg_list.entry_init = alive_entry_init;
 
