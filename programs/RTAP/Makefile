@@ -1,5 +1,9 @@
 BASE_SRC=./src
-INC_DIR=-I/usr/local/include/luajit-2.0 -I../../lib/libev -I../../lib/json-c \
+INC_DIR=-I/usr/local/include/luajit-2.0 \
+	-I/usr/local/include/ \
+	-I../../lib/libev \
+	-I../../lib/json-c \
+	-I../../lib/libmini/include \
 	-I../../lib/libkv/release \
 	-I../../lib/libmemhook/src \
 	-I../../lib/libscco/include \

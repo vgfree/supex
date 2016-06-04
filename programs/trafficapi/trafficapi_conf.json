@@ -2,7 +2,7 @@
 	"service_port": 2222,
 	"hander_counts": 2,
 	"smart_worker_counts": 16,
-	"tasker_counts": 32,
+	"smart_tasker_counts": 32,
 	"smart_protocol": "http",
 	"max_req_size": 32768,
 
@@ -28,6 +28,6 @@
 		"rrid_buf_long":10000,
 		"name_index_long":800,
 		"name_buf_long":10000,
-		"map_seg_file":"map_seg.data",
+		"map_seg_file":"map_seg.data"
 	}   
 }

@@ -1,92 +1,55 @@
 #include <assert.h>
 #include <unistd.h>
 
-#include "sniff_api.h"
-#include "sniff_evuv_cpp_api.h"
+#include "minor/sniff_api.h"
+#include "sniff_evcoro_cpp_api.h"
 #include "rr_cfg.h"
-#include "tcp_api.h"
-#include "async_api.h"
-#include "apply_def.h"
-#include "pool_api.h"
-#include "utils.h"
+#include "async_tasks/async_api.h"
+#include "pool_api/conn_xpool_api.h"
+#include "base/utils.h"
+#include "redis_api/redis_status.h"
+#include "redis_parse.h"
 
 #include "send_data.h"
 #define REDIS_ERR       -1
 #define REDIS_OK        0
-
-static void _vms_erro(void **base)
-{}
-
-static void *_vms_new(void)
-{
-	return NULL;
-}
-
-static int _vms_init(void **base, int last, struct sniff_task_node *task)
-{
-	if (*base != NULL) {
-		x_printf(S, "No need to init LUA VM!");
-		return 0;
-	}
-
-	*base = _vms_new();
-	// assert( *base );
-	return 0;
-}
-
-int sniff_vms_init(void *user, void *task)
-{
-	int error = 0;
-
-	error = sniff_for_alone_vm(user, task, _vms_init, _vms_erro);
-
-	if (error) {
-		exit(EXIT_FAILURE);
-	}
-
-	return error;
-}
+extern struct rr_cfg_file       g_rr_cfg_file;
+extern void                     *g_zmq_socket;
 
 int import_to_redis(char command[], void *loop, char host[], unsigned short port)
 {
-	printf("import_to_redis:%s\n", command);
-	struct cnt_pool         *cpool = NULL;
-	struct async_ctx        *ac = NULL;
 
-	ac = async_initial((struct ev_loop *)loop, QUEUE_TYPE_FIFO, NULL, NULL, NULL, 2);
+	struct xpool    *cpool = conn_xpool_find(host, port);
+	struct async_api *api = async_api_initial(loop, 1, true, QUEUE_TYPE_FIFO, NEXUS_TYPE_TEAM, NULL, NULL, NULL);
+	// x_printf(D,"import_to_redis: %s\n",command);
 
-	if (ac) {
-		void    *sfd = (void *)-1;
-		int     rc = conn_xpool_gain(&cpool, host, port, &sfd);
-
-		if (rc) {
-			//                        conn_xpool_free ( cpool, &sfd );
-			async_distory(ac);
-			return -1;
-		}
-
+	if (api && cpool) {
 		/*data*/
 		char    *proto;
 		int     ok = cmd_to_proto(&proto, command);
 
 		if (ok == REDIS_ERR) {
-			conn_xpool_push(cpool, &sfd);
-			async_distory(ac);
+			async_api_distory(api);
 			return -1;
 		}
 
 		/*send*/
-		async_command(ac, PROTO_TYPE_REDIS, (int)sfd, cpool, NULL, NULL, proto, strlen(proto));
+		struct command_node *cmd = async_api_command(api, PROTO_TYPE_REDIS, cpool, proto, strlen(proto), NULL, NULL);
 		free(proto);
+		if (cmd == NULL) {
+			async_api_distory(api);
+			return -1;
+		}
 
-		async_startup(ac);
+
+		async_api_startup(api);
 		return 0;
 	}
 
 	return -1;
 }
 
-int sniff_vms_call(void *user, void *task)
+int sniff_vms_call(void *user, union virtual_system **VMS, struct sniff_task_node *task)
 {
 	struct sniff_task_node  *p_task = (struct sniff_task_node *)task;
 	SNIFF_WORKER_PTHREAD    *p_sniff_worker = (SNIFF_WORKER_PTHREAD *)user;
@@ -94,7 +57,7 @@ int sniff_vms_call(void *user, void *task)
 
 	// struct ev_loop *loop = p_sniff_worker->evuv.loop;
 
-	x_printf(S, "channel %d\t|task <shift> %d\t<come> %ld\t<delay> %ld",
+	x_printf(D, "channel %d\t|task <shift> %d\t<come> %ld\t<delay> %ld",
 		p_sniff_worker->genus, p_task->base.shift, p_task->stamp, delay);
 
 	x_printf(D, "%s", p_task->data);
@@ -159,7 +122,8 @@ int sendToother(void *sfd, int size, char *result)
 	 *                }
 	 *        }
 	 */
-	x_printf(I, "send bodysize:%d--size is %d\n", out, size);
+	x_printf(D, "send bodysize:%d--size is %d\n", out, size);
+
 	return 0;
 }
 

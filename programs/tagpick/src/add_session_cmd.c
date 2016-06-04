@@ -7,10 +7,9 @@
 //
 
 #include "add_session_cmd.h"
-#include "sniff_api.h"
-#include "swift_api.h"
-#include "apply_def.h"
-#include "swift_evcb.h"
+#include "minor/sniff_api.h"
+#include "major/swift_api.h"
+#include "major/swift_evcb.h"
 
 static bool help(void *user, void *data)
 {

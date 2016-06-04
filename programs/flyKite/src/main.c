@@ -3,7 +3,6 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <assert.h>
-
 #include "mq_api.h"
 
 #ifdef OPEN_TOPO
@@ -11,21 +10,17 @@
   #include "topo_api.h"
 #endif
 
-#include "swift_api.h"
+#include "major/swift_api.h"
 #include "swift_cpp_api.h"
 #include "load_swift_cfg.h"
 
-#include "sniff_api.h"
+#include "minor/sniff_api.h"
 #include "load_sniff_cfg.h"
 #include "switch_queue.h"
+#include "app_queue.h"
 
-#ifdef OPEN_SCCO
-  #include "sniff_scco_lua_api.h"
-#else
-  #include "sniff_line_lua_api.h"
-#endif
+#include "sniff_evcoro_lua_api.h"
 
-#include "add_session_cmd.h"
 
 struct swift_cfg_list   g_swift_cfg_list = {};
 struct sniff_cfg_list   g_sniff_cfg_list = {};
@@ -47,7 +42,7 @@ static void swift_entry_init(void)
 	// same_kill("gopath");
 #endif
 
-	init_session_cmd();
+	//init_session_cmd();
 
 	if (!kvpool_init()) {
 		exit(EXIT_FAILURE);
@@ -98,43 +93,28 @@ int main(int argc, char **argv)
 	}
 
 	g_swift_cfg_list.func_info[APPLY_FUNC_ORDER].type = BIT8_TASK_TYPE_ALONE;
-	g_swift_cfg_list.func_info[APPLY_FUNC_ORDER].func = (TASK_CALLBACK)swift_vms_call;
+	g_swift_cfg_list.func_info[APPLY_FUNC_ORDER].func = (TASK_VMS_FCB)swift_vms_call;
 	// g_swift_cfg_list.func_info[ FETCH_FUNC_ORDER ].type = BIT8_TASK_TYPE_ALONE;
-	// g_swift_cfg_list.func_info[ FETCH_FUNC_ORDER ].func = (TASK_CALLBACK)swift_vms_gain;
+	// g_swift_cfg_list.func_info[ FETCH_FUNC_ORDER ].func = (TASK_VMS_FCB)swift_vms_gain;
 	// g_swift_cfg_list.func_info[ MERGE_FUNC_ORDER ].type = BIT8_TASK_TYPE_WHOLE;
-	// g_swift_cfg_list.func_info[ MERGE_FUNC_ORDER ].func = (TASK_CALLBACK)swift_vms_sync;
+	// g_swift_cfg_list.func_info[ MERGE_FUNC_ORDER ].func = (TASK_VMS_FCB)swift_vms_sync;
 	g_swift_cfg_list.func_info[CUSTOM_FUNC_ORDER].type = BIT8_TASK_TYPE_ALONE;
-	g_swift_cfg_list.func_info[CUSTOM_FUNC_ORDER].func = (TASK_CALLBACK)swift_vms_exec;
+	g_swift_cfg_list.func_info[CUSTOM_FUNC_ORDER].func = (TASK_VMS_FCB)swift_vms_exec;
 
 	g_swift_cfg_list.entry_init = swift_entry_init;
 	g_swift_cfg_list.pthrd_init = swift_pthrd_init;
 
-	g_swift_cfg_list.shut_down = swift_shut_down;
-
-	g_swift_cfg_list.vmsys_init = swift_vms_init;
-	// g_swift_cfg_list.vmsys_exit = swift_vms_exit;
-	// g_swift_cfg_list.vmsys_cntl = swift_vms_cntl;
-	// g_swift_cfg_list.vmsys_rfsh = swift_vms_rfsh;
-#ifdef STORE_USE_UCMQ_AND_QUEUE
-	// g_swift_cfg_list.vmsys_idle = swift_vms_idle;
-	/*have bug when tasks pile up*/
-#endif
+	//g_swift_cfg_list.shut_down = swift_shut_down;
 
 	swift_mount(&g_swift_cfg_list);
 
 	// ---> init sniff
-
-	snprintf(g_sniff_cfg_list.argv_info.conf_name,
-		sizeof(g_sniff_cfg_list.argv_info.conf_name),
-		"%s", g_swift_cfg_list.argv_info.conf_name);
-
-	snprintf(g_sniff_cfg_list.argv_info.serv_name,
-		sizeof(g_sniff_cfg_list.argv_info.serv_name),
-		"%s", g_swift_cfg_list.argv_info.serv_name);
-
-	snprintf(g_sniff_cfg_list.argv_info.msmq_name,
-		sizeof(g_sniff_cfg_list.argv_info.msmq_name),
-		"%s", g_swift_cfg_list.argv_info.msmq_name);
+	memcpy(g_sniff_cfg_list.argv_info.conf_name,
+		g_swift_cfg_list.argv_info.conf_name, MAX_FILE_NAME_SIZE);
+	memcpy(g_sniff_cfg_list.argv_info.serv_name,
+		g_swift_cfg_list.argv_info.serv_name, MAX_FILE_NAME_SIZE);
+	memcpy(g_sniff_cfg_list.argv_info.msmq_name,
+		g_swift_cfg_list.argv_info.msmq_name, MAX_FILE_NAME_SIZE);
 
 	load_sniff_cfg_file(&g_sniff_cfg_list.file_info, g_swift_cfg_list.argv_info.conf_name);
 
@@ -150,7 +130,6 @@ int main(int argc, char **argv)
 	sniff_mount(&g_sniff_cfg_list);
 
 	swift_start();
-
 	return 0;
 }
 

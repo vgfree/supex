@@ -9,12 +9,10 @@ COLOR_CYAN            = "\x1B[1;36m"
 COLOR_WHITE           = "\x1B[1;37m"
 
 #######
-
 COLOR_FILE_OBJ =	$(COLOR_CYAN)
 COLOR_FILE_TAG =	$(COLOR_PURPLE)
 
 #######
-
 BUILD_PWD = 		$(shell pwd)
 BUILD_HOST =		$(shell uname | tr '[A-Z]' '[a-z]')
 
@@ -26,17 +24,20 @@ BUILD_INC_DIR = 	-I/usr/include -I/usr/local/include -I/usr/local/include/luajit
 BUILD_LIB_DIR =		-L/usr/local/lib -L/usr/lib -L/usr/libexec 
 
 ADD_DYLIBS =
-ADD_ARLIBS =		-lsupex_base -lmini -lkv -lev -levcoro -lcjson -lscco -lcoro -lzmq
+ADD_ARLIBS =		-levcs -lmini -lkv -lev -levcoro -lcjson -lscco -lcoro -lzmq
 ADD_INC_DIR = 		-I$(BUILD_PWD)/../../lib/libmini/include \
 			-I$(BUILD_PWD)/../../lib/libmemhook/src \
 			-I$(BUILD_PWD)/../../lib/libev \
-			-I$(BUILD_PWD)/../../lib/libevcoro/include \
 			-I$(BUILD_PWD)/../../lib/zeromq-4.1.4/include \
 			-I$(BUILD_PWD)/../../lib/cJSON \
-			-I$(BUILD_PWD)/../../lib/libscco \
-			-I$(BUILD_PWD)/../../engine
+			-I$(BUILD_PWD)/../../lib/libscco/include \
+			-I$(BUILD_PWD)/../../lib/libcoro/include \
+			-I$(BUILD_PWD)/../../lib/libevcoro/include \
+			-I$(BUILD_PWD)/../../lib/libevcs/include/engine \
+			-I$(BUILD_PWD)/../../lib/libevcs/include/frame \
+			-I$(BUILD_PWD)/../
 
-ADD_LIB_DIR =		-L$(BUILD_PWD)/../../lib -L$(BUILD_PWD)/../../engine
+ADD_LIB_DIR =		-L$(BUILD_PWD)/../../lib
 
 #######
 BUILD_CFLAGS +=		$(EXPORT_CFLAGS)
@@ -80,6 +81,7 @@ OBJ = $(addprefix $(OBJ_DIR)/, \
 	prg_frame.o \
 	recv_data4zmq.o \
 	send_data4zmq.o \
+	zmq_wrap.o \
 	)
 
 #######
@@ -113,3 +115,6 @@ $(OBJ_DIR)/%.o : src/%.c
 	$(ECHO) $(COLOR_GREEN)"\t\t- COMPILE\t===>\t"$(COLOR_FILE_OBJ)"$@"$(COLOR_NONE)
 	$(CC) -o $@ -c $<
 #######
+$(OBJ_DIR)/zmq_wrap.o : ../zmq_wrap.c
+	@-if [ ! -d $(OBJ_DIR) ];then mkdir $(OBJ_DIR); fi
+	$(CC) -o $@ -c $<

@@ -5,7 +5,7 @@
 //  Created by 周凯 on 15/10/22.
 //  Copyright © 2015年 zk. All rights reserved.
 //
-#include "pool_api.h"
+#include "pool_api/conn_xpool_api.h"
 #include "data_model.h"
 
 struct allcfg g_allcfg = {};

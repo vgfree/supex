@@ -8,8 +8,8 @@
  *
  ******************************************************************************/
 #include "ev.h"
-#include "pool_api.h"
-#include "async_api.h"
+#include "pool_api/conn_xpool_api.h"
+#include "async_tasks/async_api.h"
 #include "route_data.h"
 #include "calculate_data.h"
 #include "cache/cache.h"

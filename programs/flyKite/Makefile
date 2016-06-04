@@ -1,15 +1,23 @@
 BASE_SRC=./src
-ADDITION_SRC=../../engine
-INC_DIR=-I/usr/local/include/luajit-2.0 -I../../lib/libev -I../../lib/json-c \
-	-I../../lib/http-parser -I../../lib/libscco \
-	-I../../lib/libucmq/src -I../../engine -I../../engine/major \
-	-I../../engine/minor -I./src \
-	-I../../lib/libmemhook/src/
+INC_DIR=-I/usr/local/include/luajit-2.0 \
+	-I/usr/local/include/ \
+	-I../../lib/libev \
+	-I../../lib/json-c \
+	-I../../lib/libmini/include \
+	-I../../lib/libkv/release \
+	-I../../lib/libmemhook/src \
+	-I../../lib/libscco/include \
+	-I../../lib/libcoro/include \
+	-I../../lib/libevcoro/include \
+	-I../../lib/libevcs/include/engine \
+	-I../../lib/libevcs/include/frame \
+	-I./src -I../ \
+	-I../../lib/libucmq/src \
+	-I../../lib/cJSON
 
-LIB_DIR=-L/usr/local/lib -L../../lib -L../../engine/
-
-LIBS=-lluajit-5.1 -lpthread -lrt -lm 
-LIBA=-ljson-c -lucmq
+LIB_DIR=-L/usr/local/lib -L../../lib
+LIBS=-lluajit-5.1 -lpthread -lrt -lm -lstdc++
+LIBA=-ljson-c -lkv -lucmq -lcjson -lmini
 
 #[=========>MARK<=========]#
 MAIN_APP_SERV ?= gopath
@@ -18,8 +26,8 @@ MAIN_APP_SERV ?= gopath
 #CFLAGS +=-DSTORE_USE_QUEUE
 CFLAGS +=-DSTORE_USE_UCMQ_AND_QUEUE
 
+HANDLE_MODEL = EVCORO
 ifeq ($(MAIN_APP_SERV), gopath)
-HANDLE_MODEL = LINE
 INC_DIR += -I/usr/include/mysql -I../../lib/libtopo -I ./
 LIB_DIR += -L/usr/lib64/mysql
 LIBS += -lmysqlclient
@@ -27,18 +35,12 @@ LIBA += -ltopo
 CFLAGS += -DOPEN_TOPO
 endif
 
-ifeq ($(MAIN_APP_SERV), gomile)
-HANDLE_MODEL = LINE
-endif
-ifeq ($(MAIN_APP_SERV), kkb)
-HANDLE_MODEL = LINE
-endif
 #<------------------------>#
 -include $(HOME_PATH)/programs/link.mk
 -include $(HOME_PATH)/share.mk
 #<------------------------>#
 
-ADD_OBJ += sniff_line_lua_api.o
+ADD_OBJ += sniff_evcoro_lua_api.o lj_sniff_util.o
 
 #<--------------------------->#
 
@@ -49,7 +51,8 @@ BASE_OBJ = $(addprefix $(BIN)/, \
 	   load_sniff_cfg.o \
 	   load_swift_cfg.o \
 	   swift_cpp_api.o \
-	   add_session_cmd.o \
+	   app_queue.o \
+	   switch_queue.o \
 	   )
 
 OBJ ?= $(BASE_OBJ)
@@ -61,13 +64,24 @@ CLEANFILES = mhooktrace.log
 all:$(JOB)
 	@echo -e $(foreach bin,$^,$(BLUE)$(bin) $(GREEN)✔)$(RED)"\n-->OVER!\n"$(NONE)
 
-
 $(SRV):$(OBJ)
 	gcc $(CFLAGS) $^ $(INC_DIR) $(LIB_DIR) $(LIBA) $(LIBS) -o $@
 	@-if [ ! -d ./logs ];then mkdir logs; fi
 	@echo -e $(GREEN)"【"$(YELLOW) $@ $(GREEN)"】"$(RED)"\n-->OK!\n"$(NONE)
 
 $(BIN)/%.o : $(BASE_SRC)/%.c
+	@-if [ ! -d $(BIN) ];then mkdir $(BIN); fi
+	gcc $(CFLAGS) $(INC_DIR) -c $< -o $@
+
+$(BIN)/switch_queue.o : ../switch_queue.c
+	@-if [ ! -d $(BIN) ];then mkdir $(BIN); fi
+	gcc $(CFLAGS) $(INC_DIR) $(LIB_DIR) $(LIBS) -c $< -o $@
+
+$(BIN)/lj_sniff_util.o : ../lj_sniff_util.c
+	@-if [ ! -d $(BIN) ];then mkdir $(BIN); fi
+	gcc $(CFLAGS) $(INC_DIR) $(LIB_DIR) $(LIBS) -c $< -o $@
+
+$(BIN)/app_queue.o : ../app_queue.c
 	@-if [ ! -d $(BIN) ];then mkdir $(BIN); fi
 	gcc $(CFLAGS) $(INC_DIR) $(LIB_DIR) $(LIBS) -c $< -o $@
 

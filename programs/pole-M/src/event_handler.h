@@ -30,7 +30,7 @@
 #ifndef _EVENT_HANDLER_H_
 #define _EVENT_HANDLER_H_
 
-#include "hashmap.h"
+#include "base/hashmap.h"
 #include "xlist.h"
 #include "netmod.h"
 #include "xmq.h"

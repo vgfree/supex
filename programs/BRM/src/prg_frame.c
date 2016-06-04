@@ -6,7 +6,7 @@
 //  Copyright © 2015年 zk. All rights reserved.
 //
 #include "parse_cfg.h"
-#include "pool_api.h"
+#include "pool_api/conn_xpool_api.h"
 #include "recv_data.h"
 #include "route_data.h"
 #include "ctrl_proc.h"
