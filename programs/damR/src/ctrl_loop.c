@@ -65,7 +65,7 @@ void ctrl_loop(struct frame *frame)
 			ev_loop_destroy(loop);
 		}
 
-		ATOMIC_SET(&frame->stat, FRAME_STAT_STOP);
+		AO_SET(&frame->stat, FRAME_STAT_STOP);
 	}
 	END;
 }
@@ -80,7 +80,7 @@ static void _ctrl_signal(struct ev_loop *loop, ev_signal *signal, int event)
 		x_printf(W, "receive SIGPIPE !!!");
 		return;
 	} else if (signal->signum == SIGINT) {
-		ATOMIC_CASB((int *)&frame->stat, FRAME_STAT_RUN, FRAME_STAT_STOP);
+		AO_CASB((int *)&frame->stat, FRAME_STAT_RUN, FRAME_STAT_STOP);
 		stop_proc(&frame->rcvproc);
 		stop_proc(&frame->sndproc);
 		ev_break(loop, EVBREAK_ALL);

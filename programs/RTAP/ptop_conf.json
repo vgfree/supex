@@ -1,8 +1,8 @@
 {
 	"service_port": 7777,
-	"hander_counts": 2,
+	"smart_hander_counts": 2,
 	"smart_worker_counts": 2,
-	"tasker_counts": 64,
+	"smart_tasker_counts": 64,
 	"smart_protocol": "http",
 	"max_req_size": 32768,
 

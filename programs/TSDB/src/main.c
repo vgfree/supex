@@ -4,8 +4,8 @@
 #include "load_smart_cfg.h"
 #include "load_swift_cfg.h"
 
-#include "smart_api.h"
-#include "swift_api.h"
+#include "major/smart_api.h"
+#include "major/swift_api.h"
 
 #include "smart_cpp_api.h"
 #include "swift_cpp_api.h"
@@ -15,19 +15,19 @@
 
 #define DEFINE_LDB_CMD_LIST(name)					   \
 	static struct cmd_list s_##name##_cmd_list[] = {		   \
-		{ SET_FUNC_ORDER,     (TASK_CALLBACK)name##_ldb_set     }, \
-		{ DEL_FUNC_ORDER,     (TASK_CALLBACK)name##_ldb_del     }, \
-		{ MSET_FUNC_ORDER,    (TASK_CALLBACK)name##_ldb_mset    }, \
-		{ GET_FUNC_ORDER,     (TASK_CALLBACK)name##_ldb_get     }, \
-		{ LRANGE_FUNC_ORDER,  (TASK_CALLBACK)name##_ldb_lrange  }, \
-		{ KEYS_FUNC_ORDER,    (TASK_CALLBACK)name##_ldb_keys    }, \
-		{ VALUES_FUNC_ORDER,  (TASK_CALLBACK)name##_ldb_values  }, \
-		{ INFO_FUNC_ORDER,    (TASK_CALLBACK)name##_ldb_info    }, \
-		{ PING_FUNC_ORDER,    (TASK_CALLBACK)name##_ldb_ping    }, \
-		{ EXISTS_FUNC_ORDER,  (TASK_CALLBACK)name##_ldb_exists  }, \
-		{ SYNCSET_FUNC_ORDER, (TASK_CALLBACK)name##_ldb_syncset }, \
-		{ SYNCDEL_FUNC_ORDER, (TASK_CALLBACK)name##_ldb_syncdel }, \
-		{ COMPACT_FUNC_ORDER, (TASK_CALLBACK)name##_ldb_compact }  \
+		{ SET_FUNC_ORDER,     (TASK_VMS_FCB)name##_ldb_set     }, \
+		{ DEL_FUNC_ORDER,     (TASK_VMS_FCB)name##_ldb_del     }, \
+		{ MSET_FUNC_ORDER,    (TASK_VMS_FCB)name##_ldb_mset    }, \
+		{ GET_FUNC_ORDER,     (TASK_VMS_FCB)name##_ldb_get     }, \
+		{ LRANGE_FUNC_ORDER,  (TASK_VMS_FCB)name##_ldb_lrange  }, \
+		{ KEYS_FUNC_ORDER,    (TASK_VMS_FCB)name##_ldb_keys    }, \
+		{ VALUES_FUNC_ORDER,  (TASK_VMS_FCB)name##_ldb_values  }, \
+		{ INFO_FUNC_ORDER,    (TASK_VMS_FCB)name##_ldb_info    }, \
+		{ PING_FUNC_ORDER,    (TASK_VMS_FCB)name##_ldb_ping    }, \
+		{ EXISTS_FUNC_ORDER,  (TASK_VMS_FCB)name##_ldb_exists  }, \
+		{ SYNCSET_FUNC_ORDER, (TASK_VMS_FCB)name##_ldb_syncset }, \
+		{ SYNCDEL_FUNC_ORDER, (TASK_VMS_FCB)name##_ldb_syncdel }, \
+		{ COMPACT_FUNC_ORDER, (TASK_VMS_FCB)name##_ldb_compact }  \
 	}
 
 DEFINE_LDB_CMD_LIST(smart);
@@ -46,7 +46,7 @@ static void load_smart_cfg_func(struct smart_cfg_func *p_func_info, struct cmd_l
 
 	for (i = 0; i < cmd_count; ++i) {
 		p_func_info[(int)p_cmd_list[i].type].type = BIT8_TASK_TYPE_ALONE;
-		p_func_info[(int)p_cmd_list[i].type].func = (SUPEX_TASK_CALLBACK)p_cmd_list[i].func;
+		p_func_info[(int)p_cmd_list[i].type].func = (TASK_VMS_FCB)p_cmd_list[i].func;
 	}
 }
 
@@ -56,7 +56,7 @@ static void load_swift_cfg_func(struct swift_cfg_func *p_func_info, struct cmd_l
 
 	for (i = 0; i < cmd_count; ++i) {
 		p_func_info[(int)p_cmd_list[i].type].type = BIT8_TASK_TYPE_ALONE;
-		p_func_info[(int)p_cmd_list[i].type].func = (TASK_CALLBACK)p_cmd_list[i].func;
+		p_func_info[(int)p_cmd_list[i].type].func = (TASK_VMS_FCB)p_cmd_list[i].func;
 	}
 }
 

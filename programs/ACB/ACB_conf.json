@@ -1,6 +1,7 @@
 {
 	"swift_port": 6868,
 	"swift_worker_counts": 1,
+	"swift_tasker_counts": 1,
 	"swift_protocol": "http",
 
 	"max_req_size": 32768,
@@ -8,7 +9,7 @@
 
 	"log_path": "./logs/",
 	"log_file": "ACB",
-	"log_level": 5,
+	"log_level": 1,
 
 	"api_apply": "/publicentry",
 
@@ -26,7 +27,7 @@
 		},
 	"LinYi":
 		{
-			"host": "172.16.31.173"
+			"host": "172.16.31.173",
 			"port": 5096
 		}
 }

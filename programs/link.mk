@@ -12,7 +12,7 @@ LIBA += -lsupex_evuv
 endif
 
 ifeq ($(HANDLE_MODEL), EVCORO)
-LIBA += -lsupex_evcoro
+LIBA += -levcs
 endif
 
 LIBA += -lev -lkv -lscco -levcoro -lcoro

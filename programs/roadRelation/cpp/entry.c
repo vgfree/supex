@@ -3,8 +3,8 @@
 #include <unistd.h>
 
 #include "entry.h"
-#include "same_kill.h"
-#include "net_cache.h"
+#include "base/same_kill.h"
+#include "cache/cache.h"
 #include "topo.h"
 #include "topo_api.h"
 
@@ -32,18 +32,18 @@ static int get_number_len(uint64_t len)
 	return i;
 }
 
-static int put_number_out(struct net_cache *p_cache, uint64_t nb)
+static int put_number_out(struct cache *p_cache, uint64_t nb)
 {
 	char tmp[32] = { 0 };
 
 	sprintf(tmp, "%zu\r\n", nb);
-	return cache_add(p_cache, tmp, strnlen(tmp, 32));
+	return cache_append(p_cache, tmp, strnlen(tmp, 32));
 }
 
 static int entry_topo_main_call(struct data_node *p_node, uint64_t idx, TOPO_CALLBACK topo_cb, int max)
 {
 	int                     ok = false;
-	struct net_cache        *p_cache = &p_node->send;
+	struct cache        *p_cache = &p_node->mdl_send.cache;
 	uint64_t                slot[max];
 	struct query_args       info = {};
 
@@ -54,24 +54,24 @@ static int entry_topo_main_call(struct data_node *p_node, uint64_t idx, TOPO_CAL
 	ok = topo_cb(&info);
 
 	if (false == ok) {
-		cache_add(p_cache, "-", 1);
-		cache_add(p_cache, info.erro, strnlen(info.erro, MAX_ERROR_MESSAGE_SIZE));
-		cache_add(p_cache, "\r\n", 2);
+		cache_append(p_cache, "-", 1);
+		cache_append(p_cache, info.erro, strnlen(info.erro, MAX_ERROR_MESSAGE_SIZE));
+		cache_append(p_cache, "\r\n", 2);
 		return -1;
 	}
 
 	if (0 == info.size) {
-		cache_add(p_cache, OPT_MULTI_BULK_NULL, strlen(OPT_MULTI_BULK_NULL));
+		cache_append(p_cache, OPT_MULTI_BULK_NULL, strlen(OPT_MULTI_BULK_NULL));
 		return 0;
 	}
 
 	// *2\r\n$5\r\nmykey\r\n$5\r\nmyval\r\n
 	int i = 0;
-	cache_add(p_cache, "*", 1);
+	cache_append(p_cache, "*", 1);
 	put_number_out(p_cache, info.size);
 
 	for (; i < info.size; i++) {
-		cache_add(p_cache, "$", 1);
+		cache_append(p_cache, "$", 1);
 		put_number_out(p_cache, get_number_len(info.buf[i]));
 		put_number_out(p_cache, info.buf[i]);
 	}
@@ -82,40 +82,41 @@ static int entry_topo_main_call(struct data_node *p_node, uint64_t idx, TOPO_CAL
 static int entry_topo_with_data_call(struct data_node *p_node, uint64_t idx, TOPO_CALLBACK topo_cb, int max)
 {
 	int                     ok = false;
-	struct net_cache        *p_cache = &p_node->send;
+	struct cache        *p_cache = &p_node->mdl_send.cache;
 	uint64_t                slot[max];
-	char                    *p_buf = p_node->recv.buf_addr;
-	struct redis_status     *p_status = &p_node->redis_info.rs;
+	char                    *p_buf = cache_data_address(&p_node->mdl_recv.cache);
+	struct redis_status     *p_rst = &p_node->mdl_recv.parse.redis_info.rs;
+
 	struct query_args       info = {};
 
 	memset(&info, 0, sizeof(info));
 	info.idx = idx;
 	info.buf = slot;
 	info.peak = max;
-	strncpy(info.data, p_buf + p_status->key_offset[0], p_status->klen_array[0]);
-	info.len = p_status->klen_array[0];
+	strncpy(info.data, p_buf + p_rst->field[1].offset, p_rst->field[1].len);
+	info.len = p_rst->field[1].len;
 
 	ok = topo_cb(&info);
 
 	if (false == ok) {
-		cache_add(p_cache, "-", 1);
-		cache_add(p_cache, info.erro, strnlen(info.erro, MAX_ERROR_MESSAGE_SIZE));
-		cache_add(p_cache, "\r\n", 2);
+		cache_append(p_cache, "-", 1);
+		cache_append(p_cache, info.erro, strnlen(info.erro, MAX_ERROR_MESSAGE_SIZE));
+		cache_append(p_cache, "\r\n", 2);
 		return -1;
 	}
 
 	if (0 == info.size) {
-		cache_add(p_cache, OPT_MULTI_BULK_NULL, strlen(OPT_MULTI_BULK_NULL));
+		cache_append(p_cache, OPT_MULTI_BULK_NULL, strlen(OPT_MULTI_BULK_NULL));
 		return 0;
 	}
 
 	// *2\r\n$5\r\nmykey\r\n$5\r\nmyval\r\n
 	int i = 0;
-	cache_add(p_cache, "*", 1);
+	cache_append(p_cache, "*", 1);
 	put_number_out(p_cache, info.size);
 
 	for (; i < info.size; i++) {
-		cache_add(p_cache, "$", 1);
+		cache_append(p_cache, "$", 1);
 		put_number_out(p_cache, get_number_len(info.buf[i]));
 		put_number_out(p_cache, info.buf[i]);
 	}

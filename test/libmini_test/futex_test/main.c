@@ -56,7 +56,7 @@ again:
 	if (modify) {
 		bool flag = false;
 
-		flag = ATOMIC_CASB(&ptr->ft->stat, FT_ON, FT_OFF);
+		flag = AO_CASB(&ptr->ft->stat, FT_ON, FT_OFF);
 
 		if (likely(flag)) {
 			x_printf(D, "modified successful ...");
@@ -178,7 +178,7 @@ int main(int argc, char **argv)
 	} else {
 		/*唤醒等待的进程*/
 		bool flag = false;
-		flag = ATOMIC_CASB(&ftptr->stat, FT_OFF, FT_ON);
+		flag = AO_CASB(&ftptr->stat, FT_OFF, FT_ON);
 
 		if (likely(flag)) {
 			x_printf(D, "it's necessary to wake somebody ...");

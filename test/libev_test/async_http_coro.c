@@ -52,12 +52,12 @@ int main()
 	struct ev_loop          *main_loop = ev_default_loop(0);
 	struct async_ctx        *ac = NULL;
 
-	pool_api_init("www.sina.com", 80, 2000, true);
+	conn_xpool_init("www.sina.com", 80, 2000, true);
 	ac = async_initial(main_loop, QUEUE_TYPE_CORO, NULL, NULL, NULL, ASYNC_LIBEV_PEAK);
 
 	if (ac) {
 		void    *sfd = (void *)(intptr_t)-1;
-		int     rc = pool_api_gain(&cpool, "www.sina.com", 80, &sfd);
+		int     rc = conn_xpool_gain(&cpool, "www.sina.com", 80, &sfd);
 
 		if (rc) {
 			async_distory(ac);
@@ -72,7 +72,7 @@ int main()
 
 		/* commond 2 */
 		void *sfd1 = (void *)(intptr_t)-1;
-		rc = pool_api_gain(&cpool, "www.baidu.com", 80, &sfd1);
+		rc = conn_xpool_gain(&cpool, "www.baidu.com", 80, &sfd1);
 
 		if (sfd1 <= 0) {
 			async_distory(ac);

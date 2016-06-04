@@ -12,14 +12,21 @@
 __thread ExceptFrameT   *_g_ef_ = NULL;
 __thread volatile int   g_errno = 0;
 
-void ExceptRaise(const char *function, const char *file, int line, const ExceptT *e)
+void ExceptRaise(bool skipable, const char *function, const char *file, int line, const ExceptT *e)
 {
 	ExceptFrameT *ptr = NULL;
 
 	/*
 	 * 从栈中弹出当前抛出的异常
 	 */
-	ptr = PopExceptFrame();
+	if (!skipable) {
+		if (_g_ef_->skipable) {
+			abort();
+		}
+	}
+	do {
+		ptr = PopExceptFrame();
+	} while (ptr->skipable != skipable);
 
 	if (unlikely((!ptr) || (!e))) {
 		SLogWriteByInfo(F, function, file, line,

@@ -27,12 +27,12 @@ static void mfptp_pthrd_init(void *user)
 #ifdef STORE_USE_QUEUE
 static bool mfptp_task_report(void *user, void *task)
 {
-	return supex_task_push(&((MFPTP_WORKER_PTHREAD *)user)->tlist, task);
+	return free_queue_push(&((MFPTP_WORKER_PTHREAD *)user)->tlist, task);
 }
 
 static bool mfptp_task_lookup(void *user, void *task)
 {
-	return supex_task_pull(&((MFPTP_WORKER_PTHREAD *)user)->tlist, task);
+	return free_queue_pull(&((MFPTP_WORKER_PTHREAD *)user)->tlist, task);
 }
 #endif
 
@@ -90,7 +90,7 @@ struct queue_stat_info
 	unsigned int            shift_lookup;
 	int                     step_lookup;
 	struct mfptp_task_node  temp;
-	struct supex_task_list  swap;
+	struct free_queue_list  swap;
 };
 
 static struct queue_stat_info *g_queue_stat_list = NULL;
@@ -115,7 +115,7 @@ static bool mfptp_task_report(void *user, void *task)
 		}
 
 		new_shift = p_task->shift;
-		ok = supex_task_push(&p_worker->tlist, p_task);
+		ok = free_queue_push(&p_worker->tlist, p_task);
 
 		if (ok) {
 			x_printf(D, "push queue ok!\n");
@@ -174,14 +174,14 @@ static bool mfptp_task_lookup(void *user, void *task)
 	have = p_worker->thave;
 
 	if ((have <= 0) && (p_stat->step_lookup == 2)) {
-		return supex_task_pull(p_worker->glist, p_task);
+		return free_queue_pull(p_worker->glist, p_task);
 	}
 
 	switch (p_stat->step_lookup)
 	{
 		case 0:
 			/*init vms step*/
-			ok = supex_task_pull(&p_worker->tlist, p_task);
+			ok = free_queue_pull(&p_worker->tlist, p_task);
 
 			if (ok) {
 				__sync_sub_and_fetch(&p_worker->thave, 1);
@@ -199,7 +199,7 @@ static bool mfptp_task_lookup(void *user, void *task)
 
 			if (ok) {
 				if (p_task->shift == 1) {
-					supex_task_push(&p_stat->swap, p_task);	// push l
+					free_queue_push(&p_stat->swap, p_task);	// push l
 					p_stat->step_lookup++;
 				} else {
 					// do nothing, is old task
@@ -214,7 +214,7 @@ static bool mfptp_task_lookup(void *user, void *task)
 
 			/*done new step*/
 			if (p_stat->mark_lookup == MARK_USE_QUEUE) {
-				ok = supex_task_pull(&p_worker->tlist, p_task);
+				ok = free_queue_pull(&p_worker->tlist, p_task);
 
 				if (ok) {
 					if (p_task->shift == p_stat->shift_lookup) {
@@ -223,19 +223,19 @@ static bool mfptp_task_lookup(void *user, void *task)
 					} else {
 						/*not first push then pop,it will get the push task in one loop.*/
 						memcpy(&p_stat->temp, p_task, sizeof(struct mfptp_task_node));
-						ok = supex_task_pull(&p_stat->swap, p_task);	// pull l
+						ok = free_queue_pull(&p_stat->swap, p_task);	// pull l
 
 						if (ok) {
 							__sync_sub_and_fetch(&p_worker->thave, 1);
 						}
 
-						supex_task_push(&p_stat->swap, &p_stat->temp);	// push l
+						free_queue_push(&p_stat->swap, &p_stat->temp);	// push l
 						p_stat->shift_lookup++;
 						p_stat->mark_lookup = MARK_USE_UCMQ;
 					}
 				} else {
 					if (have > 0) {
-						ok = supex_task_pull(&p_stat->swap, p_task);	// pull l
+						ok = free_queue_pull(&p_stat->swap, p_task);	// pull l
 
 						if (ok) {
 							__sync_sub_and_fetch(&p_worker->thave, 1);
@@ -259,19 +259,19 @@ static bool mfptp_task_lookup(void *user, void *task)
 						__sync_sub_and_fetch(&p_worker->thave, 1);
 					} else {
 						memcpy(&p_stat->temp, p_task, sizeof(struct mfptp_task_node));
-						ok = supex_task_pull(&p_stat->swap, p_task);	// pull l
+						ok = free_queue_pull(&p_stat->swap, p_task);	// pull l
 
 						if (ok) {
 							__sync_sub_and_fetch(&p_worker->thave, 1);
 						}
 
-						supex_task_push(&p_stat->swap, &p_stat->temp);	// push l
+						free_queue_push(&p_stat->swap, &p_stat->temp);	// push l
 						p_stat->shift_lookup++;
 						p_stat->mark_lookup = MARK_USE_QUEUE;
 					}
 				} else {
 					if (have > 0) {
-						ok = supex_task_pull(&p_stat->swap, p_task);	// pull l
+						ok = free_queue_pull(&p_stat->swap, p_task);	// pull l
 
 						if (ok) {
 							__sync_sub_and_fetch(&p_worker->thave, 1);
@@ -324,7 +324,7 @@ void mfptp_entry_init(void)
 
 	while (all--) {
 		p_stat = &g_queue_stat_list[all];
-		supex_task_init(&p_stat->swap, sizeof(struct mfptp_task_node), MAX_MFPTP_TEMP_QUEUE_NUMBER);
+		free_queue_init(&p_stat->swap, sizeof(struct mfptp_task_node), MAX_MFPTP_TEMP_QUEUE_NUMBER);
 	}
   #endif
 #endif

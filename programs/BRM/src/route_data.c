@@ -8,8 +8,8 @@
  *
  ******************************************************************************/
 #include "ev.h"
-#include "pool_api.h"
-#include "async_api.h"
+#include "pool_api/conn_xpool_api.h"
+#include "async_tasks/async_api.h"
 #include "route_data.h"
 #include "calculate_data.h"
 #include "cache/cache.h"
@@ -106,7 +106,7 @@ void start_route_data(struct taskdata *data)
 
 			/*gain and store data to netdata*/
 			int rc = 0;
-			rc = pool_api_gain(&data->rtdata[i].cntpool,
+			rc = conn_xpool_gain(&data->rtdata[i].cntpool,
 					data->rtdata[i].host->ip,
 					data->rtdata[i].host->port,
 					(void **)&data->rtdata[i].fd);
@@ -114,9 +114,9 @@ void start_route_data(struct taskdata *data)
 			if (unlikely(ischeckfd && rc == POOL_API_OK &&
 						 SF_IsClosed((int)data->rtdata[i].fd))) {
 			check_fd:
-				pool_api_free(data->rtdata[i].cntpool,
+				conn_xpool_free(data->rtdata[i].cntpool,
 							  (void **)&data->rtdata[i].fd);
-				rc = pool_api_pull(data->rtdata[i].cntpool,
+				rc = conn_xpool_pull(data->rtdata[i].cntpool,
 								   (void **)&data->rtdata[i].fd);
 			}
 			
@@ -127,7 +127,7 @@ void start_route_data(struct taskdata *data)
 				}
 			} else {
 				if (unlikely(rc == POOL_API_ERR_OP_FAIL)) {
-					ATOMIC_INC(&data->rtdata[i].host->errconn);
+					AO_INC(&data->rtdata[i].host->errconn);
 					x_printf(E, "can't connect %s:%d",
 							 data->rtdata[i].host->ip,
 							 data->rtdata[i].host->port);
@@ -366,7 +366,7 @@ static void _route_fail(const struct async_obj *obj, void *usr)
 	TRY
 	{
 #if TEST
-		long cur = ATOMIC_F_ADD(&g_TestCnt, 1);
+		long cur = AO_F_ADD(&g_TestCnt, 1);
 
 		if (unlikely(cur >= TEST)) {
 			kill(0, SIGINT);
@@ -393,7 +393,7 @@ static void _route_all_finish(const struct async_obj *obj, void *usr)
 	TRY
 	{
 #if TEST
-		long cur = ATOMIC_F_ADD(&g_TestCnt, 1);
+		long cur = AO_F_ADD(&g_TestCnt, 1);
 
 		if (unlikely(cur >= TEST)) {
 			kill(0, SIGINT);
@@ -451,7 +451,7 @@ static void _route_one_finish(struct async_obj *obj, void *reply, void *usr)
 
 				if (unlikely(!keepalive)) {
 					/*close connection*/
-					pool_api_free(data->cntpool, (void **)&data->fd);
+					conn_xpool_free(data->cntpool, (void **)&data->fd);
 				}
 #endif
 			} else {

@@ -42,7 +42,7 @@ static int snd_data_to_luakv(char *http_data, struct ev_loop *loop, char *host, 
 
 	if (ac) {
 		void    *sfd = (void *)(intptr_t)-1;
-		int     rc = pool_api_gain(&cpool, host, port, &sfd);
+		int     rc = conn_xpool_gain(&cpool, host, port, &sfd);
 
 		if (rc) {
 			async_distory(ac);
@@ -71,7 +71,7 @@ static int add_redis_task(char *redis_buff, struct rr_link *link, struct async_c
 	struct cnt_pool *cpool = NULL;
 
 	void    *sfd = (void *)(intptr_t)-1;
-	int     rc = pool_api_gain(&cpool, link->host, link->port, &sfd);
+	int     rc = conn_xpool_gain(&cpool, link->host, link->port, &sfd);
 
 	if (rc) {
 		async_distory(ac);

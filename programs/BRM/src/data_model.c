@@ -5,7 +5,7 @@
 //  Created by 周凯 on 15/10/22.
 //  Copyright © 2015年 zk. All rights reserved.
 //
-#include "pool_api.h"
+#include "pool_api/conn_xpool_api.h"
 #include "data_model.h"
 
 struct allcfg g_allcfg = {};
@@ -194,8 +194,8 @@ void taghash_destroy(struct taghash *tag)
 void procentry_stop(struct procentry *proc)
 {
 	return_if_fail(proc);
-	ATOMIC_SET((int *)&proc->stat, PROC_STAT_STOP);
-	ATOMIC_SET(&proc->frame->stat, FRAME_STAT_STOP);
+	AO_SET((int *)&proc->stat, PROC_STAT_STOP);
+	AO_SET(&proc->frame->stat, FRAME_STAT_STOP);
 }
 
 /* --------             */
@@ -207,7 +207,7 @@ static inline bool _hostentry_connect(struct hostentry *host, int poolsize)
 
 	x_printf(D, "connect to `%s:%d`", host->ip, host->port);
 
-	ret = pool_api_init(host->ip, host->port, poolsize, false);
+	ret = conn_xpool_init(host->ip, host->port, poolsize, false);
 
 	if (unlikely(!ret)) x_perror("connect to `%s:%d` fail.", host->ip, host->port);
 

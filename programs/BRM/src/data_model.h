@@ -15,9 +15,8 @@
 // #include "zmq.h"
 #include "cJSON.h"
 //#include "redis_parser.h"
-#include "http.h"
-#include "cnt_pool.h"
-#include "async_obj.h"
+#include "pool_api/conn_xpool_api.h"
+#include "async_tasks/async_api.h"
 #include "except_info.h"
 
 #include "cache/cache.h"

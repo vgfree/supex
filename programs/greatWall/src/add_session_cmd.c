@@ -7,10 +7,10 @@
 //
 
 #include "add_session_cmd.h"
-#include "sniff_api.h"
-#include "swift_api.h"
+#include "minor/sniff_api.h"
+#include "major/swift_api.h"
 #include "apply_def.h"
-#include "swift_evcb.h"
+#include "major/swift_evcb.h"
 
 static bool help(void *user, void *data)
 {
@@ -39,55 +39,52 @@ static bool tasks(void *user, void *data)
 {
 	bool                    flag = false;
 	int                     taskid = 0;
-	struct swift_task_node  *task = NULL;
+	struct adopt_task_node  *task = NULL;
 	struct session_task     *service = NULL;
 	SWIFT_WORKER_PTHREAD    *p_swift_worker = NULL;
-	struct mount_info       *link = NULL;
 
 	assert(user);
 	assert(data);
 
-	task = (struct swift_task_node *)data;
+	task = (struct adopt_task_node *)data;
 	p_swift_worker = (SWIFT_WORKER_PTHREAD *)user;
 	service = (struct session_task *)task->data;
 
-	swift_task_come(&taskid, task->id);
+	//swift_task_come(&taskid, task->id);
 
 	if (!service) {
 		goto over;
 	}
 
-	for (link = p_swift_worker->mount; link; link = link->next) {
-		SNIFF_WORKER_PTHREAD    *p_sniff_worker = link->list;
-		SNIFF_WORKER_PTHREAD    *ptr = NULL;
+	SNIFF_WORKER_PTHREAD    *p_sniff_worker = p_swift_worker->mount;
+	SNIFF_WORKER_PTHREAD    *ptr = NULL;
 
-		for (ptr = p_sniff_worker; ptr; ) {
-			x_printf(D, "thread(%20p) : %ld",
-				(void *)ptr->thread_id,
-				ATOMIC_GET(&ptr->thave));
+	for (ptr = p_sniff_worker; ptr; ) {
+		x_printf(D, "thread(%20p) : %ld",
+				(void *)ptr->pid,
+				AO_GET(&ptr->thave));
 
-			flag = session_response_clnt(service->fd, SESSION_IO_TIMEOUT,
-					"thread(%10ld) : %d\n",
-					ptr->tid,
-					ATOMIC_GET(&ptr->thave));
+		flag = session_response_clnt(service->fd, SESSION_IO_TIMEOUT,
+				"thread(%10ld) : %d\n",
+				ptr->tid,
+				AO_GET(&ptr->thave));
 
-			if (!flag) {
-				goto over;
-			}
+		if (!flag) {
+			goto over;
+		}
 
-			ptr = ptr->next;
+		ptr = ptr->next;
 
-			if (ptr == p_sniff_worker) {
-				break;
-			}
+		if (ptr == p_sniff_worker) {
+			break;
 		}
 	}
 
 over:
 
-	if (swift_task_last(&taskid, task->id)) {
+	//if (swift_task_last(&taskid, task->id)) {
 		close(service->fd);
-	}
+	//}
 
 	return flag;
 }
@@ -132,12 +129,12 @@ static void session_dispatch_task(struct session_task *service)
 		type = service->action->taskmode;
 	}
 
-	struct swift_task_node task = {
+	struct adopt_task_node task = {
 		.id     = 0,
 		.sfd    = 0,
 		.type   = type,
 		.origin = BIT8_TASK_ORIGIN_MSMQ,
-		.func   = (TASK_CALLBACK)service->action->action,
+		.func   = (TASK_VMS_FCB)service->action->action,
 		.index  = 0,
 		.data   = (void *)service
 	};
@@ -145,7 +142,7 @@ static void session_dispatch_task(struct session_task *service)
 	if (type == BIT8_TASK_TYPE_WHOLE) {
 		swift_all_task_hit(&task, false, service->fd);
 	} else {
-		swift_one_task_hit(&task, false, service->fd);
+		swift_one_task_hit(&task, false, service->fd, 0);
 	}
 }
 

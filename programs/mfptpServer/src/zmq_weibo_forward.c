@@ -130,7 +130,7 @@ void *mfptp_usr_weibo_forward(void *arg)
 
 				time(&node.stamp);
 				LOG(LOG_NET_DOWNLINK, M, "push user weibo to supex list!\n\n");
-				supex_task_push(&(p_worker->tlist), (void *)&node);
+				free_queue_push(&(p_worker->tlist), (void *)&node);
 				supex_evuv_wake(&(p_worker->evuv));
 			} else {
 				continue;
@@ -289,7 +289,7 @@ void *mfptp_gp_weibo_forward(void *arg)
 
 				time(&node.stamp);
 				LOG(LOG_NET_DOWNLINK, D, "now,push downlink data to supex list \n ");
-				supex_task_push(&(p_worker->tlist), (void *)&node);
+				free_queue_push(&(p_worker->tlist), (void *)&node);
 				supex_evuv_wake(&(p_worker->evuv));
 			} else {
 				printf("user %s is not in server !\n", name_buf);

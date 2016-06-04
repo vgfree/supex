@@ -1,0 +1,7 @@
+
+test:
+	gcc -fdiagnostics-color=auto -g \
+		test_evcoro_async_tasks.c \
+		-lpthread  -levcs -levcoro -lcoro -lev -lmini -lm -ldl -lluajit-5.1 \
+		-I. -I../../lib/libevcs/include/engine/ -I../../lib/libev -I../../lib/libevcoro/include -I../../lib/libcoro/include/ -I../../lib/libmini/src -I/usr/local/include/luajit-2.0 \
+		-L../../lib -L/usr/local/lib

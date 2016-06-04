@@ -1,29 +1,51 @@
 #include <assert.h>
 
-#include "match.h"
-#include "swift_api.h"
+#include "major/swift_api.h"
 #include "swift_lua_api.h"
+#include "lua_expand/lj_c_coro.h"
+#include "lua_expand/lua_link.h"
+#include "lua_expand/lj_http_info.h"
+#include "lua_expand/lj_cache.h"
+#include "luakv/luakv.h"
 
-extern int sync_http(lua_State *L);
 
-extern int app_lua_get_head_data(lua_State *L);
 
-extern int app_lua_get_body_data(lua_State *L);
 
-extern int app_lua_get_path_data(lua_State *L);
-
-extern int app_lua_get_uri_args(lua_State *L);
-
-extern int app_lua_add_send_data(lua_State *L);
-
-static int _vms_cntl(lua_State **L, int last, struct swift_task_node *task)
+int app_lua_diffuse(lua_State *L)
 {
+	size_t  size = 0;
+	char    *name = (char *)lua_tostring(L, 1);
+	char    *data = (char *)lua_tolstring(L, 2, &size);
+	int     time = (int)lua_tointeger(L, 3);
+	int     mode = (int)lua_tointeger(L, 4);
+
+	printf("time is %d mode is %d #################\n", time, mode);
+
+	struct msg_info msg = {};
+	msg.mode = (char)mode;
+	msg.time = time;
+	memcpy(msg.data, data, MIN(size, MSMQ_MAX_DATA_SIZE));
+	int ok = msmq_send(name, (char *)&msg, sizeof(struct msg_info));
+
+	if (ok != 0) {
+		lua_pushboolean(L, 0);
+	} else {
+		lua_pushboolean(L, 1);
+	}
+
+	return 1;
+}
+
+int swift_vms_cntl(void *user, union virtual_system **VMS, struct adopt_task_node *task)
+{
+	int             error = 0;
 	struct msg_info *msg = task->data;
+	lua_State       **L = VMS;
 
 	assert(msg);
 
 	lua_getglobal(*L, "app_cntl");
-	lua_pushboolean(*L, last);
+	lua_pushboolean(*L, task->last);
 	lua_pushstring(*L, msg->data);
 	switch (msg->opt)
 	{
@@ -51,13 +73,15 @@ static int _vms_cntl(lua_State **L, int last, struct swift_task_node *task)
 			x_printf(S, "Error msmq opt!\n");
 			return 0;
 	}
-	return lua_pcall(*L, 3, 0, 0);
+	error = lua_pcall(*L, 3, 0, 0);
+	if (error) {
+		assert(*L);
+		x_printf(E, "%s", lua_tostring(*L, -1));
+		lua_pop(*L, 1);
+	}
+	return error;
 }
 
-int swift_vms_cntl(void *W)
-{
-	return swift_for_alone_vm(W, _vms_cntl);
-}
 
 static lua_State *_vms_new(void)
 {
@@ -68,18 +92,16 @@ static lua_State *_vms_new(void)
 	luaopen_base(L);
 	luaL_openlibs(L);
 	/*reg func*/
-	lua_register(L, "supex_http", sync_http);
+	lua_register(L, "supex_http", async_http);
+	lua_register(L, "app_lua_diffuse", app_lua_diffuse);
+	lua_register(L, "lua_default_switch", lj_evcoro_switch);
 	lua_register(L, "app_lua_get_head_data", app_lua_get_head_data);
 	lua_register(L, "app_lua_get_body_data", app_lua_get_body_data);
 	lua_register(L, "app_lua_get_path_data", app_lua_get_path_data);
 	lua_register(L, "app_lua_get_uri_args", app_lua_get_uri_args);
+	lua_register(L, "app_lua_get_recv_data", app_lua_get_recv_data);
 	lua_register(L, "app_lua_add_send_data", app_lua_add_send_data);
-	lua_register(L, "app_lua_mapinit", app_lua_mapinit);
-	lua_register(L, "app_lua_convert", app_lua_convert);
-	lua_register(L, "app_lua_reverse", app_lua_reverse);
-	lua_register(L, "app_lua_ifmatch", app_lua_ifmatch);
 	lua_register(L, "search_kvhandle", search_kvhandle);
-	lua_register(L, "app_lua_get_recv_buf", app_lua_get_recv_buf);
 	/*lua init*/
 	{
 		extern struct swift_cfg_list g_swift_cfg_list;
@@ -95,7 +117,7 @@ static lua_State *_vms_new(void)
 		error = luaL_dofile(L, "lua/core/init.lua");
 
 		if (error) {
-			fprintf(stderr, "%s\n", lua_tostring(L, -1));
+			x_printf(E, "%s\n", lua_tostring(L, -1));
 			lua_pop(L, 1);
 			exit(EXIT_FAILURE);
 		}
@@ -104,7 +126,7 @@ static lua_State *_vms_new(void)
 	error = luaL_dofile(L, "lua/core/start.lua");
 
 	if (error) {
-		fprintf(stderr, "%s\n", lua_tostring(L, -1));
+		x_printf(E, "%s\n", lua_tostring(L, -1));
 		lua_pop(L, 1);
 		exit(EXIT_FAILURE);
 	}
@@ -112,8 +134,11 @@ static lua_State *_vms_new(void)
 	return L;
 }
 
-static int _vms_init(lua_State **L, int last, struct swift_task_node *task)
+
+int swift_vms_init(void *user, union virtual_system **VMS, struct adopt_task_node *task)
 {
+	int             error = 0;
+	lua_State       **L = VMS;
 	if (*L != NULL) {
 		x_printf(S, "No need to init LUA VM!\n");
 		return 0;
@@ -121,26 +146,24 @@ static int _vms_init(lua_State **L, int last, struct swift_task_node *task)
 
 	*L = _vms_new();
 	assert(*L);
-	lua_getglobal(*L, "app_line_init");
-	return lua_pcall(*L, 0, 0, 0);
-}
-
-int swift_vms_init(void *W)
-{
-	int error = 0;
-
-	error = swift_for_alone_vm(W, _vms_init);
-
+	lua_getglobal(*L, "app_evcoro_init");
+	lua_pushinteger(*L, supex_get_default()->scheduler);
+	lua_pushinteger(*L, task->index);
+	error = lua_pcall(*L, 2, 0, 0);
 	if (error) {
+		x_printf(E, "%s", lua_tostring(*L, -1));
+		lua_pop(*L, 1);
 		exit(EXIT_FAILURE);
 	}
-
 	return error;
 }
 
-static int _vms_exit(lua_State **L, int last, struct swift_task_node *task)
+
+int swift_vms_exit(void *user, union virtual_system **VMS, struct adopt_task_node *task)
 {
 	int error = 0;
+	lua_State       **L = VMS;
+	x_printf(S, "exit one batch LUA!\n");
 
 	lua_getglobal(*L, "app_exit");
 	error = lua_pcall(*L, 0, 0, 0);
@@ -155,76 +178,88 @@ static int _vms_exit(lua_State **L, int last, struct swift_task_node *task)
 	return 0;	/*must return 0*/
 }
 
-int swift_vms_exit(void *W)
-{
-	int error = swift_for_alone_vm(W, _vms_exit);
 
-	x_printf(S, "exit one alone LUA!\n");
+int swift_vms_rfsh(void *user, union virtual_system **VMS, struct adopt_task_node *task)
+{
+	int error = 0;
+	lua_State       **L = VMS;
+	lua_getglobal(*L, "app_rfsh");
+	lua_pushboolean(*L, task->last);
+	lua_pushinteger(*L, task->sfd);
+	error = lua_pcall(*L, 2, 0, 0);
+	if (error) {
+		assert(*L);
+		x_printf(E, "%s", lua_tostring(*L, -1));
+		lua_pop(*L, 1);
+	}
 	return error;
 }
 
-static int _vms_rfsh(lua_State **L, int last, struct swift_task_node *task)
-{
-	lua_getglobal(*L, "app_rfsh");
-	lua_pushboolean(*L, last);
-	lua_pushinteger(*L, task->sfd);
-	return lua_pcall(*L, 2, 0, 0);
-}
 
-int swift_vms_rfsh(void *W)
+int swift_vms_sync(void *user, union virtual_system **VMS, struct adopt_task_node *task)
 {
-	return swift_for_alone_vm(W, _vms_rfsh);
-}
-
-static int _vms_sync(lua_State **L, int last, struct swift_task_node *task)
-{
+	int error = 0;
+	lua_State       **L = VMS;
 	lua_getglobal(*L, "app_push");
-	lua_pushboolean(*L, last);
+	lua_pushboolean(*L, task->last);
 	lua_pushinteger(*L, task->sfd);
-	return lua_pcall(*L, 2, 0, 0);
+	error = lua_pcall(*L, 2, 0, 0);
+	if (error) {
+		assert(*L);
+		x_printf(E, "%s", lua_tostring(*L, -1));
+		lua_pop(*L, 1);
+	}
+	return error;
 }
 
-int swift_vms_sync(void *W)
+/*=============================================================*/
+int swift_vms_gain(void *user, union virtual_system **VMS, struct adopt_task_node *task)
 {
-	return swift_for_alone_vm(W, _vms_sync);
-}
-
-static int _vms_gain(lua_State **L, int last, struct swift_task_node *task)
-{
+	int error = 0;
+	lua_State       **L = VMS;
 	lua_getglobal(*L, "app_pull");
-	lua_pushboolean(*L, last);
+	lua_pushboolean(*L, task->last);
 	lua_pushinteger(*L, task->sfd);
-	return lua_pcall(*L, 2, 0, 0);
+	error = lua_pcall(*L, 2, 0, 0);
+	if (error) {
+		assert(*L);
+		x_printf(E, "%s", lua_tostring(*L, -1));
+		lua_pop(*L, 1);
+	}
+	return error;
 }
 
-int swift_vms_gain(void *W)
-{
-	return swift_for_alone_vm(W, _vms_gain);
-}
 
-static int _vms_call(lua_State **L, int last, struct swift_task_node *task)
+int swift_vms_call(void *user, union virtual_system **VMS, struct adopt_task_node *task)
 {
+	int error = 0;
+	lua_State       **L = VMS;
 	lua_getglobal(*L, "app_call_all");
-	lua_pushboolean(*L, last);
+	lua_pushboolean(*L, task->last);
 	lua_pushinteger(*L, task->sfd);
-	return lua_pcall(*L, 2, 0, 0);
+	error = lua_pcall(*L, 2, 0, 0);
+	if (error) {
+		assert(*L);
+		x_printf(E, "%s", lua_tostring(*L, -1));
+		lua_pop(*L, 1);
+	}
+	return error;
 }
 
-int swift_vms_call(void *W)
-{
-	return swift_for_alone_vm(W, _vms_call);
-}
 
-static int _vms_exec(lua_State **L, int last, struct swift_task_node *task)
+int swift_vms_exec(void *user, union virtual_system **VMS, struct adopt_task_node *task)
 {
+	int error = 0;
+	lua_State       **L = VMS;
 	lua_getglobal(*L, "app_call_one");
-	lua_pushboolean(*L, last);
+	lua_pushboolean(*L, task->last);
 	lua_pushinteger(*L, task->sfd);
-	return lua_pcall(*L, 2, 0, 0);
-}
-
-int swift_vms_exec(void *W)
-{
-	return swift_for_alone_vm(W, _vms_exec);
+	error = lua_pcall(*L, 2, 0, 0);
+	if (error) {
+		assert(*L);
+		x_printf(E, "%s", lua_tostring(*L, -1));
+		lua_pop(*L, 1);
+	}
+	return error;
 }
 

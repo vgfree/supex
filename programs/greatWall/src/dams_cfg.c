@@ -4,6 +4,7 @@
 #include <stdio.h>
 
 #include "dams_cfg.h"
+#include "apply_def.h"
 
 static void init_dams_cfg(struct dams_cfg_file *p_cfg)
 {
@@ -110,6 +111,16 @@ bool read_dams_cfg(struct dams_cfg_file *p_cfg, char *name)
 		str_val = json_object_get_string(obj);
 		p_cfg->links[i].host = x_strdup(str_val);
 	}
+
+	if (json_object_object_get_ex(cfg, "qtype", &obj)) {
+		str_val = json_object_get_string(obj);
+
+		if (strncmp(str_val, "fresh", 5) == 0) {
+			p_cfg->qtype = REAL_TIME_KIND;
+		} else {
+			p_cfg->qtype = NON_REAL_TIME_KIND;
+		}
+	} else { goto fail; }
 
 	/*fresh*/
 	if (!json_object_object_get_ex(cfg, "fresh", &ary)) {

@@ -88,7 +88,7 @@ bool DQueuePush(DQueueT queue, intptr_t data)
 			ret = true;
 		}
 	} else {
-		x_printf(W, "no more space");
+		x_pwarn("no more space");
 	}
 
 	AO_SpinUnlock(queue->lock);
@@ -122,7 +122,7 @@ bool DQueuePriorityPush(DQueueT queue, intptr_t data)
 			ret = true;
 		}
 	} else {
-		x_printf(W, "no more space");
+		x_pwarn("no more space");
 	}
 
 	AO_SpinUnlock(queue->lock);

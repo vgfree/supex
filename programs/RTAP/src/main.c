@@ -15,15 +15,38 @@ extern char     *ZK_RNODE;
 #endif
 
 #include "load_cfg.h"
-#include "smart_api.h"
+#include "major/smart_api.h"
+#include "smart_evcoro_lua_api.h"
+static void session_dispatch_task(struct session_task *service)
+{
+	char type = 0;
 
-#ifdef OPEN_SCCO
-  #include "smart_scco_lua_api.h"
-#elif  OPEN_EVCORO
-  #include "smart_evcoro_lua_api.h"
-#else
-  #include "smart_line_lua_api.h"
-#endif
+	assert(service);
+	assert(service->action);
+
+	if ((service->action->taskmode != BIT8_TASK_TYPE_WHOLE) &&
+		(service->action->taskmode != BIT8_TASK_TYPE_ALONE)) {
+		type = BIT8_TASK_TYPE_ALONE;
+	} else {
+		type = service->action->taskmode;
+	}
+
+	struct adopt_task_node task = {
+		.id     = 0,
+		.sfd    = 0,
+		.type   = type,
+		.origin = BIT8_TASK_ORIGIN_MSMQ,
+		.func   = (TASK_VMS_FCB)service->action->action,
+		.index  = 0,
+		.data   = (void *)service
+	};
+
+	if (type == BIT8_TASK_TYPE_WHOLE) {
+		smart_all_task_hit(&task, false, service->fd);
+	} else {
+		smart_one_task_hit(&task, false, service->fd);
+	}
+}
 
 struct smart_cfg_list g_smart_cfg_list = {};
 
@@ -49,13 +72,13 @@ int main(int argc, char **argv)
 	load_cfg_file(&g_smart_cfg_list.file_info, g_smart_cfg_list.argv_info.conf_name);
 
 	g_smart_cfg_list.func_info[APPLY_FUNC_ORDER].type = BIT8_TASK_TYPE_ALONE;
-	g_smart_cfg_list.func_info[APPLY_FUNC_ORDER].func = (SUPEX_TASK_CALLBACK)smart_vms_call;
+	g_smart_cfg_list.func_info[APPLY_FUNC_ORDER].func = (TASK_VMS_FCB)smart_vms_call;
 	g_smart_cfg_list.func_info[FETCH_FUNC_ORDER].type = BIT8_TASK_TYPE_ALONE;
-	g_smart_cfg_list.func_info[FETCH_FUNC_ORDER].func = (SUPEX_TASK_CALLBACK)smart_vms_gain;
+	g_smart_cfg_list.func_info[FETCH_FUNC_ORDER].func = (TASK_VMS_FCB)smart_vms_gain;
 	g_smart_cfg_list.func_info[MERGE_FUNC_ORDER].type = BIT8_TASK_TYPE_WHOLE;
-	g_smart_cfg_list.func_info[MERGE_FUNC_ORDER].func = (SUPEX_TASK_CALLBACK)smart_vms_sync;
+	g_smart_cfg_list.func_info[MERGE_FUNC_ORDER].func = (TASK_VMS_FCB)smart_vms_sync;
 	g_smart_cfg_list.func_info[CUSTOM_FUNC_ORDER].type = BIT8_TASK_TYPE_ALONE;
-	g_smart_cfg_list.func_info[CUSTOM_FUNC_ORDER].func = (SUPEX_TASK_CALLBACK)smart_vms_exec;
+	g_smart_cfg_list.func_info[CUSTOM_FUNC_ORDER].func = (TASK_VMS_FCB)smart_vms_exec;
 
 	g_smart_cfg_list.entry_init = entry_init;
 

@@ -1,6 +1,6 @@
 #pragma once
 
-#define DECLARE_SMART_LDB_FUNC(name) int smart_ldb_##name(void *user, void *task);
+#define DECLARE_SMART_LDB_FUNC(name) int smart_ldb_##name(void *user, union virtual_system **VMS, struct adopt_task_node *task);
 
 DECLARE_SMART_LDB_FUNC(set)
 

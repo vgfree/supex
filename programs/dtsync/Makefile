@@ -1,18 +1,24 @@
 BASE_SRC=./src
 INC_DIR=-I/usr/local/include/luajit-2.0 \
 	-I/usr/local/include/ \
-	-I../../lib/libmini/include\
 	-I../../lib/libev \
-	-I../../lib/json-c -I../../lib/http-parser -I../../lib/libscco \
-	-I../../lib/libucmq/src -I../../engine -I../../engine/major \
-	-I../../lib/zeromq-4.1.4/include/ \
-	-I../../lib/libkv/release/ \
-	-I../../engine/minor -I./src \
-	-I../../lib/cJSON
+	-I../../lib/json-c \
+	-I../../lib/libmini/include \
+	-I../../lib/libkv/release \
+	-I../../lib/libmemhook/src \
+	-I../../lib/libscco/include \
+	-I../../lib/libcoro/include \
+	-I../../lib/libevcoro/include \
+	-I../../lib/libevcs/include/engine \
+	-I../../lib/libevcs/include/frame \
+	-I./src -I../ \
+	-I../../lib/libucmq/src \
+	-I../../lib/cJSON \
+	-I../../lib/zeromq-4.1.4/include/
 
-LIB_DIR=-L/usr/local/lib -L../../lib -L../../engine/ 
-LIBS=-lluajit-5.1 -lpthread -lstdc++ -lrt -lm 
-LIBA=-lucmq -lcjson -lkv -lmini -lzmq -ljson-c 
+LIB_DIR=-L/usr/local/lib -L../../lib
+LIBS=-lluajit-5.1 -lpthread -lrt -lm -lstdc++
+LIBA=-lcjson -lkv -lmini -lucmq -lzmq -ljson-c 
 
 #[=========>MARK<=========]#
 MAIN_APP_SERV ?= dtsync
@@ -22,14 +28,14 @@ MAIN_APP_SERV ?= dtsync
 CFLAGS += -DSTORE_USE_UCMQ_AND_QUEUE
 
 ifeq ($(MAIN_APP_SERV), dtsync)
-HANDLE_MODEL = EVUV
+HANDLE_MODEL = EVCORO
 endif
 #<------------------------>#
 -include $(HOME_PATH)/programs/link.mk
 -include $(HOME_PATH)/share.mk
 #<------------------------>#
 
-ADD_OBJ += sniff_evuv_cpp_api.o
+ADD_OBJ += sniff_evcoro_cpp_api.o
 
 #<--------------------------->#
 
@@ -41,9 +47,11 @@ BASE_OBJ = $(addprefix $(BIN)/, \
 	   load_sniff_cfg.o \
 	   load_swift_cfg.o \
 	   swift_cpp_api.o \
-	   add_session_cmd.o \
 	   cqueue.o \
 	   send_data.o \
+	   app_queue.o \
+	   switch_queue.o \
+	   redis_parse.o \
 	   )
 
 OBJ ?= $(BASE_OBJ)
@@ -61,6 +69,14 @@ $(SRV):$(OBJ)
 $(BIN)/%.o : $(BASE_SRC)/%.c
 	@-if [ ! -d $(BIN) ];then mkdir $(BIN); fi
 	gcc $(CFLAGS) $(INC_DIR) -c $< -o $@
+
+$(BIN)/switch_queue.o : ../switch_queue.c
+	@-if [ ! -d $(BIN) ];then mkdir $(BIN); fi
+	gcc $(CFLAGS) $(INC_DIR) $(LIB_DIR) $(LIBS) -c $< -o $@
+
+$(BIN)/app_queue.o : ../app_queue.c
+	@-if [ ! -d $(BIN) ];then mkdir $(BIN); fi
+	gcc $(CFLAGS) $(INC_DIR) $(LIB_DIR) $(LIBS) -c $< -o $@
 
 push:
 	git push origin HEAD:refs/for/master

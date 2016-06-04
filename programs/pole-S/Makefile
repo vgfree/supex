@@ -5,15 +5,14 @@ INC_DIR=\
     -I../../lib/zeromq-4.1.4/include/ \
     -I../../lib/libmini/include/ \
     -I../../lib/libnetmod/include/ \
-    -I../../engine/ \
-    -I./src
+    -I./src -I../
 
 LIB_DIR=\
     -L../../lib \
     -L/usr/local/lib/ \
     -L/usr/lib64/mysql
     
-LIBS=-lmysqlclient -lpthread -lrt -lm -lstdc++
+LIBS=-lmysqlclient -lpthread -lrt -lm -lstdc++ -ldl
 LIBA=-ljson-c -lmini -lnetmod -lzmq
 
 # [args] Running mode, DEBUG: debug mode. RELEASE: release mode.

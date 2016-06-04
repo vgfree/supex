@@ -1,9 +1,22 @@
 BASE_SRC=./src
-INC_DIR=-I/usr/local/include/luajit-2.0 -I../../lib/libev -I../../lib/json-c -I../../lib/cJSON -I../../lib/http-parser -I../../lib/libscco -I /usr/include/mysql \
-        -I../../lib/libucmq/src -I../../engine -I../../engine/major -I../../engine/minor -I./src
-LIB_DIR=-L/usr/local/lib -L../../lib -L../../engine/ -L /usr/lib64/mysql
-LIBS=-lluajit-5.1 -lpthread -lrt -lm -lev  -lmysqlclient
-LIBA=-ljson-c -lucmq -lcjson
+INC_DIR=-I/usr/local/include/luajit-2.0 -I../../lib/libev -I../../lib/json-c \
+	-I../../lib/libmini/include \
+	-I../../lib/libkv/release \
+	-I../../lib/libmemhook/src \
+	-I../../lib/libscco/include \
+	-I../../lib/libcoro/include \
+	-I../../lib/libevcoro/include \
+	-I../../lib/libevcs/include/engine \
+	-I../../lib/libevcs/include/frame \
+	-I./src -I../ \
+	-I../../lib/cJSON \
+	-I/usr/include/mysql \
+        -I../../lib/libucmq/src
+
+
+LIB_DIR=-L/usr/local/lib -L../../lib -L /usr/lib64/mysql
+LIBS=-lluajit-5.1 -lpthread -lrt -lm -lstdc++ -lmysqlclient
+LIBA=-ljson-c -lkv -levcs -lmini -ldl -lucmq -lcjson
 
 #[=========>MARK<=========]#
 MAIN_APP_SERV ?= releaseServer
@@ -13,7 +26,7 @@ MAIN_APP_SERV ?= releaseServer
 #CFLAGS +=-DSTORE_USE_UCMQ_AND_QUEUE
 
 ifeq ($(MAIN_APP_SERV), releaseServer)
-HANDLE_MODEL = LINE
+HANDLE_MODEL = EVCORO
 endif
 #<------------------------>#
 -include $(HOME_PATH)/programs/link.mk
@@ -46,7 +59,6 @@ OBJ ?= $(BASE_OBJ)
 SRV := $(MAIN_APP_SERV)
 JOB += $(SRV)
 CLEANFILES = mhooktrace.log
-
 
 
 all:$(JOB)

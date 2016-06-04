@@ -60,7 +60,7 @@ int main(int argc, char **argv)
 
 					bytes = write(pfd[1], (void *)&client, sizeof(client));
 					RAISE_SYS_ERROR(bytes);
-					x_printf(I, "Number of connection `%ld`", ATOMIC_ADD_F(&counter, 1));
+					x_printf(I, "Number of connection `%ld`", AO_ADD_F(&counter, 1));
 				}
 			}
 			CATCH
@@ -140,7 +140,7 @@ void *work(void *usr)
 				x_printf(D, "DISCONNECTION, ` %s : %d `",
 					SA_ntop((SA)&addr, ipaddr, sizeof(ipaddr)),
 					SA_GetPort((SA)&addr));
-				ATOMIC_DEC(&counter);
+				AO_DEC(&counter);
 				close(client);
 			}
 			END;

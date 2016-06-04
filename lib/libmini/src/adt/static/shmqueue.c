@@ -59,7 +59,7 @@ ShmQueueT SHM_QueueCreate(key_t shmkey, int nodetotal, int nodesize)
 			RAISE_SYS_ERROR(shmid);
 
 			if (unlikely((totalsize > 0) && (shmds.shm_segsz != totalsize))) {
-				x_printf(E, "SHM_QueueCreate() by `0x%08x` failed : "
+				x_perror("SHM_QueueCreate() by `0x%08x` failed : "
 					"expected the length of "
 					"shared memory is `%ld`, but get `%zu`.",
 					shmkey, totalsize, shmds.shm_segsz);
@@ -90,7 +90,7 @@ ShmQueueT SHM_QueueCreate(key_t shmkey, int nodetotal, int nodesize)
 		}
 
 		/*增加计数器*/
-		ATOMIC_INC(&data->refs);
+		AO_INC(&data->refs);
 		queue->data = data;
 		queue->shmid = shmid;
 		queue->shmkey = shmkey;
@@ -201,7 +201,7 @@ void SHM_QueueDestroy(ShmQueueT *queue, bool shmrm, NodeDestroyCB destroy)
 		TRY
 		{
 			int refs = 0;
-			refs = ATOMIC_GET(&data->refs);
+			refs = AO_GET(&data->refs);
 
 			if (unlikely(refs > 1)) {
 				struct shmid_ds shmds = {};
@@ -213,7 +213,7 @@ void SHM_QueueDestroy(ShmQueueT *queue, bool shmrm, NodeDestroyCB destroy)
 			}
 
 			if (unlikely(refs > 1)) {
-				ATOMIC_DEC(&data->refs);
+				AO_DEC(&data->refs);
 			} else {
 				/*在未detach的情况下，将变成进程私有到共享内存*/
 				flag = shmctl((*queue)->shmid, IPC_RMID, NULL);

@@ -126,12 +126,9 @@ clean:
 	-if [ -f json-c/Makefile ];then cd ./json-c && make distclean; fi
 	-if [ -d ./snappy-1.1.1 ];then rm -rf ./snappy-1.1.1; fi
 	-if [ -f sqlite-autoconf-3090200/Makefile ];then cd ./sqlite-autoconf-3090200 && make distclean; fi
-	-if [ -d libcoro/tmp/ ]; then rm -rf libcoro/tmp/; fi
-	-if [ -f libcoro/config.h ]; then rm -f libcoro/config.h; fi
 	$(MAKE) -C $(LIB_DIR)/leveldb-1.18 clean
 	$(MAKE) -C $(LIB_DIR)/cJSON clean
 	$(MAKE) -C $(LIB_DIR)/libucmq clean
-	$(MAKE) -C $(LIB_DIR)/libscco clean
 	$(MAKE) -C $(LIB_DIR)/libtopo clean
 	$(MAKE) -C $(LIB_DIR)/libtopoi clean
 	$(MAKE) -C $(LIB_DIR)/liblrucache clean
@@ -141,7 +138,6 @@ clean:
 	$(MAKE) -C $(LIB_DIR)/libmini distclean
 	$(MAKE) -C $(LIB_DIR)/libxmq clean
 	$(MAKE) -C $(LIB_DIR)/libnetmod clean
-#	$(MAKE) -C $(LIB_DIR)/libevcoro distclean
 	-if [ -d ./zookeeper-3.4.6 ];then rm -rf ./zookeeper-3.4.6; fi
 	rm -rf $(OBJ)
 

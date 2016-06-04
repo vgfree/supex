@@ -110,7 +110,7 @@ static void _connect_pool_init()
 
 		REFOBJ(pool);
 
-		if (unlikely(!ATOMIC_CASB(&_g_cntpool, NULL, (void *)pool))) {
+		if (unlikely(!AO_CASB(&_g_cntpool, NULL, (void *)pool))) {
 			RAISE(EXCEPT_ASSERT);
 		}
 	}

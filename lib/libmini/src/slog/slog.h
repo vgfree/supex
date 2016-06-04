@@ -33,7 +33,7 @@ __BEGIN_DECLS
 		(file), (line), (int)GetThreadID(), (function), ##__VA_ARGS__)
 
   #define x_printf(level, fmt, ...)		       \
-	SLogWriteByInfo(level, __FUNCTION__, __FILE__, \
+	SLogWriteByInfo(level, __FUNCTION__, LOG_FILENAME, \
 		__LINE__, fmt, ##__VA_ARGS__)
 
 #else
@@ -81,7 +81,7 @@ __BEGIN_DECLS
 	})
 
   #define x_printf(level, fmt, ...)		       \
-	SLogWriteByInfo(level, __FUNCTION__, __FILE__, \
+	SLogWriteByInfo(level, __FUNCTION__, __FILENAME__, \
 		__LINE__, fmt, ##__VA_ARGS__)
 #endif	/* ifdef DEBUG */
 

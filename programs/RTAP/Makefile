@@ -1,45 +1,53 @@
 BASE_SRC=./src
-INC_DIR=-I/usr/local/include/luajit-2.0 -I../../lib/libev -I../../lib/json-c \
-	-I../../lib/http-parser -I../../lib/libscco -I../../engine -I../../engine/major -I./src \
-	-I../../lib/libkv/release/ -I./src \
-	-I../../lib/libmemhook/src/
+INC_DIR=-I/usr/local/include/luajit-2.0 \
+	-I/usr/local/include/ \
+	-I../../lib/libev \
+	-I../../lib/json-c \
+	-I../../lib/libmini/include \
+	-I../../lib/libkv/release \
+	-I../../lib/libmemhook/src \
+	-I../../lib/libscco/include \
+	-I../../lib/libcoro/include \
+	-I../../lib/libevcoro/include \
+	-I../../lib/libevcs/include/engine \
+	-I../../lib/libevcs/include/frame \
+	-I./src -I../
 
 
 
-LIB_DIR=-L/usr/local/lib -L../../lib -L../../engine/
-LIBS=-lluajit-5.1 -lstdc++ -lpthread -lrt -lm
+LIB_DIR=-L/usr/local/lib -L../../lib
+LIBS=-lluajit-5.1 -lpthread -lrt -lm -lstdc++
 LIBA=-ljson-c -lkv
 
 #[=========>MARK<=========]#
 MAIN_APP_SERV ?= ptop
 
 ifeq ($(MAIN_APP_SERV), driviewapi)
-HANDLE_MODEL = SCCO
+HANDLE_MODEL = EVCORO
 endif
 ifeq ($(MAIN_APP_SERV), ptop)
-HANDLE_MODEL = SCCO
+HANDLE_MODEL = EVCORO
 endif
 ifeq ($(MAIN_APP_SERV), weibo-S)
-HANDLE_MODEL = SCCO
+HANDLE_MODEL = EVCORO
 endif
 ifeq ($(MAIN_APP_SERV), spxapi)
-HANDLE_MODEL = SCCO
+HANDLE_MODEL = EVCORO
 endif
 ifeq ($(MAIN_APP_SERV), dfsapi)
-HANDLE_MODEL = SCCO
+HANDLE_MODEL = EVCORO
 endif
 ifeq ($(MAIN_APP_SERV), rmsapi)
-HANDLE_MODEL = SCCO
+HANDLE_MODEL = EVCORO
 endif
 ifeq ($(MAIN_APP_SERV), hlsapi)
-HANDLE_MODEL = SCCO
+HANDLE_MODEL = EVCORO
 endif
 ifeq ($(MAIN_APP_SERV), robais)
-#HANDLE_MODEL = EVCORO
-HANDLE_MODEL = SCCO
+HANDLE_MODEL = EVCORO
 endif
 ifeq ($(MAIN_APP_SERV), tsearchapi)
-HANDLE_MODEL = SCCO
+HANDLE_MODEL = EVCORO
 INC_DIR += -I../../lib/zookeeper-3.4.6/src/c/include \
 	   -I../../lib/zookeeper-3.4.6/src/c/generated
 CFLAGS += -DOPEN_ZOOKEEPER
@@ -47,7 +55,7 @@ ADD_OBJ += zk.o lua_zk.o
 LIBA += -lzookeeper_mt
 endif
 ifeq ($(MAIN_APP_SERV), msgsearchapi)
-HANDLE_MODEL = SCCO
+HANDLE_MODEL = EVCORO
 INC_DIR += -I../../lib/zookeeper-3.4.6/src/c/include \
 	   -I../../lib/zookeeper-3.4.6/src/c/generated
 CFLAGS += -DOPEN_ZOOKEEPER
@@ -59,8 +67,7 @@ endif
 -include $(HOME_PATH)/share.mk
 #<------------------------>#
 
-#ADD_OBJ += smart_evcoro_lua_api.o
-ADD_OBJ += smart_scco_lua_api.o
+ADD_OBJ += smart_evcoro_lua_api.o lj_smart_util.o
 
 #<--------------------------->#
 
@@ -91,6 +98,9 @@ $(BIN)/%.o : $(BASE_SRC)/%.c
 	@-if [ ! -d $(BIN) ];then mkdir $(BIN); fi
 	gcc $(CFLAGS) $(INC_DIR) $(LIB_DIR) $(LIBS) -c $< -o $@
 
+$(BIN)/lj_smart_util.o : ../lj_smart_util.c
+	@-if [ ! -d $(BIN) ];then mkdir $(BIN); fi
+	gcc $(CFLAGS) $(INC_DIR) $(LIB_DIR) $(LIBS) -c $< -o $@
 
 push:
 	git push origin HEAD:refs/for/master

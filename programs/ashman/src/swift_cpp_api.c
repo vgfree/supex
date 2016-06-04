@@ -2,36 +2,13 @@
 #include <stdlib.h>
 
 #include "utils.h"
-#include "swift_api.h"
-#include "sniff_api.h"
+#include "major/swift_api.h"
+#include "minor/sniff_api.h"
 #include "swift_cpp_api.h"
 
-#ifdef OPEN_SCCO
-  #include "sniff_scco_lua_api.h"
-#else
-  #include "sniff_line_lua_api.h"
-#endif
+#include "sniff_evcoro_lua_api.h"
 
 extern struct sniff_cfg_list g_sniff_cfg_list;
-
-int swift_vms_init(void *W)
-{
-	/*
-	 *   SWIFT_WORKER_PTHREAD *p_swift_worker = (SWIFT_WORKER_PTHREAD *)W;
-	 *   struct swift_task_node *swift_task = &p_swift_worker->task;
-	 *
-	 *   struct sniff_task_node sniff_task = {};
-	 *   sniff_task.sfd = swift_task->sfd;
-	 *   sniff_task.type = swift_task->type;
-	 *   sniff_task.origin = swift_task->origin;
-	 *   sniff_task.func = g_sniff_cfg_list.vmsys_init;
-	 *   sniff_task.last = false;//FIXME
-	 *   sniff_task.size = 0;
-	 *
-	 *   sniff_all_task_hit( (SNIFF_WORKER_PTHREAD *)p_swift_worker->mount, &sniff_task );
-	 */
-	return 0;
-}
 
 SNIFF_WORKER_PTHREAD *get_idle_thread(SNIFF_WORKER_PTHREAD *p_list)
 {
@@ -53,20 +30,24 @@ SNIFF_WORKER_PTHREAD *get_idle_thread(SNIFF_WORKER_PTHREAD *p_list)
 	return p_idle;
 }
 
-int swift_vms_call(void *W)
+int swift_vms_call(void *user, union virtual_system **VMS, struct adopt_task_node *task)
 {
-	SWIFT_WORKER_PTHREAD    *p_swift_worker = (SWIFT_WORKER_PTHREAD *)W;
-	struct swift_task_node  *swift_task = &p_swift_worker->task;
+	SWIFT_WORKER_PTHREAD    *p_swift_worker = (SWIFT_WORKER_PTHREAD *)user;
+	struct data_node        *p_node = get_pool_data(task->sfd);
+	char                    *p_buf = cache_data_address(&p_node->mdl_recv.cache);
+	unsigned                size = cache_data_length(&p_node->mdl_recv.cache);
+	struct http_status      *p_hst = &p_node->mdl_recv.parse.http_info.hs;
 
 	struct sniff_task_node sniff_task = {};
 
-	sniff_task.sfd = swift_task->sfd;
-	sniff_task.type = swift_task->type;
-	sniff_task.origin = swift_task->origin;
-	sniff_task.func = sniff_vms_call;	// fix to use xxxx;
+	sniff_task.sfd = task->sfd;
+	sniff_task.type = task->type;
+	sniff_task.origin = task->origin;
+	sniff_task.func = (SNIFF_VMS_FCB)sniff_vms_call;	// fix to use xxxx;
 	sniff_task.last = false;		// FIXME
 	sniff_task.stamp = time(NULL);
-	get_cache_data(swift_task->sfd, sniff_task.data, &sniff_task.size);
+	sniff_task.size = p_hst->body_size;
+	memcpy(sniff_task.data, (const char *)(p_buf + p_hst->body_offset), p_hst->body_size);
 
 #if 0
 	sniff_task.thread_id = ((SNIFF_WORKER_PTHREAD *)p_swift_worker->mount)->thread_id;
@@ -74,27 +55,31 @@ int swift_vms_call(void *W)
 	p_swift_worker->mount = ((SNIFF_WORKER_PTHREAD *)p_swift_worker->mount)->next;
 #else
 	SNIFF_WORKER_PTHREAD *p_sniff_worker = get_idle_thread((SNIFF_WORKER_PTHREAD *)p_swift_worker->mount);
-	sniff_task.thread_id = p_sniff_worker->thread_id;
+	sniff_task.thread_id = p_sniff_worker->pid;
 	sniff_one_task_hit(p_sniff_worker, &sniff_task);
 	p_swift_worker->mount = p_sniff_worker->next;
 #endif
 	return 0;
 }
 
-int swift_vms_exec(void *W)
+int swift_vms_exec(void *user, union virtual_system **VMS, struct adopt_task_node *task)
 {
-	SWIFT_WORKER_PTHREAD    *p_swift_worker = (SWIFT_WORKER_PTHREAD *)W;
-	struct swift_task_node  *swift_task = &p_swift_worker->task;
+	SWIFT_WORKER_PTHREAD    *p_swift_worker = (SWIFT_WORKER_PTHREAD *)user;
+	struct data_node        *p_node = get_pool_data(task->sfd);
+	char                    *p_buf = cache_data_address(&p_node->mdl_recv.cache);
+	unsigned                size = cache_data_length(&p_node->mdl_recv.cache);
+	struct http_status      *p_hst = &p_node->mdl_recv.parse.http_info.hs;
 
 	struct sniff_task_node sniff_task = {};
 
-	sniff_task.sfd = swift_task->sfd;
-	sniff_task.type = swift_task->type;
-	sniff_task.origin = swift_task->origin;
+	sniff_task.sfd = task->sfd;
+	sniff_task.type = task->type;
+	sniff_task.origin = task->origin;
 	sniff_task.func = sniff_vms_exec;	// fix to use xxxx;
 	sniff_task.last = false;		// FIXME
 	sniff_task.stamp = time(NULL);
-	get_cache_data(swift_task->sfd, sniff_task.data, &sniff_task.size);
+	sniff_task.size = p_hst->body_size;
+	memcpy(sniff_task.data, (const char *)(p_buf + p_hst->body_offset), p_hst->body_size);
 
 #if 0
 	sniff_task.thread_id = ((SNIFF_WORKER_PTHREAD *)p_swift_worker->mount)->thread_id;
@@ -102,28 +87,10 @@ int swift_vms_exec(void *W)
 	p_swift_worker->mount = ((SNIFF_WORKER_PTHREAD *)p_swift_worker->mount)->next;
 #else
 	SNIFF_WORKER_PTHREAD *p_sniff_worker = get_idle_thread((SNIFF_WORKER_PTHREAD *)p_swift_worker->mount);
-	sniff_task.thread_id = p_sniff_worker->thread_id;
+	sniff_task.thread_id = p_sniff_worker->pid;
 	sniff_one_task_hit(p_sniff_worker, &sniff_task);
 	p_swift_worker->mount = p_sniff_worker->next;
 #endif
-	return 0;
-}
-
-#define BIT8_TASK_ORIGIN_IDLE 'd'
-int swift_vms_idle(void *W)
-{
-	SWIFT_WORKER_PTHREAD *p_swift_worker = (SWIFT_WORKER_PTHREAD *)W;
-
-	struct sniff_task_node sniff_task = {};
-
-	sniff_task.sfd = 0;
-	sniff_task.type = BIT8_TASK_TYPE_WHOLE;
-	sniff_task.origin = BIT8_TASK_ORIGIN_IDLE;
-	sniff_task.func = sniff_vms_idle;	// fix to use xxxx;
-	sniff_task.last = false;		// FIXME
-	sniff_task.size = 0;
-
-	sniff_all_task_hit((SNIFF_WORKER_PTHREAD *)p_swift_worker->mount, &sniff_task);
 	return 0;
 }
 

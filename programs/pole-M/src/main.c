@@ -16,7 +16,7 @@
 #include "netmod.h"
 
 // #include "supex.h"
-#include "swift_api.h"
+#include "major/swift_api.h"
 #include "load_swift_cfg.h"
 #include "swift_cpp_api.h"
 
@@ -40,7 +40,7 @@ void *data_write_swift()
 		case POLE_PROTYPE_HTTP:	// HTTP Protocal.
 		{
 			g_swift_cfg_list.func_info[APPLY_FUNC_ORDER].type = BIT8_TASK_TYPE_ALONE;
-			g_swift_cfg_list.func_info[APPLY_FUNC_ORDER].func = (TASK_CALLBACK)swift_vms_call;
+			g_swift_cfg_list.func_info[APPLY_FUNC_ORDER].func = (TASK_VMS_FCB)swift_vms_call;
 
 			break;
 		}
@@ -48,9 +48,9 @@ void *data_write_swift()
 		case POLE_PROTYPE_REDIS:// REDIS Protocal.
 		{
 			g_swift_cfg_list.func_info[LPUSHX_FUNC_ORDER].type = BIT8_TASK_TYPE_ALONE;
-			g_swift_cfg_list.func_info[LPUSHX_FUNC_ORDER].func = (TASK_CALLBACK)swift_vms_call;
+			g_swift_cfg_list.func_info[LPUSHX_FUNC_ORDER].func = (TASK_VMS_FCB)swift_vms_call;
 			g_swift_cfg_list.func_info[RPUSHX_FUNC_ORDER].type = BIT8_TASK_TYPE_ALONE;
-			g_swift_cfg_list.func_info[RPUSHX_FUNC_ORDER].func = (TASK_CALLBACK)swift_vms_call;
+			g_swift_cfg_list.func_info[RPUSHX_FUNC_ORDER].func = (TASK_VMS_FCB)swift_vms_call;
 
 			break;
 		}
@@ -58,7 +58,7 @@ void *data_write_swift()
 		case POLE_PROTYPE_MTTP:	// MTTP Protocal.
 		{
 			g_swift_cfg_list.func_info[APPLY_FUNC_ORDER].type = BIT8_TASK_TYPE_ALONE;
-			g_swift_cfg_list.func_info[APPLY_FUNC_ORDER].func = (TASK_CALLBACK)swift_vms_call;
+			g_swift_cfg_list.func_info[APPLY_FUNC_ORDER].func = (TASK_VMS_FCB)swift_vms_call;
 
 			break;
 		}

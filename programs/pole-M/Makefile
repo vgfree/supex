@@ -7,27 +7,28 @@ SRC=./src
 BIN=./bin
 
 INC_PATH=\
-	-I../../lib/leveldb-1.18/include/ \
-	-I../../lib/zeromq-4.1.4/include/ \
-	-I../../lib/libmini/include/ \
-	-I../../lib/libxmq/include/ \
-	-I../../lib/libnetmod/include/ \
-	-I../../lib/libevcoro/include/ \
-	-I../../lib/json-c/ \
-	-I../../lib/http-parser/ \
-	-I../../lib/libscco \
-	-I../../lib/libev \
-	-I/usr/local/include/luajit-2.0 \
-	-I../../engine/ \
-	-I../../engine/major/
+	 -I/usr/local/include/luajit-2.0 -I../../lib/libev -I../../lib/json-c \
+	 -I../../lib/libkv/release \
+	 -I../../lib/libmemhook/src \
+	 -I../../lib/libscco/include \
+	 -I../../lib/libcoro/include \
+	 -I../../lib/libevcoro/include \
+	 -I../../lib/libevcs/include/engine \
+	 -I../../lib/libevcs/include/frame \
+	 -I./src -I../ \
+	 -I../../lib/leveldb-1.18/include/ \
+	 -I../../lib/zeromq-4.1.4/include/ \
+	 -I../../lib/libmini/include/ \
+	 -I../../lib/libxmq/include/ \
+	 -I../../lib/libnetmod/include/
 
-LIB_PATH=-L../../lib -L../../engine
+LIB_PATH=-L../../lib
 
 LIBS=-lpthread -lrt -lm -ldl -lluajit-5.1 -lstdc++
 LIBA=-lleveldb -ljson-c -lmini -levcoro -lxmq -lnetmod -lzmq -lsnappy
 
 #<------------------------>#
-HANDLE_MODEL = LINE
+HANDLE_MODEL = EVCORO
 -include $(HOME_PATH)/programs/link.mk
 -include $(HOME_PATH)/share.mk
 #<------------------------>#

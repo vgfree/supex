@@ -25,7 +25,7 @@ int CreateFIFO(const char *path, int flag, int mode)
 
 	if ((flag & O_CREAT) && (mkfifo(path, mode) < 0)) {
 		if (unlikely(errno != EEXIST)) {
-			x_printf(S, "create fifo fail %s.", path);
+			x_psys("create fifo fail %s.", path);
 			return -1;
 		}
 	} else {
@@ -43,7 +43,7 @@ int CreateFIFO(const char *path, int flag, int mode)
 			unlink(path);
 		}
 
-		x_printf(S, "open fifo fail %s.", path);
+		x_psys("open fifo fail %s.", path);
 
 		return -1;
 	}

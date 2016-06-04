@@ -7,10 +7,9 @@
 //
 
 #include "add_session_cmd.h"
-#include "sniff_api.h"
-#include "swift_api.h"
-#include "apply_def.h"
-#include "swift_evcb.h"
+#include "minor/sniff_api.h"
+#include "major/swift_api.h"
+#include "major/swift_evcb.h"
 
 static bool help(void *user, void *data)
 {
@@ -64,12 +63,12 @@ static bool tasks(void *user, void *data)
 		for (ptr = p_sniff_worker; ptr; ) {
 			x_printf(D, "thread(%20p) : %ld",
 				(void *)ptr->thread_id,
-				ATOMIC_GET(&ptr->thave));
+				AO_GET(&ptr->thave));
 
 			flag = session_response_clnt(service->fd, SESSION_IO_TIMEOUT,
 					"thread(%10ld) : %d\n",
 					ptr->tid,
-					ATOMIC_GET(&ptr->thave));
+					AO_GET(&ptr->thave));
 
 			if (!flag) {
 				goto over;

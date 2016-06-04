@@ -1,6 +1,6 @@
 #pragma once
 
-#define DECLARE_SWIFT_LDB_FUNC(name) int swift_ldb_##name(void *W);
+#define DECLARE_SWIFT_LDB_FUNC(name) int swift_ldb_##name(void *user, union virtual_system **VMS, struct adopt_task_node *task);
 
 DECLARE_SWIFT_LDB_FUNC(set)
 

@@ -2,7 +2,7 @@
 	"service_port": 5555,
 	"hander_counts": 4,
 	"smart_worker_counts": 16,
-	"tasker_counts": 32,
+	"smart_tasker_counts": 16,
 	"smart_protocol": "redis",
 	"max_req_size": 32768,
 

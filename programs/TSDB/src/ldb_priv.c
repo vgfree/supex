@@ -50,6 +50,8 @@ char *ldb_lrangeget(struct _leveldb_stuff *ldbs, const char *pre_key, size_t pre
 		/* first use it is invalid */
 		fprintf(stderr, "%s:%d: this iter is valid already!\n", __FILE__, __LINE__);
 		*size = -1;
+		free(st_key);
+		free(ed_key);
 		return NULL;
 	}
 
@@ -585,6 +587,7 @@ char *ldb_info(struct _leveldb_stuff *ldbs, int *size)
 
 		if (!ldbs->dbname || access(ldbs->dbname, R_OK)) {
 			x_printf(E, "%s", "failed to get database size!");
+			free(result);
 			return NULL;
 		}
 
@@ -592,6 +595,7 @@ char *ldb_info(struct _leveldb_stuff *ldbs, int *size)
 
 		if (ftw(ldbs->dbname, &sum, 1)) {
 			x_printf(E, "%s", "failed to get database size!");
+			free(result);
 			return NULL;
 		}
 

@@ -95,7 +95,7 @@ static void mfptp_task_handle(void *data, void *addr)
 	MFPTP_WORKER_PTHREAD    *p_worker = data;
 	ev_io                   *p_watcher;
 
-	while (supex_task_pull(&(p_worker->tlist), (void *)&(p_worker->task))) {
+	while (free_queue_pull(&(p_worker->tlist), (void *)&(p_worker->task))) {
 		if (enMODE_USR == p_worker->task.mode) {
 			// 修改  添加条件usr->auth_status判断用户是否在线
 			usr = rb_search_user(&user_tree, p_worker->task.usrID);
@@ -144,7 +144,7 @@ static void init_worker(MFPTP_WORKER_PTHREAD *p_worker)
 	/*init queue list*/
 	cq_init(&(p_worker->qlist));
 	/*init task list*/
-	supex_task_init(&(p_worker->tlist), sizeof(struct mfptp_task_node), MAX_MFPTP_QUEUE_NUMBER);
+	free_queue_init(&(p_worker->tlist), sizeof(struct mfptp_task_node), MAX_MFPTP_QUEUE_NUMBER);
 
 	/*set loop*/
 	p_worker->loop = ev_loop_new(EVBACKEND_EPOLL | EVFLAG_NOENV);

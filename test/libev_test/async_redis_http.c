@@ -41,14 +41,14 @@ int main()
 	struct ev_loop          *main_loop = ev_default_loop(0);
 	struct async_ctx        *ac = NULL;
 
-	pool_api_init("127.0.0.1", 6000, 2000, true);
-	pool_api_init("www.sina.com", 80, 2000, true);
+	conn_xpool_init("127.0.0.1", 6000, 2000, true);
+	conn_xpool_init("www.sina.com", 80, 2000, true);
 
 	ac = async_initial(main_loop, QUEUE_TYPE_FIFO, NULL, NULL, NULL, ASYNC_LIBEV_PEAK);
 
 	if (ac) {
 		void    *sfd = (void *)(intptr_t)-1;
-		int     rc = pool_api_gain(&cpool, "127.0.0.1", 6000, &sfd);
+		int     rc = conn_xpool_gain(&cpool, "127.0.0.1", 6000, &sfd);
 
 		if (rc) {
 			async_distory(ac);
@@ -59,7 +59,7 @@ int main()
 		int     ok = cmd_to_proto(&proto, "set key value");
 
 		if (ok == REDIS_ERR) {
-			pool_api_push(cpool, &sfd);
+			conn_xpool_push(cpool, &sfd);
 			async_distory(ac);
 			return -1;
 		}
@@ -67,7 +67,7 @@ int main()
 		async_command(ac, PROTO_TYPE_REDIS, (void *)(intptr_t)sfd, cpool, NULL, NULL, proto, strlen(proto));
 		free(proto);
 
-		rc = pool_api_gain(&cpool, "www.sina.com", 80, &sfd);
+		rc = conn_xpool_gain(&cpool, "www.sina.com", 80, &sfd);
 
 		if (rc) {
 			async_distory(ac);

@@ -5,14 +5,16 @@
 #include <string.h>
 #include <time.h>
 
-#include "swift_api.h"
+#include "major/swift_api.h"
 #include "swift_lua_api.h"
 #include "load_swift_cfg.h"
 #include "load_child_cfg.h"
-#include "crzpt_task.h"
 #include "share_evcb.h"
 #include "list_node.h"
-#include "pool_api.h"
+#include "pools/xpool.h"
+#include "minor/crzpt_api.h"
+#include "base/utils.h"
+#include "share_evcb.h"
 
 // 时间链表头节点
 struct t_node *g_t_head = NULL;
@@ -24,6 +26,13 @@ short g_child_index = -1;
 struct swift_cfg_list   g_swift_cfg_list = {};
 struct child_cfg_list   g_child_cfg_list = {};
 
+void msmq_share_cb(struct ev_loop *loop, ev_io *w, int revents)
+{
+	        int n = msmq_call();
+
+		        x_printf(D, "done shell cntl %d", n);
+}
+
 static void child_init(void)
 {
 	char path[MAX_PATH_SIZE] = {};
@@ -31,7 +40,7 @@ static void child_init(void)
 	//	struct swift_cfg_file *p_cfg_file = &(g_swift_cfg_list.file_info);
 	// printf("child init, host:%s, port:%d\n", g_child_cfg_list.app_redis_host[g_child_index], g_child_cfg_list.app_redis_port[g_child_index]);
 
-	pool_api_init(g_child_cfg_list.app_redis_host[g_child_index], g_child_cfg_list.app_redis_port[g_child_index], 200000, true);
+	conn_xpool_init(g_child_cfg_list.app_redis_host[g_child_index], g_child_cfg_list.app_redis_port[g_child_index], 200000, true);
 
 	//	snprintf(path, sizeof(path), "%s/%s.log", p_cfg_file->log_path, p_cfg_file->log_file);
 
@@ -112,20 +121,16 @@ int main(int argc, char **argv)
 		struct ev_io msmq_watcher;		/* msmq watcher for new message */
 
 		/*set msmq*/
-		bool ok = msmq_init(g_child_cfg_list.app_msmqs[i], accept_cntl);
+		msmq_init(g_child_cfg_list.app_msmqs[i], accept_cntl);
 
-		if (ok) {
-			ev_io_init(&msmq_watcher, msmq_share_cb, msmq_hand(), EV_READ);
-			ev_io_start(g_child_loop, &msmq_watcher);
-		}
+		ev_io_init(&msmq_watcher, msmq_share_cb, msmq_hand(), EV_READ);
+		ev_io_start(g_child_loop, &msmq_watcher);
 
 		// x_printf(D, "start ...");
 		ev_loop(g_child_loop, 0);
 		ev_loop_destroy(g_child_loop);
 
-		if (ok) {
-			msmq_exit();
-		}
+		msmq_exit();
 
 		ForkFrontEndTerm();
 		// printf("FORK ONE PROCESS -->PID :%d\n", pid[i]);
@@ -133,9 +138,9 @@ int main(int argc, char **argv)
 
 	/*====swift====*/
 	g_swift_cfg_list.func_info[APPLY_FUNC_ORDER].type = BIT8_TASK_TYPE_ALONE;
-	g_swift_cfg_list.func_info[APPLY_FUNC_ORDER].func = (TASK_CALLBACK)swift_vms_call;
+	g_swift_cfg_list.func_info[APPLY_FUNC_ORDER].func = (TASK_VMS_FCB)swift_vms_call;
 	g_swift_cfg_list.func_info[CUSTOM_FUNC_ORDER].type = BIT8_TASK_TYPE_ALONE;
-	g_swift_cfg_list.func_info[CUSTOM_FUNC_ORDER].func = (TASK_CALLBACK)swift_vms_exec;
+	g_swift_cfg_list.func_info[CUSTOM_FUNC_ORDER].func = (TASK_VMS_FCB)swift_vms_exec;
 
 	g_swift_cfg_list.entry_init = entry_init;
 

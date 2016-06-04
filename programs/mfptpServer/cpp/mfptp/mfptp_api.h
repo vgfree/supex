@@ -66,8 +66,8 @@ typedef struct
 	void                    *data;
 	int                     index;
 	int                     thave;		/*can't use unsigned int*/
-	struct supex_task_list  tlist;
-	struct supex_task_list  *glist;
+	struct free_queue_list  tlist;
+	struct free_queue_list  *glist;
 } MFPTP_WORKER_PTHREAD;
 
 /*******************************************/

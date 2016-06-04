@@ -1,20 +1,25 @@
 BASE_SRC=./src
-INC_DIR=-I/usr/local/include/luajit-2.0 -I../../lib/libev -I../../lib/json-c -I../../lib/http-parser -I../../lib/libscco -I../../engine -I../../engine/major -I./src
-LIB_DIR=-L/usr/local/lib -L../../lib -L../../engine/
-LIBS=-lluajit-5.1 -lpthread -lrt -lm
-LIBA=-ljson-c
+INC_DIR=-I/usr/local/include/luajit-2.0 -I../../lib/libev -I../../lib/json-c \
+	-I../../lib/libkv/release \
+	-I../../lib/libmemhook/src \
+	-I../../lib/libscco/include \
+	-I../../lib/libcoro/include \
+	-I../../lib/libevcoro/include \
+	-I../../lib/libevcs/include/engine \
+	-I../../lib/libevcs/include/frame \
+	-I./src -I../
+
+
+
+LIB_DIR=-L/usr/local/lib -L../../lib
+LIBS=-lluajit-5.1 -lpthread -lrt -lm -lstdc++
+LIBA=-ljson-c -lkv
 
 #[=========>MARK<=========]#
 MAIN_APP_SERV ?= adcube_v2
 
 ifeq ($(MAIN_APP_SERV), adcube_v2)
-HANDLE_MODEL = LINE
-ADD_OBJ += swift_lua_api.o adcube_main.o
-endif
-
-ifeq ($(MAIN_APP_SERV), spark)
-HANDLE_MODEL = LINE
-ADD_OBJ += swift_cpp_api.o spark_main.o
+HANDLE_MODEL = EVCORO
 endif
 
 #<------------------------>#
@@ -27,6 +32,8 @@ endif
 BIN=./bin_$(MAIN_APP_SERV)
 BASE_OBJ = $(addprefix $(BIN)/, \
 	   $(ADD_OBJ) \
+	   swift_lua_api.o \
+	   main.o \
 	   load_swift_cfg.o \
 	   )
 
@@ -55,8 +62,7 @@ push:
 
 clean:
 	rm -rf ./bin_adcube_v2
-	rm -rf ./bin_spark
-	rm -rf adcube_v2 spark
+	rm -rf adcube_v2
 	rm -f $(CLEANFILES)
 	@-if [ ! -d ./logs ];then mkdir logs; fi
 

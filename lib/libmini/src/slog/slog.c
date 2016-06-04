@@ -120,7 +120,7 @@ void (SLogSetLevel)(SLogCfgT *cfg, const SLogLevelT *level)
 	assert(likely(cfg));
 	return_if_fail(cfg->alevel && cfg->alevels > 0);
 	return_if_fail(level >= cfg->alevel && level < &cfg->alevel[cfg->alevels]);
-	ATOMIC_SET(&cfg->clevel, level);
+	AO_SET(&cfg->clevel, level);
 }
 
 bool (SLogOpen)(SLogCfgT *cfg, const char *path, const SLogLevelT *level)
@@ -138,7 +138,7 @@ bool (SLogOpen)(SLogCfgT *cfg, const char *path, const SLogLevelT *level)
 
 	gettimeofday(&tv, NULL);
 
-	oldct = ATOMIC_SWAP(&cfg->crtv, tv.tv_sec);
+	oldct = AO_SWAP(&cfg->crtv, tv.tv_sec);
 
 	/*不能刷新太频繁*/
 	return_val_if_fail(oldct != tv.tv_sec, false);
@@ -175,9 +175,9 @@ bool (SLogOpen)(SLogCfgT *cfg, const char *path, const SLogLevelT *level)
 	}
 
 #ifdef SLOG_SPLIT_BY_MON
-	_FormatTime(strtm, sizeof(tm), tv.tv_sec, "%Y%m");
+	_FormatTime(strtm, sizeof(strtm), tv.tv_sec, "%Y%m");
 #else
-	_FormatTime(strtm, sizeof(tm), tv.tv_sec, "%Y%m%d");
+	_FormatTime(strtm, sizeof(strtm), tv.tv_sec, "%Y%m%d");
 #endif
 
 	snprintf(fullname, sizeof(fullname), "%s%s_%s", cfg->path, strtm, cfg->name);
@@ -190,7 +190,7 @@ error:
 		snprintf(cfg->path, sizeof(cfg->path), "%s", oldpath);
 		snprintf(cfg->name, sizeof(cfg->name), "%s", oldname);
 	} else {
-		oldfd = ATOMIC_SWAP(&cfg->fd, fd);
+		oldfd = AO_SWAP(&cfg->fd, fd);
 
 		if (likely(oldfd != fd)) {
 			/*如果不是标准输出，则返还给调用者*/
@@ -205,7 +205,7 @@ error:
 			ret = true;
 		} else {
 			/*原描述是不可能和新打开的描述符相同的*/
-			x_printf(F, "OS's file descriptor manager occured ERROR.");
+			x_pfatal("OS's file descriptor manager occured ERROR.");
 			abort();
 		}
 	}

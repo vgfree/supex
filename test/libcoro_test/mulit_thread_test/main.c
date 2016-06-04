@@ -71,7 +71,7 @@ void *test(void *arg)
 	futex_add_signal((int *)&st->counter, 1, 1);
 	futex_cond_wait((int *)&st->start, 1, -1);
 #else
-	ATOMIC_INC(&st->counter);
+	AO_INC(&st->counter);
 
 	while (st->start != 1) {
 		sched_yield();
@@ -146,7 +146,7 @@ int main()
 	while (st.counter != (int)ncpus) {
 		sched_yield();
 	}
-	ATOMIC_SET(&st.start, 1);
+	AO_SET(&st.start, 1);
 #endif
 
 	for (i = 0; i < ncpus; i++) {

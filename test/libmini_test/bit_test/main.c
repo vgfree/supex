@@ -58,7 +58,7 @@ int main()
 
 	x_printf(D, "0x%x 0x%x", value.low, value.hight);
 
-	ATOMIC_SET((int64_t *)&value, 0x1234567890abcdef);
+	AO_SET((int64_t *)&value, 0x1234567890abcdef);
 
 	x_printf(D, "0x%x 0x%x", value.low, value.hight);
 

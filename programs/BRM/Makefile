@@ -26,20 +26,21 @@ BUILD_INC_DIR = 	-I/usr/include -I/usr/local/include -I/usr/local/include/luajit
 BUILD_LIB_DIR =		-L/usr/local/lib -L/usr/lib -L/usr/libexec
 
 ADD_DYLIBS =
-ADD_ARLIBS =		-lsupex_base -lmini -lkv -lev -lcjson -lscco -levcoro -lcoro -lzmq
+ADD_ARLIBS =		-levcs -lmini -lkv -lev -levcoro -lcjson -lscco -lcoro -lzmq
 ADD_INC_DIR = 		-I$(BUILD_PWD)/../../lib/libmini/include \
-			-I$(BUILD_PWD)/../../lib/libev \
-			-I$(BUILD_PWD)/../../lib/cJSON \
-			-I$(BUILD_PWD)/../../lib/libscco \
-			-I$(BUILD_PWD)/../../lib/http-parser \
-			-I$(BUILD_PWD)/../../lib/libkv/src \
 			-I$(BUILD_PWD)/../../lib/libmemhook/src \
-			-I$(BUILD_PWD)/../../lib/libevcoro/include \
+			-I$(BUILD_PWD)/../../lib/libev \
 			-I$(BUILD_PWD)/../../lib/zeromq-4.1.4/include \
-			-I$(BUILD_PWD)/../../engine \
-			-I$(BUILD_PWD)/../../frame
+			-I$(BUILD_PWD)/../../lib/cJSON \
+			-I$(BUILD_PWD)/../../lib/libscco/include \
+			-I$(BUILD_PWD)/../../lib/libcoro/include \
+			-I$(BUILD_PWD)/../../lib/libevcoro/include \
+			-I$(BUILD_PWD)/../../lib/libevcs/include/engine \
+			-I$(BUILD_PWD)/../../lib/libevcs/include/frame \
+			-I$(BUILD_PWD)/../../lib/libkv/src \
+			-I$(BUILD_PWD)/../
 
-ADD_LIB_DIR =		-L$(BUILD_PWD)/../../lib -L$(BUILD_PWD)/../../engine
+ADD_LIB_DIR =		-L$(BUILD_PWD)/../../lib
 #######
 
 ifeq ($(BUILD_HOST), darwin)
@@ -67,7 +68,6 @@ TARGET ?= 		$(MAIN_APP_SERV)
 SRC_DIR = 		./src
 OBJ_DIR = 		$(BUILD_PWD)/.obj
 OBJS = 			$(addprefix $(OBJ_DIR)/, \
-				cache.o \
 				data_model.o \
 				parse_cfg.o \
 				prg_frame.o \
@@ -90,10 +90,6 @@ AR = 			@ar -rcs
 all : prepare $(TARGET)
 
 $(OBJ_DIR)/%.o : $(SRC_DIR)/%.c
-	$(ECHO) $(COLOR_GREEN)"\t\t- COMPILE\t===>\t"$(COLOR_FILE_OBJ)"$(<:.c=.o)"$(COLOR_NONE)
-	$(CC) -o $@ -c $<
-
-$(OBJ_DIR)/cache.o : $(BUILD_PWD)/../../frame/cache/cache.c
 	$(ECHO) $(COLOR_GREEN)"\t\t- COMPILE\t===>\t"$(COLOR_FILE_OBJ)"$(<:.c=.o)"$(COLOR_NONE)
 	$(CC) -o $@ -c $<
 

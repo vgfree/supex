@@ -16,36 +16,9 @@ LIGHT_CYAN      = "\x1B[1;36m"
 WHITE           = "\x1B[0;37m"
 LIGHT_WHITE     = "\x1B[1;37m"
 ######################################
-str_kernel_version = $(shell uname -r)
-get_kernel_version = $(shell echo $1 | sed 's/\./ /g' | sed 's/-/ /g')
-fix_kernel_version = $(call get_kernel_version, $(str_kernel_version))
-
-v_major = $(word 1, $(fix_kernel_version))
-v_minor = $(word 2, $(fix_kernel_version))
-v_emend = $(word 3, $(fix_kernel_version))
-
-OPTIMIZE = 0
-
-compare = $(shell if [ $1 -eq $2 ]; then echo ?; elif [ $1 -gt $2 ]; then echo 1; else echo 0; fi)
-OPTIMIZE = $(call compare, $(v_major), 2)
-
-ifeq ($(OPTIMIZE), ?)
-OPTIMIZE = $(call compare, $(v_minor), 6)
-ifeq ($(OPTIMIZE), ?)
-OPTIMIZE = $(call compare, $(v_emend), 35)
-endif
-endif
-ifeq ($(OPTIMIZE), ?)
-OPTIMIZE = 1
-endif
-
-ifeq ($(OPTIMIZE), 1)
-EXCESS_CFLAGS += -DOPEN_OPTIMIZE
-endif
 ######################################
 
 export OBJECT_SCENE ?= ONLINE
-export SCCO_STACK_TYPE ?= -DSCCO_USE_STATIC_STACK
 
 export HOME_PATH = $(shell pwd)
 EXPORT_CFLAGS = -g
@@ -62,10 +35,10 @@ EXPORT_CFLAGS += -Wall \
 	-DCRZPT_MSMQ_SELECT_ASYNC \
 	-D_GNU_SOURCE \
 	-DOPEN_POLLING \
+	-DDEBUG \
 	#-DSECTION_SEND \
 	#-DOPEN_HASH \
 	#-DOPEN_EQUAL \
-	#-DDEBUG \
 	#-D_AO_CPU_NUMS=8 \
 	#-DCRZPT_MSMQ_SELECT_SYNC \
 	#-DUSE_MUTEX \
@@ -94,8 +67,8 @@ SRV := $(openIMX) $(openHLS) \
 	loghub topology crzptX crzptY ACB damS roadRank \
 	gdgive bdgive gopath gomile ashman adcube adcube_v2\
 	spark releaseServer dfsdb tsdb \
-	timport msgimport rtimport simimport PMR dtsync pole-M pole-S tagpick trafficapi mttpServer rrtopo damR BRM mfptpServer pmrhttp weibo-S weibo-G
-# weidb club
+	timport msgimport rtimport simimport PMR dtsync pole-M pole-S tagpick trafficapi mttpServer mttpSvp rrtopo damR BRM mfptpServer pmrhttp weibo-S weibo-G
+# club
 
 help:
 	@echo -e $(GREEN) "make libs first!" $(NONE)
@@ -107,13 +80,6 @@ libs:
 	$(MAKE) -C ./lib
 	#sleep 1
 #	$(MAKE) -C ./engine distclean
-#	$(MAKE) -j8 -C ./engine MAIN_SUPEX=supex_base
-#	$(MAKE) -j8 -C ./engine MAIN_SUPEX=supex_scco
-#	$(MAKE) -j8 -C ./engine MAIN_SUPEX=supex_line
-#	$(MAKE) -j8 -C ./engine MAIN_SUPEX=supex_evuv
-#	$(MAKE) -j8 -C ./engine MAIN_SUPEX=supex_evcoro
-#	$(MAKE) -C ./engine xctl
-#	$(MAKE) -C ./engine sclnt
 	#sleep 1
 	$(MAKE) -C ./open/lib clean
 	$(MAKE) -C ./open/lib/
@@ -263,6 +229,11 @@ mttpServer:
 	$(MAKE) -C ./programs/mttpServer MAIN_APP_SERV=mttpServer
 	@echo -e $(GREEN)"【"$(YELLOW) $@ $(GREEN)"】"$(RED)"\n-->OK!\n"$(NONE)
 
+mttpSvp:
+	$(MAKE) -C ./programs/mttpSvp MAIN_APP_SERV=mttpSvp
+	@echo -e $(GREEN)"【"$(YELLOW) $@ $(GREEN)"】"$(RED)"\n-->OK!\n"$(NONE)
+
+
 rrtopo:
 	$(MAKE) -C ./programs/RRDemo/topo MAIN_APP_SERV=rrtopo
 	@echo -e $(GREEN)"【"$(YELLOW) $@ $(GREEN)"】"$(RED)"\n-->OK!\n"$(NONE)
@@ -287,25 +258,16 @@ weibo-G:
 	$(MAKE) -C ./programs/weibo-G MAIN_APP_SERV=weibo-G
 	@echo -e $(GREEN)"【"$(YELLOW) $@ $(GREEN)"】"$(RED)"\n-->OK!\n"$(NONE)
 
-weidb:
-	$(MAKE) -C ./programs/weidb MAIN_APP_SERV=weidb
-	@echo -e $(GREEN)"【"$(YELLOW) $@ $(GREEN)"】"$(RED)"\n-->OK!\n"$(NONE)
-
-
 useroptapi:
 	$(MAKE) -C ./programs/useroptapi MAIN_APP_SERV=useroptapi
 	@echo -e $(GREEN)"【"$(YELLOW) $@ $(GREEN)"】"$(RED)"\n-->OK!\n"$(NONE)
 
 
-adcube:
-	$(MAKE) -C ./programs/adtalk MAIN_APP_SERV=adcube
-	@echo -e $(GREEN)"【"$(YELLOW) $@ $(GREEN)"】"$(RED)"\n-->OK!\n"$(NONE)
-
 adcube_v2:
 	$(MAKE) -C ./programs/adtalk_v2 MAIN_APP_SERV=adcube_v2
 	@echo -e $(GREEN)"【"$(YELLOW) $@ $(GREEN)"】"$(RED)"\n-->OK!\n"$(NONE)
 spark:
-	$(MAKE) -C ./programs/adtalk MAIN_APP_SERV=spark
+	$(MAKE) -C ./programs/adtalk_v2 MAIN_APP_SERV=spark
 	@echo -e $(GREEN)"【"$(YELLOW) $@ $(GREEN)"】"$(RED)"\n-->OK!\n"$(NONE)
 
 tsdb:
@@ -387,7 +349,6 @@ clean:
 	$(MAKE) -C ./programs/flyKite clean
 	$(MAKE) -C ./programs/ashman clean
 	$(MAKE) -C ./programs/weibo-G clean
-	$(MAKE) -C ./programs/weidb clean
 	$(MAKE) -C ./programs/BRM clean
 	$(MAKE) -C ./programs/roadRank clean
 	$(MAKE) -C ./programs/dtsync clean
@@ -396,9 +357,9 @@ clean:
 	$(MAKE) -C ./programs/tagpick clean
 	$(MAKE) -C ./programs/GIVE clean
 	$(MAKE) -C ./programs/mttpServer clean
+	$(MAKE) -C ./programs/mttpSvp clean
 	$(MAKE) -C ./programs/RRDemo/topo clean
 	$(MAKE) -C ./programs/useroptapi clean
-	$(MAKE) -C ./programs/adtalk clean
 	$(MAKE) -C ./programs/releaseServer clean
 	$(MAKE) -C ./programs/TSDB clean
 	$(MAKE) -C ./programs/timport clean
@@ -425,7 +386,6 @@ distclean:
 	$(MAKE) -C ./programs/flyKite distclean
 	$(MAKE) -C ./programs/ashman distclean
 	$(MAKE) -C ./programs/weibo-G distclean
-	$(MAKE) -C ./programs/weidb distclean
 	$(MAKE) -C ./programs/BRM distclean
 	$(MAKE) -C ./programs/roadRank distclean
 	$(MAKE) -C ./programs/dtsync distclean
@@ -434,6 +394,7 @@ distclean:
 	$(MAKE) -C ./programs/tagpick distclean
 	$(MAKE) -C ./programs/GIVE distclean
 	$(MAKE) -C ./programs/mttpServer distclean
+	$(MAKE) -C ./programs/mttpSvp distclean
 	$(MAKE) -C ./programs/RRDemo/topo distclean
 	$(MAKE) -C ./programs/useroptapi distclean
 	$(MAKE) -C ./programs/UserInfoApi distclean
@@ -441,7 +402,6 @@ distclean:
 	$(MAKE) -C ./programs/messageGateway distclean
 	$(MAKE) -C ./programs/loginServer distclean
 	$(MAKE) -C ./programs/settingServer distclean
-	$(MAKE) -C ./programs/adtalk distclean
 	$(MAKE) -C ./programs/loghub distclean
 	$(MAKE) -C ./programs/releaseServer distclean
 	$(MAKE) -C ./programs/TSDB distclean

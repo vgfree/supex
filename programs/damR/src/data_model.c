@@ -14,7 +14,7 @@ void stop_proc(struct proc *proc)
 {
 	return_if_fail(ISOBJ(proc));
 
-	ATOMIC_SET(&proc->stat, PROC_STAT_STOP);
+	AO_SET(&proc->stat, PROC_STAT_STOP);
 
 	if (proc->coroloop) {
 		evcoro_stop(proc->coroloop);
@@ -22,14 +22,14 @@ void stop_proc(struct proc *proc)
 
 	return_if_fail(ISOBJ(proc->frame));
 
-	ATOMIC_SET(&proc->frame->stat, FRAME_STAT_STOP);
+	AO_SET(&proc->frame->stat, FRAME_STAT_STOP);
 }
 
 void kill_proc(struct proc *proc)
 {
 	return_if_fail(ISOBJ(proc));
 
-	ATOMIC_SET(&proc->stat, PROC_STAT_STOP);
+	AO_SET(&proc->stat, PROC_STAT_STOP);
 
 	if (proc->coroloop) {
 		evcoro_stop(proc->coroloop);
@@ -37,7 +37,7 @@ void kill_proc(struct proc *proc)
 
 	return_if_fail(ISOBJ(proc->frame));
 
-	ATOMIC_SET(&proc->frame->stat, FRAME_STAT_STOP);
+	AO_SET(&proc->frame->stat, FRAME_STAT_STOP);
 
 	if ((proc->tid > 0) && (proc->stat != PROC_STAT_STOP)) {
 		pthread_cancel(proc->ptid);

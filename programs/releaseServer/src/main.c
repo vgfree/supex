@@ -11,7 +11,7 @@
 #include "log.h"
 #include "utils.h"
 
-#include "swift_api.h"
+#include "major/swift_api.h"
 #include "major_def.h"
 #include "load_swift_cfg.h"
 
@@ -103,16 +103,16 @@ static void swift_pthrd_init(void *user)
 
 #define DATA_MAX_LEN (80 * 1024)
 /*worker解析完数据后，调用此接口处理数据*/
-int data_handle(void *W)
+int data_handle(void *user, union virtual_system **VMS, struct adopt_task_node *task)
 {
-	SWIFT_WORKER_PTHREAD    *p_swift_worker = (SWIFT_WORKER_PTHREAD *)W;
-	struct swift_task_node  *swift_task = &p_swift_worker->task;
+	SWIFT_WORKER_PTHREAD    *p_swift_worker = (SWIFT_WORKER_PTHREAD *)user;
+	struct data_node        *p_node = get_pool_data(task->sfd);
 	char                    *ptr = NULL;
 
 	char    buf[DATA_MAX_LEN] = {};
 	int     buflen = sizeof(buf);
 
-	get_cache_data(swift_task->sfd, buf, &buflen);		/*从worker那获取信息并读取数据*/
+	buflen = cache_get(&p_node->mdl_recv.cache, buf, buflen);		/*从worker那获取信息并读取数据*/
 
 	/*=============调用客户化接口===============*/
 
@@ -143,7 +143,7 @@ int main(int argc, char **argv)
 	load_swift_cfg_file(&g_swift_cfg_list.file_info, g_swift_cfg_list.argv_info.conf_name);
 
 	g_swift_cfg_list.func_info[APPLY_FUNC_ORDER].type = BIT8_TASK_TYPE_ALONE;
-	g_swift_cfg_list.func_info[APPLY_FUNC_ORDER].func = (TASK_CALLBACK)data_handle;
+	g_swift_cfg_list.func_info[APPLY_FUNC_ORDER].func = (TASK_VMS_FCB)data_handle;
 
 	g_swift_cfg_list.entry_init = swift_entry_init;
 	g_swift_cfg_list.pthrd_init = swift_pthrd_init;

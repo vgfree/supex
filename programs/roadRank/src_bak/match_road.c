@@ -58,7 +58,7 @@ static int forward_to_server(char *host, int port, const char *data, size_t size
 
 	if (ac) {
 		void    *sfd = (void *)(intptr_t)-1;
-		int     rc = pool_api_gain(&cpool, host, port, &sfd);
+		int     rc = conn_xpool_gain(&cpool, host, port, &sfd);
 
 		if (rc) {
 			async_distory(ac);
