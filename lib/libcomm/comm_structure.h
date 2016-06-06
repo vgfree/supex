@@ -163,6 +163,8 @@ bool add_remainfd(struct remainfd *remainfd, int fd, int type);
 /* 删除一个未处理完的fd @fd:待删除的fd @type:待添加的fd的类型[remainfd_type] */
 void del_remainfd(struct remainfd *remainfd, int fd, int type);
 
+
+
 #ifdef __cplusplus
 	}
 #endif

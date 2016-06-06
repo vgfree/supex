@@ -27,7 +27,7 @@ int mfptp_parse(struct mfptp_parser *parser)
 	int		frame_offset = parser->ms.cache.end;	/* 每帧在cache里面的偏移 */
 	int		dsize = *(parser->ms.dsize);		/* 待解析数据的大小 */
 	const char*	data = *parser->ms.data;		/* 待解析的数据缓冲区 */
-	struct mfptp_frame_info* frame = NULL;			/* 帧的相关信息 */
+	struct mfptp_package_info* package = NULL;		/* 包的相关信息 */
 	char decryptbuff[MFPTP_MAX_FRAMESIZE] = {0};		/* 用于保存解密之后的数据 */
 	char decompressbuff[MFPTP_MAX_FRAMESIZE] = {0};		/* 用于保存解压之后的数据 */
 
@@ -36,7 +36,7 @@ int mfptp_parse(struct mfptp_parser *parser)
 		//parser->ms.error = MFPTP_PARSE_INIT;
 		parser->ms.step = MFPTP_PARSE_INIT;
 		parser->ms.dosize = 0;
-		memset(&parser->package, 0, sizeof(parser->package));
+		memset(&parser->bodyer, 0, sizeof(parser->bodyer));
 		//memset(&parser->header, 0 , sizeof(parser->header));
 	}
 	while (dsize) {
@@ -138,13 +138,12 @@ int mfptp_parse(struct mfptp_parser *parser)
 					}
 
 					commcache_append(&parser->ms.cache, decryptbuff, frame_size);
+					package = &parser->bodyer.package[parser->bodyer.packages];
+					package->frame[package->frames].frame_size = frame_size;
+					package->frame[package->frames].frame_offset = frame_offset;
+					package->frames ++;
 
-					frame = &(parser->package.frame[parser->package.packages]);
-					frame->frame_size[frame->frames] = frame_size;
-					frame->frame_offset[frame->frames] = frame_offset;
-					parser->package.dsize += frame_size;
-
-					frame->frames++;
+					parser->bodyer.dsize += frame_size;
 					frame_offset += frame_size;
 					parser->ms.dosize += parser->header.f_size;
 
@@ -160,8 +159,8 @@ int mfptp_parse(struct mfptp_parser *parser)
 				break ;
 			case MFPTP_FRAME_OVER:
 				dsize -= parser->header.f_size;
-				parser->package.packages ++;
-				if (parser->header.packages  == parser->package.packages) {	/* 代表所有的包都已经解析完毕 */
+				parser->bodyer.packages ++;
+				if (parser->header.packages  == parser->bodyer.packages) {	/* 代表所有的包都已经解析完毕 */
 					parser->ms.step = MFPTP_PARSE_OVER;
 				} else {
 					parser->ms.step = MFPTP_FP_CONTROL;

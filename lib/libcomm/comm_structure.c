@@ -103,19 +103,20 @@ void restore_remainfd(struct remainfd *remainfd)
 	assert(remainfd && remainfd->init);
 	int  i = 0;
 	int* ptr = NULL;
-	int  capacity = 0;
+	//int  capacity = 0;
 
 	/* REMAINFD_LISTEN类型的fd不进行扩容，所以不用恢复 */
 	for(i = 1; i < 5; i++) {
-		ptr = remainfd->fda[i];
-		capacity = remainfd->capacity[i];
-		remainfd->fda[i] = realloc(ptr, capacity);
-		if (unlikely(!remainfd->fda[i])) {
-			remainfd->fda[i] = ptr;
-		} else {
-			remainfd->capacity[i] = EPOLL_SIZE/2;
+		if (remainfd->capacity[i] > EPOLL_SIZE/2 && remainfd->cnt[i] < EPOLL_SIZE/2) {
+			ptr = remainfd->fda[i];
+			//capacity = remainfd->capacity[i];
+			remainfd->fda[i] = realloc(ptr, EPOLL_SIZE/2);
+			if (unlikely(!remainfd->fda[i])) {
+				remainfd->fda[i] = ptr;
+			} else {
+				remainfd->capacity[i] = EPOLL_SIZE/2;
+			}
 		}
-
 	}
 	return ;
 }

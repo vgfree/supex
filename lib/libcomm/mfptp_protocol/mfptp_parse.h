@@ -32,11 +32,11 @@ struct mfptp_parser_stat {
 /* MFPTP解析器的相关信息 */
 struct mfptp_parser {
 	bool				init;
-	struct mfptp_header_info	header;		/* MFPTP头的相关信息 */
-	struct mfptp_package_info	package;	/* 每个包的相关信息 */
-	Decompression_CallBack		decompresscb;	/* 解压回调函数 */
+	struct mfptp_header_info	header;		/* MFPTP协议head的相关信息 */
+	struct mfptp_bodyer_info	bodyer;		/* MFPTP协议body的相关信息 */
+	Decompression_CallBack		decompresscb;	/* 解压的回调函数 */
 	Decryption_CallBack		decryptcb;	/* 解密的回调函数 */
-	struct mfptp_parser_stat	ms;		/* MFPTP数据解析器状态 */
+	struct mfptp_parser_stat	ms;		/* MFPTP协议数据解析器状态 */
 };
 
 /***********************************************************************************

@@ -9,7 +9,7 @@ static inline void _set_callback(struct mfptp_packager *packager);
 
 static inline bool _check_config(struct mfptp_packager *packager);
 
-static void _make_package(struct mfptp_packager *packager, struct mfptp_frame_info *frame, const char *data);
+static void _make_package(struct mfptp_packager *packager, struct mfptp_package_info *package, const char *data);
 
 void  mfptp_package_init(struct mfptp_packager *packager, char **buff, int *size)
 {
@@ -30,7 +30,8 @@ int mfptp_package(struct mfptp_packager *packager, const char *data, unsigned ch
 	char encryptbuff[MFPTP_MAX_FRAMESIZE]	= {0};	/* 用于保存加密之后的数据 */
 	char compressbuff[MFPTP_MAX_FRAMESIZE]	= {0};	/* 用于保存压缩之后的数据 */
 
-	packager->header.packages = packager->package.packages;
+	//packager->header.packages = packager->package.packages;
+	packager->header.packages = packager->bodyer.packages;
 	packager->header.compression = flag & 0xF0;
 	packager->header.encryption = flag & 0x0F;
 	packager->header.socket_type = method;
@@ -68,9 +69,10 @@ int mfptp_package(struct mfptp_packager *packager, const char *data, unsigned ch
 	packager->ms.dosize += 1;
 
 	/* 开始组装包数据 */
-	for (pckidx = 0; pckidx < packager->package.packages; pckidx++) {
+	for (pckidx = 0; pckidx < packager->bodyer.packages; pckidx++) {
 		/* 依次组装每包数据 */
-		_make_package(packager, &packager->package.frame[pckidx], data);
+		//_make_package(packager, &packager->package.frame[pckidx], data);
+		_make_package(packager, &packager->bodyer.package[pckidx], data);
 	}
 	return packager->ms.dosize;
 }
@@ -90,22 +92,20 @@ void mfptp_fill_package(struct mfptp_packager *packager, const int *frame_offset
 	int dsize	= 0;	/* 数据的总大小 */
 	int pckidx	= 0;	/* 包的索引 */
 	int frmidx	= 0;	/* 帧的索引 */
-	//memset(packager->package, 0, sizeof(packager->package));
 	for (pckidx = 0; pckidx < packages; pckidx++) {
 		for (frmidx = 0; frmidx < frames_of_package[pckidx]; frmidx++, index++) {
-			packager->package.frame[pckidx].frame_offset[frmidx] = frame_offset[index];
-			packager->package.frame[pckidx].frame_size[frmidx] = frame_size[index];
+			packager->bodyer.package[pckidx].frame[frmidx].frame_offset = frame_offset[index];
+			packager->bodyer.package[pckidx].frame[frmidx].frame_size = frame_size[index];
 			dsize += frame_size[index];
 		}
-		packager->package.frame[pckidx].frames = frames_of_package[pckidx];
+		packager->bodyer.package[pckidx].frames = frames_of_package[pckidx];
 	}
-	packager->package.dsize = dsize;
-	packager->package.packages = packages;
+	packager->bodyer.dsize = dsize;
+	packager->bodyer.packages = packages;
 }
 
-
 /* 将帧组合成一个包数据 @frame:一包数据里面帧的相关信息 @data：需要进行打包的数据 */
-static void _make_package(struct mfptp_packager *packager, struct mfptp_frame_info *frame, const char *data)
+static void _make_package(struct mfptp_packager *packager, struct mfptp_package_info *package, const char *data)
 {
 	int frmidx	= 0;	/* 帧的索引 */
 	int frame_size	= 0;	/* 帧的大小 */
@@ -114,15 +114,15 @@ static void _make_package(struct mfptp_packager *packager, struct mfptp_frame_in
 	char compressbuff[MFPTP_MAX_FRAMESIZE]	= {0};	/* 用于保存压缩之后的数据 */
 
 	/* 开始组装帧 */
-	for(frmidx = 0; frmidx < frame->frames; frmidx++) {
+	for(frmidx = 0; frmidx < package->frames; frmidx++) {
 		/* 先加密 再压缩 */
 		//memset(encryptbuff, 0,  MFPTP_MAX_FRAMESIZE);
 		//memset(compressbuff, 0, MFPTP_MAX_FRAMESIZE);
 		if (packager->encryptcb) {
-			frame_size = packager->encryptcb(encryptbuff, &data[frame->frame_offset[frmidx]], MFPTP_MAX_FRAMESIZE, frame->frame_size[frmidx]);
+			frame_size = packager->encryptcb(encryptbuff, &data[package->frame[frmidx].frame_offset], MFPTP_MAX_FRAMESIZE, package->frame[frmidx].frame_size);
 		} else {
-			memcpy(encryptbuff, &data[frame->frame_offset[frmidx]], frame->frame_size[frmidx]);
-			frame_size = frame->frame_size[frmidx];
+			memcpy(encryptbuff, &data[package->frame[frmidx].frame_offset], package->frame[frmidx].frame_size);
+			frame_size = package->frame[frmidx].frame_size;
 		}
 		
 		if (packager->compresscb) {
@@ -132,7 +132,7 @@ static void _make_package(struct mfptp_packager *packager, struct mfptp_frame_in
 		}
 
 		/* FP_CONTROL的设置 */
-		if (frmidx == frame->frames-1) {
+		if (frmidx == package->frames-1) {
 			/* 最后一帧 结束帧 */
 			(*packager->ms.buff)[*packager->ms.size] = 0x0;
 		} else {

@@ -124,7 +124,7 @@ int comm_socket(struct comm_context *commctx, const char *host, const char *serv
 	}
 
 	/* 添加一个fd进行监听 */
-	if (unlikely(!commevent_add(commctx->commevent, &commtcp, finishedcb))) {
+	if (unlikely(!commdata_add(commctx->commevent, &commtcp, finishedcb))) {
 		close(commtcp.fd);
 		return -1;
 	}
@@ -211,7 +211,7 @@ void comm_settimeout(struct comm_context *commctx, int timeout, CommCB callback,
 
 void comm_close(struct comm_context *commctx, int fd)
 {
-	commevent_del(commctx->commevent, fd);
+	commdata_del(commctx->commevent, fd);
 	close(fd);
 	return ;
 }
@@ -252,11 +252,15 @@ static void * _start_new_pthread(void *usr)
 						if (commctx->commepoll.events[n].data.fd == commctx->commpipe.rfd) {	/* 管道事件被触发，则触发打包事件 */
 							int cnt = 0, i = 0;
 							int array[EPOLL_SIZE] = {};
+							cnt = commpipe_read(&commctx->commpipe, array, sizeof(int));
+							_set_remainfd(&commctx->commevent->remainfd, array, cnt);
+#if 0
 							if ((cnt = commpipe_read(&commctx->commpipe, array, sizeof(int))) > 0) {
 								for(i = 0; i < cnt; i++) {
 									add_remainfd(&commctx->commevent->remainfd, array[i], REMAINFD_PACKAGE);
 								}
 							}
+#endif
 						} else {	/* 非pipe的fd读事件被触发，则代表是socket的fd触发了读事件 */
 							 add_remainfd(&commctx->commevent->remainfd, commctx->commepoll.events[n].data.fd, REMAINFD_READ);
 						}
@@ -281,7 +285,7 @@ static bool _set_remainfd(struct remainfd *remainfd, int array[], int n)
 {
 	int i =0;
 	for(i = 0; i < n; i++) {
-		add_remainfd(remainfd, array[i], REMAINFD_WRITE);
+		add_remainfd(remainfd, array[i], REMAINFD_PACKAGE);
 	}
 #if 0
 	if (_quick_sort(array, n)) {
