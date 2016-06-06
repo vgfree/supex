@@ -15,57 +15,57 @@
 
 static int check_parameter_mlocate(struct data_node *p_node, gps_point_t *p_point, char *p_imei, int size)
 {
-        if (!p_node || !p_node->recv.buf_addr) {
+        struct cache        *p_cache = &p_node->mdl_send.cache;
+	char                    *p_buf = cache_data_address(&p_node->mdl_recv.cache);
+	struct redis_status     *p_rst = &p_node->mdl_recv.parse.redis_info.rs;
+        if (!p_node || !p_buf) {
                 return -1;
         }
 
-        struct net_cache        *p_cache = &p_node->send;
-        struct redis_status     *p_rst = &p_node->redis_info.rs;
-        char                    *p_buf = p_node->recv.buf_addr;
 
-        if (p_rst->keys != 7 || !p_point) {
+        if (p_rst->fields != 7 || !p_point) {
                 send_error(p_cache, "paramters error");
                 return -1;
         }
 
-         strncpy(p_imei, p_buf + p_rst->key_offset[0], p_rst->klen_array[0]);
+         strncpy(p_imei, p_buf + p_rst->field[0].offset, p_rst->field[0].len);
 
-         double lon = strtod(p_buf + p_rst->key_offset[1], NULL);
+         double lon = strtod(p_buf + p_rst->field[1].offset, NULL);
          if ((lon > 180.0) || (lon < -180.0)) {
                  send_error(p_cache, "longitude error");
                  return -1;
          }
          p_point->lon = lon;
 
-         double lat = strtod(p_buf + p_rst->key_offset[2], NULL);
+         double lat = strtod(p_buf + p_rst->field[2].offset, NULL);
          if ((lat > 90.0) || (lat < -90.0)) {
                  send_error(p_cache, "latitude error");
                  return -1;
          }
          p_point->lat = lat;
 
-         long dir = strtol(p_buf + p_rst->key_offset[3], NULL, 0);
+         long dir = strtol(p_buf + p_rst->field[3].offset, NULL, 0);
          if ((dir > 360.0) || (dir < -1.0)) {
                  send_error(p_cache, "direction error");
                  return -1;
          }
          p_point->dir = (short)dir;
 
-         long alt = strtol(p_buf + p_rst->key_offset[4], NULL, 0);
+         long alt = strtol(p_buf + p_rst->field[4].offset, NULL, 0);
          if ((alt >8848) || (alt < -200)) {
                  send_error(p_cache, "altitude error");
                  return -1;
          }
          p_point->alt = (short)alt;
 
-         long speed = strtol(p_buf + p_rst->key_offset[5], NULL, 0);
+         long speed = strtol(p_buf + p_rst->field[5].offset, NULL, 0);
          if ((speed >200) || (speed < 0)) {
                  send_error(p_cache, "speed error");
                  return -1;
          }
         p_point->speed = (short)speed;
 
-        long long time = strtoll(p_buf + p_rst->key_offset[6], NULL, 0);
+        long long time = strtoll(p_buf + p_rst->field[6].offset, NULL, 0);
         if (time <= 0) {
                 send_error(p_cache, "time error");
                 return -1;
@@ -177,7 +177,7 @@ int entry_cmd_mlocate(struct data_node *p_node)
                 return 0;
         }
 
-        struct net_cache        *p_cache = &p_node->send;
+        struct cache        *p_cache = &p_node->mdl_send.cache;
         char imei[IMEI_LEN + 1] = {0};
         gps_point_t gps_pt;
 
@@ -194,48 +194,48 @@ int entry_cmd_mlocate(struct data_node *p_node)
 
         int ret = map_grid_query(gps_pt.lon, gps_pt.lat, pmr_mlocate_cb, (void *)&match_road);
         if(ret <= 0) {
-                cache_add(p_cache, OPT_MULTI_BULK_NULL, strlen(OPT_MULTI_BULK_NULL));
+                cache_append(p_cache, OPT_MULTI_BULK_NULL, strlen(OPT_MULTI_BULK_NULL));
                 return 0;
         }
 
         int idx = match_roads(&match_road, imei);
         if(idx < 0  ) {
-                cache_add(p_cache, OPT_MULTI_BULK_NULL, strlen(OPT_MULTI_BULK_NULL));
+                cache_append(p_cache, OPT_MULTI_BULK_NULL, strlen(OPT_MULTI_BULK_NULL));
                 return 0;
         }
 
         road_info_t *p_road = &(match_road.roads[idx]);
 
         // *2\r\n$6\r\nlineID\r\n$5\r\n12345\r\n
-        cache_add(p_cache, "*", 1);
+        cache_append(p_cache, "*", 1);
         put_number_out(p_cache, 11);
 
-        cache_add(p_cache, "$", 1);
+        cache_append(p_cache, "$", 1);
         put_number_out(p_cache, get_number_len(p_road->p_sg->rrid));
         put_number_out(p_cache, p_road->p_sg->rrid);
 
-        cache_add(p_cache, "$", 1);
+        cache_append(p_cache, "$", 1);
         put_number_out(p_cache, get_number_len(p_road->p_sg->sgid));
         put_number_out(p_cache, p_road->p_sg->sgid);
 
         // TFID
 
-        cache_add(p_cache, "$", 1);
+        cache_append(p_cache, "$", 1);
         put_number_out(p_cache, get_number_len(p_road->p_sg->sgid));
         put_number_out(p_cache, p_road->p_sg->sgid);
 
         // countyCode  TODO  need init the data file
-        cache_add(p_cache, "$", 1);
+        cache_append(p_cache, "$", 1);
         put_number_out(p_cache, get_number_len(p_road->p_sg->countyCode));
         put_number_out(p_cache, p_road->p_sg->countyCode);
 
         // RT
-        cache_add(p_cache, "$", 1);
+        cache_append(p_cache, "$", 1);
         put_number_out(p_cache, get_number_len(p_road->p_sg->sgid_rt));
         put_number_out(p_cache, p_road->p_sg->sgid_rt);
 
         // roadName
-        cache_add(p_cache, "$", 1);
+        cache_append(p_cache, "$", 1);
         if(!p_road->p_sg_name || strlen(p_road->p_sg_name) == 0) {
                 put_number_out(p_cache, 0);
                 put_string_out(p_cache, "");
@@ -250,7 +250,7 @@ int entry_cmd_mlocate(struct data_node *p_node)
         put_double_out(p_cache, p_road->p_sg->end_lon);
         put_double_out(p_cache, p_road->p_sg->end_lat);
 
-        cache_add(p_cache, "$", 1);
+        cache_append(p_cache, "$", 1);
         put_number_out(p_cache, get_number_len(p_road->p_sg->length));
         put_number_out(p_cache, p_road->p_sg->length);
 

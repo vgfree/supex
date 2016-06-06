@@ -18,3 +18,6 @@ $(TARGET) : $(OBJ)
 
 clean:
 	rm -f *.o $(TARGET)
+
+distclean:
+	make clean

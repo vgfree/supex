@@ -5,15 +5,11 @@
 #include <assert.h>
 
 #include "load_cfg.h"
-#include "smart_api.h"
+#include "major/smart_api.h"
 #include "map_pmr.h"
 #include "match_road.h"
 
-#ifdef OPEN_SCCO
-  #include "smart_scco_lua_api.h"
-#else
-  #include "smart_line_lua_api.h"
-#endif
+#include "smart_evcoro_lua_api.h"
 
 struct smart_cfg_list g_smart_cfg_list = {};
 
@@ -33,13 +29,13 @@ int main(int argc, char **argv)
 	load_cfg_file(&g_smart_cfg_list.file_info, g_smart_cfg_list.argv_info.conf_name);
 
 	g_smart_cfg_list.func_info[APPLY_FUNC_ORDER].type = BIT8_TASK_TYPE_ALONE;
-	g_smart_cfg_list.func_info[APPLY_FUNC_ORDER].func = (SUPEX_TASK_CALLBACK)smart_vms_call;
+	g_smart_cfg_list.func_info[APPLY_FUNC_ORDER].func = (TASK_VMS_FCB)smart_vms_call;
 	g_smart_cfg_list.func_info[FETCH_FUNC_ORDER].type = BIT8_TASK_TYPE_ALONE;
-	g_smart_cfg_list.func_info[FETCH_FUNC_ORDER].func = (SUPEX_TASK_CALLBACK)smart_vms_gain;
+	g_smart_cfg_list.func_info[FETCH_FUNC_ORDER].func = (TASK_VMS_FCB)smart_vms_gain;
 	g_smart_cfg_list.func_info[MERGE_FUNC_ORDER].type = BIT8_TASK_TYPE_WHOLE;
-	g_smart_cfg_list.func_info[MERGE_FUNC_ORDER].func = (SUPEX_TASK_CALLBACK)smart_vms_sync;
+	g_smart_cfg_list.func_info[MERGE_FUNC_ORDER].func = (TASK_VMS_FCB)smart_vms_sync;
 	g_smart_cfg_list.func_info[CUSTOM_FUNC_ORDER].type = BIT8_TASK_TYPE_ALONE;
-	g_smart_cfg_list.func_info[CUSTOM_FUNC_ORDER].func = (SUPEX_TASK_CALLBACK)smart_vms_exec;
+	g_smart_cfg_list.func_info[CUSTOM_FUNC_ORDER].func = (TASK_VMS_FCB)smart_vms_exec;
 
 	g_smart_cfg_list.entry_init = entry_init;
 

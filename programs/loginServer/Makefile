@@ -45,8 +45,8 @@ push:
 	git push origin HEAD:refs/for/master
 
 clean:
-	rm $(MAIN_APP_SERV)
-	rm -f $(CLEANFILES)
+	rm -rf $(MAIN_APP_SERV)
+	rm -rf $(CLEANFILES)
 	rm -rf logs
 
 distclean:

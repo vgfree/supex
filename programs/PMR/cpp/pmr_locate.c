@@ -13,7 +13,7 @@ int entry_cmd_locate(struct data_node *p_node)
         double                  longitude = 0.0;
         double                  latitude = 0.0;
         short                   direction = -1;
-        struct net_cache        *p_cache = &p_node->send;
+        struct cache        *p_cache = &p_node->mdl_send.cache;
 
         if (0 != check_parameter_locate(p_node, &longitude, &latitude, &direction)) {
                 return 0;
@@ -24,40 +24,40 @@ int entry_cmd_locate(struct data_node *p_node)
         int ret = pmr_locate(&line, direction, longitude, latitude);
 
         if (0 != ret) {
-                cache_add(p_cache, OPT_MULTI_BULK_NULL, strlen(OPT_MULTI_BULK_NULL));
+                cache_append(p_cache, OPT_MULTI_BULK_NULL, strlen(OPT_MULTI_BULK_NULL));
                 return 0;
         }
 
         back_seg ret_seg;
         if(0 != map_seg_query(line->rr_id, line->sgid,&ret_seg)) {
-                cache_add(p_cache, OPT_MULTI_BULK_NULL, strlen(OPT_MULTI_BULK_NULL));
+                cache_append(p_cache, OPT_MULTI_BULK_NULL, strlen(OPT_MULTI_BULK_NULL));
                 return 0;
         }
 
         // *2\r\n$6\r\nlineID\r\n$5\r\n12345\r\n
-        cache_add(p_cache, "*", 1);
+        cache_append(p_cache, "*", 1);
         put_number_out(p_cache, 11);
 
-        cache_add(p_cache, "$", 1);
+        cache_append(p_cache, "$", 1);
         put_number_out(p_cache, get_number_len(line->rr_id));
         put_number_out(p_cache, line->rr_id);
 
-        cache_add(p_cache, "$", 1);
+        cache_append(p_cache, "$", 1);
         put_number_out(p_cache, get_number_len(line->sgid));
         put_number_out(p_cache, line->sgid);
 
         // TFID
-        cache_add(p_cache, "$", 1);
+        cache_append(p_cache, "$", 1);
         put_number_out(p_cache, get_number_len(line->tfid));
         put_number_out(p_cache, line->tfid);
 
         // countyCode  TODO  need init the data file
-        cache_add(p_cache, "$", 1);
+        cache_append(p_cache, "$", 1);
         put_number_out(p_cache, get_number_len(ret_seg.ptr_seg->countyCode));
         put_number_out(p_cache, ret_seg.ptr_seg->countyCode);
 
         // RT
-        cache_add(p_cache, "$", 1);
+        cache_append(p_cache, "$", 1);
         put_number_out(p_cache, get_number_len(ret_seg.ptr_seg->sgid_rt));
         put_number_out(p_cache, ret_seg.ptr_seg->sgid_rt);
 
@@ -67,7 +67,7 @@ int entry_cmd_locate(struct data_node *p_node)
 	if(ret_seg.ptr_name) {
 		strncpy(road_name, ret_seg.ptr_name, 128);
 	}
-        cache_add(p_cache, "$", 1);
+        cache_append(p_cache, "$", 1);
         put_number_out(p_cache, strlen(road_name));
         put_string_out(p_cache, road_name);
 
@@ -77,7 +77,7 @@ int entry_cmd_locate(struct data_node *p_node)
         put_double_out(p_cache, ret_seg.ptr_seg->end_lon);
         put_double_out(p_cache, ret_seg.ptr_seg->end_lat);
 
-        cache_add(p_cache, "$", 1);
+        cache_append(p_cache, "$", 1);
         put_number_out(p_cache, get_number_len(ret_seg.ptr_seg->length));
         put_number_out(p_cache, ret_seg.ptr_seg->length);
 

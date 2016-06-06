@@ -55,8 +55,6 @@ int sniff_vms_call(void *user, union virtual_system **VMS, struct sniff_task_nod
 	SNIFF_WORKER_PTHREAD    *p_sniff_worker = (SNIFF_WORKER_PTHREAD *)user;
 	time_t                  delay = time(NULL) - p_task->stamp;
 
-	// struct ev_loop *loop = p_sniff_worker->evuv.loop;
-
 	x_printf(D, "channel %d\t|task <shift> %d\t<come> %ld\t<delay> %ld",
 		p_sniff_worker->genus, p_task->base.shift, p_task->stamp, delay);
 

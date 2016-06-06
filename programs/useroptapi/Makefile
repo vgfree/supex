@@ -53,7 +53,7 @@ push:
 clean:
 	rm -rf ./bin_useroptapi
 	rm -rf useroptapi
-	rm -f $(CLEANFILES)
+	rm -rf $(CLEANFILES)
 	@-if [ ! -d ./logs ];then mkdir logs; fi
 
 distclean:
