@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <stdint.h>
 
-#include "smart_api.h"
+#include "major/smart_api.h"
 #include "kv_cache.h"
 
 #define GRID_EXTEND_LIMIT g_locate_cfg->grid_extend_limit

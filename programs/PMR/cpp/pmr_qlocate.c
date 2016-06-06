@@ -14,7 +14,7 @@ int entry_cmd_qlocate(struct data_node *p_node)
         double                  latitude = 0.0;
         short                   direction = -1;
         unsigned int            line_id = 0;
-        struct net_cache        *p_cache = &p_node->send;
+        struct cache        *p_cache = &p_node->mdl_send.cache;
 
         if (0 != check_parameter_qlocate(p_node, &longitude, &latitude, &direction, &line_id)) {
                 return 0;

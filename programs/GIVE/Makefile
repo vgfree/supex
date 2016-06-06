@@ -1,14 +1,26 @@
 export PKG_CONFIG_PATH=/usr/local/lib/pkgconfig
 BASE_SRC=./src
-INC_DIR=-I/usr/local/include/luajit-2.0 -I../../lib/libev \
-	-I../../lib/json-c -I../../lib/http-parser -I../../lib/libscco \
-	-I../../lib/libucmq/src -I../../engine -I../../engine/major \
-	-I../../engine/minor -I./src -I../../lib/cJSON -I/usr/local/include \
-	-I../../lib/hiredis/ -I../../lib/libkv/release -I/usr/include/mysql
+INC_DIR=-I/usr/local/include/luajit-2.0 \
+	-I/usr/local/include/ \
+	-I../../lib/libev \
+	-I../../lib/json-c \
+	-I../../lib/libmini/include \
+	-I../../lib/libkv/release \
+	-I../../lib/libmemhook/src \
+	-I../../lib/libscco/include \
+	-I../../lib/libcoro/include \
+	-I../../lib/libevcoro/include \
+	-I../../lib/libevcs/include/engine \
+	-I../../lib/libevcs/include/frame \
+	-I./src -I../ \
+	-I../../lib/libucmq/src \
+	-I../../lib/cJSON \
+	-I../../lib/hiredis/ \
+	-I/usr/include/mysql
 
-LIB_DIR=-L/usr/local/lib -L../../lib -L../../engine/ -L../../lib/hiredis/ -L/usr/lib64/mysql
-LIBS=-lhiredis -lkv -lluajit-5.1 -lpthread -lrt -lm -lz -lcrypto -lstdc++  -lmysqlclient `pkg-config --cflags --libs protobuf`
-LIBA=-ljson-c -lucmq -lcjson
+LIB_DIR=-L/usr/local/lib -L../../lib -L../../lib/hiredis/ -L/usr/lib64/mysql
+LIBS=-lluajit-5.1 -lpthread -lrt -lm -lz -lcrypto -lstdc++ -lhiredis -lkv  -lmysqlclient `pkg-config --cflags --libs protobuf`
+LIBA=-ljson-c -lkv -lucmq -lcjson -lmini
 
 #[=========>MARK<=========]#
 MAIN_APP_SERV ?= gdgive
@@ -18,12 +30,12 @@ MAIN_APP_SERV ?= gdgive
 CFLAGS += -DSTORE_USE_UCMQ_AND_QUEUE
 
 ifeq ($(MAIN_APP_SERV), gdgive)
-HANDLE_MODEL = EVUV
+HANDLE_MODEL = EVCORO
 CFLAGS += -D_GAODE
 CFLAGS += -D_BJSH
 #CFLAGS += -Wl,rpath=/usr/local/lib
 else
-HANDLE_MODEL = EVUV
+HANDLE_MODEL = EVCORO
 CFLAGS += -D_ENCRYPT
 #CFLAGS += -Wl,rpath=/usr/local/lib
 endif
@@ -32,7 +44,7 @@ endif
 -include $(HOME_PATH)/share.mk
 #<------------------------>#
 
-ADD_OBJ += sniff_evuv_cpp_api.o
+ADD_OBJ += sniff_evcoro_cpp_api.o
 ADD_OBJ += loadfile_tomem.o
 ADD_OBJ += redis_kv.o
 
@@ -46,7 +58,6 @@ BASE_OBJ = $(addprefix $(BIN)/, \
 	   load_sniff_cfg.o \
 	   load_swift_cfg.o \
 	   swift_cpp_api.o \
-	   add_session_cmd.o \
 	   mirrtalk-transfer-data.pb.o \
 	   cjson_topb.o \
 	   mysql_ops.o \
@@ -54,6 +65,8 @@ BASE_OBJ = $(addprefix $(BIN)/, \
 	   id_encrypt.o \
 	   count.o \
 	   statistics_thread.o \
+	   app_queue.o \
+	   switch_queue.o \
 	   )
 
 OBJ ?= $(BASE_OBJ)
@@ -80,6 +93,14 @@ $(BIN)/%.o : $(BASE_SRC)/%.c
 $(BIN)/%.o : $(BASE_SRC)/%.cc
 	@-if [ ! -d $(BIN) ];then mkdir $(BIN); fi
 	g++ $(CFLAGS) $(INC_DIR) $(LIB_DIR) $(LIBS) -c $< -o $@ `pkg-config --cflags --libs protobuf`
+
+$(BIN)/switch_queue.o : ../switch_queue.c
+	@-if [ ! -d $(BIN) ];then mkdir $(BIN); fi
+	gcc $(CFLAGS) $(INC_DIR) $(LIB_DIR) $(LIBS) -c $< -o $@
+
+$(BIN)/app_queue.o : ../app_queue.c
+	@-if [ ! -d $(BIN) ];then mkdir $(BIN); fi
+	gcc $(CFLAGS) $(INC_DIR) $(LIB_DIR) $(LIBS) -c $< -o $@
 
 push:
 	git push origin HEAD:refs/for/devel

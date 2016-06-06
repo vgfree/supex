@@ -20,7 +20,7 @@ void load_cfg_file(struct smart_cfg_file *p_cfg, char *name)
 		p_cfg->srv_port = json_object_get_int(obj);
 	} else { goto fail; }
 
-	if (json_object_object_get_ex(cfg, "hander_counts", &obj)) {
+	if (json_object_object_get_ex(cfg, "smart_hander_counts", &obj)) {
 		p_cfg->hander_counts = (short)json_object_get_int(obj);
 	} else { goto fail; }
 
@@ -28,11 +28,9 @@ void load_cfg_file(struct smart_cfg_file *p_cfg, char *name)
 		p_cfg->worker_counts = (short)json_object_get_int(obj);
 	} else { goto fail; }
 
-#ifdef OPEN_SCCO
-	if (json_object_object_get_ex(cfg, "tasker_counts", &obj)) {
+	if (json_object_object_get_ex(cfg, "smart_tasker_counts", &obj)) {
 		p_cfg->tasker_counts = (short)json_object_get_int(obj);
 	} else { goto fail; }
-#endif
 
 	if (json_object_object_get_ex(cfg, "smart_protocol", &obj)) {
 		str_val = json_object_get_string(obj);

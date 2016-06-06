@@ -11,6 +11,8 @@ all:
 clean:
 	rm -rf UserInfoApi
 
+distclean:
+	make clean
 
 push:
 	git push origin HEAD:refs/for/master
