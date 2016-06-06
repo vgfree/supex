@@ -7,5 +7,6 @@ void mttpsvp_redis_init(const char *hostname, int port);
 void mttpsvp_redis_destory(); 
 
 int mttpsvp_redis_check_gpstoken(const char *mirrtalk_id, const char *gpdtoken, size_t gpdtoken_len);
+void mttpsvp_redis_del_gpstoken(const char *mirrtalk_id);
 
 #endif /* MTTPSVP_REDIS_H */

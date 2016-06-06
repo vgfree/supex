@@ -32,13 +32,26 @@ void mttpsvp_redis_destory() {
 int mttpsvp_redis_check_gpstoken(const char *mirrtalk_id, const char *gpstoken, size_t gpstoken_len) {
   redisReply *reply = redisCommand(redis_ctx, "GET gpsToken:%s", mirrtalk_id);
 
+  if (reply == NULL) {
+		x_printf(E, "mttpsvp_redis_check_gpstoken redisCommand error: %s\n", redis_ctx->errstr);
+    return -1;
+  }
+
   int ret = 0;
-  if (reply == NULL
-      || reply->len != gpstoken_len
-      || strncmp(reply->str, gpstoken, gpstoken_len) != 0) {
+  if (reply->len != gpstoken_len || strncmp(reply->str, gpstoken, gpstoken_len) != 0) {
     ret = -1;
   }
 
   freeReplyObject(reply);
   return ret;
+}
+
+void mttpsvp_redis_del_gpstoken(const char *mirrtalk_id) {
+  redisReply *reply = redisCommand(redis_ctx, "DEL gpsToken:%s", mirrtalk_id);
+  
+  if (reply == NULL) {
+		x_printf(E, "mttpsvp_redis_del_gpstoken redisCommand error: %s\n", redis_ctx->errstr);
+  }
+
+  freeReplyObject(reply);
 }

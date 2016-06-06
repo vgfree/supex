@@ -26,7 +26,6 @@ void mttpsvp_libkv_destory() {
 void mttpsvp_libkv_set(uint64_t cid, int sfd, const char *v) {
   char cmd[CMD_BUF_SIZE];
   int cmdlen = sprintf(cmd, "set %"PRId64":%d %s", cid, sfd, v);
-		x_printf(E, "cmd: %s\n", cmd);
 	kv_answer_t *ans = kv_ask(handler, cmd, cmdlen);
   if (ans == NULL) {
 		x_printf(E, "libkv kv_ask error: not enough memory for kv_answer_t\n");
@@ -43,7 +42,6 @@ void mttpsvp_libkv_set(uint64_t cid, int sfd, const char *v) {
 int mttpsvp_libkv_check_handshake(uint64_t cid, int sfd, const char *v, size_t vlen) {
   char cmd[CMD_BUF_SIZE];
   int cmdlen = sprintf(cmd, "get %"PRId64":%d", cid, sfd);
-		x_printf(E, "cmd: %s\n", cmd);
 	kv_answer_t *ans = kv_ask(handler, cmd, cmdlen);
   if (ans == NULL) {
 		x_printf(E, "libkv kv_ask error: not enough memory for kv_answer_t\n");
@@ -76,7 +74,6 @@ int mttpsvp_libkv_check_handshake(uint64_t cid, int sfd, const char *v, size_t v
     return -1;
   }
 
-		x_printf(E, "value: %s\n", (char *)value->ptr);
   if (strncmp(value->ptr, v, vlen) == 0) {
 	  kv_answer_release(ans);
     return 0;

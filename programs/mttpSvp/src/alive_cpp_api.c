@@ -58,11 +58,6 @@ static int parse_query_string(const char* data, size_t len, qs_buf_t *buf, size_
           buf[n].len = p - buf[n].base;
           index++;
           n++;
-          if (n >= MAX_QUERY_STRING_PAIRES) {
-            *buf_size = n;
-            return -1;
-          }
-
           s = s_value_start;
           break;
         }
@@ -70,19 +65,16 @@ static int parse_query_string(const char* data, size_t len, qs_buf_t *buf, size_
         if (ch == '&') {
           buf[n].len = p - buf[n].base;
           n++;
-          if (n >= MAX_QUERY_STRING_PAIRES) {
-            *buf_size = n;
-            return -1;
-          }
-
           buf[n].base = NULL;
           buf[n].len = 0;
+
           n++;
-          if (n >= MAX_QUERY_STRING_PAIRES) {
-            *buf_size = n;
+          if (n >= MAX_QUERY_STRING_PAIRES * 2) {
+            *buf_size = n / 2;
             return -1;
           }
 
+          index = 0;
           s = s_key_start;
           break;
         }
@@ -95,12 +87,14 @@ static int parse_query_string(const char* data, size_t len, qs_buf_t *buf, size_
         if (ch == '=' || ch == '&') {
           buf[n].base = NULL;
           buf[n].len = 0;
+
           n++;
-          if (n >= MAX_QUERY_STRING_PAIRES) {
-            *buf_size = n;
+          if (n >= MAX_QUERY_STRING_PAIRES * 2) {
+            *buf_size = n / 2;
             return -1;
           }
 
+          index = 0;
           s = s_key_start;
           break;
         }
@@ -116,8 +110,8 @@ static int parse_query_string(const char* data, size_t len, qs_buf_t *buf, size_
         if (ch == '&') {
           buf[n].len = p - buf[n].base;
           n++;
-          if (n >= MAX_QUERY_STRING_PAIRES) {
-            *buf_size = n;
+          if (n >= MAX_QUERY_STRING_PAIRES * 2) {
+            *buf_size = n / 2;
             return -1;
           }
 
@@ -140,11 +134,6 @@ static int parse_query_string(const char* data, size_t len, qs_buf_t *buf, size_
     case 1:
       buf[n].len = end - buf[n].base;
       n++;
-      if (n >= MAX_QUERY_STRING_PAIRES) {
-        *buf_size = n;
-        return -1;
-      }
-
       buf[n].base = NULL;
       buf[n].len = 0;
       break;
@@ -159,21 +148,24 @@ static int parse_query_string(const char* data, size_t len, qs_buf_t *buf, size_
       return -1;
   }
 
-  *buf_size = n;
+  n++;
+  *buf_size = n / 2;
   return 0;
 }
 
 char *copy_query_string_value(qs_buf_t *buf, size_t buf_size, const char* key, size_t klen) {
-  for (size_t i = 0; i < buf_size; i += 2) {
-    if (buf[i].len == klen) {
-      if (strncmp(buf[i].base, key, klen) == 0) {
-        if (buf[i + 1].base == NULL) {
+  for (size_t i = 0; i < buf_size; i++) {
+    size_t k = i * 2;
+    size_t v = k + 1;
+    if (buf[k].len == klen) {
+      if (strncmp(buf[k].base, key, klen) == 0) {
+        if (buf[v].base == NULL) {
           return NULL;
         } else {
-          size_t len = buf[i + 1].len;
+          size_t len = buf[v].len;
           char *tmp = malloc(len + 1);
           if (tmp == NULL) return NULL;
-          memcpy(tmp, buf[i + 1].base, len);
+          memcpy(tmp, buf[v].base, len);
           tmp[len] = '\0';
           return tmp;
         }
@@ -193,7 +185,7 @@ int alive_vms_call(void *user, union virtual_system **VMS, struct adopt_task_nod
   size_t n = 0;
   char *mirrtalk_id;
   char *gps_token;
-  qs_buf_t bufs[MAX_QUERY_STRING_PAIRES];
+  qs_buf_t bufs[MAX_QUERY_STRING_PAIRES * 2];
 
   int size = task->size;
 	if (size == 0) {
@@ -221,7 +213,7 @@ int alive_vms_call(void *user, union virtual_system **VMS, struct adopt_task_nod
     case 0x00:  // 握手
       x_printf(D, "handshake start");
       // 已经握手，重复握手，非正常数据，断开连接
-      if (mttpsvp_libkv_check_handshake(task->cid, task->sfd, "0", 1) < 0) {
+      if (mttpsvp_libkv_check_handshake(task->cid, task->sfd, "1", 1) == 0) {
         errstr = "repeat handshake";
         errlen = strlen(errstr);
         goto ERROR;
@@ -236,7 +228,6 @@ int alive_vms_call(void *user, union virtual_system **VMS, struct adopt_task_nod
       x_printf(D, "%d", n);
 
       mirrtalk_id = copy_query_string_value(bufs, n, "M", 1);
-      x_printf(D, "mirrtalk_id: %s", mirrtalk_id);
       if (mirrtalk_id == NULL) {
         errstr = "can't get mirrtalk_id M=XXXXXX";
         errlen = strlen(errstr);
@@ -250,13 +241,17 @@ int alive_vms_call(void *user, union virtual_system **VMS, struct adopt_task_nod
         errlen = strlen(errstr);
         goto ERROR;
       }
-      x_printf(D, "gps_token: %s", gps_token);
 
       if (mttpsvp_redis_check_gpstoken(mirrtalk_id, gps_token, strlen(gps_token)) < 0) {
         errstr = "gpsToken error";
         errlen = strlen(errstr);
+        free(mirrtalk_id);
+        free(gps_token);
         goto ERROR;
       }
+
+      /*gpsToken is used only once*/
+      mttpsvp_redis_del_gpstoken(mirrtalk_id);
 
       mttpsvp_libkv_set(task->cid, task->sfd, "1");
       free(mirrtalk_id);
@@ -277,7 +272,7 @@ int alive_vms_call(void *user, union virtual_system **VMS, struct adopt_task_nod
 
       break;
     default:
-      errstr = "unknow long connection type ";
+      errstr = "unknow long connection type";
       errlen = strlen(errstr);
       goto ERROR;
   }
@@ -302,7 +297,7 @@ int alive_vms_call(void *user, union virtual_system **VMS, struct adopt_task_nod
 ERROR:
   x_printf(D, "%s", errstr);
   mttpsvp_libkv_del(task->cid, task->sfd);
-  alive_send_data(1, task->cid, task->sfd, errstr, errlen);
+  /*alive_send_data(1, task->cid, task->sfd, errstr, errlen);*/
   alive_close_conn(1, task->cid, task->sfd);
   return -1;
 }
