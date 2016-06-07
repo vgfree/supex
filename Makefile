@@ -78,9 +78,6 @@ help:
 libs:
 	$(MAKE) -C ./lib clean
 	$(MAKE) -C ./lib
-	#sleep 1
-#	$(MAKE) -C ./engine distclean
-	#sleep 1
 	$(MAKE) -C ./open/lib clean
 	$(MAKE) -C ./open/lib/
 	cd lib/mapdata && make && cd $(HOME_PATH)
@@ -412,7 +409,6 @@ distclean:
 	$(MAKE) -C ./programs/mfptpServer distclean
 	$(MAKE) -C ./lib clean
 	$(MAKE) -C ./open/lib clean
-	$(MAKE) -C ./engine distclean
 	cd lib/mapdata && make clean && cd $(HOME_PATH)
 
 ########################################DONT USE#####################################################
