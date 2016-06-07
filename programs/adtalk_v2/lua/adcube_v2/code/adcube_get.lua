@@ -280,7 +280,7 @@ function AdCube_get(Cid, lat, lng, typ, appKey, sign, speed, dir, time)
         local tmp_str = utils.random_string(10)
 	local time_str = os.time()
 	local mid = time_str .. tmp_str
-	local ok = redis_api.cmd("private1", "", "HINCRBY","mid:".. mid,"cbtimes","0")
+	local ok = redis_api.cmd("private1", "", "HINCRBY","mid:" .. strs .. mid,"cbtimes","0")
         if not ok  then
             only.log("E","hset mid redis do failed!\n")
         end
