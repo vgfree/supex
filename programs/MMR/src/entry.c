@@ -3,7 +3,7 @@
 #include <unistd.h>
 
 #include "entry.h"
-#include "same_kill.h"
+#include "base/same_kill.h"
 #include "load_swift_cfg.h"
 // #include "luakvutils.h"
 #ifdef GOBY

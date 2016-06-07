@@ -1,6 +1,6 @@
 #pragma once
 
-#include "smart_cfg.h"
+#include "major/smart_cfg.h"
 
 bool load_smart_cfg_argv(int opt, void *user);
 

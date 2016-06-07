@@ -1,19 +1,28 @@
 BASE_SRC=./src
 CAPP_SRC=./app
 CAPI_SRC=./api
-ADDITION_SRC=../../engine
-INC_DIR=-I/usr/local/include/luajit-2.0 -I../../lib/libev -I../../lib/json-c -I../../lib/http-parser \
-	-I../../lib/libscco -I../../engine -I../../engine/major -I../../engine/minor \
-	-I../../lib/mapdata/libmappoi \
-	-I../../lib/libkv/release/ \
-	-I./src -I./app -I./api \
+INC_DIR=-I/usr/local/include/luajit-2.0 \
+	-I/usr/local/include/ \
+	-I../../lib/libev \
+	-I../../lib/json-c \
+	-I../../lib/libmini/include \
+	-I../../lib/libkv/release \
+	-I../../lib/libmemhook/src \
+	-I../../lib/libscco/include \
+	-I../../lib/libcoro/include \
+	-I../../lib/libevcoro/include \
+	-I../../lib/libevcs/include/engine \
+	-I../../lib/libevcs/include/frame \
+	-I./src -I../ \
+	-I./app -I./api \
 	-I../../lib/libucmq/src \
-	-I../../lib/libmemhook/src/
+	-I../../lib/mapdata/libmappoi \
+	-I../../lib/cJSON
 
 
-LIB_DIR=-L/usr/local/lib -L../../lib -L../../engine/
-LIBS=-lluajit-5.1 -lstdc++ -lpthread -lrt -lm 
-LIBA=-ljson-c -lucmq
+LIB_DIR=-L/usr/local/lib -L../../lib
+LIBS=-lluajit-5.1 -lpthread -lrt -lm -lstdc++
+LIBA=-ljson-c -lkv -lucmq -lmini
 
 #[=========>MARK<=========]#
 MAIN_APP_SERV ?= drisamp
@@ -27,43 +36,43 @@ MAIN_APP_SERV ?= drisamp
 CFLAGS +=-DSTORE_USE_UCMQ_AND_QUEUE
 
 ifeq ($(MAIN_APP_SERV), drisamp)
-HANDLE_MODEL = LINE
+HANDLE_MODEL = EVCORO
 endif
 
 ifeq ($(MAIN_APP_SERV), drimode)
-HANDLE_MODEL = LINE
+HANDLE_MODEL = EVCORO
 endif
 
 ifeq ($(MAIN_APP_SERV), rtmiles)
-HANDLE_MODEL = LINE
+HANDLE_MODEL = EVCORO
 endif
 
 ifeq ($(MAIN_APP_SERV), rta)
-HANDLE_MODEL = LINE
+HANDLE_MODEL = EVCORO
 endif
 
 ifeq ($(MAIN_APP_SERV), goby)
-HANDLE_MODEL = LINE
+HANDLE_MODEL = EVCORO
 endif
 
 ifeq ($(MAIN_APP_SERV), drisampapi)
-HANDLE_MODEL = LINE
+HANDLE_MODEL = EVCORO
 endif
 
 ifeq ($(MAIN_APP_SERV), drimodeapi)
-HANDLE_MODEL = LINE
+HANDLE_MODEL = EVCORO
 endif
 
 ifeq ($(MAIN_APP_SERV), rtmilesapi)
-HANDLE_MODEL = LINE
+HANDLE_MODEL = EVCORO
 endif
 
 ifeq ($(MAIN_APP_SERV), rtaapi)
-HANDLE_MODEL = LINE
+HANDLE_MODEL = EVCORO
 endif
 
 ifeq ($(MAIN_APP_SERV), gobyapi)
-HANDLE_MODEL = LINE
+HANDLE_MODEL = EVCORO
 endif
 
 #<------goby的宏--->#
@@ -82,47 +91,40 @@ LIBS += -lmysqlclient -lmappoi
 CFLAGS += -DGOBY
 endif
 #<------------------------>#
-
 -include $(HOME_PATH)/programs/link.mk
 -include $(HOME_PATH)/share.mk
+#<------------------------>#
 
 
 BIN=./bin_$(MAIN_APP_SERV)
 
+ADD_OBJ += match.o
 #<--drisamp/drimode/rtmiles需要使用的.o文件 -->#
 ifeq ($(MAIN_APP_SERV), $(filter $(MAIN_APP_SERV),drisamp drimode rtmiles rta goby))
-ifeq ($(HANDLE_MODEL), SCCO)
-ADD_OBJ += smart_scco_cpp_api.o
-ADD_OBJ += sniff_scco_lua_api.o
-endif
-ifeq ($(HANDLE_MODEL), LINE)
-ADD_OBJ += smart_line_cpp_api.o
-ADD_OBJ += sniff_line_lua_api.o
-endif
+ADD_OBJ += smart_evcoro_cpp_api.o
+ADD_OBJ += sniff_evcoro_lua_api.o
 BASE_OBJ = $(addprefix $(BIN)/, \
 	   $(ADD_OBJ) \
 	   app_main.o \
 	   entry.o \
-	   add_session_cmd.o \
 	   load_smart_cfg.o \
-	   load_swift_cfg.o \
 	   load_sniff_cfg.o \
+	   load_swift_cfg.o \
 	   swift_cpp_api.o \
+	   app_queue.o \
+	   switch_queue.o \
+	   lj_sniff_util.o \
 	   )
 endif
 
 #<--drisampapi/drimodeapi/rtmilesapi需要使用的.o文件 -->#
 ifeq ($(MAIN_APP_SERV), $(filter $(MAIN_APP_SERV),drisampapi drimodeapi rtmilesapi rtaapi gobyapi))
-ifeq ($(HANDLE_MODEL), SCCO)
-ADD_OBJ += smart_scco_lua_api.o
-endif
-ifeq ($(HANDLE_MODEL), LINE)
-ADD_OBJ += smart_line_lua_api.o
-endif
+ADD_OBJ += smart_evcoro_lua_api.o
 BASE_OBJ = $(addprefix $(BIN)/, \
 	   $(ADD_OBJ) \
 	   api_main.o \
 	   entry.o \
+	   lj_smart_util.o \
 	   load_smart_cfg.o \
 	   )
 endif
@@ -145,7 +147,6 @@ CLEANFILES = mhooktrace.log
 all:$(JOB)
 	@echo -e $(foreach bin,$^,$(BLUE)$(bin) $(GREEN)✔)$(RED)"\n-->OVER!\n"$(NONE)
 
-
 $(SRV):$(OBJ)
 	gcc $(CFLAGS) $^ $(INC_DIR) $(LIB_DIR) $(LIBA) $(LIBS) -o $@ 
 	@-if [ ! -d ./logs ];then mkdir logs; fi
@@ -164,6 +165,21 @@ $(BIN)/%.o : $(CAPI_SRC)/%.c
 	@-if [ ! -d $(BIN) ];then mkdir $(BIN); fi
 	gcc $(CFLAGS) $(INC_DIR) $(LIB_DIR) $(LIBS) -c $< -o $@
 
+$(BIN)/switch_queue.o : ../switch_queue.c
+	@-if [ ! -d $(BIN) ];then mkdir $(BIN); fi
+	gcc $(CFLAGS) $(INC_DIR) $(LIB_DIR) $(LIBS) -c $< -o $@
+
+$(BIN)/lj_sniff_util.o : ../lj_sniff_util.c
+	@-if [ ! -d $(BIN) ];then mkdir $(BIN); fi
+	gcc $(CFLAGS) $(INC_DIR) $(LIB_DIR) $(LIBS) -c $< -o $@
+
+$(BIN)/lj_smart_util.o : ../lj_smart_util.c
+	@-if [ ! -d $(BIN) ];then mkdir $(BIN); fi
+	gcc $(CFLAGS) $(INC_DIR) $(LIB_DIR) $(LIBS) -c $< -o $@
+
+$(BIN)/app_queue.o : ../app_queue.c
+	@-if [ ! -d $(BIN) ];then mkdir $(BIN); fi
+	gcc $(CFLAGS) $(INC_DIR) $(LIB_DIR) $(LIBS) -c $< -o $@
 
 load:
 ifeq ($(MMR), default)

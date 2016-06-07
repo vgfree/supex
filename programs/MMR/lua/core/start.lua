@@ -114,6 +114,17 @@ function app_scco_init( sch )
 	app_line_init()
 end
 
+function app_evcoro_init( sch, num )
+	supex["__TASKER_SCHEME__"] = sch
+	supex["__TASKER_NUMBER__"] = num
+
+	redis_api.reg( lua_default_switch, sch )
+	--lhttp_api.reg( lua_default_switch, sch )
+
+
+	app_line_init()
+end
+
 function app_type()
 	supex["__WORK_TYPE__"] = true
 end
@@ -135,13 +146,13 @@ end
 -- 参数:
 -- 返回值:
 -- 修改:新生成函数 程少远　2015/05/12
-function app_monitor( idx )
+function app_monitor( top, idx )
 	lualog.open('monitor')
 	monitor.mon_stat( idx )
 	lualog.open('access')
 end
 
-function app_cntl( top, name, cmds, mode )
+local function _app_cntl( top, name, cmds, mode )
 	supex["_FINAL_STAGE_"] = top
 	only.log("I", string.format("【%s】 ------> |model:%s|name:%s", cmds, mode, name))
 	local ctrl_cmd_list = {
@@ -184,6 +195,12 @@ function app_cntl( top, name, cmds, mode )
 	ctrl_cmd_list[cmds]( name, mode )
 end
 
+function app_cntl( top, name, cmds )
+	_app_cntl( top, name, cmds, 1 )
+	_app_cntl( top, name, cmds, 2 )
+	_app_cntl( top, name, cmds, 3 )
+	_app_cntl( top, name, cmds, 4 )
+end
 
 function app_pull( top, sfd )
 	supex["_FINAL_STAGE_"] = top
@@ -289,7 +306,7 @@ function app_push( top, sfd )
 		--> parse data
 		local push_cmd_list = {
 			ctl_one_app = function( )
-				app_cntl( top, jo["appname"], jo["status"], OWN_MODE_INDEX[jo["mode"]] )
+				_app_cntl( top, jo["appname"], jo["status"], OWN_MODE_INDEX[jo["mode"]] )
 			end,
 			fix_app_cfg = function( )
 				route.push_config( jo["appname"], jo["config"] )

@@ -181,3 +181,26 @@ int sniff_vms_exec(void *user, union virtual_system **VMS, struct sniff_task_nod
 	return error;
 }
 
+/*
+ * 函 数:sniff_vms_monitor
+ * 功 能:监控系统的回调函数
+ * 参 数:user 指向线程的WORKER_PTHRAD结构体，　task 指向要处理的一个任务
+ * 返回值: 返回sniff_for_alone_vm函数的返回值
+ * 修 改:新添加函数　 程少远　2015/05/12
+ */
+int sniff_vms_monitor(void *user, union virtual_system **VMS, struct sniff_task_node *task)
+{
+	int error = 0;
+	SNIFF_WORKER_PTHREAD    *p_sniff_worker = (SNIFF_WORKER_PTHREAD *)user;
+	lua_State       **L = VMS;
+	lua_getglobal(*L, "app_monitor");
+	lua_pushboolean(*L, task->last);
+	lua_pushinteger(*L, p_sniff_worker->index);
+	error = lua_pcall(*L, 2, 0, 0);
+	if (error) {
+		assert(*L);
+		x_printf(E, "%s", lua_tostring(*L, -1));
+		lua_pop(*L, 1);
+	}
+	return error;
+}

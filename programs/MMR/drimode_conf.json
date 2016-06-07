@@ -1,17 +1,18 @@
 {
 	"smart_port": 9999,
-	"hander_counts": 1,
+	"smart_hander_counts": 1,
 	"smart_worker_counts": 1,
+	"smart_tasker_counts": 1,
 	"smart_protocol": "http",
-	"tasker_counts": 32,
 	"monitor_times": 30,
 	
 	"swift_port": 4070,
 	"swift_worker_counts": 1,
+	"swift_tasker_counts": 1,
 	"swift_protocol": "http",
 	
 	"sniff_worker_counts": 10,
-	"sharer_counts": 64,
+	"sniff_tasker_counts": 64,
 	
 
 	"max_req_size": 32768,

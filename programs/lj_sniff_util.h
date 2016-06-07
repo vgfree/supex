@@ -31,3 +31,4 @@ int sniff_vms_call(void *user, union virtual_system **VMS, struct sniff_task_nod
 
 int sniff_vms_exec(void *user, union virtual_system **VMS, struct sniff_task_node *task);
 
+int sniff_vms_monitor(void *user, union virtual_system **VMS, struct sniff_task_node *task);
