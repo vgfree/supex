@@ -154,7 +154,8 @@ static int parse_query_string(const char* data, size_t len, qs_buf_t *buf, size_
 }
 
 char *copy_query_string_value(qs_buf_t *buf, size_t buf_size, const char* key, size_t klen) {
-  for (size_t i = 0; i < buf_size; i++) {
+  size_t i;
+  for (i = 0; i < buf_size; i++) {
     size_t k = i * 2;
     size_t v = k + 1;
     if (buf[k].len == klen) {
