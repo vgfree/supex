@@ -55,12 +55,13 @@ local function Adcube_set(content,typ,citycode,adtime,lng,lat,diff,cburl,appKey,
             
                     -- 取 aid 广告号
                     local ok,aid  = redis_api.cmd( 'private1','','incr',SET_AID)
+                          only.log("I","AID IS %s ",tostring(SET_AID))
                     if  not ok  then
                           only.log("E","incr SET_AID false ")
                           local afp = supex.rgs(200)
                           local string = '{"ERRORCODE":"ME25005","RESULT":"other errors!"}'.."\n"
                           supex.say(afp,string)
-                          return supex.over(afp)
+                          return supex.over(afp,"application/json")
                    --       return false
                     end  
                     local caid = "A_"..aid
@@ -84,7 +85,7 @@ local function Adcube_set(content,typ,citycode,adtime,lng,lat,diff,cburl,appKey,
                                  local afp = supex.rgs(200)
                                  local string = '{"ERRORCODE":"ME25004","RESULT":"appKey or sign incorrect!"}'.."\n"
                                  supex.say(afp,string)
-                                 return supex.over(afp)
+                                 return supex.over(afp,"application/json")
                           end
  --         ]]--        
                     -- 集合存储 key ： GPS ,value : aid
@@ -94,7 +95,7 @@ local function Adcube_set(content,typ,citycode,adtime,lng,lat,diff,cburl,appKey,
                                local afp = supex.rgs(200)
                                local string = '{"ERRORCODE":"ME25005","RESULT":"other errors!"}'.."\n"
                                supex.say(afp,string)
-                               return supex.over(afp)
+                               return supex.over(afp,"application/json")
                           end
                           
                     -- 计算坐标
@@ -111,7 +112,7 @@ local function Adcube_set(content,typ,citycode,adtime,lng,lat,diff,cburl,appKey,
                                local afp = supex.rgs(200)
                                local string = '{"ERRORCODE":"ME25005","RESULT":"other errors!"}'.."\n"
                                supex.say(afp,string)
-                               return supex.over(afp)
+                               return supex.over(afp,"application/json")
                           end
 
                     else
@@ -132,8 +133,9 @@ local function Adcube_set(content,typ,citycode,adtime,lng,lat,diff,cburl,appKey,
                               local afp = supex.rgs(200)
                               local string = '{"ERRORCODE":"ME25004","RESULT":"appKey or sign incorrect!"}'.."\n"
                               supex.say(afp,string)
-                              return supex.over(afp)
+                              return supex.over(afp,"application/json")
                           end
+		
   --        ]]--         
                    -- 集合存储 key  : citycode,value : aid
                           citycode = tostring(citycode)
@@ -146,7 +148,7 @@ local function Adcube_set(content,typ,citycode,adtime,lng,lat,diff,cburl,appKey,
                                    local afp = supex.rgs(200)
                                    local string = '{"ERRORCODE":"ME25005","RESULT":"other errors!"}'.."\n"
                                    supex.say(afp,string)
-                                   return supex.over(afp)
+                                   return supex.over(afp,"application/json")
                               end
                           end
                   --         哈希存储  表名：aid    字段：Content,Typ,Url
@@ -162,7 +164,7 @@ local function Adcube_set(content,typ,citycode,adtime,lng,lat,diff,cburl,appKey,
                                local afp = supex.rgs(200)
                                local string = '{"ERRORCODE":"ME25005","RESULT":"other errors!"}'.."\n"
                                supex.say(afp,string)
-                               return supex.over(afp)
+                               return supex.over(afp,"application/json")
                           end
 
                       end
@@ -171,45 +173,59 @@ local function Adcube_set(content,typ,citycode,adtime,lng,lat,diff,cburl,appKey,
                   local string =string.format('{"ERRORCODE":"0","RESULT":{"aid":"%s"}}'.."\n",aid)
                   supex.say(afp,string)
                   only.log("D","set advertising success  "..aid)
-                  return supex.over(afp)
+                  return supex.over(afp,"application/json")
           else
               only.log("E","The format is not correct")
               local afp = supex.rgs(200)
               local string = '{"ERRORCODE":"ME25003","RESULT":"incorrect paramete!"}'.."\n"
               supex.say(afp,string)
-              return supex.over(afp)
+              return supex.over(afp,"application/json")
           end
     else
          only.log("E","The parameter is not correct")
          local afp = supex.rgs(200)
          local string = '{"ERRORCODE":"ME25003","RESULT":"incorrect paramete!"}'.."\n"
          supex.say(afp,string)
-         return supex.over(afp)
+         return supex.over(afp,"application/json")
     end          
 end
 
 
-
-
-
-
+function string:split(sep)
+	local sep, fields = sep or "\t", {}
+	local pattern = string.format("([^%s]+)", sep)
+	self:gsub(pattern, function(c) fields[#fields+1] = c end)
+	return fields
+end
 
 function handle()
-	    only.log("D","start set interface...")
+	only.log("D","start set interface...")
+	local head = supex.get_our_head()
+	local result = string.split(head, '\r\n')
+	local ret = {}
+
+	local ret_k,ret_v
+	for k, v in ipairs(result) do
+		ret_k,ret_v = string.match(v, '(%a+):%s*(.+)')
+		if ret_v then
+			ret[ret_k]=ret_v
+		end
+        end
+
         local data        = supex.get_our_body_table()
         local content     = data['content']
         local typ         = data['typ']
         local cburl       = data['cburl']
         local citycode    = data['citycode']
-        local adtime      = data['adtime'] 
         local lng         = data['lng']
         local lat         = data['lat'] 
         local diff        = data['diff']
-        local appKey      = data['appKey']
-        local sign        = data['sign']
-        only.log("D","content="..tostring(content).."typ="..tostring(typ).."cburl="..tostring(cburl).."citycode="..tostring(citycode))
+        local adtime      = ret['time'] or data['adtime'] 
+        local appKey      = ret['appKey'] or data['appKey']
+        local sign        = ret['sign'] or data['sign']
+        only.log("D","%s","content="..tostring(content).."typ="..tostring(typ).."cburl="..tostring(cburl).."citycode="..tostring(citycode))
 
-        only.log("D","adtime="..tostring(adtime).."lng="..tostring(lng).."lat="..tostring(lat).."diff="..tostring(diff).."appKey="..tostring(appKey).."sign="..tostring(sign))
+        only.log("D","%s","adtime="..tostring(adtime).."lng="..tostring(lng).."lat="..tostring(lat).."diff="..tostring(diff).."appKey="..tostring(appKey).."sign="..tostring(sign))
         Adcube_set(content,typ,citycode,adtime,lng,lat,diff,cburl,appKey,sign)
  
 end

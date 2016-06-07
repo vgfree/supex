@@ -7,6 +7,7 @@ local safe = require('safe')
 local ltn12 = require ('ltn12')
 local http = require ('socket.http')
 local socket = require('socket')
+local scan = require('scan')
 --函数:cb
 --功能:回调aid对应的url
 --参数:aid广告id, status用户的状态
@@ -16,29 +17,24 @@ local socket = require('socket')
 module("adcube_cb",package.seeall)
 
 
-function __cb(aid, cid,report, time, appKey, sign)
+function __cb(args)
 
-    if tostring(aid)=="nil" or tostring(cid)=="nil"  or tostring(report)=="nil" or tostring(time)=="nil" or tostring(appKey)=="nil" or tostring(sign)=="nil" then
-             only.log("E", "incorrect paramete!\n")
-             return 1 
-    end
+	for k,v in ipairs(args) do
+		if not v then
+			only.log("E", "incorrect paramete!\n")
+			return 1
+		end
+	end
     
   --check appKey  and  sign
-       local tab = {}
-       tab['cid']    = cid
-       tab['aid']    = aid 
-       tab['report'] = report
-       tab['time']   = time
-       tab['appKey'] = appKey
-       tab['sign']   = sign
-
+--[[
        local ret = safe.sign_check(tab)
        if not ret then
               only.log("E", "appKey or sign incorrect!\n")
               return 2
        end
-
-       local aid1 = "A_"..aid
+]]--
+       local aid1 = "A_"..args['aid']
        only.log("D","aid1 ="..tostring(aid1))
        local ok, ret_url = REDIS_API.cmd("private1", "", "hget", aid1,"Cburl")
        only.log("D","url ="..tostring(ret_url))
@@ -46,17 +42,18 @@ function __cb(aid, cid,report, time, appKey, sign)
                  only.log("E", " redis hget_aid Url do failed!\n")
                  return 3
        else            
-	         return  cb(aid, cid,report,time,appKey, sign, ret_url)
+	         return  cb(args, ret_url)
        end
 end
 
 
-function cb(aid,cid,report,time,appKey,sign,ret_url)
-    only.log('D',"cid:"..type(cid))
-    cid = tostring(cid)
-    local str = '{"aid":' ..'\"'.. aid .. '\"' .. ',"cid":'..'\"'..cid..'\"'..',"report":'..report..',"sign":'..'\"'..sign ..'\"' .. ',"time":'..'\"'..time..'\"'..',"appKey":'..'\"' ..appKey..'\"'..'}';
+function cb(args,ret_url)
+	local ok,str = pcall(cjson.encode, args)
+	if not ok then
+		only.log('E', "failed to encode result")
+	end
+    --local str = '{"aid":' ..'\"'.. aid .. '\"' .. ',"cid":'..'\"'..cid..'\"'..',"report":'..report..',"sign":'..'\"'..sign ..'\"' .. ',"time":'..'\"'..time..'\"'..',"appKey":'..'\"' ..appKey..'\"'..'}';
           
-       only.log("D","aid ="..tostring(aid))
        only.log("D","ret_url ="..tostring(ret_url))
 
           local response_body = {}    
@@ -65,24 +62,35 @@ function cb(aid,cid,report,time,appKey,sign,ret_url)
                            method = "POST",  
                            headers =   
                                  {  
-                                   -- ["Content-Type"] = "application/x-www-form-urlencoded",  
                                     ["Content-Type"] = "application/json",  
                                     ["Content-Length"] = #str,  
                                  },  
                            source = ltn12.source.string(str),  
                            sink = ltn12.sink.table(response_body)  
                            }  
-     --    print(code)
          code = tonumber(code)
-
+	local ret_num = 0
          only.log("D","code="..tostring(code))
          if(code ==200 ) then
               only.log("D", " post request  success\n")
-              return 5
+		args["cbstatus"]=200
+             ret_num =  5
          else
               only.log("E", " post request do failed!\n")
-              return 4
+		
+		args["cbstatus"]=400
+              ret_num = 4
           end  
+	local ok,ret_str = pcall(cjson.encode, args)
+	local key = "mid:" .. args['mid']
+	local ok,cbtimes = REDIS_API.cmd("private1", "", "HINCRBY", key,"cbtimes","1")	
+	local value = "cb"..cbtimes
+	local ok = REDIS_API.cmd("private1", "", "hset", key, value ,ret_str)	
+	if not ok then
+                 only.log("E", " redis hset cb do failed!\n")
+	end
+       	only.log("D","%s",ret_str)
+	return ret_num
 end          
 
 function re_back(number)
@@ -117,18 +125,39 @@ function re_back(number)
     end
 end
 
-function handle()
-    only.log("D","cb interface start ...")
-	local res       = supex.get_our_body_table()
-	local aid       = res["aid"]
-	local cid       = res["cid"]
-	local report    = res["report"]
-	local time      = res["time"]
-	local appKey    = res["appKey"]
-	local sign      = res["sign"]
+function string:split(sep)
+	local sep, fields = sep or "\t", {}
+	local pattern = string.format("([^%s]+)", sep)
+	self:gsub(pattern, function(c) fields[#fields+1] = c end)
+	return fields
+end
 
-    only.log("D","aid ="..tostring(aid).."cid ="..tostring(cid).."report ="..tostring(report).."time ="..tostring(time).."appKey ="..tostring(appKey).."sign ="..tostring(sign))
-    local number = __cb(aid, cid,report,time,appKey, sign)
+function handle()
+    	only.log("D","cb interface start ...")
+	local head = supex.get_our_head()
+	local result = string.split(head, '\r\n')
+	local ret = {}
+
+	local ret_k,ret_v
+	for k, v in ipairs(result) do
+		ret_k,ret_v = string.match(v, '(%a+):%s*(.+)')
+		if ret_v then
+			ret[ret_k]=ret_v
+		end
+        end
+	local args = {}
+
+	local res       = supex.get_our_body_table()
+	args['aid']       = res["aid"]
+	args['report']    = res["report"]
+	args['mid']       = res["mid"] or "midempty"
+	args['cid']       = ret['cid'] or res["cid"]
+	args['time']      = ret['time'] or res["time"]
+	args['appKey']    = ret['appKey'] or res["appKey"]
+	args['sign']      = ret['sign'] or res["sign"]
+	only.log('D','args is %s',scan.dump(args))
+
+    local number = __cb(args)
     number = tonumber(number)
     only.log('D',"number:"..number)
     re_back(number)

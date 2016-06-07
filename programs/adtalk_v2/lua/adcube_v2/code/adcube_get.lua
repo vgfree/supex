@@ -12,6 +12,7 @@ local socket     =   require('socket')
 local safe       =   require('safe')
 local http_api   =   require('http_short_api')
 local utils      =   require('utils')
+local scan      =   require('scan')
 
 module('adcube_get', package.seeall)
 
@@ -35,12 +36,13 @@ local function get_citycode(Cid,lat,lng,appKey)
             local afp = supex.rgs(200)
             local string = '{"ERRORCODE":"ME25001", "RESULT":"http request  do failed!"}' .. '\n'
             supex.say(afp, string)
-            return supex.over(afp)
+            return supex.over(afp,"application/json")
         end
 
         only.log("W","********http request return is :%s",ret_body)
         local body = string.match(ret_body, '{.*}')
         only.log("D", Cid .. "body = " .. body)
+	local ret_string = body
         if body then
             ok, jo = pcall(cjson.decode, body)
             if ok and jo then
@@ -49,27 +51,28 @@ local function get_citycode(Cid,lat,lng,appKey)
                     local afp = supex.rgs(200)
                     local string = '{"ERRORCODE":"ME25002", "RESULT":"http body do failed!"}' .. '\n'
                     supex.say(afp, string)
-                    return supex.over(afp)
+                    return supex.over(afp,"application/json")
                 elseif jo["ERRORCODE"] ~= "0" then
-                    only.log("E", Cid .. "http body do  failed!\n")
+                    only.log("E", "ret: %s",ret_string)
                     local afp = supex.rgs(200)
-                    local string = '{"ERRORCODE":"ME25002", "RESULT":"http body do failed!"}' .. '\n'
+                    --local string = '{"ERRORCODE":"ME25002", "RESULT":"http body do failed!"}' .. '\n'
+                    local string = ret_string
                     supex.say(afp, string)
-                    return supex.over(afp)
+                    return supex.over(afp,"application/json")
                 end
             else
                 only.log("E", Cid .. "http body do  failed!\n")
                 local afp = supex.rgs(200)
                 local string = '{"ERRORCODE":"ME25002", "RESULT":"http body do failed!"}' .. '\n'
                 supex.say(afp, string)
-                return supex.over(afp)
+                return supex.over(afp,"application/json")
             end
         else
             only.log("E", Cid .. "http body do  failed!\n")
             local afp = supex.rgs(200)
             local string = '{"ERRORCODE":"ME25002", "RESULT":"http body do failed!"}' .. '\n'
             supex.say(afp, string)
-            return supex.over(afp)
+            return supex.over(afp,"application/json")
         end
 
         local citycode_info = jo['RESULT']
@@ -87,7 +90,7 @@ function AdCube_get(Cid, lat, lng, typ, appKey, sign, speed, dir, time)
         local afp = supex.rgs(200)
         local string = '{"ERRORCODE":"ME25003", "RESULT":"incorrect paramete!"}' .. '\n'
         supex.say(afp, string)
-        return supex.over(afp)
+        return supex.over(afp,"application/json")
     end
 
     local id_content
@@ -109,7 +112,7 @@ function AdCube_get(Cid, lat, lng, typ, appKey, sign, speed, dir, time)
         local afp = supex.rgs(200)
         local string = '{"ERRORCODE":"ME25004", "RESULT":"appKey or sign incorrect!"}' .. '\n'
         supex.say(afp, string)
-        return supex.over(afp)
+        return supex.over(afp,"application/json")
     else
     
         --将gps转换成相应citycode
@@ -122,7 +125,7 @@ function AdCube_get(Cid, lat, lng, typ, appKey, sign, speed, dir, time)
             local afp = supex.rgs(200)
             local string = '{"ERRORCODE":"ME25005", "RESULT":"other errors!"}' .. '\n'
             supex.say(afp, string)
-            return supex.over(afp)
+            return supex.over(afp,"application/json")
         end
 
         local a = 1
@@ -138,7 +141,7 @@ function AdCube_get(Cid, lat, lng, typ, appKey, sign, speed, dir, time)
                 local afp = supex.rgs(200)
                 local string = '{"ERRORCODE":"ME25005", "error":"other errors!"}' .. '\n'
                 supex.say(afp, string)
-                return supex.over(afp)
+                return supex.over(afp,"application/json")
             end
 
             local X0 = tonumber(value_tab['X0'])
@@ -190,7 +193,7 @@ function AdCube_get(Cid, lat, lng, typ, appKey, sign, speed, dir, time)
                 local afp = supex.rgs(200)
                 local string = '{"ERRORCODE":"ME25005", "error":"other errors!"}' .. '\n'
                 supex.say(afp, string)
-                return supex.over(afp)
+                return supex.over(afp,"application/json")
             end
 
             local content_array2 = {}
@@ -205,9 +208,9 @@ function AdCube_get(Cid, lat, lng, typ, appKey, sign, speed, dir, time)
                     local afp = supex.rgs(200)
                     local string = '{"ERRORCODE":"ME25005", "RESULT":"other errors!"}' .. '\n'
                     supex.say(afp, string)
-                    return supex.over(afp)
+                    return supex.over(afp,"application/json")
                 end
-                only.log("D",scan.dump(value_tab))
+                only.log("D","%s",scan.dump(value_tab))
                 local Content = value_tab['Content']
                 local ctype = value_tab['Typ']
                 local Url = value_tab['Url']
@@ -253,7 +256,7 @@ function AdCube_get(Cid, lat, lng, typ, appKey, sign, speed, dir, time)
             local afp = supex.rgs(200)
             local string = '{"ERRORCODE":"ME25006", "RESULT":"content does not exist!"}' .. '\n'
             supex.say(afp, string)
-            return supex.over(afp)
+            return supex.over(afp,"application/json")
         end
 
         local ok, ret = pcall(cjson.encode, id_content)
@@ -262,7 +265,7 @@ function AdCube_get(Cid, lat, lng, typ, appKey, sign, speed, dir, time)
             local afp = supex.rgs(200)
             local string = '{"ERRORCODE":"ME25005", "RESULT":"other errors!"}' .. '\n'
             supex.say(afp, string)
-            return supex.over(afp)
+            return supex.over(afp,"application/json")
         end      
 
         local afp = supex.rgs(200)
@@ -274,28 +277,54 @@ function AdCube_get(Cid, lat, lng, typ, appKey, sign, speed, dir, time)
         local strs1 = tostring(id_content['content']) 
         local strs2 = tonumber(typ)
         --local string = string.format( '{"result":"ok","citycode":"%s", "aid":"%s","typ":"%d", "content":%s}', citycode,strs,strs2,strs1) .. '\n' 
-        local string = string.format( '{"ERRORCODE":"0","RESULT":{"aid":"%s","typ":"%d","content":%s}}', strs,strs2,strs1) .. '\n' 
+        local tmp_str = utils.random_string(10)
+	local time_str = os.time()
+	local mid = time_str .. tmp_str
+	local ok = redis_api.cmd("private1", "", "HINCRBY","mid:".. mid,"cbtimes","0")
+        if not ok  then
+            only.log("E","hset mid redis do failed!\n")
+        end
+
+        local string = string.format( '{"ERRORCODE":"0","RESULT":{"aid":"%s","mid":"%s","typ":"%d","content":%s}}', strs,mid,strs2,strs1) .. '\n' 
         supex.say(afp, string)
         dex = dex +1 
         only.log("D","get adverstring success"..strs) 
-        return supex.over(afp)
+        return supex.over(afp,"application/json")
 
     end
 end
 
+function string:split(sep)
+	local sep, fields = sep or "\t", {}
+	local pattern = string.format("([^%s]+)", sep)
+	self:gsub(pattern, function(c) fields[#fields+1] = c end)
+	return fields
+end
+
 function handle()
-    only.log("D","get interface start ...")
-    local data = supex.get_our_body_table()
-    local cid = data["cid"]
-    local lat = data["lat"]
-    local lng = data["lng"]
-    local typ = data["typ"]
-    local appKey = data["appKey"]
-    local sign = data["sign"]
-    local speed = data["speed"]
-    local dir = data["dir"]
-    local time = data["time"]
-    only.log("D","cid ="..tostring(cid).."lat ="..tostring(lat).."lng ="..tostring(lng).."typ ="..tostring(typ).."appKey ="..tostring(appKey).."sign ="..tostring(sign).."speed ="..tostring(speed).."dir ="..tostring(dir).."time ="..tostring(time))
+	only.log("D","get interface start ...")
+	local head = supex.get_our_head()
+	local result = string.split(head, '\r\n')
+	local ret = {}
+
+	local ret_k,ret_v
+	for k, v in ipairs(result) do
+		ret_k,ret_v = string.match(v, '(%a+):%s*(.+)')
+		if ret_v then
+			ret[ret_k]=ret_v
+		end
+        end
+	local data = supex.get_our_body_table()
+	local lat = data["lat"]
+	local lng = data["lng"]
+	local typ = data["typ"]
+	local dir = data["dir"]
+	local speed = data["speed"]
+	local cid = ret['cid'] or data["cid"]
+	local appKey = ret['appKey'] or data["appKey"]
+	local sign = ret['sign'] or data["sign"]
+	local time = ret['time'] or data["time"]
+    only.log("D","%s","cid ="..tostring(cid).."lat ="..tostring(lat).."lng ="..tostring(lng).."typ ="..tostring(typ).."appKey ="..tostring(appKey).."sign ="..tostring(sign).."speed ="..tostring(speed).."dir ="..tostring(dir).."time ="..tostring(time))
     AdCube_get(cid, lat, lng, typ, appKey, sign, speed, dir, time)
 end
 

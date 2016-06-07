@@ -99,15 +99,34 @@ local function AdCube_del(aid,appKey,sign)
      end
 end
 
+function string:split(sep)
+	local sep, fields = sep or "\t", {}
+	local pattern = string.format("([^%s]+)", sep)
+	self:gsub(pattern, function(c) fields[#fields+1] = c end)
+	return fields
+end
+
 
 
 function handle()
-	    only.log("D","del interface start ...")
+	only.log("D","del interface start ...")
+	local head = supex.get_our_head()
+	local result = string.split(head, '\r\n')
+	local ret = {}
+
+	local ret_k,ret_v
+	for k, v in ipairs(result) do
+		ret_k,ret_v = string.match(v, '(%a+):%s*(.+)')
+		if ret_v then
+			ret[ret_k]=ret_v
+		end
+        end
+
    
-        local data        = supex.get_our_body_table()
-        local aid         = data['aid']
-        local appKey      = data['appKey']
-        local sign        = data['sign']
+        local data = supex.get_our_body_table()
+        local aid = data['aid']
+	local appKey = ret['appKey'] or data["appKey"]
+	local sign = ret['sign'] or data["sign"]
         only.log("D","aid ="..tostring(aid))
         AdCube_del(aid,appKey,sign)
 
