@@ -285,7 +285,7 @@ function AdCube_get(Cid, lat, lng, typ, appKey, sign, speed, dir, time)
             only.log("E","hset mid redis do failed!\n")
         end
 
-        local string = string.format( '{"ERRORCODE":"0","RESULT":{"aid":"%s","mid":"%s","typ":"%d","content":%s}}', strs,mid,strs2,strs1) .. '\n' 
+        local string = string.format( '{"ERRORCODE":"0","RESULT":{"aid":"%s","mid:%s":"%s","typ":"%d","content":%s}}', strs, strs, mid,strs2,strs1) .. '\n' 
         supex.say(afp, string)
         dex = dex +1 
         only.log("D","get adverstring success"..strs) 
