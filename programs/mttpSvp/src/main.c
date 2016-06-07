@@ -16,6 +16,8 @@
 
 #include "sniff_evcoro_lua_api.h"
 
+#include "json.h"
+
 struct alive_cfg_list   g_alive_cfg_list = {};
 struct sniff_cfg_list   g_sniff_cfg_list = {};
 
@@ -82,7 +84,28 @@ int main(int argc, char **argv)
 		exit(EXIT_FAILURE);
 	}
 
-  mttpsvp_redis_init("127.0.0.1", 6379);
+	struct json_object      *obj = NULL;
+	struct json_object      *cfg = NULL;
+  const char* redis_host = NULL;
+  short redis_port = 0;
+
+	cfg = json_object_from_file(g_alive_cfg_list.argv_info.conf_name);
+
+	if (json_object_object_get_ex(cfg, "redis_host", &obj)) {
+		redis_host = json_object_get_string(obj);
+	} else { 
+		x_printf(E, "can't get redis_host from mttpSvp_conf.json");
+		exit(EXIT_FAILURE);
+  }
+
+	if (json_object_object_get_ex(cfg, "redis_port", &obj)) {
+		redis_port = (short)json_object_get_int(obj);
+	} else { 
+		x_printf(E, "can't get redis_port from mttpSvp_conf.json");
+		exit(EXIT_FAILURE);
+  }
+
+  mttpsvp_redis_init(redis_host, redis_port);
   mttpsvp_libkv_init();
 
 	g_alive_cfg_list.func_info[UPSTREAM_FUNC_ORDER].type = BIT8_TASK_TYPE_ALONE;

@@ -6,6 +6,9 @@
 	
 	"sniff_worker_counts": 1,
 	"sniff_tasker_counts": 1,
+
+  "redis_host": "127.0.0.1",
+  "redis_port": 9002, 
 	
 	"max_req_size": 32768,
 	"log_path": "./logs/",
