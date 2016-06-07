@@ -354,7 +354,7 @@ mkdir -p $TAGNAME/var/data $TAGNAME/var/logs
 		cp -r $NEWTREE/programs/weibo-G/sniff_lua/core		$TAGNAME/sniff_lua
 		cp -r $NEWTREE/programs/weibo-G/sniff_lua/weibo-G	$TAGNAME/sniff_lua
 		cp -r $NEWTREE/open/lib/lua-coro/ring.lua		$TAGNAME/sniff_lua/core
-		cp -r $NEWTREE/open/lib/lua-coro/coro.lua		$TAGNAME/open
+		cp -r $NEWTREE/open/lib/lua-coro/coro.lua		$TAGNAME/sniff_lua/core
 		mv $TAGNAME/sniff_lua/$PROJECT/deploy/link.lua		$TAGNAME
 		cp  $NEWTREE/programs/weibo-G/$PROJECT"_conf.json" 	$TAGNAME
 		cp  $NEWTREE/programs/weibo-G/sniff_lua/weibo-G/deploy/cfg.lua		$TAGNAME
@@ -375,6 +375,19 @@ mkdir -p $TAGNAME/var/data $TAGNAME/var/logs
 		cp -r $NEWTREE/programs/RTAP/$PROJECT			$TAGNAME
 		echo -e $MAKEFILE > $TAGNAME/Makefile
 		;;
+	"mttpSvp")
+		copy_open
+
+		mkdir $TAGNAME/sniff_lua
+		cp -r $NEWTREE/programs/mttpSvp/sniff_lua/core			$TAGNAME/sniff_lua
+		cp -r $NEWTREE/programs/mttpSvp/sniff_lua/mttpSvp		$TAGNAME/sniff_lua
+		mv $TAGNAME/sniff_lua/$PROJECT/deploy/link.lua			$TAGNAME
+		cp  $NEWTREE/programs/mttpSvp/$PROJECT"_conf.json"		$TAGNAME
+		cp  $NEWTREE/programs/mttpSvp/sniff_lua/mttpSvp/deploy/cfg.lua	$TAGNAME
+		cp  $NEWTREE/programs/mttpSvp/$PROJECT				$TAGNAME
+		echo -e $MAKEFILE > $TAGNAME/Makefile
+		;;
+
 	*)
 		echo -e "\n"$COLOR_RED"NO PROJECT NAME!"$COLOR_DEFAULT;;
 esac

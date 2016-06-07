@@ -2,5 +2,5 @@ module("STATUS_LIST")
 
 
 OWN_LIST = {
-	{"settings", "open"},
+	{"api_dc_newstatus", "open"},
 }
