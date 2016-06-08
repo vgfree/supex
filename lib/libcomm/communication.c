@@ -88,6 +88,7 @@ void comm_ctx_destroy(struct comm_context *commctx)
 
 		/* 等待子线程退出然后再继续销毁数据 */
 		commlock_wait(&commctx->statlock, (int *)&commctx->stat, COMM_STAT_NONE, -1, false);
+		pthread_join(commctx->ptid, NULL);
 
 		commevent_destroy(commctx->commevent);
 		commqueue_destroy(&commctx->recvqueue);
@@ -99,7 +100,6 @@ void comm_ctx_destroy(struct comm_context *commctx)
 		commpipe_destroy(&commctx->commpipe);
 		commlist_destroy(&commctx->recvlist, COMMMSG_OFFSET);
 		commepoll_destroy(&commctx->commepoll);
-		pthread_join(commctx->ptid, NULL);
 		Free(commctx);
 	}
 	return ;
@@ -114,7 +114,12 @@ int comm_socket(struct comm_context *commctx, const char *host, const char *serv
 	struct comm_data* connfd = NULL;
 
 	if (type == COMM_BIND) {
-		if (unlikely(!socket_listen(&commtcp, host, service))) {
+		if (commctx->commevent->bindfdcnt < LISTEN_SIZE ) {
+			if (unlikely(!socket_listen(&commtcp, host, service))) {
+				return -1;
+			}
+		} else {
+			log("Bind too many socket in one comm_context\n");
 			return -1;
 		}
 	} else {
@@ -149,10 +154,13 @@ int comm_send(struct comm_context *commctx, const struct comm_message *message, 
 			copy_commmsg(commmsg, message);
 
 			commlock_lock(&connfd->sendlock);
+			commlist_push(&connfd->send_list, &commmsg->list);
+#if 0
 			if (unlikely(!commqueue_push(&connfd->send_queue, (void*)&commmsg))) {
 				/* 队列已满，则存放到链表中 */
 				commlist_push(&connfd->send_list, &commmsg->list);
 			}
+#endif
 			commlock_unlock(&connfd->sendlock);
 
 			if (unlikely(commpipe_write(&commctx->commpipe, (void*)&message->fd, sizeof(message->fd)) == -1)) {
@@ -174,6 +182,19 @@ int comm_recv(struct comm_context *commctx, struct comm_message *message, bool b
 
 	commlock_lock(&commctx->recvlock);
 	do {
+		struct comm_list* list = NULL;
+		if (commlist_pull(&commctx->recvlist, (void*)&list)) {
+			commmsg = (struct comm_message*)get_container_addr(list, COMMMSG_OFFSET);
+			break ;
+		} else if (block) {
+			commctx->recvqueue.readable = 0;
+			if (commlock_wait(&commctx->recvlock, &commctx->recvqueue.readable, 1, timeout, true)) {
+				flag = true;			/* 返回值为真说明有数据可读 */
+			}
+		} else {
+			commctx->recvqueue.readable = 1;	/* 不进行堵塞就设置为1不需要唤醒 */
+		};
+#if 0
 		if (unlikely(!commqueue_pull(&commctx->recvqueue, (void*)&commmsg))) {
 			struct comm_list* list = NULL;
 			if (commlist_pull(&commctx->recvlist, (void*)&list)) {
@@ -190,6 +211,7 @@ int comm_recv(struct comm_context *commctx, struct comm_message *message, bool b
 		} else {
 			break ;
 		}
+#endif
 	}while(flag);							/* flag为true说明成功等待到数据 尝试再去取一次数据 */
 	commlock_unlock(&commctx->recvlock);
 

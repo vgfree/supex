@@ -208,32 +208,25 @@ static inline bool _connect(struct comm_tcp *commtcp, struct addrinfo *ai)
 	for (aiptr = ai; aiptr != NULL; aiptr = aiptr->ai_next) {
 		commtcp->fd = socket(aiptr->ai_family, aiptr->ai_socktype, aiptr->ai_protocol);
 		if (commtcp->fd > 0) {
-#if 0
-			if (connect(commtcp->fd, aiptr->ai_addr, aiptr->ai_addrlen) == 0) {
-				if (fd_setopt(commtcp->fd, O_NONBLOCK)) {	/* 将套接字设置为非阻塞模式 */
-					flag = true;
-				} else {
-					CLOSEFD(commtcp->fd);
-				}
-				break ;
-			} else {						/* 连接失败 忽略此描述符,继续循环下一个 */
-				CLOSEFD(commtcp->fd);
-			}
-#endif
 			if (fd_setopt(commtcp->fd, O_NONBLOCK)) {
 				if (connect(commtcp->fd, aiptr->ai_addr, aiptr->ai_addrlen) == -1) {
 					/* 非堵塞情况下一般都会失败 */
 					if (errno == EINPROGRESS) {
 						/* 连接正在进程中 检测是否会连接成功 */
 						int error = -1;
+						int retval = -1;
 						int len = sizeof(int);
-						struct timeval tm = {TIMEOUTTIME, 0};
+						struct timeval tm;
 						fd_set set;
 						FD_ZERO(&set);
 						FD_SET(commtcp->fd, &set);
+						tm.tv_sec = TIMEOUTTIME;
+						tm.tv_usec = 0; 
 						if (select(commtcp->fd+1, NULL, &set, NULL, &tm) > 0) {
-							getsockopt(commtcp->fd, SOL_SOCKET, SO_ERROR, &error, (socklen_t *)&len);
-							if (error == 0) {
+							retval = getsockopt(commtcp->fd, SOL_SOCKET, SO_ERROR, &error, (socklen_t *)&len);
+							if (retval < 0 || error) {
+								/*失败 Solaris版本将retval设为-1,Berkeley版本返回0,设置error错误值 */
+							} else {
 								flag = true;
 								break ;
 							}

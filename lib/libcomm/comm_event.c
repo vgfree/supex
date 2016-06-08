@@ -41,8 +41,9 @@ void commevent_destroy(struct comm_event *commevent)
 		while (commevent->connfdcnt) {
 			if ((connfd = commevent->connfd[fd])) {
 				commdata_destroy(connfd);
-				commevent->bindfdcnt--;
+				commevent->connfdcnt--;
 				commepoll_del(&commevent->commctx->commepoll, fd, -1);
+				log("close connfd:%d\n", fd);
 			}
 			fd++;
 		}
@@ -53,6 +54,7 @@ void commevent_destroy(struct comm_event *commevent)
 			close(fd);
 			commevent->bindfd[commevent->bindfdcnt-1].commtcp.fd = -1;
 			commevent->bindfdcnt -= 1;
+			log("close bindfd %d\n", fd);
 		}
 		free_remainfd(&commevent->remainfd);
 		commevent->init = false;
@@ -74,6 +76,7 @@ void  commevent_accept(struct comm_event *commevent, int fdidx)
 		fd = socket_accept(&commevent->bindfd[fdidx].commtcp, &commtcp);
 		if (fd > 0) {
 			if (commdata_add(commevent, &commtcp, &commevent->bindfd[fdidx].finishedcb)) {
+				log("Listen fd:%d accept fd:%d\n", commevent->bindfd[fdidx].commtcp.fd, commtcp.fd);
 				if (commevent->bindfd[fdidx].finishedcb.callback) {
 					commevent->bindfd[fdidx].finishedcb.callback(commevent->commctx, &commtcp, commevent->bindfd[fdidx].finishedcb.usr);
 				}

@@ -83,15 +83,15 @@ static inline bool commlist_pull(struct comm_list *head, struct comm_list **data
 
 /* 销毁嵌套链表的结构体数据： @head：链表的头节点 @offset：链表在嵌套其结构体中的偏移 */
 static inline void commlist_destroy(struct comm_list *head, int offset){
-	struct comm_list *list = head->next;
+	struct comm_list *list = NULL;
 	if (head->destroy && head && offset > 0) {
-		while (list != head ) {
+		while (commlist_pull(head, &list)) {
+			log("list destroy data");
+			struct comm_message *message = (struct comm_message*)get_container_addr(list, offset);
 			head->destroy((void *)get_container_addr(list, offset));
-			list = list->next;
 		}
 	}
 }
-
 
 
 

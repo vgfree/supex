@@ -3,186 +3,101 @@
 
 #define		EPOLLSIZE	1024
 
-static bool send_data(struct comm_context *commctx, struct comm_message *message, int fd);
-
-static bool recv_data(struct comm_context *commctx, struct comm_message *message, int fd);
-
-void event_fun(struct comm_context* commctx, struct comm_tcp* commtcp, void* usr);
+static void event_fun(struct comm_context* commctx, struct comm_tcp* commtcp, void* usr);
 
 int main(int argc, char* argv[])
 {
-	int i = 0, fd = -1;
-	int retval = -1;
+	int i = 0, k = 0, fd = 0;
+	int pckidx = 0, frmidx = 0;
+	int retval = -1, port = 0;
+	char content[1024] = {};
+	char str_port[64] = {0};
+
 	struct cbinfo		finishedcb = {0};
 	struct comm_context*	commctx = NULL;
-	struct comm_message	sendmsg = {0};
-	struct comm_message	recvmsg = {0};
+	struct comm_message	message = {0};
 
-	if( unlikely(argc < 3) ){
-		printf("usage: %s <ipaddr> <port>", argv[0]);
+	if (unlikely(argc < 4)) {
+		/* 最后一个参数为绑定几个端口，输入端口为起始，后续端口都直接加1 */
+		printf("usage:%s <ipaddr> <port> <bind_times>\n", argv[0]);
 		return retval;
 	}
 
 	signal(SIGPIPE, SIG_IGN);
+	port = atoi(argv[2]);
+	message.content = content;
 	commctx = comm_ctx_create(EPOLLSIZE);
-	if (likely(commctx)) {
-		log("server comm_ctx_create successed\n");
-		finishedcb.callback = event_fun;
-		finishedcb.usr = &recvmsg;
-		fd = comm_socket(commctx, argv[1], argv[2], &finishedcb, COMM_BIND);
-		if (likely(fd > 0)) {
-			log("server comm_socket successed\n");
-			while (1) {
-				memset(&recvmsg, 0, sizeof(recvmsg));
-				retval = recv_data(commctx, &recvmsg, -1);
-				if (likely(retval > 0)) {
-					log("server recv_data successed\n");
-				} else {
-				//	log("server recv_data failed\n");
-				//	sleep(1);
+	if (unlikely(!commctx)) {
+		log("server comm_ctx_create failed\n");
+		return retval;
+	}
+
+	/* 设置回调函数的相关信息 */
+	finishedcb.callback = event_fun;
+	finishedcb.usr = &message;
+	for (i = 0; i < atoi(argv[3]); i++) {
+		sprintf(str_port, "%d", (port+i));
+		if (unlikely((fd = comm_socket(commctx, argv[1], str_port, &finishedcb, COMM_BIND)) == -1)) {
+			log("server comm_socket failed\n");
+			comm_ctx_destroy(commctx);
+			return retval;
+		}
+		log("server bind successed fd:%d\n", fd);
+	}
+
+	/* 循环接收 发送数据 */
+	while (1) {
+		if (message.fd == -1) {
+			printf("close aready destroy anything\n");
+			comm_ctx_destroy(commctx);
+			printf("destroy done and quit\n");
+			return -1;
+		}
+		if (comm_recv(commctx, &message, false, -1) > -1) {
+			for (pckidx = 0, k = 0; pckidx < message.package.packages; pckidx++) {
+				int  size = 0;
+				char buff[1024] = {};
+				for (frmidx = 0; frmidx < message.package.frames_of_package[pckidx]; frmidx++, k++) {
+					memcpy(&buff[size], &message.content[message.package.frame_offset[k]],message.package.frame_size[k]);
+					size += message.package.frame_size[k];
+				//	buff[size++] = ' ';
 				}
-				if (recvmsg.fd > 0) {
-					memset(&sendmsg, 0, sizeof(sendmsg));
-					retval = send_data(commctx, &sendmsg, recvmsg.fd);
-					if (likely(retval > 0)) {
-						log("server send_data successed\n");
-						//break ;
-					} else {
-					//	log("server send_data failed\n");
-					}
-				}
+				log("messag fd: %d message body: %s\n",message.fd, buff);
+			}
+			/* 接收成功之后将此消息体再返回给用户 */
+			if (message.fd > 0) {
+				comm_send(commctx, &message, false, -1);
 			}
 		} else {
-			log("server comm_socket failed\n");
+			log("comm_recv failed\n");
+			sleep(1);
 		}
-#if 0
-		comm_close(commctx, fd);
-		fd = comm_socket(commctx, "127.0.0.1", "10004", &finishedcb, COMM_BIND);
-		if (likely(fd > 0)) {
-			log("server comm_socket successed\n");
-			while (1) {
-				memset(&recvmsg, 0, sizeof(recvmsg));
-				retval = recv_data(commctx, &recvmsg, -1);
-				if (likely(retval > 0)) {
-					//log("server recv_data successed\n");
-				} else {
-					log("server recv_data failed\n");
-					sleep(1);
-				}
-				if (recvmsg.fd > 0) {
-					memset(&sendmsg, 0, sizeof(sendmsg));
-					retval = send_data(commctx, &sendmsg, recvmsg.fd);
-					if (likely(retval > 0)) {
-						//log("server send_data successed\n");
-						break ;
-					} else {
-						log("server send_data failed\n");
-					}
-				}
-			}
-		} else {
-			log("server comm_socket failed\n");
-		}
-#endif
+
 	}
 	log("goint to detroy everything here\n");
 	comm_ctx_destroy(commctx);
 	return retval;
 }
 
-static bool send_data(struct comm_context *commctx, struct comm_message *message, int fd)
-{
-#undef FRAMES
-#define FRAMES	3
-#undef PACKAGES 
-#define PACKAGES 3
-
-	int i = 0, j = 0, k = 0;
-	int retval = -1; 
-	char buff[1024] = "everythingisimportant";
-	int frames_of_package[PACKAGES] = {1,1,1};				/* 每个包里面帧数 */
-	
-	int frame_offset[FRAMES] = {0, 
-					strlen("everything"), 
-					strlen("everythingis")
-				};						/* 每帧的偏移 */
-	int frame_size[FRAMES] = {	strlen("everything"), 
-					strlen("is"), 
-					strlen("important")
-				};						/* 每帧的大小 */
-
-	message->fd = fd;
-	message->content = buff;
-	message->config = ZIP_COMPRESSION | AES_ENCRYPTION;
-	message->socket_type = REP_METHOD;
-	message->package.dsize = strlen(buff);
-	message->package.frames = FRAMES;
-	message->package.packages = PACKAGES;
-
-	for (i = 0 ; i < PACKAGES; i++) {
-		for (j = 0; j < frames_of_package[i]; j++,k++) {
-			message->package.frame_offset[k] = frame_offset[k];
-			message->package.frame_size[k] = frame_size[k];
-		}
-	} 
-	memcpy(message->package.frames_of_package, frames_of_package, (sizeof(int))*PACKAGES);
-
-	retval = comm_send(commctx, message, false, -1);
-	if (retval <=  0) {
-		return false;
-	} else {
-		return true;
-	}
-}
-
-static bool recv_data(struct comm_context *commctx, struct comm_message *message, int fd) 
-{
-	char buff[1024] = {0};
-	char content[1024] = {0};
-	int retval = -1;
-	int i = 0, j = 0, k = 0; 
-	int size = 0;
-	message->content = content;
-	//retval = comm_recv(commctx, message, true, -1);
-	retval = comm_recv(commctx, message, false, -1);
-	if( unlikely(retval < 0) ){
-		//log("comm_recv failed\n");
-		return false;
-	} else {
-		for (i = 0; i < message->package.packages; i++) {
-			size = 0;
-			memset(buff, 0, 1024);
-			for (j = 0; j < message->package.frames_of_package[i]; j++, k++) {
-				memcpy(&buff[size], &message->content[message->package.frame_offset[k]], message->package.frame_size[k]);
-				size += message->package.frame_size[k];
-				buff[size++] = ' ';
-			}
-			log("%s\n", buff);
-			sleep(1);
-
-		}
-		log("comm_recv successed\n");
-		return true;
-	}
-}
-
 void close_fun(void *usr)
 {
+	//struct comm_tcp* commtcp = (struct comm_tcp*)usr;
 	struct comm_message *message = (struct comm_message*)usr;
-	printf("server here is close_fun():%d\n", message->fd);
 	message->fd = -1;
+	printf("server here is close_fun():%d\n", message->fd);
+//	printf("server here is close_fun():%d\n", commtcp->fd);
 }
 
 void write_fun(void *usr)
 {
-	struct comm_message *message = (struct comm_message*)usr;
-	printf("server here is write_fun(): %d\n", message->fd);
+	struct comm_tcp* commtcp = (struct comm_tcp*)usr;
+	printf("server here is write_fun(): %d\n", commtcp->fd);
 }
 
 void read_fun(void *usr)
 {
-	struct comm_message *message = (struct comm_message*)usr;
-	printf("server here is read_fun(): %d\n", message->fd);
+	struct comm_tcp* commtcp = (struct comm_tcp*)usr;
+	printf("server here is read_fun(): %d\n", commtcp->fd);
 }
 
 void accept_fun(void *usr)
@@ -196,7 +111,7 @@ void timeout_fun(void *usr)
 	printf("server here is timeout_fun()\n");
 }
 
-void event_fun(struct comm_context* commctx, struct comm_tcp* commtcp, void* usr)
+static void event_fun(struct comm_context* commctx, struct comm_tcp* commtcp, void* usr)
 {
 	switch (commtcp->stat)
 	{
@@ -204,17 +119,17 @@ void event_fun(struct comm_context* commctx, struct comm_tcp* commtcp, void* usr
 			close_fun(usr);
 			break;
 		case FD_WRITE:
-			write_fun(usr);
+			write_fun(commtcp);
 			break;
 		case FD_READ:
-			read_fun(usr);
+			read_fun(commtcp);
 			break;
 		case FD_INIT: 
 			if (commtcp->type == COMM_ACCEPT) {
 				accept_fun(commtcp);
 			}
 		default:
-			timeout_fun(usr);
+			timeout_fun(commtcp);
 			break;
 	}
 }
