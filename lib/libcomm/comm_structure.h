@@ -55,6 +55,7 @@ struct comm_package {
 	int frames_of_package[COMM_FRAMES];		/* 每个包中帧的多少 */
 };
 
+
 /* 发送接收数据的结构体 */
 struct comm_message {
 	int			fd;			/* 消息对应的描述符 */
@@ -65,12 +66,11 @@ struct comm_message {
 	struct comm_list	list;			/* 链表节点 */
 };
 
-
 /* 通信模块的上下文环境结构体 */
 struct comm_context {
 	pthread_t		ptid;			/* 新线程的pid */
 	struct comm_event*	commevent;		/* 事件驱动的相关信息 */
-	struct comm_queue	recvqueue;		/* 存放已经接收到并解析好的数据 */
+	struct comm_queue	recvqueue;		/* 存放接收并解析好的数据 */
 	struct comm_list	recvlist;		/* 当recvqueue已满时放入此链表中 */
 	struct comm_pipe	commpipe;		/* 关于管道的相关信息 */
 	struct comm_lock	recvlock;		/* 用来同步接收队列的锁*/
@@ -113,10 +113,10 @@ struct bindfd_info {
 
 /* 主动链接或被动连接的fd相关信息[fd的类型为COMM_CONNECT, COMM_ACCEPT] */
 struct connfd_info {
-	struct comm_queue	send_queue;	/* 存放用户传递但并未打包的数据 */
+	struct comm_queue	send_queue;	/* 存放用户传递进来未打包的原始数据 */
 	struct comm_list	send_list;	/* 当send_queue队列已满时放入此链表中 */
-	struct comm_cache	recv_cache;	/* 存放接收但并未解析的数据 read函数使用 */
-	struct comm_cache	send_cache;	/* 存放需要发送并已经打包的数据 write函数使用 package函数使用 */
+	struct comm_cache	recv_cache;	/* 存放read函数接收但并未解析的数据 */
+	struct comm_cache	send_cache;	/* 存放已打包好待发送的数据 */
 	struct comm_lock	sendlock;	/* send_queue的锁 */
 	struct cbinfo		finishedcb;	/* 此描述符监听事件发生时相应的回调函数信息 */
 	struct comm_tcp		commtcp;	/* 套接字相关信息 */

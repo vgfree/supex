@@ -18,13 +18,22 @@ void mfptp_parse_init(struct mfptp_parser *parser, char* const *data, const int 
 	return ;
 }
 
+void mfptp_parse_destroy(struct mfptp_parser *parser)
+{
+	if (parser && parser->init) {
+		commcache_free(&parser->ms.cache);
+		parser->init = false;
+	}
+	return ;
+}
+
 int mfptp_parse(struct mfptp_parser *parser)
 {
 	assert(parser && parser->init);
 
 	int		size_f_size = 0;			/* f_size字段占几位 */
 	int		frame_size = 0;				/* 解压解密之后的帧数据大小 */
-	int		frame_offset = parser->ms.cache.end;	/* 每帧在cache里面的偏移 */
+	static int	frame_offset = 0;			/* 帧的偏移 定义为static变量，记录上一次调用的结果 */
 	int		dsize = *(parser->ms.dsize);		/* 待解析数据的大小 */
 	const char*	data = *parser->ms.data;		/* 待解析的数据缓冲区 */
 	struct mfptp_package_info* package = NULL;		/* 包的相关信息 */
@@ -33,11 +42,18 @@ int mfptp_parse(struct mfptp_parser *parser)
 
 	if (parser->ms.step == MFPTP_PARSE_OVER) {
 		/* 外部需要检测error的状态，为MFPTP_PARSE_OVER时就必须清理一下cache */
-		//parser->ms.error = MFPTP_PARSE_INIT;
 		parser->ms.step = MFPTP_PARSE_INIT;
+		parser->ms.error = MFPTP_OK;
 		parser->ms.dosize = 0;
+		frame_offset = 0;
+		/* 只要解析完成就需要立即去提取解析完的数据，然后将bodyer和cache清零 */
+		parser->ms.cache.start += parser->bodyer.dsize;
+		parser->ms.cache.size -= parser->bodyer.dsize;
+		commcache_clean(&parser->ms.cache);
 		memset(&parser->bodyer, 0, sizeof(parser->bodyer));
-		//memset(&parser->header, 0 , sizeof(parser->header));
+	}
+	if (parser->ms.step == MFPTP_PARSE_INIT || parser->ms.step == MFPTP_HEAD) {
+		frame_offset = 0;
 	}
 	while (dsize) {
 		switch (parser->ms.step) {
@@ -168,7 +184,10 @@ int mfptp_parse(struct mfptp_parser *parser)
 				break ;
 		}
 
-		if (parser->ms.error != MFPTP_OK && parser->ms.error != MFPTP_DATA_TOOFEW){
+		if (dsize == 0 && parser->ms.error == MFPTP_OK &&  parser->ms.step != MFPTP_PARSE_OVER) {
+			/* 没有解析完毕并且没有出错的时候，数据不够 */
+			parser->ms.error = MFPTP_DATA_TOOFEW;
+		} else if (parser->ms.error != MFPTP_OK && parser->ms.error != MFPTP_DATA_TOOFEW){
 			/* 解析过程出错，将步进设置为MFPTP_PARSE_INIT，丢弃错误包，重新开始解析下面数据 */
 			parser->ms.step = MFPTP_PARSE_OVER;
 			break ;

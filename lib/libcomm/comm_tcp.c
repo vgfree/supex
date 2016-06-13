@@ -226,6 +226,10 @@ static inline bool _connect(struct comm_tcp *commtcp, struct addrinfo *ai)
 							retval = getsockopt(commtcp->fd, SOL_SOCKET, SO_ERROR, &error, (socklen_t *)&len);
 							if (retval < 0 || error) {
 								/*失败 Solaris版本将retval设为-1,Berkeley版本返回0,设置error错误值 */
+								if (error == EHOSTUNREACH || errno == EHOSTUNREACH) {
+									/* 错误值为此，则代表对端端口未打开 */
+									log("peer port isn't open\n");
+								}
 							} else {
 								flag = true;
 								break ;

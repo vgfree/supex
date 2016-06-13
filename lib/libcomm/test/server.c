@@ -53,7 +53,7 @@ int main(int argc, char* argv[])
 			printf("destroy done and quit\n");
 			return -1;
 		}
-		if (comm_recv(commctx, &message, false, -1) > -1) {
+		if (comm_recv(commctx, &message, true, -1) > -1) {
 			for (pckidx = 0, k = 0; pckidx < message.package.packages; pckidx++) {
 				int  size = 0;
 				char buff[1024] = {};

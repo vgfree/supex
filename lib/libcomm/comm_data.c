@@ -50,6 +50,7 @@ error:
 	commcache_free(&(*connfd)->recv_cache);
 	commcache_free(&(*connfd)->send_cache);
 	commlist_destroy(&(*connfd)->send_list, COMMMSG_OFFSET);
+	mfptp_parse_destroy(&((*connfd)->parser));
 	Free(*connfd);
 	return false;
 }
@@ -62,6 +63,7 @@ void commdata_destroy(struct connfd_info *connfd)
 		commcache_free(&connfd->recv_cache);
 		commcache_free(&connfd->send_cache);
 		commlist_destroy(&connfd->send_list, COMMMSG_OFFSET);
+		mfptp_parse_destroy(&connfd->parser);
 		close(connfd->commtcp.fd);
 		connfd->commtcp.fd = -1;
 		Free(connfd);
@@ -136,8 +138,10 @@ bool commdata_send(struct connfd_info *connfd, struct comm_event *commevent, int
 					connfd->send_cache.size -= bytes;
 					commcache_clean(&connfd->send_cache);
 				} else {
-					if (errno == EINTR || errno == EAGAIN || errno == EWOULDBLOCK ) {
-						flag = false;
+					if (errno == EINTR) {
+						flag = false;	/* 被打断，则下次继续处理 */
+					} else if (errno == EAGAIN || errno == EWOULDBLOCK ){
+						flag = true;	/* 缓冲区已满，则从remainfd里面删除此fd，等待此fd的epoll写事件被触发再继续发送数据 */
 					} else {
 						/* 出现其他的致命错误，返回true，将此fd的相关信息删除 */
 						DELETEFD(commevent, connfd->commtcp.fd, REMAINFD_WRITE);
@@ -170,6 +174,7 @@ bool commdata_package(struct connfd_info *connfd, struct comm_event *commevent, 
 
 	if (connfd != NULL) {
 		commlock_lock(&connfd->sendlock);
+#if 0
 		struct comm_list *list = NULL;
 		if (commlist_pull(&connfd->send_list, &list)) {
 			message = (struct comm_message*)get_container_addr(list, COMMMSG_OFFSET);
@@ -179,7 +184,7 @@ bool commdata_package(struct connfd_info *connfd, struct comm_event *commevent, 
 			del_remainfd(&commevent->remainfd, connfd->commtcp.fd, REMAINFD_PACKAGE); /* 没有数据需要进行打包	*/
 			return true;
 		}
-#if 0
+#endif
 		if (unlikely(!commqueue_pull(&connfd->send_queue, (void*)&message))) {
 			struct comm_list *list = NULL;
 			if (commlist_pull(&connfd->send_list, &list)) {
@@ -191,7 +196,6 @@ bool commdata_package(struct connfd_info *connfd, struct comm_event *commevent, 
 				return true;
 			}
 		}
-#endif
 		commlock_unlock(&connfd->sendlock);
 
 		size = mfptp_check_memory(connfd->send_cache.capacity - connfd->send_cache.size, message->package.frames, message->package.dsize);
@@ -244,16 +248,12 @@ bool commdata_parse(struct connfd_info *connfd, struct comm_event *commevent, in
 					message->fd = connfd->commtcp.fd;
 					memcpy(message->content, &connfd->parser.ms.cache.buffer[connfd->parser.ms.cache.start], connfd->parser.bodyer.dsize);
 					_fill_message_package(message, &connfd->parser);
-					connfd->parser.ms.cache.start += connfd->parser.bodyer.dsize;
-					connfd->parser.ms.cache.size -= connfd->parser.bodyer.dsize;
 					connfd->recv_cache.start += size;
 					connfd->recv_cache.size -= size;
 					commcache_clean(&connfd->recv_cache);
-					commcache_clean(&connfd->parser.ms.cache);
 
 					commlock_lock(&commevent->commctx->recvlock);
-					commlist_push(&commevent->commctx->recvlist, &message->list);
-#if 0
+					//commlist_push(&commevent->commctx->recvlist, &message->list);
 					if (unlikely(!commqueue_push(&commevent->commctx->recvqueue, (void*)&message))) {
 						/* 队列已满，则放入链表中 */
 						if (unlikely(!commlist_push(&commevent->commctx->recvlist, &message->list))) {
@@ -264,10 +264,11 @@ bool commdata_parse(struct connfd_info *connfd, struct comm_event *commevent, in
 						/* 唤醒在commctx->recv_queue.readable上等待的线程并设置其为1 */
 						commlock_wake(&commevent->commctx->recvlock, &commevent->commctx->recvqueue.readable, 1, true);
 					}
-#endif
 					commlock_unlock(&commevent->commctx->recvlock);
 					//log("parse successed and push the data\n");
-				} 
+				} else {
+					/* 分配内存失败 数据未处理 */
+				}
 			} else if (connfd->parser.ms.error == MFPTP_DATA_TOOFEW) {
 				connfd->parser.ms.error = MFPTP_OK;	/* 重新恢复正常值 */
 				del_remainfd(&commevent->remainfd, connfd->commtcp.fd, REMAINFD_PARSE);

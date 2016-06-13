@@ -26,11 +26,7 @@ void  mfptp_package_init(struct mfptp_packager *packager, char **buff, int *size
 int mfptp_package(struct mfptp_packager *packager, const char *data, unsigned char flag, int method)
 {
 	assert(packager && packager->init && data);
-	int  pckidx				= 0;	/* 包的索引 */
-	char encryptbuff[MFPTP_MAX_FRAMESIZE]	= {0};	/* 用于保存加密之后的数据 */
-	char compressbuff[MFPTP_MAX_FRAMESIZE]	= {0};	/* 用于保存压缩之后的数据 */
 
-	//packager->header.packages = packager->package.packages;
 	packager->header.packages = packager->bodyer.packages;
 	packager->header.compression = flag & 0xF0;
 	packager->header.encryption = flag & 0x0F;
@@ -45,7 +41,7 @@ int mfptp_package(struct mfptp_packager *packager, const char *data, unsigned ch
 	/* 设置加密压缩的回调函数 */
 	_set_callback(packager);
 
-	/* 开始组装包头 */
+	/* 开始组装header */
 	memcpy(&((*packager->ms.buff)[*packager->ms.size]), "#MFPTP", 6);
 	*packager->ms.size += 6;
 	packager->ms.dosize += 6;
@@ -68,11 +64,14 @@ int mfptp_package(struct mfptp_packager *packager, const char *data, unsigned ch
 	*packager->ms.size += 1;
 	packager->ms.dosize += 1;
 
-	/* 开始组装包数据 */
+	/* 开始组装bodyer */
+	int  pckidx = 0;	/* 包的索引 */
 	for (pckidx = 0; pckidx < packager->bodyer.packages; pckidx++) {
 		/* 依次组装每包数据 */
-		//_make_package(packager, &packager->package.frame[pckidx], data);
 		_make_package(packager, &packager->bodyer.package[pckidx], data);
+		if (packager->ms.error != MFPTP_OK) {
+			return -1;
+		}
 	}
 	return packager->ms.dosize;
 }
@@ -116,8 +115,6 @@ static void _make_package(struct mfptp_packager *packager, struct mfptp_package_
 	/* 开始组装帧 */
 	for(frmidx = 0; frmidx < package->frames; frmidx++) {
 		/* 先加密 再压缩 */
-		//memset(encryptbuff, 0,  MFPTP_MAX_FRAMESIZE);
-		//memset(compressbuff, 0, MFPTP_MAX_FRAMESIZE);
 		if (packager->encryptcb) {
 			frame_size = packager->encryptcb(encryptbuff, &data[package->frame[frmidx].frame_offset], MFPTP_MAX_FRAMESIZE, package->frame[frmidx].frame_size);
 		} else {
@@ -139,6 +136,7 @@ static void _make_package(struct mfptp_packager *packager, struct mfptp_package_
 			(*packager->ms.buff)[*packager->ms.size] = 0x1;
 		}
 
+		/* 确定f_size字段占几位 */
 		if (frame_size > 0 && frame_size < 256) {
 			/* 一个字节 */
 			packager->header.size_f_size = 1;
@@ -162,7 +160,7 @@ static void _make_package(struct mfptp_packager *packager, struct mfptp_package_
 		*packager->ms.size += 1;
 		packager->ms.dosize += 1;
 
-		/*F_SIZE的设置 */
+		/*F_SIZE字段的设置 */
 		for (size_f_size = 0; size_f_size < packager->header.size_f_size; size_f_size++) {
 			(*packager->ms.buff)[*packager->ms.size] = frame_size << (size_f_size*8);
 		}

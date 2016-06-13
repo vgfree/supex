@@ -80,6 +80,7 @@ endef
 
 #######
 ALL:
+	gcc $(BUILD_CFLAGS) -L$(BUILD_PWD)/lib -lcomm $(BUILD_PWD)/test/mfptp_test.c -o mfptp_test
 	gcc $(BUILD_CFLAGS) -L$(BUILD_PWD)/lib -lcomm $(BUILD_PWD)/test/server.c -o server
 	gcc $(BUILD_CFLAGS) -L$(BUILD_PWD)/lib -lcomm $(BUILD_PWD)/test/client.c -o client
 
@@ -111,6 +112,7 @@ distclean : clean
 	@-rm -rf $(INSTALL_HEAD_DIR)
 	@-rm -rf client
 	@-rm -rf server
+	@-rm -rf mfptp_test
 	@-rm -rf core*
 	$(ECHO) $(COLOR_TXT)"\n\tCLEAN\t >>> "$(COLOR_RED)"$@"$(COLOR_TXT)" <<< COMPLETE"$(COLOR_NONE)
 

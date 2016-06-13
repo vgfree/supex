@@ -154,13 +154,11 @@ int comm_send(struct comm_context *commctx, const struct comm_message *message, 
 			copy_commmsg(commmsg, message);
 
 			commlock_lock(&connfd->sendlock);
-			commlist_push(&connfd->send_list, &commmsg->list);
-#if 0
+			//commlist_push(&connfd->send_list, &commmsg->list);
 			if (unlikely(!commqueue_push(&connfd->send_queue, (void*)&commmsg))) {
 				/* 队列已满，则存放到链表中 */
 				commlist_push(&connfd->send_list, &commmsg->list);
 			}
-#endif
 			commlock_unlock(&connfd->sendlock);
 
 			if (unlikely(commpipe_write(&commctx->commpipe, (void*)&message->fd, sizeof(message->fd)) == -1)) {
@@ -182,6 +180,7 @@ int comm_recv(struct comm_context *commctx, struct comm_message *message, bool b
 
 	commlock_lock(&commctx->recvlock);
 	do {
+#if 0
 		struct comm_list* list = NULL;
 		if (commlist_pull(&commctx->recvlist, (void*)&list)) {
 			commmsg = (struct comm_message*)get_container_addr(list, COMMMSG_OFFSET);
@@ -194,7 +193,7 @@ int comm_recv(struct comm_context *commctx, struct comm_message *message, bool b
 		} else {
 			commctx->recvqueue.readable = 1;	/* 不进行堵塞就设置为1不需要唤醒 */
 		};
-#if 0
+#endif
 		if (unlikely(!commqueue_pull(&commctx->recvqueue, (void*)&commmsg))) {
 			struct comm_list* list = NULL;
 			if (commlist_pull(&commctx->recvlist, (void*)&list)) {
@@ -211,7 +210,6 @@ int comm_recv(struct comm_context *commctx, struct comm_message *message, bool b
 		} else {
 			break ;
 		}
-#endif
 	}while(flag);							/* flag为true说明成功等待到数据 尝试再去取一次数据 */
 	commlock_unlock(&commctx->recvlock);
 

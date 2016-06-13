@@ -23,8 +23,8 @@ struct mfptp_parser_stat {
 	bool			resume;		/* 是否断点续传 */
 	int			step;		/* 当前解析的步进 */
 	int			dosize;		/* 当前已解析的长度 */
-	char *const*            data;		/* 被解析数据起始地址指针*/
-	int const*		dsize;		/* 当前数据的总长度地址*/
+	char *const*            data;		/* 待解析数据起始地址指针*/
+	int const*		dsize;		/* 待解析数据的总长度地址*/
 	struct comm_cache	cache;		/* 用来保存解压解密之后的数据 */
 	enum mfptp_error	error;		/* MFPTP解析错误码 */
 };
@@ -46,10 +46,15 @@ struct mfptp_parser {
 void mfptp_parse_init(struct mfptp_parser *parser, char* const *data, const int *size);     
 
 /***********************************************************************************
+ * 功能：销毁一个解析结构体
+***********************************************************************************/
+void mfptp_parse_destroy(struct mfptp_parser *parser);
+/***********************************************************************************
  * 功能：开始解析数据
  * 返回值：已解析数据的字节数
 ***********************************************************************************/
 int mfptp_parse(struct mfptp_parser *parser);
+
 #ifdef __cplusplus
 	}
 #endif 
