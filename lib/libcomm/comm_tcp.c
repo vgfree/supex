@@ -228,6 +228,7 @@ static inline bool _connect(struct comm_tcp *commtcp, struct addrinfo *ai)
 								/*失败 Solaris版本将retval设为-1,Berkeley版本返回0,设置error错误值 */
 								if (error == EHOSTUNREACH || errno == EHOSTUNREACH) {
 									/* 错误值为此，则代表对端端口未打开 */
+									//log("%s\n", strerror(errno));
 									log("peer port isn't open\n");
 								}
 							} else {

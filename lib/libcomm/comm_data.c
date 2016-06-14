@@ -32,12 +32,15 @@ bool commdata_init(struct connfd_info **connfd, struct comm_tcp* commtcp,  struc
 	if (unlikely(!commlock_init(&(*connfd)->sendlock))) {
 		goto error;
 	}
+	if (unlikely(!mfptp_parse_init(&(*connfd)->parser, &(*connfd)->recv_cache.buffer, &(*connfd)->recv_cache.size))) {
+		goto error;
+	}
+	if (unlikely(!mfptp_package_init(&(*connfd)->packager, &(*connfd)->send_cache.buffer, &(*connfd)->send_cache.size))) {
+		goto error;
+	}
 	commlist_init(&(*connfd)->send_list, free_commmsg);
 	commcache_init(&(*connfd)->send_cache);
 	commcache_init(&(*connfd)->recv_cache);
-	mfptp_parse_init(&(*connfd)->parser, &(*connfd)->recv_cache.buffer, &(*connfd)->recv_cache.size);
-	mfptp_package_init(&(*connfd)->packager, &(*connfd)->send_cache.buffer, &(*connfd)->send_cache.size);
-
 	memcpy(&(*connfd)->commtcp, commtcp, sizeof(*commtcp));
 	if (finishedcb) {
 		memcpy(&(*connfd)->finishedcb, finishedcb, sizeof(*finishedcb));
@@ -50,7 +53,8 @@ error:
 	commcache_free(&(*connfd)->recv_cache);
 	commcache_free(&(*connfd)->send_cache);
 	commlist_destroy(&(*connfd)->send_list, COMMMSG_OFFSET);
-	mfptp_parse_destroy(&((*connfd)->parser));
+	mfptp_parse_destroy(&(*connfd)->parser);
+	mfptp_package_destroy(&(*connfd)->packager);
 	Free(*connfd);
 	return false;
 }
@@ -64,6 +68,7 @@ void commdata_destroy(struct connfd_info *connfd)
 		commcache_free(&connfd->send_cache);
 		commlist_destroy(&connfd->send_list, COMMMSG_OFFSET);
 		mfptp_parse_destroy(&connfd->parser);
+		mfptp_package_destroy(&connfd->packager);
 		close(connfd->commtcp.fd);
 		connfd->commtcp.fd = -1;
 		Free(connfd);
@@ -217,7 +222,7 @@ bool commdata_package(struct connfd_info *connfd, struct comm_event *commevent, 
 			connfd->send_cache.end += size;
 			add_remainfd(&commevent->remainfd, connfd->commtcp.fd, REMAINFD_WRITE);
 		} else {
-		//	log("package failed\n");
+			log("package failed\n");
 			connfd->packager.ms.error = MFPTP_OK;
 		}
 		free_commmsg(message);	/* 打包失败也会直接放弃这个有问题的包 */
@@ -243,8 +248,8 @@ bool commdata_parse(struct connfd_info *connfd, struct comm_event *commevent, in
 	if (connfd != NULL) {
 		if (connfd->recv_cache.size > 0) {
 			size = mfptp_parse(&connfd->parser);
-			if ((size > 0) && connfd->parser.ms.error == MFPTP_OK && connfd->parser.ms.step == MFPTP_PARSE_OVER) {	/* 成功解析了一个连续的包 */
-				if (likely(new_commmsg(&message, connfd->parser.bodyer.dsize))) {
+			if ((size > 0) && connfd->parser.ms.step == MFPTP_PARSE_OVER) {	/* 成功解析了一个连续的包 */
+				if (new_commmsg(&message, connfd->parser.bodyer.dsize)) {
 					message->fd = connfd->commtcp.fd;
 					memcpy(message->content, &connfd->parser.ms.cache.buffer[connfd->parser.ms.cache.start], connfd->parser.bodyer.dsize);
 					_fill_message_package(message, &connfd->parser);
@@ -273,13 +278,13 @@ bool commdata_parse(struct connfd_info *connfd, struct comm_event *commevent, in
 				connfd->parser.ms.error = MFPTP_OK;	/* 重新恢复正常值 */
 				del_remainfd(&commevent->remainfd, connfd->commtcp.fd, REMAINFD_PARSE);
 				return true;
-			} else if (connfd->parser.ms.error != MFPTP_DATA_TOOFEW) {
+			} else  {
 				/* 解析出错 抛弃已解析的错误数据 继续解析后面的数据 */
 				connfd->recv_cache.start += size;
 				connfd->recv_cache.size -= size;
 				commcache_clean(&connfd->recv_cache);
 				connfd->parser.ms.error = MFPTP_OK;	/* 重新恢复正常值 */
-				//log("parse failed\n");
+				log("parse failed\n");
 			}
 			if (connfd->recv_cache.size == 0) {
 				del_remainfd(&commevent->remainfd, connfd->commtcp.fd, REMAINFD_PARSE);	/* 数据已解析完，则将remainfd里面的此fd删除 */

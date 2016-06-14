@@ -4,35 +4,29 @@
 #include "../mfptp_protocol/mfptp_parse.h"
 #include "../comm_structure.h"
 
-//void packager(char *dest_buff, int *dest_size);
+#define	MAXDATASIZE	4194304
+
 void packager(struct comm_cache *cache);
 
 void parser(struct comm_cache *pack_cache, struct comm_cache *parse_cache);
-//void parser(char *src_buff, int *src_size);
 
 static void _fill_message_package(struct comm_message *message, const struct mfptp_parser *parser);
 
 int main()
 {
-	char package_buff[2048] = {};
 	int pckbuff_size = 0;
 	struct comm_cache pack_cache = {};
 	struct comm_cache parse_cache = {};
 	commcache_init(&pack_cache);
 	commcache_init(&parse_cache);
-//	char parse_buff[2048] = {};
-//	int parsbuff_size = 0;
 
-	//packager(cache.buffer, &cache.size);
-	//packager(package_buff, &pckbuff_size);
 	packager(&pack_cache);
 	parser(&pack_cache, &parse_cache);
-	//parser(package_buff, &pckbuff_size);
 }
 
 void packager(struct comm_cache *cache)
 {
-	char buff[1024] = "you never know what's gonna happen to you";
+	char buff[MAXDATASIZE] = "you never know what's gonna happen to you";
 	int dsize = strlen(buff);
 	int packages = 1;
 	int pckidx = 0;
@@ -42,7 +36,6 @@ void packager(struct comm_cache *cache)
 
 	struct mfptp_packager packager = {};
 	struct comm_message message = {};
-
 	int frames_of_package[10] = {8};
 	int frame_size[64] = { 
 		strlen("you "),
@@ -67,7 +60,7 @@ void packager(struct comm_cache *cache)
 	mfptp_package_init(&packager, &cache->buffer, &cache->size);
 	//message.fd = fd;
 	message.content = buff;
-	message.config = ZIP_COMPRESSION | AES_ENCRYPTION;
+	message.config = IDEA_ENCRYPTION | GZIP_COMPRESSION;
 	message.socket_type = REQ_METHOD;
 	message.package.dsize = strlen(buff);
 	message.package.frames = 8;
@@ -80,20 +73,6 @@ void packager(struct comm_cache *cache)
 		}
 	} 
 	memcpy(message.package.frames_of_package, frames_of_package, (sizeof(int))*message.package.packages);
-#if 0
-	for (pckidx = 0, index = 0; pckidx < packages; pckidx++) {
-
-		for (frmidx = 0; frmidx < frames_of_package[pckidx]; frmidx++, index++) {
-			message.package[]
-			packager.bodyer.package[pckidx].frame[frmidx].frame_size = frame_size[index];
-			packager.bodyer.package[pckidx].frame[frmidx].frame_offset = frame_offset[index];
-		}
-		packager.bodyer.package[pckidx].frames = frames_of_package[pckidx];
-	}
-	packager.bodyer.dsize = dsize;
-	packager.bodyer.packages = packages;
-#endif
-
 	size = mfptp_check_memory(cache->capacity - cache->size, message.package.frames, message.package.dsize);
 	if (size > 0) {
 		/* 检测到内存不够 则增加内存*/
@@ -101,15 +80,14 @@ void packager(struct comm_cache *cache)
 			printf("expend commcache failed\n");
 			return ;
 		}
+		log("expend commcache successed\n");
 	}
 	mfptp_fill_package(&packager, message.package.frame_offset, message.package.frame_size, message.package.frames_of_package, message.package.packages);
 	size = mfptp_package(&packager, message.content, message.config, message.socket_type);
 	if (size > 0 && packager.ms.error == MFPTP_OK) {
 		printf("packager successed\n");
-	//	cache->end += size;
-		//add_remainfd(&commevent->remainfd, connfd->commtcp.fd, REMAINFD_WRITE);
+		cache->end += size;
 	} else {
-	//	log("package failed\n");
 		printf("packager failed\n");
 		packager.ms.error = MFPTP_OK;
 	}
@@ -119,7 +97,6 @@ void packager(struct comm_cache *cache)
 void parser(struct comm_cache *pack_cache, struct comm_cache *parse_cache)
 {
 	char buff[1024] = {};
-	char content[1024] = {};
 	int len = pack_cache->size/2;
 	int pckidx = 0;
 	int frmidx = 0;
@@ -128,7 +105,8 @@ void parser(struct comm_cache *pack_cache, struct comm_cache *parse_cache)
 
 	struct mfptp_parser parser = {};
 	struct comm_message message = {};
-	message.content = content;
+	message.content = malloc(MAXDATASIZE);
+	memset(message.content, 0, MAXDATASIZE);
 
 	mfptp_parse_init(&parser, &parse_cache->buffer, &parse_cache->size);
 	commcache_append(parse_cache, pack_cache->buffer, len);
@@ -159,9 +137,9 @@ void parser(struct comm_cache *pack_cache, struct comm_cache *parse_cache)
 		return ;
 	} else if (parser.ms.error != MFPTP_DATA_TOOFEW) {
 		/* 解析出错 抛弃已解析的错误数据 继续解析后面的数据 */
-		//connfd->recv_cache.start += size;
-		//connfd->recv_cache.size -= size;
-		//commcache_clean(&connfd->recv_cache);
+		parse_cache->start += size;
+		parse_cache->size -= size;
+		commcache_clean(parse_cache);
 		parser.ms.error = MFPTP_OK;	/* 重新恢复正常值 */
 		printf("parse failed\n");
 	}
