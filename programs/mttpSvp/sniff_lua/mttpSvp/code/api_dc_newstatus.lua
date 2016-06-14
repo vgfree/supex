@@ -47,6 +47,8 @@ local function parse_gpsdata(gpsdata, dot_list)
 end
 
 --从请求传入的msg中提取字段的value封装成table
+--由于请求按照顺序描述，返回的value_tab的字段按索引顺序排列为：
+--value_tab[1]:M value_tab[2]:A value_tab[3]:T value_tab[4]:B value_tab[5]:G
 local function extract_val_from_msg(data_tab)
 	value_tab = {}
 	for k, elem in pairs(data_tab) do
