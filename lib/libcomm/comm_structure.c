@@ -68,7 +68,6 @@ inline void free_commmsg(void* arg)
 {
 	struct comm_message *message = (struct comm_message*)arg;
 	if (message) {
-		log("free commmsg\n");
 		Free(message->content);
 		Free(message);
 	}

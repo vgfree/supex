@@ -16,7 +16,7 @@ extern "C" {
 #define	MFPTP_MAJOR_VERSION	1	/* MFPTP协议的主版本号 */
 #define MFPTP_MINOR_VERSION	0	/* MFPTP协议的副版本号 */
 #define	MFPTP_MAX_FRAMES	13	/* MFPTP协议单包支持最大的帧的数量 */
-#define MFPTP_MAX_FRAMESIZE	1024	/* MFPTP协议一个帧携带数据的最大值 */
+#define MFPTP_MAX_DATASIZE	4194304	/* MFPTP协议一个帧携带数据的最大值 */
 #define	MFPTP_MAX_PACKAGES	8	/* MFPTP协议支持携带的最大包数 */
 
 #define MFPTP_HEADER_LEN	10	/* MFPTP协议头的所占的字节数 */
@@ -37,22 +37,23 @@ extern "C" {
 				parser->header.encryption >= NO_ENCRYPTION &&		\
 				parser->header.encryption <= AES_ENCRYPTION)
 
-/* 检测MFPTP协议F_SIZE所占的字节数是否是在1-4范围之内 */
+/* 检测MFPTP协议F_SIZE所占的字节数是否是在1-4范围内 */
 #define CHECK_F_SIZE(parser)	(parser->header.size_f_size > 0 && \
 				 parser->header.size_f_size <= 4)
 
 /* 检测MFPTP协议socket type是否正确*/
 #define	CHECK_SOCKTYPE(parser)	(parser->header.socket_type <= HEARTBEAT_METHOD	&&	\
-				parser->header.socket_type >= PAIR_METHOD)
+				 parser->header.socket_type >= PAIR_METHOD)
 
 /* 检测MFPTP协议包数是否是在范围之内 */
-#define CHECK_PACKAGES(parser)	(parser->header.packages <= MFPTP_MAX_PACKAGES)
+#define CHECK_PACKAGES(parser)	(parser->header.packages > 0 && \
+				 parser->header.packages <= MFPTP_MAX_PACKAGES)
 
 /* 检测MFPTP协议帧携带的数据大小是否正确 */
-#define CHECK_FRAMESIZE(parser) (*parser->ms.dsize-parser->ms.dosize >= parser->header.f_size)
+#define CHECK_DATASIZE(parser) (*parser->ms.dsize-parser->ms.dosize >= parser->header.f_size)
 
 
-/* MFPTP协议压缩加密设置 */
+/* MFPTP协议压缩加密值 */
 enum mfptp_config {
 	NO_COMPRESSION		= 0x00 << 4,
 	ZIP_COMPRESSION		= 0x01 << 4,
@@ -62,7 +63,7 @@ enum mfptp_config {
 	AES_ENCRYPTION		= 0x02
 };
 
-/* MFPTP协议的socket的type */
+/* MFPTP协议的socket的type值 */
 enum mfptp_socket_type {
 	PAIR_METHOD = 0x00,
 	PUB_METHOD,
@@ -84,39 +85,21 @@ enum mfptp_error {
 	MFPTP_VERSION_INVAILD,		/* MFPTP协议版本无效 */
 	MFPTP_CONFIG_INVAILD,		/* MFPTP压缩解密格式设置错误 */
 	MFPTP_SOCKTYPE_INVAILD,		/* MFPTP协议socket_type设置错误 */
-	MFPTP_PACKAGES_TOOMUCH,		/* MFPTP协议的包含的包太多 */
-	MFPTP_DATA_TOOFEW,		/* MFPTP协议帧的数据太少[没有接收完毕] */
-	MFPTP_DATA_TOOMUCH		/* MFPTP协议帧携带的数据太多 */
-
-};
-
-/* MFPTP协议的状态码 */
-enum mfptp_status {
-	MFPTP_PARSE_INIT = 0x00,/* MFPTP协议解析初始化的状态 */
-	MFPTP_PACKAGE_INIT,	/* MFPTP协议打包初始化的状态 */
-	MFPTP_HEAD,		/* MFPTP协议的前6个字节"#MFPTP" */
-	MFPTP_VERSION,		/* MFPTP协议的版本号 */
-	MFPTP_CONFIG,		/* MFPTP协议的压缩解密格式 */
-	MFPTP_SOCKET_TYPE,	/* MFPTP协议socket的类型 */
-	MFPTP_PACKAGES,		/* MFPTP协议携带的包数 */
-	MFPTP_FP_CONTROL,	/* MFPTP协议的FP_control字段 */
-	MFPTP_F_SIZE,		/* MFPTP协议F_size字段 */
-	MFPTP_FRAME_START,	/* MFPTP协议的帧 */
-	MFPTP_FRAME_OVER,	/* MFPTP协议解析完一包的数据 */
-	MFPTP_PACKAGE_OVER,	/* MFPTP协议解析完 */
-	MFPTP_PARSE_OVER	/* MFPTP协议解析完*/
+	MFPTP_PACKAGES_INVAILD,		/* MFPTP协议包数不合法[小于零或大于允许携带的最大包数] */
+	MFPTP_DATA_TOOFEW,		/* MFPTP协议帧携带的数据太少[数据未接收完毕] */
+	MFPTP_DATASIZE_INVAILD		/* MFPTP协议帧携带的数据长度无效[携带的数据小于零或者大于允许帧携带最大数] */
 
 };
 
 /* MFPTP协议帧的相关信息 */
 struct mfptp_frame_info {
-	int frame_size;				/* 帧的大小 */
-	int frame_offset;			/* 帧的偏移 */
+	int frame_size;			/* 帧的大小 */
+	int frame_offset;		/* 帧的偏移 */
 };
 
 /* MFPTP协议包的相关信息 */
 struct mfptp_package_info {
-	int			frames;				/* 一个包帧的总数 */
+	int			frames;				/* 此包帧的总数 */
 	struct mfptp_frame_info frame[MFPTP_MAX_FRAMES];	/* 每帧的相关信息 */
 };
 
@@ -131,7 +114,7 @@ struct mfptp_bodyer_info {
 /* MFPTP协议的包头相关信息 */
 struct mfptp_header_info {
 	int		packages;			/* 包的数量 */
-	int		f_size;				/* F_size的字段帧数据的大小 */
+	unsigned int	f_size;				/* F_size字段的值[帧所携带数据大小] */
 	unsigned char	not_end;			/* 当前帧是否是最后一帧 */
 	unsigned char	size_f_size;			/* F_size字段所占字节数 */
 	unsigned char	encryption;			/* 加密格式 */
