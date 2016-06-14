@@ -55,7 +55,7 @@ local function status_process(status, cid)
                 end
 		local gidTable = ok_ret
 		for i=1, #gidTable do
-			ok_status, ok_ret = redis_api.cmd('IdKey', '', 'del', 'GID:' .. gidTable[i])
+			ok_status, ok_ret = redis_api.cmd('IdKey', '', 'srem', 'GID:' .. gidTable[i], cid)
                         if not (ok_status and ok_ret) then
                                 only.log('D', 'redis delete GID failed, or empty in redis')
                         end
