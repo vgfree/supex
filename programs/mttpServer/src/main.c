@@ -15,7 +15,7 @@
 #include "load_sniff_cfg.h"
 #include "apply_def.h"
 #include "rr_cfg.h"
-#include "switch_queue.h"
+#include "base/switch_queue.h"
 
 #include "sniff_evuv_cpp_api.h"
 
@@ -50,7 +50,7 @@ static void swift_pthrd_init(void *user)
 {
 	SWIFT_WORKER_PTHREAD *p_swift_worker = user;
 
-	p_swift_worker->mount = sniff_start(p_swift_worker, p_swift_worker->index, 0);
+	p_swift_worker->mount = sniff_start(p_swift_worker->index);
 }
 
 
@@ -94,17 +94,10 @@ static void swift_shut_down(void)
 
 	/*通过每个swift_worker挂起sniff_worker的所有线程*/
 	for (i = 0; i < swift_worker_total; i++) {
-		struct mount_info *link = NULL;
 
-		int j = 0;
+		thds++;
 
-		link = (struct mount_info *)swift_worker[i].mount;
-
-		for (j = 0; j < LIMIT_CHANNEL_KIND; j++) {
-			thds++;
-
-			sniff_suspend_thread(link[j].list, cond);
-		}
+		sniff_suspend_thread(swift_worker[i].mount, cond);
 	}
 
 	/*
@@ -136,17 +129,9 @@ static void swift_reload_cfg(void)
 
 	/*通过每个swift_worker挂起sniff_worker的所有线程*/
 	for (i = 0; i < swift_worker_total; i++) {
-		struct mount_info *link = NULL;
+		thds++;
 
-		int j = 0;
-
-		link = (struct mount_info *)swift_worker[i].mount;
-
-		for (j = 0; j < LIMIT_CHANNEL_KIND; j++) {
-			thds++;
-
-			sniff_suspend_thread(link[j].list, &cond);
-		}
+		sniff_suspend_thread(swift_worker[i].mount, &cond);
 	}
 
 	/*
@@ -200,8 +185,6 @@ int main(int argc, char **argv)
 	g_swift_cfg_list.entry_init = swift_entry_init;
 
 	g_swift_cfg_list.pthrd_init = swift_pthrd_init;
-
-	g_swift_cfg_list.vmsys_init = swift_vms_init;
 
 	g_swift_cfg_list.reload_cfg = swift_reload_cfg;
 

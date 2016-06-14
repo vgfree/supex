@@ -47,13 +47,7 @@ int swift_vms_call(void *W)
 
 	memcpy(p_rmsg->flows, p_buf + p_rst->val_offset[0], sniff_task.size);
 
-	struct mount_info *mnt = (struct mount_info *)p_swift_worker->mount;
-
-	while (mnt) {
-		sniff_one_task_hit(mnt->list, &sniff_task);
-		mnt->list = mnt->list->next;
-		mnt = mnt->next;
-	}
+	sniff_one_task_hit(p_swift_worker->mount, &sniff_task);
 
 	const char sndcnt[] = ":1\r\n";
 	cache_add(&p_node->send, sndcnt, sizeof(sndcnt) - 1);

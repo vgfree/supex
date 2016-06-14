@@ -14,7 +14,6 @@ extern PriorityQueue g_H;
 
 int insert_call(void *user, void *task)
 {
-	SMART_WORKER_PTHREAD    *p_smart_worker = (SMART_WORKER_PTHREAD *)user;
 	struct smart_task_node  *p_task = (struct smart_task_node *)task;
 	struct data_node        *p_node = get_pool_addr(p_task->sfd);
 

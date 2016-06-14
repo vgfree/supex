@@ -18,7 +18,7 @@
 
 #include "minor/sniff_api.h"
 #include "load_sniff_cfg.h"
-#include "switch_queue.h"
+#include "base/switch_queue.h"
 #include "app_queue.h"
 
 #include "smart_evcoro_cpp_api.h"
@@ -34,7 +34,7 @@ static void swift_pthrd_init(void *user)
 {
 	SWIFT_WORKER_PTHREAD *p_swift_worker = user;
 
-	p_swift_worker->mount = sniff_start(p_swift_worker, p_swift_worker->index, 0);
+	p_swift_worker->mount = sniff_start(p_swift_worker->index);
 }
 
 

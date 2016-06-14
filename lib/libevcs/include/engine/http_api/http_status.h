@@ -71,6 +71,7 @@ struct http_parse_info
  */
 void http_parse_init(struct http_parse_info *info, char *const *buff, unsigned const *size);
 
+void http_parse_free(struct http_parse_info *info);
 /**
  * 解析响应http字符串
  * @return false 还未结束，需要后续数据；ture 已经结束，根据内部状态判断成功与否

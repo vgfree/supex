@@ -1,16 +1,16 @@
 //
-//  add_session_cmd.c
+//  addition_session_command.c
 //  supex
 //
-//  Created by 周凯 on 15/8/6.
+//  Created by 周凯 on 15/8/5.
 //  Copyright (c) 2015年 zk. All rights reserved.
 //
 
 #include "add_session_cmd.h"
-#include "sniff_api.h"
-#include "swift_evcb.h"
-#include "swift_api.h"
-#include "swift_evcb.h"
+#include "minor/sniff_api.h"
+#include "major/swift_api.h"
+#include "apply_def.h"
+#include "major/swift_evcb.h"
 
 ShmQueueT g_tasks_shmqueue = NULL;
 
@@ -23,7 +23,8 @@ static bool help(void *user, void *data)
 		"[memblocks] to check how much blocks that were allocated in heap.\n"
 		"[memdetails] to print information about memory that were allocated in heap.\n"
 #endif
-		"[tasks] to check how much tasks that belong to parters.\n";
+		"[tasks] to check how much tasks that belong to parters.\n"
+		"[netpkgstat] to check how much network package that have been recieved.\n";
 
 	struct session_task *service = (struct session_task *)data;
 
@@ -40,23 +41,23 @@ static bool tasks(void *user, void *data)
 {
 	bool                    flag = false;
 	int                     taskid = 0;
-	struct swift_task_node  *task = NULL;
+	struct adopt_task_node  *task = NULL;
 	struct session_task     *service = NULL;
 	SWIFT_WORKER_PTHREAD    *p_swift_worker = NULL;
 
 	assert(user);
 	assert(data);
 
-	task = (struct swift_task_node *)data;
+	task = (struct adopt_task_node *)data;
 	p_swift_worker = (SWIFT_WORKER_PTHREAD *)user;
 	service = (struct session_task *)task->data;
 
-	swift_task_come(&taskid, task->id);
+	//swift_task_come(&taskid, task->id);
 
 	if (!service) {
 		goto over;
 	}
-
+#if 0
 #if defined(STORE_USE_SHMQ)
 	session_response_clnt(service->fd, SESSION_IO_TIMEOUT,
 		"tasks(0x%20x) : %ld\n",
@@ -64,33 +65,50 @@ static bool tasks(void *user, void *data)
 		AO_GET(&g_tasks_shmqueue->list->nodes));
 
 #else
-	SNIFF_WORKER_PTHREAD    *p_sniff_worker = (SNIFF_WORKER_PTHREAD *)p_swift_worker->mount;
-	SNIFF_WORKER_PTHREAD    *ptr = NULL;
+	flag = session_response_clnt(service->fd, SESSION_IO_TIMEOUT,
+			"thread(%20ld) : %ld\n",
+			ptr->tid,
+			AO_GET(&ptr->thave));
 
-	for (ptr = p_sniff_worker; ptr; ) {
-		flag = session_response_clnt(service->fd, SESSION_IO_TIMEOUT,
-				"thread(%20ld) : %ld\n",
-				ptr->tid,
-				AO_GET(&ptr->thave));
-
-		if (!flag) {
-			goto over;
-		}
-
-		ptr = ptr->next;
-
-		if (ptr == p_sniff_worker) {
-			break;
-		}
+	if (!flag) {
+		goto over;
 	}
+
 #endif	/* if defined(STORE_USE_SHMQ) */
+#endif
 over:
 
-	if (swift_task_last(&taskid, task->id)) {
+	//if (swift_task_last(&taskid, task->id)) {
 		close(service->fd);
-	}
+	//}
 
 	return flag;
+}
+
+static bool netpkgstat(void *user, void *data)
+{
+	bool flag = false;
+
+	struct session_task *service = NULL;
+
+	assert(data);
+	service = (struct session_task *)data;
+
+	if (!service) {
+		return false;
+	}
+
+	flag = session_response_clnt(service->fd,
+			SESSION_IO_TIMEOUT,
+			"%15s | %15s | %20s | %20s \n",
+			"ip address", "package counts",
+			"connect time", "recent time");
+
+	netpkg_printstat(g_netpkg_stat, service->fd, NULL);
+
+	/* ---- */
+
+	return true;
 }
 
 static void session_dispatch_task(struct session_task *service)
@@ -107,12 +125,12 @@ static void session_dispatch_task(struct session_task *service)
 		type = service->action->taskmode;
 	}
 
-	struct swift_task_node task = {
+	struct adopt_task_node task = {
 		.id     = 0,
 		.sfd    = 0,
 		.type   = type,
 		.origin = BIT8_TASK_ORIGIN_MSMQ,
-		.func   = (TASK_CALLBACK)service->action->action,
+		.func   = (TASK_VMS_FCB)service->action->action,
 		.index  = 0,
 		.data   = (void *)service
 	};
@@ -120,17 +138,21 @@ static void session_dispatch_task(struct session_task *service)
 	if (type == BIT8_TASK_TYPE_WHOLE) {
 		swift_all_task_hit(&task, false, service->fd);
 	} else {
-		swift_one_task_hit(&task, false, service->fd);
+		swift_one_task_hit(&task, false, service->fd, 0);
 	}
 }
 
 void init_session_cmd()
 {
-	/*增加会话命令*/
+	/*
+	 * 会话扩展命令
+	 */
 	struct session_action cmd[] = {
-		{ "tasks", tasks, BIT8_TASK_TYPE_WHOLE    },
+		{ "tasks",      tasks,      BIT8_TASK_TYPE_WHOLE    },
+		{ "netpkgstat", netpkgstat, 0                       },
 	};
 
+	/*初始化会话命令相关*/
 	session_replace_command("help", help);
 	session_add_command(cmd, DIM(cmd));
 	session_init_dispatch(session_dispatch_task);

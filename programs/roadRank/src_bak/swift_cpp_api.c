@@ -25,7 +25,7 @@ int swift_vms_init(void *W)
 	 *   sniff_task.last = false;//FIXME
 	 *   sniff_task.size = 0;
 	 *
-	 *   sniff_all_task_hit( (SNIFF_WORKER_PTHREAD *)p_swift_worker->mount, &sniff_task );
+	 *   sniff_all_task_hit( p_swift_worker->mount, &sniff_task );
 	 */
 	return 0;
 }
@@ -60,13 +60,8 @@ int swift_vms_call(void *W)
 	sniff_task.size = p_hst->body_size;
 	memcpy(sniff_task.data, (const char *)(p_node->recv.buf_addr + p_hst->body_offset), p_hst->body_size);
 
-	struct mount_info *mnt = (struct mount_info *)p_swift_worker->mount;
 
-	while (mnt) {
-		sniff_one_task_hit(mnt->list, &sniff_task);
-		mnt->list = mnt->list->next;
-		mnt = mnt->next;
-	}
+	sniff_one_task_hit(p_swift_worker->mount, &sniff_task);
 
 	return 0;
 }

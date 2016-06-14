@@ -50,7 +50,6 @@ BASE_OBJ = $(addprefix $(BIN)/, \
 	   cqueue.o \
 	   send_data.o \
 	   app_queue.o \
-	   switch_queue.o \
 	   redis_parse.o \
 	   )
 
@@ -69,10 +68,6 @@ $(SRV):$(OBJ)
 $(BIN)/%.o : $(BASE_SRC)/%.c
 	@-if [ ! -d $(BIN) ];then mkdir $(BIN); fi
 	gcc $(CFLAGS) $(INC_DIR) -c $< -o $@
-
-$(BIN)/switch_queue.o : ../switch_queue.c
-	@-if [ ! -d $(BIN) ];then mkdir $(BIN); fi
-	gcc $(CFLAGS) $(INC_DIR) $(LIB_DIR) $(LIBS) -c $< -o $@
 
 $(BIN)/app_queue.o : ../app_queue.c
 	@-if [ ! -d $(BIN) ];then mkdir $(BIN); fi

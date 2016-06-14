@@ -13,7 +13,6 @@ extern xmq_producer_t           *g_xmq_producer;
 
 int swift_vms_call(void *user, union virtual_system **VMS, struct adopt_task_node *task)
 {
-	SWIFT_WORKER_PTHREAD    *p_swift_worker = (SWIFT_WORKER_PTHREAD *)user;
 	struct data_node        *p_node = get_pool_data(task->sfd);
 	char                    *p_buf = cache_data_address(&p_node->mdl_recv.cache);
 	xmq_msg_t               *x_msg = NULL;

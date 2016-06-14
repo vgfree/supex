@@ -38,7 +38,6 @@ BASE_OBJ = $(addprefix $(BIN)/, \
 	   $(ADD_OBJ) \
 	   main.o \
 	   app_queue.o \
-	   switch_queue.o \
 	   dams_cfg.o \
 	   load_sniff_cfg.o \
 	   load_swift_cfg.o \
@@ -67,10 +66,6 @@ $(BIN)/%.o : $(BASE_SRC)/%.c
 	gcc $(CFLAGS) $(INC_DIR) $(LIB_DIR) $(LIBS) -c $< -o $@
 
 $(BIN)/app_queue.o : ../app_queue.c
-	@-if [ ! -d $(BIN) ];then mkdir $(BIN); fi
-	gcc $(CFLAGS) $(INC_DIR) $(LIB_DIR) $(LIBS) -c $< -o $@
-
-$(BIN)/switch_queue.o : ../switch_queue.c
 	@-if [ ! -d $(BIN) ];then mkdir $(BIN); fi
 	gcc $(CFLAGS) $(INC_DIR) $(LIB_DIR) $(LIBS) -c $< -o $@
 

@@ -100,14 +100,14 @@ int import_to_redis(char command[], void *loop, char host[], unsigned short port
 int sniff_vms_call(void *user, void *task)
 {
 	struct sniff_task_node  *p_task = task;
-	SNIFF_WORKER_PTHREAD    *p_sniff_worker = (SNIFF_WORKER_PTHREAD *)user;
 	time_t                  delay = time(NULL) - p_task->stamp;
 
-	x_printf(I, "channel %d\t|task <shift> %d\t<come> %ld\t<delay> %ld",
-		p_sniff_worker->genus, p_task->base.shift, p_task->stamp, delay);
+	x_printf(I, "task <shift> %d\t<come> %ld\t<delay> %ld",
+		p_task->base.shift, p_task->stamp, delay);
 
 	x_printf(D, "%s\n", p_task->data);
-	struct ev_loop *loop = p_sniff_worker->evuv.loop;
+	struct supex_evcoro     *p_evcoro = supex_get_default();
+	struct ev_loop          *loop = p_evcoro->scheduler->listener;
 
 	// TODO
 	x_printf(D, "get data-------------------\n");

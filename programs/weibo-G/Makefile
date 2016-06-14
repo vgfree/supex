@@ -45,7 +45,6 @@ BASE_OBJ = $(addprefix $(BIN)/, \
 	   load_swift_cfg.o \
 	   swift_cpp_api.o \
 	   app_queue.o \
-	   switch_queue.o \
 	   )
 
 OBJ ?= $(BASE_OBJ)
@@ -63,10 +62,6 @@ $(SRV):$(OBJ)
 	@echo -e $(GREEN)"【"$(YELLOW) $@ $(GREEN)"】"$(RED)"\n-->OK!\n"$(NONE)
 
 $(BIN)/%.o : $(BASE_SRC)/%.c
-	@-if [ ! -d $(BIN) ];then mkdir $(BIN); fi
-	gcc $(CFLAGS) $(INC_DIR) $(LIB_DIR) $(LIBS) -c $< -o $@
-
-$(BIN)/switch_queue.o : ../switch_queue.c
 	@-if [ ! -d $(BIN) ];then mkdir $(BIN); fi
 	gcc $(CFLAGS) $(INC_DIR) $(LIB_DIR) $(LIBS) -c $< -o $@
 

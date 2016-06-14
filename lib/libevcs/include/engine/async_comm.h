@@ -14,17 +14,27 @@ typedef int (PROTO_CALL_BACK)(void *parse, ...);
  */
 int http_proto_init(struct http_parse_info *info, char *const *data, unsigned const *size);
 
+int http_proto_free(struct http_parse_info *info);
+
 int http_proto_resp(struct http_parse_info *info);
 
 int http_proto_reqt(struct http_parse_info *info);
 
+
+
 int redis_proto_init(struct redis_parse_info *info, char *const *data, unsigned const *size);
+
+int redis_proto_free(struct redis_parse_info *info);
 
 int redis_proto_resp(struct redis_parse_info *info);
 
 int redis_proto_reqt(struct redis_parse_info *info);
 
+
+
 int mttp_proto_init(struct mttp_parse_info *info, char *const *data, unsigned const *size);
+
+int mttp_proto_free(struct mttp_parse_info *info);
 
 int mttp_proto_reqt(struct mttp_parse_info *info);
 

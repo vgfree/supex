@@ -50,3 +50,4 @@ void mttp_parse_init(struct mttp_parse_info *info, char *const *buff, unsigned c
 
 bool mttp_parse(struct mttp_parse_info *parseinfo);
 
+void mttp_parse_free(struct mttp_parse_info *info);

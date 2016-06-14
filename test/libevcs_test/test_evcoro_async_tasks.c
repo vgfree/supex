@@ -27,7 +27,7 @@ static bool task_report(void *user, void *task)
 	return free_queue_push(&glist, task);
 }
 
-void *task_handle(struct supex_evcoro *evcoro, void *step)
+void *task_handle(struct supex_evcoro *evcoro, int step)
 {
 	printf("111111111\n");
 
@@ -62,7 +62,7 @@ void main(void)
 		, .tsz  = sizeof(TASK)
 		, .data = NULL
 		, .task_lookup= task_lookup
-		, .task_handle= (void (*)(void *data,        void *addr))task_handle
+		, .task_handle= task_handle
 	};
 	EVCS_MODULE_CARRY(evcs, &sets);
 	EVCS_MODULE_MOUNT(evcs);

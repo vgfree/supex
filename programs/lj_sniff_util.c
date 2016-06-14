@@ -123,11 +123,10 @@ int sniff_vms_call(void *user, union virtual_system **VMS, struct sniff_task_nod
 {
 	int error = 0;
 	lua_State       **L = VMS;
-	SNIFF_WORKER_PTHREAD    *p_sniff_worker = (SNIFF_WORKER_PTHREAD *)user;
 	time_t                  delay = time(NULL) - task->stamp;
 
-	x_printf(S, "channel %d\t|task <shift> %d\t<come> %ld\t<delay> %ld",
-		p_sniff_worker->genus, task->base.shift, task->stamp, delay);
+	x_printf(S, "task <shift> %d\t<come> %ld\t<delay> %ld",
+		task->base.shift, task->stamp, delay);
 
 	x_printf(D, "%s", task->data);
 
@@ -154,11 +153,10 @@ int sniff_vms_exec(void *user, union virtual_system **VMS, struct sniff_task_nod
 {
 	int error = 0;
 	lua_State       **L = VMS;
-	SNIFF_WORKER_PTHREAD    *p_sniff_worker = (SNIFF_WORKER_PTHREAD *)user;
 	time_t                  delay = time(NULL) - task->stamp;
 
-	x_printf(S, "channel %d\t|task <shift> %d\t<come> %ld\t<delay> %ld",
-		p_sniff_worker->genus, task->base.shift, task->stamp, delay);
+	x_printf(S, "task <shift> %d\t<come> %ld\t<delay> %ld",
+		task->base.shift, task->stamp, delay);
 
 	x_printf(D, "%s", task->data);
 
@@ -191,11 +189,10 @@ int sniff_vms_exec(void *user, union virtual_system **VMS, struct sniff_task_nod
 int sniff_vms_monitor(void *user, union virtual_system **VMS, struct sniff_task_node *task)
 {
 	int error = 0;
-	SNIFF_WORKER_PTHREAD    *p_sniff_worker = (SNIFF_WORKER_PTHREAD *)user;
 	lua_State       **L = VMS;
 	lua_getglobal(*L, "app_monitor");
 	lua_pushboolean(*L, task->last);
-	lua_pushinteger(*L, p_sniff_worker->index);
+	lua_pushinteger(*L, tlpool_get_thread_index(user));
 	error = lua_pcall(*L, 2, 0, 0);
 	if (error) {
 		assert(*L);

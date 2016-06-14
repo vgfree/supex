@@ -25,11 +25,9 @@ bool sniff_task_report(void *user, void *task)
 {
 	bool ok = false;
 
-	ok = free_queue_push(&((SNIFF_WORKER_PTHREAD *)user)->tlist, task);
-
+	ok = tlpool_push(user, task, TLPOOL_TASK_SEIZE, 0);
 	if (ok) {
 		x_printf(D, "push queue ok!");
-		AO_INC(&((SNIFF_WORKER_PTHREAD *)user)->thave);
 	} else {
 		x_printf(E, "push queue fail!");
 	}
@@ -41,11 +39,9 @@ bool sniff_task_lookup(void *user, void *task)
 {
 	bool ok = false;
 
-	ok = free_queue_pull(&((SNIFF_WORKER_PTHREAD *)user)->tlist, task);
-
+	ok = tlpool_pull(user, task, TLPOOL_TASK_SEIZE, 0);
 	if (ok) {
 		x_printf(D, "pull queue ok!");
-		AO_DEC(&((SNIFF_WORKER_PTHREAD *)user)->thave);
 	}
 
 	return ok;
@@ -55,7 +51,7 @@ static void alive_pthrd_init(void *user)
 {
 	ALIVE_WORKER_PTHREAD *p_alive_worker = user;
 
-	p_alive_worker->mount = sniff_start(p_alive_worker, 0, 0);
+	p_alive_worker->mount = sniff_start(0);
 }
 
 

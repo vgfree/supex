@@ -66,7 +66,6 @@ BASE_OBJ = $(addprefix $(BIN)/, \
 	   count.o \
 	   statistics_thread.o \
 	   app_queue.o \
-	   switch_queue.o \
 	   )
 
 OBJ ?= $(BASE_OBJ)
@@ -94,9 +93,6 @@ $(BIN)/%.o : $(BASE_SRC)/%.cc
 	@-if [ ! -d $(BIN) ];then mkdir $(BIN); fi
 	g++ $(CFLAGS) $(INC_DIR) $(LIB_DIR) $(LIBS) -c $< -o $@ `pkg-config --cflags --libs protobuf`
 
-$(BIN)/switch_queue.o : ../switch_queue.c
-	@-if [ ! -d $(BIN) ];then mkdir $(BIN); fi
-	gcc $(CFLAGS) $(INC_DIR) $(LIB_DIR) $(LIBS) -c $< -o $@
 
 $(BIN)/app_queue.o : ../app_queue.c
 	@-if [ ! -d $(BIN) ];then mkdir $(BIN); fi

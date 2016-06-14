@@ -160,11 +160,10 @@ static int safe_delay_http(const char *host, int port, const char *data, size_t 
 int sniff_vms_call_rlpushx(void *user, union virtual_system **VMS, struct sniff_task_node *task)
 {
 	struct sniff_task_node  *p_task = task;
-	SNIFF_WORKER_PTHREAD    *p_sniff_worker = (SNIFF_WORKER_PTHREAD *)user;
 	time_t                  delay = time(NULL) - p_task->stamp;
 
-	x_printf(S, "channel %d\t|task <shift> %d\t<come> %ld\t<delay> %ld",
-		p_sniff_worker->genus, p_task->base.shift, p_task->stamp, delay);
+	x_printf(S, "task <shift> %d\t<come> %ld\t<delay> %ld",
+		p_task->base.shift, p_task->stamp, delay);
 
 	struct route_msg_data   *p_rmsg = (struct route_msg_data *)p_task->data;
 	char                    *tags = p_rmsg->label;
@@ -174,7 +173,7 @@ int sniff_vms_call_rlpushx(void *user, union virtual_system **VMS, struct sniff_
 	int     ln = (int)MIN(strlen(tags), MAX_SNIFF_LABEL_LENGTH);
 	int     lv = 0;
 	char    *p = tags;
-	switch (p_sniff_worker->genus)
+	switch (g_dams_cfg_file.qtype)
 	{
 		case REAL_TIME_KIND:
 
@@ -260,18 +259,17 @@ int sniff_vms_call_rlpushx(void *user, union virtual_system **VMS, struct sniff_
 int sniff_vms_call_publish(void *user, union virtual_system **VMS, struct sniff_task_node *task)
 {
 	struct sniff_task_node  *p_task = task;
-	SNIFF_WORKER_PTHREAD    *p_sniff_worker = (SNIFF_WORKER_PTHREAD *)user;
 	time_t                  delay = time(NULL) - p_task->stamp;
 
-	x_printf(S, "channel %d\t|task <shift> %d\t<come> %ld\t<delay> %ld",
-		p_sniff_worker->genus, p_task->base.shift, p_task->stamp, delay);
+	x_printf(S, "task <shift> %d\t<come> %ld\t<delay> %ld",
+		p_task->base.shift, p_task->stamp, delay);
 
 	struct route_msg_data   *p_rmsg = (struct route_msg_data *)p_task->data;
 	char                    *tags = p_rmsg->label;
 	char                    *data = p_rmsg->flows;
 	int                     size = p_task->size;
 
-	switch (p_sniff_worker->genus)
+	switch (g_dams_cfg_file.qtype)
 	{
 		case REAL_TIME_KIND:
 

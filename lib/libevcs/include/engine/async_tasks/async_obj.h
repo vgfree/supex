@@ -57,6 +57,7 @@ struct command_node
 	char                    ptype;
 	PROTO_CALL_BACK         *proto_handler_work;
 	PROTO_CALL_BACK         *proto_handler_init;	// 引入到外部
+	PROTO_CALL_BACK         *proto_handler_free;	// 引入到外部
 	/*cmd parser*/
 	union
 	{

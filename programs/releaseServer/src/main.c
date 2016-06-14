@@ -105,7 +105,6 @@ static void swift_pthrd_init(void *user)
 /*worker解析完数据后，调用此接口处理数据*/
 int data_handle(void *user, union virtual_system **VMS, struct adopt_task_node *task)
 {
-	SWIFT_WORKER_PTHREAD    *p_swift_worker = (SWIFT_WORKER_PTHREAD *)user;
 	struct data_node        *p_node = get_pool_data(task->sfd);
 	char                    *ptr = NULL;
 

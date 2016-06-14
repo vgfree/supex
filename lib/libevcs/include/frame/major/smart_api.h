@@ -13,6 +13,7 @@
 #include "supex.h"
 #include "../listen_pthread.h"
 #include "../hander_pthread.h"
+#include "thread_pool_loop/tlpool.h"
 
 enum
 {
@@ -50,7 +51,6 @@ typedef struct
 	int                     index;	/**< 所属线程池的下标*/
 	pthread_t               pid;	/* unique ID of this thread */
 	long                    tid;
-	struct free_queue_list  tlist;	/**< 任务队列*/
 } SMART_WORKER_PTHREAD;
 
 /*
@@ -59,6 +59,7 @@ typedef struct
  */
 #define SMART_HANDER_PTHREAD HANDER_PTHREAD
 
+extern tlpool_t *g_smart_worker_tlpool;
 /*******************************************/
 int smart_mount(struct smart_cfg_list *conf);
 

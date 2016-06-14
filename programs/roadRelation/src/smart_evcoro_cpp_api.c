@@ -9,7 +9,6 @@
 
 int api_hmget(void *user, union virtual_system **VMS, struct adopt_task_node *task)
 {
-	SMART_WORKER_PTHREAD    *p_smart_worker = (SMART_WORKER_PTHREAD *)user;
 	struct data_node        *p_node = get_pool_data(task->sfd);
 
 	char                    *p_buf = cache_data_address(&p_node->mdl_recv.cache);
@@ -52,7 +51,6 @@ int api_hmget(void *user, union virtual_system **VMS, struct adopt_task_node *ta
 
 int api_hgetall(void *user, union virtual_system **VMS, struct adopt_task_node *task)
 {
-	SMART_WORKER_PTHREAD    *p_smart_worker = (SMART_WORKER_PTHREAD *)user;
 	struct data_node        *p_node = get_pool_data(task->sfd);
 
 	char                    *p_buf = cache_data_address(&p_node->mdl_recv.cache);

@@ -31,6 +31,9 @@ struct switch_queue_info
 	volatile long           *minor_have;
 	QUEUE_ENTITY_CALL       minor_push;
 	QUEUE_ENTITY_CALL       minor_pull;
+	
+	AO_SpinLockT    w_lock;	/**< 压入锁*/
+	AO_SpinLockT    r_lock;	/**< 弹出锁*/
 };
 
 bool switch_queue_init(struct switch_queue_info *p_stat,

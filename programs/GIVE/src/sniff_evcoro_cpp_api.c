@@ -32,11 +32,10 @@ extern kv_handler_t *count_handler;
 int sniff_vms_call(void *user, union virtual_system **VMS, struct sniff_task_node *task)
 {
 	struct sniff_task_node  *p_task = (struct sniff_task_node *)task;
-	SNIFF_WORKER_PTHREAD    *p_sniff_worker = (SNIFF_WORKER_PTHREAD *)user;
 	time_t                  delay = time(NULL) - p_task->stamp;
 
-	x_printf(D, "channel %d\t|task <shift> %d\t<come> %ld\t<delay> %ld",
-		p_sniff_worker->genus, p_task->base.shift, p_task->stamp, delay);
+	x_printf(D, "task <shift> %d\t<come> %ld\t<delay> %ld",
+		p_task->base.shift, p_task->stamp, delay);
 
 	x_printf(I, "%s\n", p_task->data);
 

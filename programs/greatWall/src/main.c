@@ -16,7 +16,7 @@
 #include "load_sniff_cfg.h"
 #include "apply_def.h"
 #include "dams_cfg.h"
-#include "switch_queue.h"
+#include "base/switch_queue.h"
 #include "app_queue.h"
 
 #include "sniff_evcoro_cpp_api.h"
@@ -31,7 +31,7 @@ static void swift_pthrd_init(void *user)
 {
 	SWIFT_WORKER_PTHREAD *p_swift_worker = user;
 
-	p_swift_worker->mount = sniff_start(p_swift_worker, p_swift_worker->index, g_dams_cfg_file.qtype);
+	p_swift_worker->mount = sniff_start(p_swift_worker->index);
 }
 
 

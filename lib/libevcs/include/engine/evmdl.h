@@ -114,6 +114,7 @@ struct irecv_module
 	int             ptype;			/* http or redis */
 	PROTO_CALL_BACK *proto_handler_work;
 	PROTO_CALL_BACK *proto_handler_init;
+	PROTO_CALL_BACK *proto_handler_free;
 	union
 	{
 		/* USE HTTP PROTOCOL */
@@ -189,6 +190,7 @@ struct upstream_module
 	int             ptype;			/* http or redis */
 	PROTO_CALL_BACK *proto_handler_work;
 	PROTO_CALL_BACK *proto_handler_init;
+	PROTO_CALL_BACK *proto_handler_free;
 	union
 	{
 		struct http_parse_info  http_info;

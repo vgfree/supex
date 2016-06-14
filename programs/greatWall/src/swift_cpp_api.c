@@ -11,9 +11,11 @@
 
 extern struct sniff_cfg_list g_sniff_cfg_list;
 
-static int swift_vms_call_common(void *W, struct adopt_task_node *task, SNIFF_VMS_FCB vms_cb)
+static int swift_vms_call_common(void *user, struct adopt_task_node *task, SNIFF_VMS_FCB vms_cb)
 {
-	SWIFT_WORKER_PTHREAD    *p_swift_worker = (SWIFT_WORKER_PTHREAD *)W;
+	tlpool_t	*tlpool = user;
+	int idx = tlpool_get_thread_index(tlpool);
+	SWIFT_WORKER_PTHREAD    *p_swift_worker = (SWIFT_WORKER_PTHREAD *)&g_swift_worker_pthread[idx];
 	struct data_node        *p_node = get_pool_data(task->sfd);
 	char                    *p_buf = cache_data_address(&p_node->mdl_recv.cache);
 	struct redis_status     *p_rst = &p_node->mdl_recv.parse.redis_info.rs;
@@ -41,9 +43,7 @@ static int swift_vms_call_common(void *W, struct adopt_task_node *task, SNIFF_VM
 	memcpy(p_rmsg->flows, p_buf + p_rst->field[1].offset, sniff_task.size);
 
 	/*如果有多通道，复制发给所以通道*/
-	SNIFF_WORKER_PTHREAD *p_sniff_worker = (SNIFF_WORKER_PTHREAD *)p_swift_worker->mount;
-	sniff_one_task_hit(p_sniff_worker, &sniff_task);
-	p_swift_worker->mount = p_sniff_worker->next;
+	sniff_one_task_hit(p_swift_worker->mount, &sniff_task);
 
 	const char sndcnt[] = ":1\r\n";
 	cache_append(&p_node->mdl_send.cache, sndcnt, sizeof(sndcnt) - 1);

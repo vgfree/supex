@@ -37,7 +37,7 @@ int smart_vms_gain_ext(void *user, union virtual_system **VMS, struct adopt_task
 		long *addr = sniff_task.data;
 		*addr = &all;
 
-		sniff_one_task_hit((SNIFF_WORKER_PTHREAD *)p_swift_worker->mount, &sniff_task);
+		sniff_one_task_hit(p_swift_worker->mount, &sniff_task);
 	}
 
 	while (all != 0) {
@@ -74,7 +74,7 @@ int smart_vms_sync_ext(void *user, union virtual_system **VMS, struct adopt_task
 		long *addr = sniff_task.data;
 		*addr = &all;
 
-		sniff_all_task_hit((SNIFF_WORKER_PTHREAD *)p_swift_worker->mount, &sniff_task);
+		sniff_all_task_hit(p_swift_worker->mount, &sniff_task);
 	}
 
 	while (all != 0) {
@@ -107,7 +107,7 @@ int smart_vms_monitor_ext(void *user, union virtual_system **VMS, struct adopt_t
 		sniff_task.stamp = time(NULL);
 		sniff_task.size = 0;
 
-		sniff_all_task_hit((SNIFF_WORKER_PTHREAD *)p_swift_worker->mount, &sniff_task);
+		sniff_all_task_hit(p_swift_worker->mount, &sniff_task);
 	}
 
 	return 0;

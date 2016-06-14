@@ -17,7 +17,7 @@
 #include "rr_cfg.h"
 #include "traffic_model.h"
 #include "kv_cache.h"
-#include "switch_queue.h"
+#include "base/switch_queue.h"
 
 #include "sniff_evuv_cpp_api.h"
 
@@ -33,7 +33,7 @@ static void swift_pthrd_init(void *user)
 {
 	SWIFT_WORKER_PTHREAD *p_swift_worker = user;
 
-	p_swift_worker->mount = sniff_start(p_swift_worker, p_swift_worker->index, 0);
+	p_swift_worker->mount = sniff_start(p_swift_worker->index);
 }
 
 
@@ -179,13 +179,11 @@ int main(int argc, char **argv)
 	}
 
 	g_swift_cfg_list.func_info[APPLY_FUNC_ORDER].type = BIT8_TASK_TYPE_ALONE;
-	g_swift_cfg_list.func_info[APPLY_FUNC_ORDER].func = (TASK_CALLBACK)swift_vms_call;
+	g_swift_cfg_list.func_info[APPLY_FUNC_ORDER].func = (TASK_VMS_FCB)swift_vms_call;
 
 	g_swift_cfg_list.entry_init = swift_entry_init;
 
 	g_swift_cfg_list.pthrd_init = swift_pthrd_init;
-
-	g_swift_cfg_list.vmsys_init = swift_vms_init;
 
 	g_swift_cfg_list.reload_cfg = swift_reload_cfg;
 

@@ -163,11 +163,10 @@ int smart_vms_exec(void *user, union virtual_system **VMS, struct adopt_task_nod
 int smart_vms_monitor(void *user, union virtual_system **VMS, struct adopt_task_node *task)
 {
 	int error = 0;
-	SMART_WORKER_PTHREAD    *p_smart_worker = (SMART_WORKER_PTHREAD *)user;
 	lua_State       **L = VMS;
 	lua_getglobal(*L, "app_monitor");
 	lua_pushboolean(*L, task->last);
-	lua_pushinteger(*L, p_smart_worker->index);
+	lua_pushinteger(*L, tlpool_get_thread_index(user));
 	error = lua_pcall(*L, 2, 0, 0);
 	if (error) {
 		assert(*L);

@@ -55,15 +55,12 @@ static bool task_report(void *user, void *task)
 	return ok;
 }
 
-void *task_handle(struct supex_evcoro *evcoro, void *step)
+void *task_handle(struct supex_evcoro *evcoro, int step)
 {
-	int idx_task = (int)(uintptr_t)step;
-	struct user_task *p_task = &((struct user_task *)evcoro->task)[idx_task];
+	struct user_task *p_task = &((struct user_task *)evcoro->task)[step];
 	int idx = tlpool_get_thread_index(evcoro->data);
 	printf("thread %p index %d get [%s]\n", pthread_self(), idx, p_task->TASK);
-	printf("------------\n");
-	printf("华丽的分割线\n");
-	printf("------------\n");
+	printf("------------华丽的分割线------------\n");
 #if 0
 	struct supex_evcoro     *p_evcoro = supex_get_default();
 	struct evcoro_scheduler *p_scheduler = p_evcoro->scheduler;
@@ -110,7 +107,7 @@ void main(void)
 {
 	conn_xpool_init("www.sina.com", 80, 10, true);
 
-	tlpool_t *tlpool = tlpool_init(3, 100, sizeof(struct user_task));
+	tlpool_t *tlpool = tlpool_init(3, 100, sizeof(struct user_task), NULL);
 	
 	tlpool_bind(tlpool, (void (*)(void *))work, tlpool, 0);
 	tlpool_bind(tlpool, (void (*)(void *))work, tlpool, 1);

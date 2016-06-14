@@ -44,17 +44,9 @@ static void swift_reload_cfg(void)
 
 	/*通过每个swift_worker挂起sniff_worker的所有线程*/
 	for (i = 0; i < swift_worker_total; i++) {
-		struct mount_info *link = NULL;
+		thds++;
 
-		int j = 0;
-
-		link = (struct mount_info *)swift_worker[i].mount;
-
-		for (j = 0; j < LIMIT_CHANNEL_KIND; j++) {
-			thds++;
-
-			sniff_suspend_thread(link[j].list, &cond);
-		}
+		sniff_suspend_thread(swift_worker[i].mount, &cond);
 	}
 
 	/*
