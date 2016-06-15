@@ -36,7 +36,7 @@ void load_cfg_file(struct swift_cfg_file *p_cfg, char *name)
 		if (strncmp(str_val, "http", 4) == 0) {
 			p_cfg->ptype = USE_HTTP_PROTO;
 			g_iProType = POLE_PROTYPE_HTTP;
-		} else if (strncmp(str_val, "redi", 4) == 0) {
+		} else if (strncmp(str_val, "redis", 5) == 0) {
 			p_cfg->ptype = USE_REDIS_PROTO;
 			g_iProType = POLE_PROTYPE_REDIS;
 		}
