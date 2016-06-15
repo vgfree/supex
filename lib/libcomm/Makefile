@@ -61,7 +61,6 @@ TARGET_DLNAME =		$(TARGET_NAME).$(TARGET_MAJOR).$(TARGET_MINOR)
 TARGET_SONAME = 	$(TARGET_NAME).$(TARGET_MAJOR)
 DYLIB_CFLAGS =		-shared -Wl,-soname,$(TARGET_SONAME)
 #BUILD_OPTIMIZE =	-fprofile-arcs
-BUILD_LIBS =		-lrt
 endif
 
 #######
@@ -80,9 +79,10 @@ endef
 
 #######
 ALL:
-	gcc $(BUILD_CFLAGS) -L$(BUILD_PWD)/lib -lcomm $(BUILD_PWD)/test/mfptp_test.c -o mfptp_test
-	gcc $(BUILD_CFLAGS) -L$(BUILD_PWD)/lib -lcomm $(BUILD_PWD)/test/server.c -o server
-	gcc $(BUILD_CFLAGS) -L$(BUILD_PWD)/lib -lcomm $(BUILD_PWD)/test/client.c -o client
+	gcc $(BUILD_CFLAGS) -L$(BUILD_PWD)/lib $(BUILD_LIBS) -lcomm $(BUILD_PWD)/test/mfptp_test.c -o mfptp_test
+	#gcc $(BUILD_CFLAGS) -L$(BUILD_PWD)/lib $(BUILD_LIBS) -lcomm $(BUILD_PWD)/test/pipe_test.c -o pipe_test
+	gcc $(BUILD_CFLAGS) -L$(BUILD_PWD)/lib $(BUILD_LIBS) -lcomm $(BUILD_PWD)/test/server.c -o server
+	gcc $(BUILD_CFLAGS) -L$(BUILD_PWD)/lib $(BUILD_LIBS) -lcomm $(BUILD_PWD)/test/client.c -o client
 
 lib: prepare  $(TARGET)
 
@@ -98,7 +98,7 @@ $(TARGET) : $(OBJ)
 	$(ECHO) $(COLOR_TXT)"\t\t- ARCHIVE\t===>\t"$(COLOR_TAG)"$(TARGET_ARNAME)"$(COLOR_NONE)
 	$(AR) $(TARGET_DIR)/$(TARGET_ARNAME) $^
 	$(ECHO) $(COLOR_TXT)"\t\t- DYNAMIC\t===>\t"$(COLOR_TAG)"$(TARGET_NAME)"$(COLOR_NONE)
-	$(LN) -o $(TARGET_DIR)/$(TARGET_DLNAME) $^ $(BUILD_LIBS)
+	$(LN) -o $(TARGET_DIR)/$(TARGET_DLNAME) $^ 
 	$(INSTALL_HEAD_FILE)
 	$(INSTALL_DYLIB_FILE)
 	$(ECHO) $(COLOR_TXT)"\n\tBUILD\t >>> "$(COLOR_RED)"$@"$(COLOR_TXT)" <<< COMPLETE"$(COLOR_NONE)

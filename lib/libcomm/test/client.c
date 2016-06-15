@@ -22,7 +22,7 @@ int main(int argc, char* argv[])
 
 	if (unlikely(argc < 4)) {
 		/* 最后一个参数为绑定几个端口，输入端口为起始，后续端口都直接加1 */
-		printf("usage:%s <ipaddr> <port> <bind_times>\n", argv[0]);
+		printf("usage:%s <ipaddr> <port> <connect_times>\n", argv[0]);
 		return retval;
 	}
 

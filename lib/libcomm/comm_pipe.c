@@ -6,7 +6,7 @@
 
 #define PIPE_READ_MIOU	1024	/* 一次性读取数据的大小 */
 
-bool commpipe_init(struct comm_pipe *commpipe) 
+bool commpipe_create(struct comm_pipe *commpipe) 
 {
 	assert(commpipe);
 
@@ -15,18 +15,13 @@ bool commpipe_init(struct comm_pipe *commpipe)
 	if (pipe(fda) == 0) {
 		/* 创建成功 */
 		commpipe->rfd = fda[0];
+		/* 读端口设置为非阻塞，没有数据就立刻返回 */
 		if (unlikely(!fd_setopt(commpipe->rfd, O_NONBLOCK))) {
 			close(commpipe->rfd);
 			return false;
 		}
-		commpipe->wfd = fda[1];
-		if (unlikely(!fd_setopt(commpipe->wfd, O_NONBLOCK))) {
-			close(commpipe->rfd);
-			close(commpipe->wfd);
-			return false;
-		}
+		commpipe->wfd = fda[1];	/* 写端口默认阻塞，直到写入数据返回为止 */
 		commpipe->init = true;
-		//log("commpipe read fd:%d commpipe write fd:%d\n",commpipe->rfd, commpipe->wfd);
 		return true;
 	} else {
 		return false;

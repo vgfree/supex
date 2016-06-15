@@ -61,6 +61,7 @@ static inline bool commlist_push(struct comm_list *head, struct comm_list *list)
 	head->tail->tail = head->tail;
 	head->tail->next = head;
 	head->nodes += 1;
+	log("push data into list\n");
 	return true;
 }
 
@@ -79,6 +80,7 @@ static inline bool commlist_pull(struct comm_list *head, struct comm_list **data
 	} else {
 		return false;
 	}
+	log("pull data from list\n");
 }
 
 /* 销毁嵌套链表的结构体数据： @head：链表的头节点 @offset：链表在嵌套其结构体中的偏移 */
@@ -87,7 +89,6 @@ static inline void commlist_destroy(struct comm_list *head, int offset){
 	if (head->destroy && head && offset > 0) {
 		while (commlist_pull(head, &list)) {
 			log("list destroy data");
-			struct comm_message *message = (struct comm_message*)get_container_addr(list, offset);
 			head->destroy((void *)get_container_addr(list, offset));
 		}
 	}

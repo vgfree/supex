@@ -95,13 +95,34 @@ void  commevent_accept(struct comm_event *commevent, int fdidx)
 	}
 }
 
+static void _set_remainfd(struct remainfd *remainfd, int *array, int cnt)
+{
+	int i = 0;
+	for(i = 0; i < cnt; i++) {
+		add_remainfd(remainfd, array[i], REMAINFD_PACKAGE);
+	}
+}
+
 void commevent_remainfd(struct comm_event *commevent, bool timeout)
 {
 	assert(commevent && commevent->init);
 	int fd = -1;
 	int counter = 0;	/* 处理fd个数的计数 */
+	int fda[EPOLL_SIZE] = {};
 	/* 先处理需要读取数据的fd */
 	while (counter < MAX_DISPOSE_FDS && (commevent->remainfd.cnt[0] || commevent->remainfd.cnt[1] || commevent->remainfd.cnt[2] || commevent->remainfd.cnt[3] || commevent->remainfd.cnt[4])) {
+		int cnt = 0, i = 0;
+		int fda[EPOLL_SIZE] = {};
+		cnt = commpipe_read(&commevent->commctx->commpipe, fda, sizeof(int));
+		_set_remainfd(&commevent->remainfd, fda, cnt);
+#if 0
+		if ((cnt = commpipe_read(&commctx->commpipe, fda, sizeof(int))) > 0) {
+			for(i = 0; i < cnt; i++) {
+				add_remainfd(&commevent->remainfd, fda[i], REMAINFD_PACKAGE);
+			}
+		}
+#endif
+
 		if (commevent->remainfd.cnt[0]) {
 			/* 处理Accept事件 */
 			/* 类型为REMAINFD_LISTEN类型的fd里面保存的是fd的索引 */

@@ -40,7 +40,7 @@ struct comm_context* comm_ctx_create(int epollsize)
 		goto error;
 	}
 
-	if (unlikely(!commpipe_init(&commctx->commpipe))) {
+	if (unlikely(!commpipe_create(&commctx->commpipe))) {
 		goto error;
 	}
 
@@ -116,20 +116,23 @@ int comm_socket(struct comm_context *commctx, const char *host, const char *serv
 	if (type == COMM_BIND) {
 		if (commctx->commevent->bindfdcnt < LISTEN_SIZE ) {
 			if (unlikely(!socket_listen(&commtcp, host, service))) {
+				log("bind socket failed\n");
 				return -1;
 			}
 		} else {
-			log("Bind too many socket in one comm_context\n");
+			log("bind too many socket in one comm_context\n");
 			return -1;
 		}
 	} else {
 		if (unlikely(!socket_connect(&commtcp, host, service))) {
+			log("connect socket failed\n");
 			return -1;
 		}
 	}
 
 	/* 添加一个fd进行监听 */
 	if (unlikely(!commdata_add(commctx->commevent, &commtcp, finishedcb))) {
+		log("add socket fd to monitor failed\n");
 		close(commtcp.fd);
 		return -1;
 	}
@@ -161,9 +164,9 @@ int comm_send(struct comm_context *commctx, const struct comm_message *message, 
 			}
 			commlock_unlock(&connfd->sendlock);
 
-			if (unlikely(commpipe_write(&commctx->commpipe, (void*)&message->fd, sizeof(message->fd)) == -1)) {
-				/* 管道已写满,发送一个信号去读取数据  */
-			}
+			/* 发送给对发以触发写事件 如果数据写满则一直堵塞到对方读取数据 */
+			commpipe_write(&commctx->commpipe, (void*)&message->fd, sizeof(message->fd));
+
 			//log("comm_send data in comm_send\n");
 			return message->package.dsize;
 		} 
@@ -271,13 +274,13 @@ static void * _start_new_pthread(void *usr)
 					} else if (commctx->commepoll.events[n].events & EPOLLIN) {			/* 有数据可读，触发读数据事件 */
 						if (commctx->commepoll.events[n].data.fd == commctx->commpipe.rfd) {	/* 管道事件被触发，则触发打包事件 */
 							int cnt = 0, i = 0;
-							int array[EPOLL_SIZE] = {};
-							cnt = commpipe_read(&commctx->commpipe, array, sizeof(int));
-							_set_remainfd(&commctx->commevent->remainfd, array, cnt);
+							int fda[EPOLL_SIZE] = {};
+							cnt = commpipe_read(&commctx->commpipe, fda, sizeof(int));
+							_set_remainfd(&commctx->commevent->remainfd, fda, cnt);
 #if 0
-							if ((cnt = commpipe_read(&commctx->commpipe, array, sizeof(int))) > 0) {
+							if ((cnt = commpipe_read(&commctx->commpipe, fda, sizeof(int))) > 0) {
 								for(i = 0; i < cnt; i++) {
-									add_remainfd(&commctx->commevent->remainfd, array[i], REMAINFD_PACKAGE);
+									add_remainfd(&commctx->commevent->remainfd, fda[i], REMAINFD_PACKAGE);
 								}
 							}
 #endif

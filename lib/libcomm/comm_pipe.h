@@ -25,7 +25,7 @@ struct comm_pipe {
 };
 
 /* 创建一个管道 */
-bool commpipe_init(struct comm_pipe *commpipe);
+bool commpipe_create(struct comm_pipe *commpipe);
 
 /* 关闭一个管道 */
 void commpipe_destroy(struct comm_pipe *commpipe);
