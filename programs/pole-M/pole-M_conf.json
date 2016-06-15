@@ -1,6 +1,7 @@
 {
 	"swift_port": 8008,
 	"swift_worker_counts": 8,
+	"swift_tasker_counts": 8,
 	"swift_protocol": "http",
 
 	// 在执行swift相关协议的同时,是否并行执行ZeroMQ的协议入口数据;

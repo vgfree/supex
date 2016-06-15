@@ -23,7 +23,11 @@ void load_cfg_file(struct swift_cfg_file *p_cfg, char *name)
 	} else { goto fail; }
 
 	if (json_object_object_get_ex(cfg, "swift_worker_counts", &obj)) {
-		p_cfg->worker_counts = (short)json_object_get_int(obj);
+		p_cfg->worker_counts = json_object_get_int(obj);
+	} else { goto fail; }
+
+	if (json_object_object_get_ex(cfg, "swift_tasker_counts", &obj)) {
+		p_cfg->tasker_counts = json_object_get_int(obj);
 	} else { goto fail; }
 
 	if (json_object_object_get_ex(cfg, "swift_protocol", &obj)) {

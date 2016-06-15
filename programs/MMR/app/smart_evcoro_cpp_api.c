@@ -37,7 +37,7 @@ int smart_vms_gain_ext(void *user, union virtual_system **VMS, struct adopt_task
 		long *addr = sniff_task.data;
 		*addr = &all;
 
-		sniff_one_task_hit(p_swift_worker->mount, &sniff_task);
+		g_sniff_cfg_list.task_report(p_swift_worker->mount, &sniff_task);
 	}
 
 	while (all != 0) {

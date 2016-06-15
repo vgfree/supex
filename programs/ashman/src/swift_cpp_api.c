@@ -32,7 +32,7 @@ int swift_vms_call(void *user, union virtual_system **VMS, struct adopt_task_nod
 	sniff_task.size = p_hst->body_size;
 	memcpy(sniff_task.data, (const char *)(p_buf + p_hst->body_offset), p_hst->body_size);
 
-	sniff_one_task_hit(p_swift_worker->mount, &sniff_task);
+	g_sniff_cfg_list.task_report(p_swift_worker->mount, &sniff_task);
 	return 0;
 }
 
@@ -57,7 +57,7 @@ int swift_vms_exec(void *user, union virtual_system **VMS, struct adopt_task_nod
 	sniff_task.size = p_hst->body_size;
 	memcpy(sniff_task.data, (const char *)(p_buf + p_hst->body_offset), p_hst->body_size);
 
-	sniff_one_task_hit(p_swift_worker->mount, &sniff_task);
+	g_sniff_cfg_list.task_report(p_swift_worker->mount, &sniff_task);
 	return 0;
 }
 

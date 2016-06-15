@@ -289,7 +289,7 @@ int alive_vms_call(void *user, union virtual_system **VMS, struct adopt_task_nod
 	sniff_task.size = size;
 	memcpy(sniff_task.data, data, size);
 
-	sniff_one_task_hit(p_alive_worker->mount, &sniff_task);
+	g_sniff_cfg_list.task_report(p_alive_worker->mount, &sniff_task);
   x_printf(D, "transfer start");
 	return 0;
 
