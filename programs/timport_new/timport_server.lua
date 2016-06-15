@@ -67,13 +67,14 @@ end
 local function sendDataToClient(table)
 end
 
-function handle()
-	local targetTime = '20160612171'
-	local user = getUserWithKey1(key1, targetTime)
-	only.log('E', scan.dump(user))
-	if user ~= nil then
-		getDataWithUser(user, targetTime)
-	end
+function GetTable(tab)
+	--local targetTime = '20160612171'
+	--local user = getUserWithKey1(key1, targetTime)
+	--only.log('E', scan.dump(user))
+	--if user ~= nil then
+	--	getDataWithUser(user, targetTime)
+	--endi
+	print(tab[1])
+	print(tab[2])
 end
 
-handle = handle()
