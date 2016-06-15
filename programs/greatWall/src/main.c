@@ -71,7 +71,7 @@ static void swift_entry_init(void)
 	/*
 	 * 初始化支持的命令
 	 */
-	init_session_cmd();
+	//init_session_cmd();
 	init_service_cnt();
 }
 
@@ -189,9 +189,9 @@ int main(int argc, char **argv)
 
 	g_swift_cfg_list.pthrd_init = swift_pthrd_init;
 
-	g_swift_cfg_list.reload_cfg = swift_reload_cfg;
+	//g_swift_cfg_list.reload_cfg = swift_reload_cfg;
 
-	g_swift_cfg_list.shut_down = swift_shut_down;
+	//g_swift_cfg_list.shut_down = swift_shut_down;
 
 	/*have bug when tasks pile up if use idle task*/
 

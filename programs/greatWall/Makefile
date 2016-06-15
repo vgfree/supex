@@ -69,6 +69,10 @@ $(BIN)/app_queue.o : ../app_queue.c
 	@-if [ ! -d $(BIN) ];then mkdir $(BIN); fi
 	gcc $(CFLAGS) $(INC_DIR) $(LIB_DIR) $(LIBS) -c $< -o $@
 
+$(BIN)/add_session_cmd.o : ../add_session_cmd.c
+	@-if [ ! -d $(BIN) ];then mkdir $(BIN); fi
+	gcc $(CFLAGS) $(INC_DIR) $(LIB_DIR) $(LIBS) -c $< -o $@
+
 push:
 	git push origin HEAD:refs/for/master
 
