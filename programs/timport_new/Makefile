@@ -62,6 +62,7 @@ BASE_OBJ = $(addprefix $(BIN)/, \
 	   $(ADD_OBJ) \
 	   main.o \
 	   redis_parse.o \
+	   dispatch_data.o \
 	   )
 
 OBJ ?= $(BASE_OBJ)
