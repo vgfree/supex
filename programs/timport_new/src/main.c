@@ -8,6 +8,7 @@
 #include "core/evcs_kernel.h"
 #include "spx_evcs.h"
 #include "spx_evcs_module.h"
+#include "async_tasks/async_obj.h"
 
 EVCS_MODULE_SETUP(kernel, kernel_init, kernel_exit, &g_kernel_evts);
 EVCS_MODULE_SETUP(evcs, evcs_init, evcs_exit, &g_evcs_evts);
@@ -23,13 +24,18 @@ EVCS_MODULE_SETUP(evcs, evcs_init, evcs_exit, &g_evcs_evts);
 
 #define PROCESS_ID (MAX_SET_DATA_PROCESS_NUMBER + SET_DATA_PROCESS)
 
-//static bool IsGotData = false;
-
 tlpool_t *tlpool = NULL;
 
 struct user_task {
 	char TASK[64];
 };
+
+struct user_data {
+	char *p_buf;
+	struct redis_status *status;
+};
+
+struct user_data UserData; 
 
 static bool task_lookup(void *user, void *task)
 {
@@ -37,9 +43,8 @@ static bool task_lookup(void *user, void *task)
 	bool ok = false;
 	int idx = tlpool_get_thread_index(pool);
 
-	ok = tlpool_pull(pool, task, TLPOOL_TASK_ALONE, idx);
+	ok = tlpool_pull(pool, task, TLPOOL_TASK_SHARE, idx);
 	if (ok) {
-		printf("get from share queue!\n");
 		return ok;
 	}
 
@@ -50,8 +55,31 @@ static bool task_report(void *user, void *task, int taskId)
 {
 	tlpool_t *pool = user;
 	bool ok = false;
-	ok = tlpool_push(pool, task, TLPOOL_TASK_ALONE, taskId);
+	ok = tlpool_push(pool, task, TLPOOL_TASK_SHARE, taskId);
 	return ok;
+}
+
+static void __ConfigSetProcess()
+{
+	int i = 0;
+	if (UserData.p_buf == NULL || UserData.status == NULL) {
+		printf("Did not get data yet !\n");
+		return;
+	}
+	
+	if (!tlpool) {
+		printf("The point of process pool is invalid.\n");
+		exit(0);
+	}
+
+	i = UserData.status->fields + 1;
+
+	while (i-- > 1) {
+		printf("Start set data process, PROCESS_ID = %d\n", i);
+		struct user_task task = {0};
+		sprintf(task.TASK, "task %d", i);
+		task_report(tlpool, &task, i);
+	}
 }
 
 void *GetData_task_handle(struct supex_evcoro *evcoro, void *step)
@@ -59,9 +87,8 @@ void *GetData_task_handle(struct supex_evcoro *evcoro, void *step)
 	int i;
 	int len = 0;
 	char *proto = NULL;
-	//int idx_task = (int)(uintptr_t)step;
-	//struct user_task *p_task = &((struct user_task *)evcoro->task)[idx_task];
-	//int idx = tlpool_get_thread_index(evcoro->data);
+	UserData.p_buf = NULL;
+	UserData.status = NULL;
 #if 1
 	struct supex_evcoro     *p_evcoro = supex_get_default();
 	struct evcoro_scheduler *p_scheduler = p_evcoro->scheduler;
@@ -71,12 +98,20 @@ void *GetData_task_handle(struct supex_evcoro *evcoro, void *step)
 	struct command_node     *command = evtask_command(tasker, PROTO_TYPE_REDIS, cpool, proto, len);
 
 	evtask_install(tasker);
-
 	evtask_startup(p_scheduler);
 
-	printf("%s\n", command->cache.buff);
+	printf("%.*s", command->cache.end - command->cache.start, &command->cache.buff[command->cache.start]);
+	UserData.p_buf = cache_data_address(&command->cache);
+        UserData.status = &command->parse.redis_info.rs;
+	printf("redis data fields = %d\n", UserData.status->fields);
 
-	//Start set data process
+	__ConfigSetProcess();
+/*
+	if (UserData.p_buf == NULL || UserData.status == NULL) {
+		printf("Did not get data yet !\n");
+		
+	}
+
 	i = PROCESS_ID;
 	while (i-- > 1) {
 		printf("Start set data process, PROCESS_ID = %d\n", i);
@@ -84,7 +119,7 @@ void *GetData_task_handle(struct supex_evcoro *evcoro, void *step)
 		sprintf(task.TASK, "task %d", i);
 		task_report(tlpool, &task, i);
 	}
-
+*/
 	evtask_distory(tasker);
 #endif
 }
@@ -93,9 +128,10 @@ void *SetData_task_handle(struct supex_evcoro *evcoro, void *step)
 {
 	int len = 0;
 	char *proto = NULL;
-	//int idx_task = (int)(uintptr_t)step;
-	//struct user_task *p_task = &((struct user_task *)evcoro->task)[idx_task];
-	//int idx = tlpool_get_thread_index(evcoro->data);
+	int idx_task = (int)(uintptr_t)step;
+	struct user_task *p_task = &((struct user_task *)evcoro->task)[idx_task];
+	int idx = tlpool_get_thread_index(evcoro->data);
+	printf("Lawrence hamster said idx = %d\n", idx);
 #if 1
 	struct supex_evcoro     *p_evcoro = supex_get_default();
 	struct evcoro_scheduler *p_scheduler = p_evcoro->scheduler;
@@ -105,10 +141,9 @@ void *SetData_task_handle(struct supex_evcoro *evcoro, void *step)
 	struct command_node     *command = evtask_command(tasker, PROTO_TYPE_REDIS, cpool, proto, len);
 
 	evtask_install(tasker);
-
 	evtask_startup(p_scheduler);
 
-	printf("%s\n", command->cache.buff);
+	printf("%.*s", command->cache.end - command->cache.start, &command->cache.buff[command->cache.start]);
 
 	evtask_distory(tasker);
 #endif
@@ -176,7 +211,7 @@ static void exitFunction(tlpool_t *tlpool)
         tlpool_free(tlpool);
 }
 
-static int StartTime = 1465906140;
+static int StartTime = 1465982340;
 
 void TimeProcessFunction(startTime)
 {
@@ -200,10 +235,8 @@ int main(void)
 {
 	int processIndex;
 	conn_xpool_init("192.168.1.12", 9001, 10, true);  //redis, for get data process
-	
-	tlpool = tlpool_init(PROCESS_ID, 100, sizeof(struct user_task));	
-
-	printf("before tlpool_bind !\n");
+	conn_xpool_init("192.168.1.12", 7101, 10, true);  //redis, for get data process
+	tlpool = tlpool_init(PROCESS_ID, 100, sizeof(struct user_task), NULL);	
 
 	tlpool_bind(tlpool, (void (*)(void *))GetDataWork, tlpool, GET_DATA_PROCESS);	
 
@@ -212,11 +245,8 @@ int main(void)
 	}	
 
 	tlpool_boot(tlpool);
-	//conn_xpool_init(host, port, 10, true);		  //tsdb,  for set data process
 	while(1) {
 		TimeProcessFunction(StartTime);
-
-		printf("after tlpool_boot\n");
 
 		struct user_task task = {0};
 		sprintf(task.TASK, "task %d", GET_DATA_PROCESS);
