@@ -47,7 +47,7 @@ fail:
 	x_printf(E, "invalid config file :%s", name);
 	exit(EXIT_FAILURE);
 }
-#endif /* if 0 */
+#endif	/* if 0 */
 bool fill_subsec_model(struct json_object *obj, char *obj_name, struct subsec_cfg_file *p_link)
 {
 	struct json_object      *sub_obj = NULL;

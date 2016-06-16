@@ -102,7 +102,7 @@ char get_line_intersection(float p0_x, float p0_y, float p1_x, float p1_y,
 
 	return 0;	// No collision
 }
-#endif /* if 0 */
+#endif	/* if 0 */
 static sg_node_t getIntersg_node(sg_info_t a, sg_info_t b)
 {
 	// 行列式求两条直线交点

@@ -19,5 +19,5 @@ int zmq_io_send(enum server srv, zmq_msg_t *msg, int flags);
 int zmq_io_recv(zmq_msg_t *msg, int flags);
 
 int zmq_io_getsockopt(int option_name, void *option_value, size_t *option_len);
-#endif /* ifndef _ZMQ_IO_WRAPER_H_ */
+#endif	/* ifndef _ZMQ_IO_WRAPER_H_ */
 

@@ -191,7 +191,7 @@ int __load_porters(event_ctx_t *ev_ctx, xmq_ctx_t *xmq_ctx)
 	}
 	return 0;
 }
-#endif /* ifdef TC_THREAD */
+#endif	/* ifdef TC_THREAD */
 
 int main(int argc, char **argv)
 {

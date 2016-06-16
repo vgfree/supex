@@ -517,7 +517,7 @@ int subsec_calculate(struct ev_loop *p_loop, gps_info_t *gps_info, road_info_t *
 		default:
 			break;
 	}
-#endif /* if 0 */
+#endif	/* if 0 */
 
 	if (ERR_IMEI == ok) {
 		return ERR_IMEI;

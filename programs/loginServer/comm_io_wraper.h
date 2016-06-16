@@ -20,5 +20,5 @@ void destroy_comm_io();
 int recv_msg(struct comm_message *msg);
 
 int send_msg(struct comm_message *msg);
-#endif /* ifndef _COMM_IO_WRAPER_H_ */
+#endif	/* ifndef _COMM_IO_WRAPER_H_ */
 

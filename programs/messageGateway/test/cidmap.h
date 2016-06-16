@@ -29,5 +29,5 @@ int append_cid(char *cid, int size);
 int remove_cid(char *cid, int size);
 
 void destroy_cidmap();
-#endif /* ifndef _CID_MAP_H_ */
+#endif	/* ifndef _CID_MAP_H_ */
 

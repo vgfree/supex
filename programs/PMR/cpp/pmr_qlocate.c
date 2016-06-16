@@ -74,7 +74,7 @@ int entry_cmd_qlocate(struct data_node *p_node)
 	cache_add(p_cache, "$", 1);
 	put_number_out(p_cache, get_number_len(line->line_id));
 	put_number_out(p_cache, line->line_id);
-#endif /* if 0 */
+#endif	/* if 0 */
 	return 0;
 }
 

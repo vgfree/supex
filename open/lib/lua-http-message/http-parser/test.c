@@ -141,13 +141,13 @@ const struct message requests[] =
       , .num_headers = 8
       , .headers =
       { { "Host",            "0.0.0.0=5000"                                                                 }
-	, { "User-Agent",      "Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9) Gecko/2008061015 Firefox/3.0" }
-	, { "Accept",          "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"              }
-	, { "Accept-Language", "en-us,en;q=0.5"                                                               }
-	, { "Accept-Encoding", "gzip,deflate"                                                                 }
-	, { "Accept-Charset",  "ISO-8859-1,utf-8;q=0.7,*;q=0.7"                                               }
-	, { "Keep-Alive",      "300"                                                                          }
-	, { "Connection",      "keep-alive"                                                                   } }
+	,{ "User-Agent",      "Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9) Gecko/2008061015 Firefox/3.0" }
+	,{ "Accept",          "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"              }
+	,{ "Accept-Language", "en-us,en;q=0.5"                                                               }
+	,{ "Accept-Encoding", "gzip,deflate"                                                                 }
+	,{ "Accept-Charset",  "ISO-8859-1,utf-8;q=0.7,*;q=0.7"                                               }
+	,{ "Keep-Alive",      "300"                                                                          }
+	,{ "Connection",      "keep-alive"                                                                   } }
 
       , .body = "" }
 
@@ -271,8 +271,8 @@ const struct message requests[] =
       , .num_headers = 3
       , .headers =
       { { "Accept",            "*/*"      }
-	, { "Transfer-Encoding", "identity" }
-	, { "Content-Length",    "5"        } }
+	,{ "Transfer-Encoding", "identity" }
+	,{ "Content-Length",    "5"        } }
 
       , .body = "World" }
 
@@ -353,8 +353,8 @@ const struct message requests[] =
       , .num_headers = 3
       , .headers =
       { { "Transfer-Encoding", "chunked"    }
-	, { "Vary",              "*"          }
-	, { "Content-Type",      "text/plain" } }
+	,{ "Vary",              "*"          }
+	,{ "Content-Type",      "text/plain" } }
 
       , .body = "hello world"
       , .num_chunks_complete = 3
@@ -630,7 +630,7 @@ const struct message requests[] =
 		     ,{ "Line2",      "line2\t"                           }
 		     ,{ "Line3",      "line3"                             }
 		     ,{ "Line4",      ""                                  }
-		     ,{ "Connection", "close"                             },}
+		     ,{ "Connection", "close"                             },   }
 
       , .body = "" }
 
@@ -938,7 +938,7 @@ const struct message requests[] =
 		     ,{ "Line2",      "line2\t"                           }
 		     ,{ "Line3",      "line3"                             }
 		     ,{ "Line4",      ""                                  }
-		     ,{ "Connection", "close"                             },}
+		     ,{ "Connection", "close"                             },   }
 
       , .body = "" }
 
@@ -1157,10 +1157,10 @@ const struct message responses[] =
       , .num_headers = 5
       , .headers =
       { { "Date",         "Tue, 04 Aug 2009 07:59:32 GMT" }
-	, { "Server",       "Apache"                        }
-	, { "X-Powered-By", "Servlet/2.5 JSP/2.1"           }
-	, { "Content-Type", "text/xml; charset=utf-8"       }
-	, { "Connection",   "close"                         } }
+	,{ "Server",       "Apache"                        }
+	,{ "X-Powered-By", "Servlet/2.5 JSP/2.1"           }
+	,{ "Content-Type", "text/xml; charset=utf-8"       }
+	,{ "Connection",   "close"                         } }
 
       , .body = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
 	      "<SOAP-ENV:Envelope xmlns:SOAP-ENV=\"http://schemas.xmlsoap.org/soap/envelope/\">\n"
@@ -1227,7 +1227,7 @@ const struct message responses[] =
       , .num_headers = 2
       , .headers =
       { { "Content-Type",      "text/plain" }
-	, { "Transfer-Encoding", "chunked"    } }
+	,{ "Transfer-Encoding", "chunked"    } }
 
       , .body_size = 37 + 28
       , .body =
@@ -1253,7 +1253,7 @@ const struct message responses[] =
       , .num_headers = 2
       , .headers =
       { { "Content-Type", "text/html; charset=utf-8" }
-	, { "Connection",   "close"                    } }
+	,{ "Connection",   "close"                    } }
 
       , .body = "these headers are from http://news.ycombinator.com/" }
 
@@ -1276,9 +1276,9 @@ const struct message responses[] =
       , .num_headers = 4
       , .headers =
       { { "Content-Type",     "text/html; charset=UTF-8"        }
-	, { "Content-Length",   "11"                              }
-	, { "Proxy-Connection", "close"                           }
-	, { "Date",             "Thu, 31 Dec 2009 20:55:48 +0000" } }
+	,{ "Content-Length",   "11"                              }
+	,{ "Proxy-Connection", "close"                           }
+	,{ "Date",             "Thu, 31 Dec 2009 20:55:48 +0000" } }
 
       , .body = "hello world" }
 
@@ -1301,9 +1301,9 @@ const struct message responses[] =
       , .num_headers = 4
       , .headers =
       { { "Server",         "DCLK-AdSvr"                                                                        }
-	, { "Content-Type",   "text/xml"                                                                          }
-	, { "Content-Length", "0"                                                                                 }
-	, { "DCLK_imp",       "v7;x;114750856;0-0;0;17820020;0/0;21603567/21621457/1;;~okv=;dcmt=text/xml;;~cs=o" } }
+	,{ "Content-Type",   "text/xml"                                                                          }
+	,{ "Content-Length", "0"                                                                                 }
+	,{ "DCLK_imp",       "v7;x;114750856;0-0;0;17820020;0/0;21603567/21621457/1;;~okv=;dcmt=text/xml;;~cs=o" } }
 
       , .body = "" }
 
@@ -1334,14 +1334,14 @@ const struct message responses[] =
       , .num_headers = 9
       , .headers =
       { { "Date",           "Thu, 03 Jun 2010 09:56:32 GMT" }
-	, { "Server",         "Apache/2.2.3 (Red Hat)"        }
-	, { "Cache-Control",  "public"                        }
-	, { "Pragma",         ""                              }
-	, { "Location",       "http://www.bonjourmadame.fr/"  }
-	, { "Vary",           "Accept-Encoding"               }
-	, { "Content-Length", "0"                             }
-	, { "Content-Type",   "text/html; charset=UTF-8"      }
-	, { "Connection",     "keep-alive"                    } }
+	,{ "Server",         "Apache/2.2.3 (Red Hat)"        }
+	,{ "Cache-Control",  "public"                        }
+	,{ "Pragma",         ""                              }
+	,{ "Location",       "http://www.bonjourmadame.fr/"  }
+	,{ "Vary",           "Accept-Encoding"               }
+	,{ "Content-Length", "0"                             }
+	,{ "Content-Type",   "text/html; charset=UTF-8"      }
+	,{ "Connection",     "keep-alive"                    } }
 
       , .body = "" }
 
@@ -1372,16 +1372,16 @@ const struct message responses[] =
       , .num_headers = 11
       , .headers =
       { { "Date",              "Tue, 28 Sep 2010 01:14:13 GMT"                          }
-	, { "Server",            "Apache"                                                 }
-	, { "Cache-Control",     "no-cache, must-revalidate"                              }
-	, { "Expires",           "Mon, 26 Jul 1997 05:00:00 GMT"                          }
-	, { ".et-Cookie",        "PlaxoCS=1274804622353690521; path=/; domain=.plaxo.com" }
-	, { "Vary",              "Accept-Encoding"                                        }
-	, { "_eep-Alive",        "timeout=45"                                             }
-	, { "_onnection",        "Keep-Alive"                                             }
-	, { "Transfer-Encoding", "chunked"                                                }
-	, { "Content-Type",      "text/html"                                              }
-	, { "Connection",        "close"                                                  } }
+	,{ "Server",            "Apache"                                                 }
+	,{ "Cache-Control",     "no-cache, must-revalidate"                              }
+	,{ "Expires",           "Mon, 26 Jul 1997 05:00:00 GMT"                          }
+	,{ ".et-Cookie",        "PlaxoCS=1274804622353690521; path=/; domain=.plaxo.com" }
+	,{ "Vary",              "Accept-Encoding"                                        }
+	,{ "_eep-Alive",        "timeout=45"                                             }
+	,{ "_onnection",        "Keep-Alive"                                             }
+	,{ "Transfer-Encoding", "chunked"                                                }
+	,{ "Content-Type",      "text/html"                                              }
+	,{ "Connection",        "close"                                                  } }
 
       , .body = ""
       , .num_chunks_complete = 1
@@ -1405,8 +1405,8 @@ const struct message responses[] =
       , .num_headers = 3
       , .headers =
       { { "Date",           "Fri, 5 Nov 2010 23:07:12 GMT+2" }
-	, { "Content-Length", "0"                              }
-	, { "Connection",     "close"                          } }
+	,{ "Content-Length", "0"                              }
+	,{ "Connection",     "close"                          } }
 
       , .body = "" }
 
@@ -1589,12 +1589,12 @@ const struct message responses[] =
       , .num_headers = 7
       , .headers =
       { { "Server",             "Microsoft-IIS/6.0"             }
-	, { "X-Powered-By",       "ASP.NET"                       }
-	, { "en-US Content-Type", "text/xml"                      }
-	, { "Content-Type",       "text/xml"                      }
-	, { "Content-Length",     "16"                            }
-	, { "Date",               "Fri, 23 Jul 2010 18:45:38 GMT" }
-	, { "Connection",         "keep-alive"                    } }
+	,{ "X-Powered-By",       "ASP.NET"                       }
+	,{ "en-US Content-Type", "text/xml"                      }
+	,{ "Content-Type",       "text/xml"                      }
+	,{ "Content-Length",     "16"                            }
+	,{ "Date",               "Fri, 23 Jul 2010 18:45:38 GMT" }
+	,{ "Connection",         "keep-alive"                    } }
 
       , .body = "<xml>hello</xml>" }
 #endif	/* !HTTP_PARSER_STRICT */
@@ -2001,15 +2001,15 @@ dontcall_chunk_complete_cb(http_parser *p)
 
 static http_parser_settings settings_dontcall =
 { .on_message_begin     = dontcall_message_begin_cb
-  , .on_header_field  = dontcall_header_field_cb
-  , .on_header_value  = dontcall_header_value_cb
-  , .on_url           = dontcall_request_url_cb
-  , .on_status        = dontcall_response_status_cb
-  , .on_body          = dontcall_body_cb
-  , .on_headers_complete = dontcall_headers_complete_cb
-  , .on_message_complete = dontcall_message_complete_cb
-  , .on_chunk_header  = dontcall_chunk_header_cb
-  , .on_chunk_complete = dontcall_chunk_complete_cb };
+  , .on_header_field    = dontcall_header_field_cb
+  , .on_header_value    = dontcall_header_value_cb
+  , .on_url             = dontcall_request_url_cb
+  , .on_status          = dontcall_response_status_cb
+  , .on_body            = dontcall_body_cb
+  , .on_headers_complete= dontcall_headers_complete_cb
+  , .on_message_complete= dontcall_message_complete_cb
+  , .on_chunk_header    = dontcall_chunk_header_cb
+  , .on_chunk_complete  = dontcall_chunk_complete_cb };
 
 /* These pause_* callbacks always pause the parser and just invoke the regular
  * callback that tracks content. Before returning, we overwrite the parser
@@ -2097,51 +2097,51 @@ pause_chunk_complete_cb(http_parser *p)
 
 static http_parser_settings settings_pause =
 { .on_message_begin     = pause_message_begin_cb
-  , .on_header_field  = pause_header_field_cb
-  , .on_header_value  = pause_header_value_cb
-  , .on_url           = pause_request_url_cb
-  , .on_status        = pause_response_status_cb
-  , .on_body          = pause_body_cb
-  , .on_headers_complete = pause_headers_complete_cb
-  , .on_message_complete = pause_message_complete_cb
-  , .on_chunk_header  = pause_chunk_header_cb
-  , .on_chunk_complete = pause_chunk_complete_cb };
+  , .on_header_field    = pause_header_field_cb
+  , .on_header_value    = pause_header_value_cb
+  , .on_url             = pause_request_url_cb
+  , .on_status          = pause_response_status_cb
+  , .on_body            = pause_body_cb
+  , .on_headers_complete= pause_headers_complete_cb
+  , .on_message_complete= pause_message_complete_cb
+  , .on_chunk_header    = pause_chunk_header_cb
+  , .on_chunk_complete  = pause_chunk_complete_cb };
 
 static http_parser_settings settings =
 { .on_message_begin     = message_begin_cb
-  , .on_header_field  = header_field_cb
-  , .on_header_value  = header_value_cb
-  , .on_url           = request_url_cb
-  , .on_status        = response_status_cb
-  , .on_body          = body_cb
-  , .on_headers_complete = headers_complete_cb
-  , .on_message_complete = message_complete_cb
-  , .on_chunk_header  = chunk_header_cb
-  , .on_chunk_complete = chunk_complete_cb };
+  , .on_header_field    = header_field_cb
+  , .on_header_value    = header_value_cb
+  , .on_url             = request_url_cb
+  , .on_status          = response_status_cb
+  , .on_body            = body_cb
+  , .on_headers_complete= headers_complete_cb
+  , .on_message_complete= message_complete_cb
+  , .on_chunk_header    = chunk_header_cb
+  , .on_chunk_complete  = chunk_complete_cb };
 
 static http_parser_settings settings_count_body =
 { .on_message_begin     = message_begin_cb
-  , .on_header_field  = header_field_cb
-  , .on_header_value  = header_value_cb
-  , .on_url           = request_url_cb
-  , .on_status        = response_status_cb
-  , .on_body          = count_body_cb
-  , .on_headers_complete = headers_complete_cb
-  , .on_message_complete = message_complete_cb
-  , .on_chunk_header  = chunk_header_cb
-  , .on_chunk_complete = chunk_complete_cb };
+  , .on_header_field    = header_field_cb
+  , .on_header_value    = header_value_cb
+  , .on_url             = request_url_cb
+  , .on_status          = response_status_cb
+  , .on_body            = count_body_cb
+  , .on_headers_complete= headers_complete_cb
+  , .on_message_complete= message_complete_cb
+  , .on_chunk_header    = chunk_header_cb
+  , .on_chunk_complete  = chunk_complete_cb };
 
 static http_parser_settings settings_null =
 { .on_message_begin     = 0
-  , .on_header_field  = 0
-  , .on_header_value  = 0
-  , .on_url           = 0
-  , .on_status        = 0
-  , .on_body          = 0
-  , .on_headers_complete = 0
-  , .on_message_complete = 0
-  , .on_chunk_header  = 0
-  , .on_chunk_complete = 0 };
+  , .on_header_field    = 0
+  , .on_header_value    = 0
+  , .on_url             = 0
+  , .on_status          = 0
+  , .on_body            = 0
+  , .on_headers_complete= 0
+  , .on_message_complete= 0
+  , .on_chunk_header    = 0
+  , .on_chunk_complete  = 0 };
 
 void
 parser_init(enum http_parser_type type)
@@ -2487,455 +2487,455 @@ struct url_test
 };
 
 const struct url_test url_tests[] =
-{     { .name      = "proxy request"
-	, .url = "http://hostname/"
-	, .is_connect = 0
-	, .u =
-	{ .field_set      = (1 << UF_SCHEMA) | (1 << UF_HOST) | (1 << UF_PATH)
-	, .port           = 0
-	, .field_data     =
-	{ {  0, 4 }	/* UF_SCHEMA */
-	,{  7, 8 }	/* UF_HOST */
-	,{  0, 0 }	/* UF_PORT */
-	,{ 15, 1 }	/* UF_PATH */
-	,{  0, 0 }	/* UF_QUERY */
-	,{  0, 0 }	/* UF_FRAGMENT */
-	,{  0, 0 }	/* UF_USERINFO */
-	} }
+{                         { .name      = "proxy request"
+			    , .url = "http://hostname/"
+			    , .is_connect = 0
+			    , .u =
+			    { .field_set  = (1 << UF_SCHEMA) | (1 << UF_HOST) | (1 << UF_PATH)
+			    , .port               = 0
+			    , .field_data         =
+			    { {  0, 4 }		/* UF_SCHEMA */
+			    ,         {  7, 8 }	/* UF_HOST */
+			    ,         {  0, 0 }	/* UF_PORT */
+			    ,         { 15, 1 }	/* UF_PATH */
+			    ,         {  0, 0 }	/* UF_QUERY */
+			    ,         {  0, 0 }	/* UF_FRAGMENT */
+			    ,         {  0, 0 }	/* UF_USERINFO */
+			    } }
 
-	, .rv = 0 }
+			    , .rv = 0 }
 
-      ,   { .name      = "proxy request with port"
-	    , .url = "http://hostname:444/"
-	    , .is_connect = 0
-	    , .u =
-	    { .field_set      = (1 << UF_SCHEMA) | (1 << UF_HOST) | (1 << UF_PORT) | (1 << UF_PATH)
-	, .port           = 444
-	, .field_data     =
-	{ {  0, 4 }	/* UF_SCHEMA */
-	,{  7, 8 }	/* UF_HOST */
-	,{ 16, 3 }	/* UF_PORT */
-	,{ 19, 1 }	/* UF_PATH */
-	,{  0, 0 }	/* UF_QUERY */
-	,{  0, 0 }	/* UF_FRAGMENT */
-	,{  0, 0 }	/* UF_USERINFO */
-	} }
+			  ,           { .name      = "proxy request with port"
+					, .url = "http://hostname:444/"
+					, .is_connect = 0
+					, .u =
+					{ .field_set  = (1 << UF_SCHEMA) | (1 << UF_HOST) | (1 << UF_PORT) | (1 << UF_PATH)
+			    , .port       = 444
+			    , .field_data =
+			    { {  0, 4 }		/* UF_SCHEMA */
+			    ,         {  7, 8 }	/* UF_HOST */
+			    ,         { 16, 3 }	/* UF_PORT */
+			    ,         { 19, 1 }	/* UF_PATH */
+			    ,         {  0, 0 }	/* UF_QUERY */
+			    ,         {  0, 0 }	/* UF_FRAGMENT */
+			    ,         {  0, 0 }	/* UF_USERINFO */
+			    } }
 
-	    , .rv = 0 }
+					, .rv = 0 }
 
-      ,   { .name      = "CONNECT request"
-	    , .url = "hostname:443"
-	    , .is_connect = 1
-	    , .u =
-	    { .field_set      = (1 << UF_HOST) | (1 << UF_PORT)
-	, .port           = 443
-	, .field_data     =
-	{ {  0, 0 }	/* UF_SCHEMA */
-	,{  0, 8 }	/* UF_HOST */
-	,{  9, 3 }	/* UF_PORT */
-	,{  0, 0 }	/* UF_PATH */
-	,{  0, 0 }	/* UF_QUERY */
-	,{  0, 0 }	/* UF_FRAGMENT */
-	,{  0, 0 }	/* UF_USERINFO */
-	} }
+			  ,           { .name      = "CONNECT request"
+					, .url = "hostname:443"
+					, .is_connect = 1
+					, .u =
+					{ .field_set  = (1 << UF_HOST) | (1 << UF_PORT)
+			    , .port       = 443
+			    , .field_data =
+			    { {  0, 0 }		/* UF_SCHEMA */
+			    ,         {  0, 8 }	/* UF_HOST */
+			    ,         {  9, 3 }	/* UF_PORT */
+			    ,         {  0, 0 }	/* UF_PATH */
+			    ,         {  0, 0 }	/* UF_QUERY */
+			    ,         {  0, 0 }	/* UF_FRAGMENT */
+			    ,         {  0, 0 }	/* UF_USERINFO */
+			    } }
 
-	    , .rv = 0 }
+					, .rv = 0 }
 
-      ,   { .name      = "CONNECT request but not connect"
-	    , .url = "hostname:443"
-	    , .is_connect = 0
-	    , .rv = 1 }
+			  ,           { .name      = "CONNECT request but not connect"
+					, .url = "hostname:443"
+					, .is_connect = 0
+					, .rv = 1 }
 
-      ,   { .name      = "proxy ipv6 request"
-	    , .url = "http://[1:2::3:4]/"
-	    , .is_connect = 0
-	    , .u =
-	    { .field_set      = (1 << UF_SCHEMA) | (1 << UF_HOST) | (1 << UF_PATH)
-	, .port           = 0
-	, .field_data     =
-	{ {  0, 4 }	/* UF_SCHEMA */
-	,{  8, 8 }	/* UF_HOST */
-	,{  0, 0 }	/* UF_PORT */
-	,{ 17, 1 }	/* UF_PATH */
-	,{  0, 0 }	/* UF_QUERY */
-	,{  0, 0 }	/* UF_FRAGMENT */
-	,{  0, 0 }	/* UF_USERINFO */
-	} }
+			  ,           { .name      = "proxy ipv6 request"
+					, .url = "http://[1:2::3:4]/"
+					, .is_connect = 0
+					, .u =
+					{ .field_set  = (1 << UF_SCHEMA) | (1 << UF_HOST) | (1 << UF_PATH)
+			    , .port       = 0
+			    , .field_data =
+			    { {  0, 4 }		/* UF_SCHEMA */
+			    ,         {  8, 8 }	/* UF_HOST */
+			    ,         {  0, 0 }	/* UF_PORT */
+			    ,         { 17, 1 }	/* UF_PATH */
+			    ,         {  0, 0 }	/* UF_QUERY */
+			    ,         {  0, 0 }	/* UF_FRAGMENT */
+			    ,         {  0, 0 }	/* UF_USERINFO */
+			    } }
 
-	    , .rv = 0 }
+					, .rv = 0 }
 
-      ,   { .name      = "proxy ipv6 request with port"
-	    , .url = "http://[1:2::3:4]:67/"
-	    , .is_connect = 0
-	    , .u =
-	    { .field_set      = (1 << UF_SCHEMA) | (1 << UF_HOST) | (1 << UF_PORT) | (1 << UF_PATH)
-	, .port           = 67
-	, .field_data     =
-	{ {  0, 4 }	/* UF_SCHEMA */
-	,{  8, 8 }	/* UF_HOST */
-	,{ 18, 2 }	/* UF_PORT */
-	,{ 20, 1 }	/* UF_PATH */
-	,{  0, 0 }	/* UF_QUERY */
-	,{  0, 0 }	/* UF_FRAGMENT */
-	,{  0, 0 }	/* UF_USERINFO */
-	} }
+			  ,           { .name      = "proxy ipv6 request with port"
+					, .url = "http://[1:2::3:4]:67/"
+					, .is_connect = 0
+					, .u =
+					{ .field_set  = (1 << UF_SCHEMA) | (1 << UF_HOST) | (1 << UF_PORT) | (1 << UF_PATH)
+			    , .port       = 67
+			    , .field_data =
+			    { {  0, 4 }		/* UF_SCHEMA */
+			    ,         {  8, 8 }	/* UF_HOST */
+			    ,         { 18, 2 }	/* UF_PORT */
+			    ,         { 20, 1 }	/* UF_PATH */
+			    ,         {  0, 0 }	/* UF_QUERY */
+			    ,         {  0, 0 }	/* UF_FRAGMENT */
+			    ,         {  0, 0 }	/* UF_USERINFO */
+			    } }
 
-	    , .rv = 0 }
+					, .rv = 0 }
 
-      ,   { .name      = "CONNECT ipv6 address"
-	    , .url = "[1:2::3:4]:443"
-	    , .is_connect = 1
-	    , .u =
-	    { .field_set      = (1 << UF_HOST) | (1 << UF_PORT)
-	, .port           = 443
-	, .field_data     =
-	{ {  0, 0 }	/* UF_SCHEMA */
-	,{  1, 8 }	/* UF_HOST */
-	,{ 11, 3 }	/* UF_PORT */
-	,{  0, 0 }	/* UF_PATH */
-	,{  0, 0 }	/* UF_QUERY */
-	,{  0, 0 }	/* UF_FRAGMENT */
-	,{  0, 0 }	/* UF_USERINFO */
-	} }
+			  ,           { .name      = "CONNECT ipv6 address"
+					, .url = "[1:2::3:4]:443"
+					, .is_connect = 1
+					, .u =
+					{ .field_set  = (1 << UF_HOST) | (1 << UF_PORT)
+			    , .port       = 443
+			    , .field_data =
+			    { {  0, 0 }		/* UF_SCHEMA */
+			    ,         {  1, 8 }	/* UF_HOST */
+			    ,         { 11, 3 }	/* UF_PORT */
+			    ,         {  0, 0 }	/* UF_PATH */
+			    ,         {  0, 0 }	/* UF_QUERY */
+			    ,         {  0, 0 }	/* UF_FRAGMENT */
+			    ,         {  0, 0 }	/* UF_USERINFO */
+			    } }
 
-	    , .rv = 0 }
+					, .rv = 0 }
 
-      ,   { .name      = "ipv4 in ipv6 address"
-	    , .url = "http://[2001:0000:0000:0000:0000:0000:1.9.1.1]/"
-	    , .is_connect = 0
-	    , .u =
-	    { .field_set      = (1 << UF_SCHEMA) | (1 << UF_HOST) | (1 << UF_PATH)
-	, .port           = 0
-	, .field_data     =
-	{ {  0, 4 }	/* UF_SCHEMA */
-	,{  8, 37 }	/* UF_HOST */
-	,{  0, 0 }	/* UF_PORT */
-	,{ 46, 1 }	/* UF_PATH */
-	,{  0, 0 }	/* UF_QUERY */
-	,{  0, 0 }	/* UF_FRAGMENT */
-	,{  0, 0 }	/* UF_USERINFO */
-	} }
+			  ,           { .name      = "ipv4 in ipv6 address"
+					, .url = "http://[2001:0000:0000:0000:0000:0000:1.9.1.1]/"
+					, .is_connect = 0
+					, .u =
+					{ .field_set  = (1 << UF_SCHEMA) | (1 << UF_HOST) | (1 << UF_PATH)
+			    , .port       = 0
+			    , .field_data =
+			    { {  0, 4 }			/* UF_SCHEMA */
+			    ,         {  8, 37 }	/* UF_HOST */
+			    ,         {  0, 0 }		/* UF_PORT */
+			    ,         { 46, 1 }		/* UF_PATH */
+			    ,         {  0, 0 }		/* UF_QUERY */
+			    ,         {  0, 0 }		/* UF_FRAGMENT */
+			    ,         {  0, 0 }		/* UF_USERINFO */
+			    } }
 
-	    , .rv = 0 }
+					, .rv = 0 }
 
-      ,   { .name      = "extra ? in query string"
-	    , .url = "http://a.tbcdn.cn/p/fp/2010c/??fp-header-min.css,fp-base-min.css,"
-		    "fp-channel-min.css,fp-product-min.css,fp-mall-min.css,fp-category-min.css,"
-		    "fp-sub-min.css,fp-gdp4p-min.css,fp-css3-min.css,fp-misc-min.css?t=20101022.css"
-	    , .is_connect = 0
-	    , .u =
-	    { .field_set      = (1 << UF_SCHEMA) | (1 << UF_HOST) | (1 << UF_PATH) | (1 << UF_QUERY)
-	, .port           = 0
-	, .field_data     =
-	{ {  0, 4 }	/* UF_SCHEMA */
-	,{  7, 10 }	/* UF_HOST */
-	,{  0, 0 }	/* UF_PORT */
-	,{ 17, 12 }	/* UF_PATH */
-	,{ 30, 187 }	/* UF_QUERY */
-	,{  0, 0 }	/* UF_FRAGMENT */
-	,{  0, 0 }	/* UF_USERINFO */
-	} }
+			  ,           { .name      = "extra ? in query string"
+					, .url = "http://a.tbcdn.cn/p/fp/2010c/??fp-header-min.css,fp-base-min.css,"
+						"fp-channel-min.css,fp-product-min.css,fp-mall-min.css,fp-category-min.css,"
+						"fp-sub-min.css,fp-gdp4p-min.css,fp-css3-min.css,fp-misc-min.css?t=20101022.css"
+					, .is_connect = 0
+					, .u =
+					{ .field_set  = (1 << UF_SCHEMA) | (1 << UF_HOST) | (1 << UF_PATH) | (1 << UF_QUERY)
+			    , .port       = 0
+			    , .field_data =
+			    { {  0, 4 }			/* UF_SCHEMA */
+			    ,         {  7, 10 }	/* UF_HOST */
+			    ,         {  0, 0 }		/* UF_PORT */
+			    ,         { 17, 12 }	/* UF_PATH */
+			    ,         { 30, 187 }	/* UF_QUERY */
+			    ,         {  0, 0 }		/* UF_FRAGMENT */
+			    ,         {  0, 0 }		/* UF_USERINFO */
+			    } }
 
-	    , .rv = 0 }
+					, .rv = 0 }
 
-      ,   { .name      = "space URL encoded"
-	    , .url = "/toto.html?toto=a%20b"
-	    , .is_connect = 0
-	    , .u =
-	    { .field_set      = (1 << UF_PATH) | (1 << UF_QUERY)
-	, .port           = 0
-	, .field_data     =
-	{ {  0, 0 }	/* UF_SCHEMA */
-	,{  0, 0 }	/* UF_HOST */
-	,{  0, 0 }	/* UF_PORT */
-	,{  0, 10 }	/* UF_PATH */
-	,{ 11, 10 }	/* UF_QUERY */
-	,{  0, 0 }	/* UF_FRAGMENT */
-	,{  0, 0 }	/* UF_USERINFO */
-	} }
+			  ,           { .name      = "space URL encoded"
+					, .url = "/toto.html?toto=a%20b"
+					, .is_connect = 0
+					, .u =
+					{ .field_set  = (1 << UF_PATH) | (1 << UF_QUERY)
+			    , .port       = 0
+			    , .field_data =
+			    { {  0, 0 }			/* UF_SCHEMA */
+			    ,         {  0, 0 }		/* UF_HOST */
+			    ,         {  0, 0 }		/* UF_PORT */
+			    ,         {  0, 10 }	/* UF_PATH */
+			    ,         { 11, 10 }	/* UF_QUERY */
+			    ,         {  0, 0 }		/* UF_FRAGMENT */
+			    ,         {  0, 0 }		/* UF_USERINFO */
+			    } }
 
-	    , .rv = 0 }
+					, .rv = 0 }
 
-      ,   { .name      = "URL fragment"
-	    , .url = "/toto.html#titi"
-	    , .is_connect = 0
-	    , .u =
-	    { .field_set      = (1 << UF_PATH) | (1 << UF_FRAGMENT)
-	, .port           = 0
-	, .field_data     =
-	{ {  0, 0 }	/* UF_SCHEMA */
-	,{  0, 0 }	/* UF_HOST */
-	,{  0, 0 }	/* UF_PORT */
-	,{  0, 10 }	/* UF_PATH */
-	,{  0, 0 }	/* UF_QUERY */
-	,{ 11, 4 }	/* UF_FRAGMENT */
-	,{  0, 0 }	/* UF_USERINFO */
-	} }
+			  ,           { .name      = "URL fragment"
+					, .url = "/toto.html#titi"
+					, .is_connect = 0
+					, .u =
+					{ .field_set  = (1 << UF_PATH) | (1 << UF_FRAGMENT)
+			    , .port       = 0
+			    , .field_data =
+			    { {  0, 0 }			/* UF_SCHEMA */
+			    ,         {  0, 0 }		/* UF_HOST */
+			    ,         {  0, 0 }		/* UF_PORT */
+			    ,         {  0, 10 }	/* UF_PATH */
+			    ,         {  0, 0 }		/* UF_QUERY */
+			    ,         { 11, 4 }		/* UF_FRAGMENT */
+			    ,         {  0, 0 }		/* UF_USERINFO */
+			    } }
 
-	    , .rv = 0 }
+					, .rv = 0 }
 
-      ,   { .name      = "complex URL fragment"
-	    , .url = "http://www.webmasterworld.com/r.cgi?f=21&d=8405&url="
-		    "http://www.example.com/index.html?foo=bar&hello=world#midpage"
-	    , .is_connect = 0
-	    , .u =
-	    { .field_set      = (1 << UF_SCHEMA) | (1 << UF_HOST) | (1 << UF_PATH) | (1 << UF_QUERY) | \
-		(1 << UF_FRAGMENT)
-	, .port           = 0
-	, .field_data     =
-	{ {  0,  4 }	/* UF_SCHEMA */
-	,{  7,  22 }	/* UF_HOST */
-	,{  0,  0 }	/* UF_PORT */
-	,{ 29,  6 }	/* UF_PATH */
-	,{ 36,  69 }	/* UF_QUERY */
-	,{ 106, 7 }	/* UF_FRAGMENT */
-	,{  0,  0 }	/* UF_USERINFO */
-	} }
+			  ,           { .name      = "complex URL fragment"
+					, .url = "http://www.webmasterworld.com/r.cgi?f=21&d=8405&url="
+						"http://www.example.com/index.html?foo=bar&hello=world#midpage"
+					, .is_connect = 0
+					, .u =
+					{ .field_set  = (1 << UF_SCHEMA) | (1 << UF_HOST) | (1 << UF_PATH) | (1 << UF_QUERY) | \
+				    (1 << UF_FRAGMENT)
+			    , .port       = 0
+			    , .field_data =
+			    { {  0,  4 }		/* UF_SCHEMA */
+			    ,         {  7,  22 }	/* UF_HOST */
+			    ,         {  0,  0 }	/* UF_PORT */
+			    ,         { 29,  6 }	/* UF_PATH */
+			    ,         { 36,  69 }	/* UF_QUERY */
+			    ,         { 106, 7 }	/* UF_FRAGMENT */
+			    ,         {  0,  0 }	/* UF_USERINFO */
+			    } }
 
-	    , .rv = 0 }
+					, .rv = 0 }
 
-      ,   { .name      = "complex URL from node js url parser doc"
-	    , .url = "http://host.com:8080/p/a/t/h?query=string#hash"
-	    , .is_connect = 0
-	    , .u =
-	    { .field_set      = (1 << UF_SCHEMA) | (1 << UF_HOST) | (1 << UF_PORT) | (1 << UF_PATH) | \
-		(1 << UF_QUERY) | (1 << UF_FRAGMENT)
-	, .port           = 8080
-	, .field_data     =
-	{ {  0, 4 }	/* UF_SCHEMA */
-	,{  7, 8 }	/* UF_HOST */
-	,{ 16, 4 }	/* UF_PORT */
-	,{ 20, 8 }	/* UF_PATH */
-	,{ 29, 12 }	/* UF_QUERY */
-	,{ 42, 4 }	/* UF_FRAGMENT */
-	,{  0, 0 }	/* UF_USERINFO */
-	} }
+			  ,           { .name      = "complex URL from node js url parser doc"
+					, .url = "http://host.com:8080/p/a/t/h?query=string#hash"
+					, .is_connect = 0
+					, .u =
+					{ .field_set  = (1 << UF_SCHEMA) | (1 << UF_HOST) | (1 << UF_PORT) | (1 << UF_PATH) | \
+				    (1 << UF_QUERY) | (1 << UF_FRAGMENT)
+			    , .port       = 8080
+			    , .field_data =
+			    { {  0, 4 }			/* UF_SCHEMA */
+			    ,         {  7, 8 }		/* UF_HOST */
+			    ,         { 16, 4 }		/* UF_PORT */
+			    ,         { 20, 8 }		/* UF_PATH */
+			    ,         { 29, 12 }	/* UF_QUERY */
+			    ,         { 42, 4 }		/* UF_FRAGMENT */
+			    ,         {  0, 0 }		/* UF_USERINFO */
+			    } }
 
-	    , .rv = 0 }
+					, .rv = 0 }
 
-      ,   { .name      = "complex URL with basic auth from node js url parser doc"
-	    , .url = "http://a:b@host.com:8080/p/a/t/h?query=string#hash"
-	    , .is_connect = 0
-	    , .u =
-	    { .field_set      = (1 << UF_SCHEMA) | (1 << UF_HOST) | (1 << UF_PORT) | (1 << UF_PATH) | \
-		(1 << UF_QUERY) | (1 << UF_FRAGMENT) | (1 << UF_USERINFO)
-	, .port           = 8080
-	, .field_data     =
-	{ {  0, 4 }	/* UF_SCHEMA */
-	,{ 11, 8 }	/* UF_HOST */
-	,{ 20, 4 }	/* UF_PORT */
-	,{ 24, 8 }	/* UF_PATH */
-	,{ 33, 12 }	/* UF_QUERY */
-	,{ 46, 4 }	/* UF_FRAGMENT */
-	,{  7, 3 }	/* UF_USERINFO */
-	} }
+			  ,           { .name      = "complex URL with basic auth from node js url parser doc"
+					, .url = "http://a:b@host.com:8080/p/a/t/h?query=string#hash"
+					, .is_connect = 0
+					, .u =
+					{ .field_set  = (1 << UF_SCHEMA) | (1 << UF_HOST) | (1 << UF_PORT) | (1 << UF_PATH) | \
+				    (1 << UF_QUERY) | (1 << UF_FRAGMENT) | (1 << UF_USERINFO)
+			    , .port       = 8080
+			    , .field_data =
+			    { {  0, 4 }			/* UF_SCHEMA */
+			    ,         { 11, 8 }		/* UF_HOST */
+			    ,         { 20, 4 }		/* UF_PORT */
+			    ,         { 24, 8 }		/* UF_PATH */
+			    ,         { 33, 12 }	/* UF_QUERY */
+			    ,         { 46, 4 }		/* UF_FRAGMENT */
+			    ,         {  7, 3 }		/* UF_USERINFO */
+			    } }
 
-	    , .rv = 0 }
+					, .rv = 0 }
 
-      ,   { .name      = "double @"
-	    , .url = "http://a:b@@hostname:443/"
-	    , .is_connect = 0
-	    , .rv = 1 }
+			  ,           { .name      = "double @"
+					, .url = "http://a:b@@hostname:443/"
+					, .is_connect = 0
+					, .rv = 1 }
 
-      ,   { .name      = "proxy empty host"
-	    , .url = "http://:443/"
-	    , .is_connect = 0
-	    , .rv = 1 }
+			  ,           { .name      = "proxy empty host"
+					, .url = "http://:443/"
+					, .is_connect = 0
+					, .rv = 1 }
 
-      ,   { .name      = "proxy empty port"
-	    , .url = "http://hostname:/"
-	    , .is_connect = 0
-	    , .rv = 1 }
+			  ,           { .name      = "proxy empty port"
+					, .url = "http://hostname:/"
+					, .is_connect = 0
+					, .rv = 1 }
 
-      ,   { .name      = "CONNECT with basic auth"
-	    , .url = "a:b@hostname:443"
-	    , .is_connect = 1
-	    , .rv = 1 }
+			  ,           { .name      = "CONNECT with basic auth"
+					, .url = "a:b@hostname:443"
+					, .is_connect = 1
+					, .rv = 1 }
 
-      ,   { .name      = "CONNECT empty host"
-	    , .url = ":443"
-	    , .is_connect = 1
-	    , .rv = 1 }
+			  ,           { .name      = "CONNECT empty host"
+					, .url = ":443"
+					, .is_connect = 1
+					, .rv = 1 }
 
-      ,   { .name      = "CONNECT empty port"
-	    , .url = "hostname:"
-	    , .is_connect = 1
-	    , .rv = 1 }
+			  ,           { .name      = "CONNECT empty port"
+					, .url = "hostname:"
+					, .is_connect = 1
+					, .rv = 1 }
 
-      ,   { .name      = "CONNECT with extra bits"
-	    , .url = "hostname:443/"
-	    , .is_connect = 1
-	    , .rv = 1 }
+			  ,           { .name      = "CONNECT with extra bits"
+					, .url = "hostname:443/"
+					, .is_connect = 1
+					, .rv = 1 }
 
-      ,   { .name      = "space in URL"
-	    , .url = "/foo bar/"
-	    , .rv = 1	/* s_dead */
-      }
+			  ,           { .name      = "space in URL"
+					, .url = "/foo bar/"
+					, .rv = 1	/* s_dead */
+			  }
 
-      ,   { .name      = "proxy basic auth with space url encoded"
-	    , .url = "http://a%20:b@host.com/"
-	    , .is_connect = 0
-	    , .u =
-	    { .field_set      = (1 << UF_SCHEMA) | (1 << UF_HOST) | (1 << UF_PATH) | (1 << UF_USERINFO)
-	, .port           = 0
-	, .field_data     =
-	{ {  0, 4 }	/* UF_SCHEMA */
-	,{ 14, 8 }	/* UF_HOST */
-	,{  0, 0 }	/* UF_PORT */
-	,{ 22, 1 }	/* UF_PATH */
-	,{  0, 0 }	/* UF_QUERY */
-	,{  0, 0 }	/* UF_FRAGMENT */
-	,{  7, 6 }	/* UF_USERINFO */
-	} }
+			  ,           { .name      = "proxy basic auth with space url encoded"
+					, .url = "http://a%20:b@host.com/"
+					, .is_connect = 0
+					, .u =
+					{ .field_set  = (1 << UF_SCHEMA) | (1 << UF_HOST) | (1 << UF_PATH) | (1 << UF_USERINFO)
+			    , .port       = 0
+			    , .field_data =
+			    { {  0, 4 }		/* UF_SCHEMA */
+			    ,         { 14, 8 }	/* UF_HOST */
+			    ,         {  0, 0 }	/* UF_PORT */
+			    ,         { 22, 1 }	/* UF_PATH */
+			    ,         {  0, 0 }	/* UF_QUERY */
+			    ,         {  0, 0 }	/* UF_FRAGMENT */
+			    ,         {  7, 6 }	/* UF_USERINFO */
+			    } }
 
-	    , .rv = 0 }
+					, .rv = 0 }
 
-      ,   { .name      = "carriage return in URL"
-	    , .url = "/foo\rbar/"
-	    , .rv = 1	/* s_dead */
-      }
+			  ,           { .name      = "carriage return in URL"
+					, .url = "/foo\rbar/"
+					, .rv = 1	/* s_dead */
+			  }
 
-      ,   { .name      = "proxy double : in URL"
-	    , .url = "http://hostname::443/"
-	    , .rv = 1	/* s_dead */
-      }
+			  ,           { .name      = "proxy double : in URL"
+					, .url = "http://hostname::443/"
+					, .rv = 1	/* s_dead */
+			  }
 
-      ,   { .name      = "proxy basic auth with double :"
-	    , .url = "http://a::b@host.com/"
-	    , .is_connect = 0
-	    , .u =
-	    { .field_set      = (1 << UF_SCHEMA) | (1 << UF_HOST) | (1 << UF_PATH) | (1 << UF_USERINFO)
-	, .port           = 0
-	, .field_data     =
-	{ {  0, 4 }	/* UF_SCHEMA */
-	,{ 12, 8 }	/* UF_HOST */
-	,{  0, 0 }	/* UF_PORT */
-	,{ 20, 1 }	/* UF_PATH */
-	,{  0, 0 }	/* UF_QUERY */
-	,{  0, 0 }	/* UF_FRAGMENT */
-	,{  7, 4 }	/* UF_USERINFO */
-	} }
+			  ,           { .name      = "proxy basic auth with double :"
+					, .url = "http://a::b@host.com/"
+					, .is_connect = 0
+					, .u =
+					{ .field_set  = (1 << UF_SCHEMA) | (1 << UF_HOST) | (1 << UF_PATH) | (1 << UF_USERINFO)
+			    , .port       = 0
+			    , .field_data =
+			    { {  0, 4 }		/* UF_SCHEMA */
+			    ,         { 12, 8 }	/* UF_HOST */
+			    ,         {  0, 0 }	/* UF_PORT */
+			    ,         { 20, 1 }	/* UF_PATH */
+			    ,         {  0, 0 }	/* UF_QUERY */
+			    ,         {  0, 0 }	/* UF_FRAGMENT */
+			    ,         {  7, 4 }	/* UF_USERINFO */
+			    } }
 
-	    , .rv = 0 }
+					, .rv = 0 }
 
-      ,   { .name      = "line feed in URL"
-	    , .url = "/foo\nbar/"
-	    , .rv = 1	/* s_dead */
-      }
+			  ,           { .name      = "line feed in URL"
+					, .url = "/foo\nbar/"
+					, .rv = 1	/* s_dead */
+			  }
 
-      ,   { .name      = "proxy empty basic auth"
-	    , .url = "http://@hostname/fo"
-	    , .u =
-	    { .field_set      = (1 << UF_SCHEMA) | (1 << UF_HOST) | (1 << UF_PATH)
-	, .port           = 0
-	, .field_data     =
-	{ {  0, 4 }	/* UF_SCHEMA */
-	,{  8, 8 }	/* UF_HOST */
-	,{  0, 0 }	/* UF_PORT */
-	,{ 16, 3 }	/* UF_PATH */
-	,{  0, 0 }	/* UF_QUERY */
-	,{  0, 0 }	/* UF_FRAGMENT */
-	,{  0, 0 }	/* UF_USERINFO */
-	} }
+			  ,           { .name      = "proxy empty basic auth"
+					, .url = "http://@hostname/fo"
+					, .u =
+					{ .field_set  = (1 << UF_SCHEMA) | (1 << UF_HOST) | (1 << UF_PATH)
+			    , .port       = 0
+			    , .field_data =
+			    { {  0, 4 }		/* UF_SCHEMA */
+			    ,         {  8, 8 }	/* UF_HOST */
+			    ,         {  0, 0 }	/* UF_PORT */
+			    ,         { 16, 3 }	/* UF_PATH */
+			    ,         {  0, 0 }	/* UF_QUERY */
+			    ,         {  0, 0 }	/* UF_FRAGMENT */
+			    ,         {  0, 0 }	/* UF_USERINFO */
+			    } }
 
-	    , .rv = 0 }
-      ,   { .name      = "proxy line feed in hostname"
-	    , .url = "http://host\name/fo"
-	    , .rv = 1	/* s_dead */
-      }
+					, .rv = 0 }
+			  ,           { .name      = "proxy line feed in hostname"
+					, .url = "http://host\name/fo"
+					, .rv = 1	/* s_dead */
+			  }
 
-      ,   { .name      = "proxy % in hostname"
-	    , .url = "http://host%name/fo"
-	    , .rv = 1	/* s_dead */
-      }
+			  ,           { .name      = "proxy % in hostname"
+					, .url = "http://host%name/fo"
+					, .rv = 1	/* s_dead */
+			  }
 
-      ,   { .name      = "proxy ; in hostname"
-	    , .url = "http://host;ame/fo"
-	    , .rv = 1	/* s_dead */
-      }
+			  ,           { .name      = "proxy ; in hostname"
+					, .url = "http://host;ame/fo"
+					, .rv = 1	/* s_dead */
+			  }
 
-      ,   { .name      = "proxy basic auth with unreservedchars"
-	    , .url = "http://a!;-_!=+$@host.com/"
-	    , .is_connect = 0
-	    , .u =
-	    { .field_set      = (1 << UF_SCHEMA) | (1 << UF_HOST) | (1 << UF_PATH) | (1 << UF_USERINFO)
-	, .port           = 0
-	, .field_data     =
-	{ {  0, 4 }	/* UF_SCHEMA */
-	,{ 17, 8 }	/* UF_HOST */
-	,{  0, 0 }	/* UF_PORT */
-	,{ 25, 1 }	/* UF_PATH */
-	,{  0, 0 }	/* UF_QUERY */
-	,{  0, 0 }	/* UF_FRAGMENT */
-	,{  7, 9 }	/* UF_USERINFO */
-	} }
+			  ,           { .name      = "proxy basic auth with unreservedchars"
+					, .url = "http://a!;-_!=+$@host.com/"
+					, .is_connect = 0
+					, .u =
+					{ .field_set  = (1 << UF_SCHEMA) | (1 << UF_HOST) | (1 << UF_PATH) | (1 << UF_USERINFO)
+			    , .port       = 0
+			    , .field_data =
+			    { {  0, 4 }		/* UF_SCHEMA */
+			    ,         { 17, 8 }	/* UF_HOST */
+			    ,         {  0, 0 }	/* UF_PORT */
+			    ,         { 25, 1 }	/* UF_PATH */
+			    ,         {  0, 0 }	/* UF_QUERY */
+			    ,         {  0, 0 }	/* UF_FRAGMENT */
+			    ,         {  7, 9 }	/* UF_USERINFO */
+			    } }
 
-	    , .rv = 0 }
+					, .rv = 0 }
 
-      ,   { .name      = "proxy only empty basic auth"
-	    , .url = "http://@/fo"
-	    , .rv = 1	/* s_dead */
-      }
+			  ,           { .name      = "proxy only empty basic auth"
+					, .url = "http://@/fo"
+					, .rv = 1	/* s_dead */
+			  }
 
-      ,   { .name      = "proxy only basic auth"
-	    , .url = "http://toto@/fo"
-	    , .rv = 1	/* s_dead */
-      }
+			  ,           { .name      = "proxy only basic auth"
+					, .url = "http://toto@/fo"
+					, .rv = 1	/* s_dead */
+			  }
 
-      ,   { .name      = "proxy emtpy hostname"
-	    , .url = "http:///fo"
-	    , .rv = 1	/* s_dead */
-      }
+			  ,           { .name      = "proxy emtpy hostname"
+					, .url = "http:///fo"
+					, .rv = 1	/* s_dead */
+			  }
 
-      ,   { .name      = "proxy = in URL"
-	    , .url = "http://host=ame/fo"
-	    , .rv = 1	/* s_dead */
-      }
+			  ,           { .name      = "proxy = in URL"
+					, .url = "http://host=ame/fo"
+					, .rv = 1	/* s_dead */
+			  }
 
 #if HTTP_PARSER_STRICT
-      ,   { .name      = "tab in URL"
-	    , .url = "/foo\tbar/"
-	    , .rv = 1	/* s_dead */
-      }
+			  ,           { .name      = "tab in URL"
+					, .url = "/foo\tbar/"
+					, .rv = 1	/* s_dead */
+			  }
 
-      ,   { .name      = "form feed in URL"
-	    , .url = "/foo\fbar/"
-	    , .rv = 1	/* s_dead */
-      }
+			  ,           { .name      = "form feed in URL"
+					, .url = "/foo\fbar/"
+					, .rv = 1	/* s_dead */
+			  }
 
 #else	/* !HTTP_PARSER_STRICT */
-      ,   { .name      = "tab in URL"
-	    , .url = "/foo\tbar/"
-	    , .u =
-	    { .field_set      = (1 << UF_PATH)
-	, .field_data     =
-	{ {  0, 0 }	/* UF_SCHEMA */
-	,{  0, 0 }	/* UF_HOST */
-	,{  0, 0 }	/* UF_PORT */
-	,{  0, 9 }	/* UF_PATH */
-	,{  0, 0 }	/* UF_QUERY */
-	,{  0, 0 }	/* UF_FRAGMENT */
-	,{  0, 0 }	/* UF_USERINFO */
-	} }
+			  ,           { .name      = "tab in URL"
+					, .url = "/foo\tbar/"
+					, .u =
+					{ .field_set  = (1 << UF_PATH)
+			    , .field_data =
+			    { {  0, 0 }		/* UF_SCHEMA */
+			    ,         {  0, 0 }	/* UF_HOST */
+			    ,         {  0, 0 }	/* UF_PORT */
+			    ,         {  0, 9 }	/* UF_PATH */
+			    ,         {  0, 0 }	/* UF_QUERY */
+			    ,         {  0, 0 }	/* UF_FRAGMENT */
+			    ,         {  0, 0 }	/* UF_USERINFO */
+			    } }
 
-	    , .rv = 0 }
+					, .rv = 0 }
 
-      ,   { .name      = "form feed in URL"
-	    , .url = "/foo\fbar/"
-	    , .u =
-	    { .field_set      = (1 << UF_PATH)
-	, .field_data     =
-	{ {  0, 0 }	/* UF_SCHEMA */
-	,{  0, 0 }	/* UF_HOST */
-	,{  0, 0 }	/* UF_PORT */
-	,{  0, 9 }	/* UF_PATH */
-	,{  0, 0 }	/* UF_QUERY */
-	,{  0, 0 }	/* UF_FRAGMENT */
-	,{  0, 0 }	/* UF_USERINFO */
-	} }
+			  ,           { .name      = "form feed in URL"
+					, .url = "/foo\fbar/"
+					, .u =
+					{ .field_set  = (1 << UF_PATH)
+			    , .field_data =
+			    { {  0, 0 }		/* UF_SCHEMA */
+			    ,         {  0, 0 }	/* UF_HOST */
+			    ,         {  0, 0 }	/* UF_PORT */
+			    ,         {  0, 9 }	/* UF_PATH */
+			    ,         {  0, 0 }	/* UF_QUERY */
+			    ,         {  0, 0 }	/* UF_FRAGMENT */
+			    ,         {  0, 0 }	/* UF_USERINFO */
+			    } }
 
-	    , .rv = 0 }
-#endif /* if HTTP_PARSER_STRICT */
+					, .rv = 0 }
+#endif	/* if HTTP_PARSER_STRICT */
 };
 
 void
@@ -3639,21 +3639,21 @@ main(void)
 				"\r\n");
 		struct message large_chunked =
 		{ .name = "large chunked"
-		  , .type         = HTTP_RESPONSE
-		  , .raw          = msg
-		  , .should_keep_alive = FALSE
-		  , .message_complete_on_eof = FALSE
-		  , .http_major   = 1
-		  , .http_minor   = 0
-		  , .status_code  = 200
-		  , .response_status = "OK"
-		  , .num_headers  = 2
-		  , .headers      =
+		  , .type= HTTP_RESPONSE
+		  , .raw= msg
+		  , .should_keep_alive= FALSE
+		  , .message_complete_on_eof= FALSE
+		  , .http_major= 1
+		  , .http_minor= 0
+		  , .status_code= 200
+		  , .response_status= "OK"
+		  , .num_headers= 2
+		  , .headers=
 		  { { "Transfer-Encoding", "chunked"    }
-	  ,{ "Content-Type",      "text/plain" } }
+		    ,{ "Content-Type",      "text/plain" } }
 
-		  , .body_size    = 31337 * 1024
-		  , .num_chunks_complete = 31338 };
+		  , .body_size= 31337 * 1024
+		  , .num_chunks_complete= 31338 };
 
 		for (i = 0; i < MAX_CHUNKS; i++) {
 			large_chunked.chunk_lengths[i] = 1024;

@@ -29,5 +29,5 @@ void free_queue_init(struct free_queue_list *list, unsigned int dsz, unsigned in
 bool free_queue_push(struct free_queue_list *list, void *data);
 
 bool free_queue_pull(struct free_queue_list *list, void *data);
-#endif /* ifndef _FREE_QUEUE_LIST_H_ */
+#endif	/* ifndef _FREE_QUEUE_LIST_H_ */
 

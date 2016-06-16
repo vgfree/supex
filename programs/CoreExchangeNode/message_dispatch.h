@@ -19,5 +19,5 @@ extern struct server_info g_serv_info;
 void find_best_gateway(int *fd);
 
 void message_dispatch();
-#endif /* ifndef _MESSAGE_DISPATCH_H_ */
+#endif	/* ifndef _MESSAGE_DISPATCH_H_ */
 

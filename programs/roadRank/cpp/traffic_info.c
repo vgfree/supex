@@ -111,7 +111,7 @@ int single_update_redis(SECKV_ROAD *kv_roadID, int g_save_time, struct ev_loop *
 		kv_roadID->countycode, kv_roadID->end_time, old_rr_id, old_sg_id, section);
 	x_printf(D, "redis command: %s", redis_buff);
 	add_redis_task(redis_buff, &(g_rr_cfg_file.county_traffic_server), ac);
-#endif /* if 0 */
+#endif	/* if 0 */
 	memset(redis_buff, 0, BUFF_USE_LEN);
 	sprintf(redis_buff,
 		"hset %d:cityinfo %ld %ld@%d:%d@%s",

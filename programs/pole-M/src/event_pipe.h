@@ -35,5 +35,5 @@ int evpipe_push_tail(evpipe_t *pipe, event_t *ev);
 int evpipe_length(evpipe_t *pipe);
 
 event_t *evpipe_pull(evpipe_t *pipe);
-#endif /* ifndef _EVENT_PIPE_H_ */
+#endif	/* ifndef _EVENT_PIPE_H_ */
 

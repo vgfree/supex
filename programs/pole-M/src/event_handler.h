@@ -142,5 +142,5 @@ int event_handler_startup(event_ctx_t *evctx, xmq_ctx_t *xctx, int threads);
 int push_event_to_thread(event_t *ev, int thread);
 
 int event_handler_destroy();
-#endif /* ifndef _EVENT_HANDLER_H_ */
+#endif	/* ifndef _EVENT_HANDLER_H_ */
 

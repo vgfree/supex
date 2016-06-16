@@ -193,7 +193,7 @@ int cjson_topb(const char *data, char **result, data_count_t *dt)
 		cJSON_Delete(obj);
 		return -1;
 	}
-#endif // ifdef _ENCRYPT
+#endif	// ifdef _ENCRYPT
 	count = pack_data_encode(&citywl_gpsdata,
 			idvalue, encrypt_text, latvalue, lngvalue,
 			speedvalue, anglevalue, gpstimevalue, retnum);

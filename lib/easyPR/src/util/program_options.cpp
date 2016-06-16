@@ -269,7 +269,7 @@ namespace program_options {
 					}
 
 					break;
-			}	// switch
+			}						// switch
 
 			if ((block[0] != '-') && (previous != block)	// not the first option
 				) {

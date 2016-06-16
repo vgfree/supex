@@ -146,5 +146,5 @@ void thpool_resume(threadpool);
  * @return nothing
  */
 void thpool_destroy(threadpool);
-#endif /* ifndef _THPOOL_ */
+#endif	/* ifndef _THPOOL_ */
 

@@ -47,5 +47,5 @@ struct router_head
 	uint32_t                body_size;
 	char                    *body;
 };
-#endif /* ifndef _ROUTER_H_ */
+#endif	/* ifndef _ROUTER_H_ */
 

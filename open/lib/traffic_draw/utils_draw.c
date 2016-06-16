@@ -233,5 +233,5 @@ main(int        argc,
 	cairo_surface_destroy(surface);
 	return 0;
 }
-#endif /* if 0 */
+#endif	/* if 0 */
 

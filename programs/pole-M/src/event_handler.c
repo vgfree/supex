@@ -396,7 +396,7 @@ static int do_incr_req(thread_member_t *pthrd, client_info_t *info, event_t *ev)
 				break;
 
 			/* 如果上一次发送的是NET_EV_DUMP_REQ，那么我们需要将当前的增量请求存储起来,
-			 *   直到所有的DUMP执行完成为止; 因为增量同步是串行的,所以,只需要用一个变量保存*/
+			*   直到所有的DUMP执行完成为止; 因为增量同步是串行的,所以,只需要用一个变量保存*/
 			case NET_EV_DUMP_REQ:
 				x_printf(I, "If ev_send_okay is EV_DUMP_REQ, then we save the incr-event to ev_incr_wait.");
 				info->ev_incr_wait = ev;

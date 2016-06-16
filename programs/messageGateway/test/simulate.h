@@ -19,5 +19,5 @@ void *pull_thread(void *usr);
 void init_push_server();
 
 void destroy_push_server();
-#endif /* ifndef _SIMULATE_H_ */
+#endif	/* ifndef _SIMULATE_H_ */
 

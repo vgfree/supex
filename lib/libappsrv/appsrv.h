@@ -20,5 +20,5 @@ void destroy_io();
 int send_app_msg(struct app_msg *msg);
 
 int recv_app_msg(struct app_msg *msg, int *more, int flag);
-#endif /* ifndef _APP_SRV_H_ */
+#endif	/* ifndef _APP_SRV_H_ */
 

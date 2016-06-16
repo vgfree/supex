@@ -55,7 +55,7 @@ static int snd_data_to_luakv(char *http_data, struct ev_loop *loop, char *host, 
 
 	return 0;
 }
-#endif /* if 0 */
+#endif	/* if 0 */
 
 static int add_redis_task(char *redis_buff, struct rr_link *link, struct async_ctx *ac)
 {

@@ -84,5 +84,5 @@ int array_at_fd(const int fd, struct fd_descriptor *des);
 uint32_t statistic_object(const enum router_object obj);
 
 uint32_t poll_client_fd(int *arr[], uint32_t *size);
-#endif /* ifndef _FD_MANAGER_H_ */
+#endif	/* ifndef _FD_MANAGER_H_ */
 

@@ -153,7 +153,7 @@ static int safe_delay_http(const char *host, int port, const char *data, size_t 
 	} while (ok == TCP_ERR_CONNECT || ok == TCP_ERR_SEND);
 	return 0;
 }
-#endif /* if 1 */
+#endif	/* if 1 */
 
 int sniff_vms_call_rlpushx(void *user, union virtual_system **VMS, struct sniff_task_node *task)
 {

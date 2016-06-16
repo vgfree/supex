@@ -134,7 +134,7 @@ bool commepoll_wait(struct comm_epoll *commepoll, int timeout)
 				}
 			}
 		}
-#endif /* if     0 */
+#endif		/* if     0 */
 		return true;
 	}
 

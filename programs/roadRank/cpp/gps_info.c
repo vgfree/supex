@@ -151,7 +151,7 @@ int gps_decode(struct ev_loop *loop, const char *p_data, gps_info_t *p_gps, rr_l
 			return -3;
 		}
 	}
-#endif /* if 1 */
+#endif	/* if 1 */
 	// (cJSON_GetArrayItem(son_speed,0))->valueint;
 
 	p_gps->max_speed = (cJSON_GetArrayItem(son_speed, 0))->valueint;

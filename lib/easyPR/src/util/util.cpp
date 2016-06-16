@@ -223,7 +223,7 @@ namespace easypr {
 
 			closedir(pdir);
 		}
-#endif // ifdef OS_WINDOWS
+#endif		// ifdef OS_WINDOWS
 		return files;
 	}
 
@@ -295,7 +295,7 @@ namespace easypr {
 
 		return strTemp;
 	}
-#endif // ifdef OS_WINDOWS
+#endif	// ifdef OS_WINDOWS
 
 	std::size_t Utils::get_last_slash(const std::string &path)
 	{
