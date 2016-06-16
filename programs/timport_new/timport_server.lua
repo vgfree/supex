@@ -38,17 +38,45 @@ local function getData(key, cmd)
 	return ok_ret
 end
 
-local function getUserWithKey1(key1, targetTime)
-	local userKey = nil
-	if key1 ~= nil and targetTime ~= nil then
-		userKey = key1 .. targetTime
+local function setData(key, data)
+	if key == nil or data == nil then
+		return nil
 	end
-	return getData(userKey, 'SMEMBERS')
+	local ok_status, ok_ret = redis_api.cmd('tsdb01', '', 'SET', key, data)
+	if not (ok_status and ok_ret) then
+        	only.log('E', 'Set data failed or no suitable data')
+		return nil        
+	end
+	print(ok_ret)
+	return ok_ret
+end
+
+local function assembleData(userData)
+	if userData == nil then
+		only.log('E', "The userData is nil.")
+		return nil
+	end
+	table.sort(userData)
+	only.log('E', scan.dump(userData))
+
+	--拿到每一行|出现的次数
+	local str = userData[1]
+	local xxx, count = string.gsub(str, '|', '|')
+	local data = #userData .. '*' .. count + 1 .. '@'
+	only.log('E', scan.dump(data))
+	
+	for i = 1, #userData do
+		data = data .. userData[i] .. '|'	
+	end
+
+	only.log('E', scan.dump(data))
+
+	return data
 end
 
 local function getDataWithUser(user, targetTime)
 	local dataKey = nil
-	if user == nil or #user == 0 then
+	if user == nil then
 		return nil
         end
 
@@ -57,24 +85,16 @@ local function getDataWithUser(user, targetTime)
 	end
 	
 	local userData = nil
-	for i = 1, #user do
-		dataKey = key2 .. user[i] .. ':' .. targetTime
-		userData = getData(dataKey, 'GET')
-		only.log('E', scan.dump(userData))
-	end
-end
-
-local function sendDataToClient(table)
+	dataKey = key2 .. user .. ':' .. targetTime
+	userData = getData(dataKey, 'SMEMBERS')
+	only.log('E', scan.dump(userData))
+	local data = assembleData(userData)
+	setData(dataKey, data)
 end
 
 function GetTable(tab)
-	--local targetTime = '20160612171'
-	--local user = getUserWithKey1(key1, targetTime)
-	--only.log('E', scan.dump(user))
-	--if user ~= nil then
-	--	getDataWithUser(user, targetTime)
-	--endi
 	print(tab[1])
 	print(tab[2])
+	getDataWithUser(tab[1], tab[2])
 end
 

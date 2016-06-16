@@ -96,7 +96,7 @@ void GetData_task()
 	struct supex_evcoro     *p_evcoro = supex_get_default();
 	struct evcoro_scheduler *p_scheduler = p_evcoro->scheduler;
 	struct xpool            *cpool = conn_xpool_find("192.168.1.12", 9001);
-	len = cmd_to_proto(&proto, "SMEMBERS %s", "ACTIVEUSER:20160612171");
+	len = cmd_to_proto(&proto, "SMEMBERS %s", "ACTIVEUSER:20160616104");
 	struct async_evtasker   *tasker = evtask_initial(p_scheduler, 1, QUEUE_TYPE_FIFO, NEXUS_TYPE_SOLO);
 	struct command_node     *command = evtask_command(tasker, PROTO_TYPE_REDIS, cpool, proto, len);
 
@@ -117,7 +117,7 @@ void *SetData_task_handle(struct supex_evcoro *evcoro, void *step)
 {
 	int len = 0;
 	char *proto = NULL;
-	char *time = "20160612171";
+	char *time = "20160616104";
 
 	int idx_task = (int)(uintptr_t)step;
 	struct user_task *p_task = &((struct user_task *)evcoro->task)[idx_task];
@@ -129,7 +129,6 @@ void *SetData_task_handle(struct supex_evcoro *evcoro, void *step)
 	printf("Lawrence hamster said task_id = %d\n", p_task->TASK);
 	printf("Lawrence hamster said data = %s\n", userName);
 
-	//dispatchToUser (userName, UserData.status->field[p_task->TASK - 1].len);
 	dispatchToUser(userName, UserData.status->field[p_task->TASK - 1].len, time, strlen(time));
 
 	free(userName);
@@ -176,7 +175,7 @@ static void exitFunction(tlpool_t *tlpool)
         tlpool_free(tlpool);
 }
 
-static int StartTime = 1465994400;
+static int StartTime = 1466064900;
 
 void TimeProcessFunction(startTime)
 {
