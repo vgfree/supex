@@ -4,14 +4,11 @@
 	"swift_tasker_counts": 8,
 	"swift_protocol": "http",
 
-	// 在执行swift相关协议的同时,是否并行执行ZeroMQ的协议入口数据;
-	// 值: yes | ye | no -> no: 代表不启用!
-	"open_zeromq_protocol": "yes",
-
 	"max_req_size": 32768,
 
 	"log_path": "./logs/",
 	"log_file": "pole-M",
+	// 0 LOG_DEBUG|1 LOG_INFO|2 LOG_WARN|3 LOG_ERROR|4 LOG_SYS|5 LOG_FATAL
 	"log_level": 1,
 
 	// 如果siwft的协议是HTTP时,下面配置才起作用;
@@ -19,5 +16,26 @@
 	"api_fetch": "/pole-MFetch.json",
 	"api_merge": "/pole-MMerge.json",
 
-	"api_custom": ["/w_xxx"]
+	"api_custom": ["/w_xxx"],
+
+	/*------------------------------------------------*/
+
+	// 在执行swift相关协议的同时,是否并行执行ZeroMQ的协议入口数据;
+	// 值: yes | ye | no -> no: 代表不启用!
+	"open_zeromq_protocol": "yes",
+
+
+	// Input ZeroMQ Server URI for Input Client connect and communication.
+        "input_uri": "tcp://*:8585",
+
+	// Server URI for pole-S connect and communication.
+        "bind_uri": "tcp://*:8686",
+
+
+	// The Maxminum of XMQ's records.
+	"max_records": 2000000,
+
+	// 如果宏编译选择(TC_COROUTINE)服务器为协程版本时,thread_number参数生效.
+	"thread_number": 3
+
 }

@@ -23,6 +23,7 @@
 // ---------------Global Area---------------------//
 //
 struct swift_cfg_list g_swift_cfg_list = {};
+struct pole_conf g_pole_conf = {};
 
 // g_xmq_producer: Just for swift module.
 xmq_producer_t *g_xmq_producer = NULL;
@@ -201,10 +202,8 @@ int main(int argc, char **argv)
 	load_cfg_file(&g_swift_cfg_list.file_info, g_swift_cfg_list.argv_info.conf_name);
 
 	// Loading Pole-M's configuration.
-	int res = config_init("./item_conf.json");
-	assert(res == 0);
+	config_init(&g_pole_conf, g_swift_cfg_list.argv_info.conf_name);
 
-	res = log_init(g_pole_conf.log_path, g_pole_conf.log_level);
 
 	// INIT XMQ's context.
 	xmq_ctx_t *xmq_ctx = xmq_context_init("./data", g_pole_conf.max_records, ldb_pvt_create, driver_ldb_put, driver_ldb_get, ldb_pvt_destroy);
@@ -225,7 +224,7 @@ int main(int argc, char **argv)
 	x_printf(I, "MAIN: Current is thread version!");
 	// Loading worker porters
 	porters_list_init();
-	res = __load_porters(ev_ctx, xmq_ctx);
+	int res = __load_porters(ev_ctx, xmq_ctx);
 	assert(res == 0);
 
 	switcher_work(ev_ctx, xmq_ctx);
@@ -234,7 +233,7 @@ int main(int argc, char **argv)
 	switcher_join_all_porter();
 #elif defined(TC_COROUTINE)
 	x_printf(I, "MAIN: Current is coroutine version!");
-	res = event_handler_startup(ev_ctx, xmq_ctx, g_pole_conf.thread_number);
+	int res = event_handler_startup(ev_ctx, xmq_ctx, g_pole_conf.thread_number);
 	assert(res == 0);
 
 	res = event_dispenser_startup(ev_ctx, g_pole_conf.thread_number);

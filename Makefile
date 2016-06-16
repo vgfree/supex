@@ -60,14 +60,15 @@ export EXPORT_LIBA
 
 openIMX := IMX_coreExchangeNode IMX_messageGateway IMX_loginServer IMX_settingServer IMX_userInfoApi
 openHLS := rmsapi hlsapi hlsldb
-SRV := $(openIMX) $(openHLS) \
+openPMS := dtsync pole-M pole-S
+SRV := $(openIMX) $(openHLS) $(openPMS) \
 	drisamp drimode goby rtmiles rta \
 	drisampapi drimodeapi gobyapi rtmilesapi rtaapi \
 	msgsearchapi spxapi dfsapi ptop robais tsearchapi driviewapi \
 	loghub topology crzptX crzptY ACB damS roadRank \
-	gdgive bdgive gopath gomile ashman adcube adcube_v2\
+	gdgive bdgive gopath gomile ashman adcube_v2\
 	spark releaseServer dfsdb tsdb \
-	timport msgimport rtimport simimport PMR dtsync pole-M pole-S tagpick trafficapi mttpServer mttpSvp rrtopo damR BRM mfptpServer pmrhttp weibo-S weibo-G
+	timport msgimport rtimport simimport PMR tagpick trafficapi mttpServer mttpSvp rrtopo damR BRM mfptpServer pmrhttp weibo-S weibo-G
 # club
 
 help:
