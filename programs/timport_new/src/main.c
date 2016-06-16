@@ -10,6 +10,7 @@
 #include "spx_evcs_module.h"
 #include "async_tasks/async_obj.h"
 #include "base/free_queue.h"
+#include "timport_cfg.h"
 
 EVCS_MODULE_SETUP(kernel, kernel_init, kernel_exit, &g_kernel_evts);
 EVCS_MODULE_SETUP(evcs, evcs_init, evcs_exit, &g_evcs_evts);
@@ -23,6 +24,8 @@ EVCS_MODULE_SETUP(evcs, evcs_init, evcs_exit, &g_evcs_evts);
 #define MAX_SET_DATA_PROCESS_NUMBER     2
 
 #define PROCESS_ID                      (MAX_SET_DATA_PROCESS_NUMBER + SET_DATA_PROCESS)
+
+struct timport_cfg_list g_timport_cfg_list = {};
 
 tlpool_t *tlpool = NULL;
 
@@ -182,7 +185,7 @@ static void exitFunction(tlpool_t *tlpool)
 	tlpool_free(tlpool);
 }
 
-static int StartTime = 1466064900;
+//static int StartTime = 1466064900;
 
 void TimeProcessFunction(startTime)
 {
@@ -199,7 +202,7 @@ void TimeProcessFunction(startTime)
 		sleep(0.2);
 	}
 
-	StartTime += 60;
+	g_timport_cfg_list.file_info.start_time += 60;
 	printf("exit TimeProcessFunction\n");
 }
 
@@ -215,15 +218,21 @@ static bool task_report_main(void *user, void *task)
 
 void *getData_task_handle()
 {
-	while (1) {
-		TimeProcessFunction(StartTime);
+	while(1) {
+		printf("start_time = %d\n", g_timport_cfg_list.file_info.start_time);
+		TimeProcessFunction(g_timport_cfg_list.file_info.start_time);
 		GetData_task();
 		sleep(1);
 	}
 }
 
-int main(void)
+
+int main(int argc, char *argv[])
 {
+	//g_timport_cfg_list.argv_info.conf_name = "../timport_conf.json";
+	load_supex_args(&g_timport_cfg_list.argv_info, argc, argv, NULL, NULL, NULL);
+	read_timport_cfg(&g_timport_cfg_list.file_info, g_timport_cfg_list.argv_info.conf_name);
+
 	int processIndex;
 
 	conn_xpool_init("192.168.1.12", 9001, 10, true);	// redis, for get data process
