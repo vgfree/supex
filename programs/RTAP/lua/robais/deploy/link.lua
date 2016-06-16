@@ -2,7 +2,12 @@ module("link")
 
 OWN_POOL = {
 	lhttp = {},
-	redis = {},
+	redis = {
+		damServer = {
+			host = "127.0.0.1",
+			port = 4210,
+		}
+	},
 	mysql = {},
 }
 
