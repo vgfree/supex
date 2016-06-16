@@ -6,8 +6,9 @@
 #include <stdlib.h>
 #include "communication.h"
 
-#define	QUEUE_NODES	1024	/* 队列里面可以存放多少个节点的数据 */
-#define TIMEOUTED	5000	/* 以毫秒(ms)为单位 1s = 1000ms*/
+#define	QUEUE_NODES	1024		/* 队列里面可以存放多少个节点的数据 */
+#define EPOLLTIMEOUTED	5000		/* epoll_wait的超时事件 以毫秒(ms)为单位 1s = 1000ms*/
+#define	CONNECTTIMEOUT	1000000*30	/* 连接服务器时的标志位设置了CONNECT_ANYWAY时，一直尝试连接服务器,超时时间到还没连接上就返回[单位:ms] */
 
 static void * _start_new_pthread(void *usr);
 
@@ -106,14 +107,14 @@ void comm_ctx_destroy(struct comm_context *commctx)
 }
 
 
-int comm_socket(struct comm_context *commctx, const char *host, const char *service, struct cbinfo *finishedcb, int type)
+int comm_socket(struct comm_context *commctx, const char *host, const char *service, struct cbinfo *finishedcb, int flag)
 {
 	assert(commctx && host && service);
 
 	struct comm_tcp	  commtcp = {};
-	struct comm_data* connfd = NULL;
 
-	if (type == COMM_BIND) {
+
+	if ((flag & 0x0F) == COMM_BIND) {
 		if (commctx->commevent->bindfdcnt < LISTEN_SIZE ) {
 			if (unlikely(!socket_listen(&commtcp, host, service))) {
 				log("bind socket failed\n");
@@ -124,11 +125,12 @@ int comm_socket(struct comm_context *commctx, const char *host, const char *serv
 			return -1;
 		}
 	} else {
-		if (unlikely(!socket_connect(&commtcp, host, service))) {
+		if (unlikely(!socket_connect(&commtcp, host, service, CONNECTTIMEOUT, (flag & 0xF0)))) {
 			log("connect socket failed\n");
 			return -1;
 		}
 	}
+
 
 	/* 添加一个fd进行监听 */
 	if (unlikely(!commdata_add(commctx->commevent, &commtcp, finishedcb))) {
@@ -136,6 +138,8 @@ int comm_socket(struct comm_context *commctx, const char *host, const char *serv
 		close(commtcp.fd);
 		return -1;
 	}
+	log("commtcp local port:%d addr:%s\n", commtcp.localport, commtcp.localaddr);
+	log("commtcp peer port:%d addr:%s\n", commtcp.peerport, commtcp.peeraddr);
 
 	/* 将状态值设置为COMM_STAT_RUN并唤醒等待的线程 */
 	commlock_wake(&commctx->statlock, (int *)&commctx->stat, COMM_STAT_RUN, false);
@@ -261,7 +265,7 @@ static void * _start_new_pthread(void *usr)
 		}					
 		/* 用户没有设置epoll_wait超时，则使用默认超时时间 */
 		if (commctx->commevent->timeoutcb.timeout < 1) {
-			commctx->commevent->timeoutcb.timeout = TIMEOUTED;
+			commctx->commevent->timeoutcb.timeout = EPOLLTIMEOUTED;
 		}
 		/* 开始epoll_wait等待描述符就绪 */
 		if ((retval = commepoll_wait(&commctx->commepoll, commctx->commevent->timeoutcb.timeout))) {

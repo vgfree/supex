@@ -45,6 +45,7 @@ struct cbinfo {
 	void*			usr;		/* 用户的参数 */
 };
 
+
 /* 数据包的设置 */
 struct comm_package {
 	int dsize;					/* 数据总大小 */
@@ -110,6 +111,7 @@ struct bindfd_info {
 	struct cbinfo	finishedcb;	/* 每个fd对应的回调函数 */
 	struct comm_tcp	commtcp;	/* 套接字的相关信息 */
 };
+
 
 /* 主动链接或被动连接的fd相关信息[fd的类型为COMM_CONNECT, COMM_ACCEPT] */
 struct connfd_info {

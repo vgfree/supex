@@ -20,8 +20,8 @@ struct comm_context* comm_ctx_create(int epollsize);
 /* 销毁一个通信上下文的结构体 */
 void comm_ctx_destroy(struct comm_context *commctx);
 
-/* bind或者connect某个指定的地址端口 */
-int comm_socket(struct comm_context *commctx, const char *host, const char *service, struct cbinfo *finishedcb, int type);
+/* bind或者connect某个指定的地址端口 @flag:标志位,可取的值为COMM_BIND,COMM_CONNECT分别与CONNECT_ONCE或CONNECT_ANYWAY的按位或*/
+int comm_socket(struct comm_context *commctx, const char *host, const char *service, struct cbinfo *finishedcb, int flag);
 
 /* @block:发送数据失败的时候是否阻塞等待 @timeout[单位：ms]：阻塞多长时间返回，-1为一直阻塞 @返回值为-1失败*/
 int comm_send(struct comm_context *commctx, const struct comm_message *message, bool block, int timeout);

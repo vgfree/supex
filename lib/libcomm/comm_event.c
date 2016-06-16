@@ -5,10 +5,6 @@
 
 #include "comm_event.h"
 
-
-/* 允许从socket fd 一次性读取数据的大小 */
-//#define	COMM_READ_MIOU	1024	
-
 /* 处理残留fd时，允许连续处理同一事件[读或写]fd的个数最大个数 */
 #define	 MAX_DISPOSE_FDS  5
 
@@ -76,7 +72,8 @@ void  commevent_accept(struct comm_event *commevent, int fdidx)
 		fd = socket_accept(&commevent->bindfd[fdidx].commtcp, &commtcp);
 		if (fd > 0) {
 			if (commdata_add(commevent, &commtcp, &commevent->bindfd[fdidx].finishedcb)) {
-				log("Listen fd:%d accept fd:%d\n", commevent->bindfd[fdidx].commtcp.fd, commtcp.fd);
+				log("listen fd:%d accept fd:%d\n", commevent->bindfd[fdidx].commtcp.fd, commtcp.fd);
+				log("accept fd localport: %d local addr:%s peerport:%d peeraddr:%s\n", commtcp.localport, commtcp.localaddr, commtcp.peerport, commtcp.peeraddr);
 				if (commevent->bindfd[fdidx].finishedcb.callback) {
 					commevent->bindfd[fdidx].finishedcb.callback(commevent->commctx, &commtcp, commevent->bindfd[fdidx].finishedcb.usr);
 				}

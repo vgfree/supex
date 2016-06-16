@@ -40,7 +40,7 @@ int main(int argc, char* argv[])
 	//finishedcb.usr = &message;
 	for (n = 0; n < atoi(argv[3]); n++) {
 		sprintf(str_port, "%d", (port+n));
-		if (unlikely((fd[n] = comm_socket(commctx, argv[1], str_port, &finishedcb, COMM_CONNECT)) == -1)) {
+		if (unlikely((fd[n] = comm_socket(commctx, argv[1], str_port, &finishedcb, COMM_CONNECT | CONNECT_ANYWAY)) == -1)) {
 			comm_ctx_destroy(commctx);
 			log("client comm_socket failed\n");
 			return retval;
