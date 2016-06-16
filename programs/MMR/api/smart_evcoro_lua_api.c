@@ -23,8 +23,6 @@ static int _getProgName(lua_State *L)
 	return 1;
 }
 
-
-
 static lua_State *_vms_new(void)
 {
 	int             error = 0;
@@ -98,11 +96,11 @@ static lua_State *_vms_new(void)
  * 返回值: 成功返回０, 失败返回非０
  * 修 改:添加注释 程少远 2015/05/12
  */
-
 int smart_vms_init(void *user, union virtual_system **VMS, struct adopt_task_node *task)
 {
 	int             error = 0;
 	lua_State       **L = VMS;
+
 	if (*L != NULL) {
 		x_printf(S, "No need to init LUA VM!\n");
 		return 0;
@@ -115,29 +113,32 @@ int smart_vms_init(void *user, union virtual_system **VMS, struct adopt_task_nod
 	lua_pushinteger(*L, supex_get_default()->scheduler);
 	lua_pushinteger(*L, task->index);
 	error = lua_pcall(*L, 2, 0, 0);
+
 	if (error) {
 		x_printf(E, "%s", lua_tostring(*L, -1));
 		lua_pop(*L, 1);
 		exit(EXIT_FAILURE);
 	}
+
 	return error;
 }
 
-
-
 int smart_vms_call_ext(void *user, union virtual_system **VMS, struct adopt_task_node *task)
 {
-	int error = 0;
+	int             error = 0;
 	lua_State       **L = VMS;
+
 	lua_getglobal(*L, "app_call_1");
 	lua_pushboolean(*L, task->last);
 	lua_pushinteger(*L, task->sfd);
 	error = lua_pcall(*L, 2, 0, 0);
+
 	if (error) {
 		assert(*L);
 		x_printf(E, "%s", lua_tostring(*L, -1));
 		lua_pop(*L, 1);
 	}
+
 	return error;
 }
 

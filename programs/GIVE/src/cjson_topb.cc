@@ -20,8 +20,8 @@
 
 #define DATANUM 15
 
-extern kv_handler_t *city_handler;
-extern kv_handler_t *count_handler;
+extern kv_handler_t     *city_handler;
+extern kv_handler_t     *count_handler;
 
 using namespace std;
 
@@ -76,14 +76,15 @@ int cjson_topb(const char *data, char **result, data_count_t *dt)
 	char    ret[GZIP_BUFF_SIZE] = {};
 	int     size = 0;
 
-        unsigned char ciphertext[128]="";
-        unsigned char encrypt_text[64]="";
-        char id_buff[32] = "";
-        char imei_slice[5] = "";
-        struct tm *p;                                                                 
-        char get_date[16] = "";
-        time_t  u_date;
-        long date = 0;
+	unsigned char   ciphertext[128] = "";
+	unsigned char   encrypt_text[64] = "";
+	char            id_buff[32] = "";
+	char            imei_slice[5] = "";
+	struct tm       *p;
+	char            get_date[16] = "";
+	time_t          u_date;
+	long            date = 0;
+
 	if (!data) {
 		x_printf(E, "gps data is null!.\n");
 		return GV_ERR;
@@ -110,11 +111,13 @@ int cjson_topb(const char *data, char **result, data_count_t *dt)
 		goto jsonerr;
 	}
 
-        imsi = getjsonitem(obj, "IMSI");
-        if (!imsi) {
-                x_printf(E, "get IMSI item failed !\n");
-                goto jsonerr;
-        }
+	imsi = getjsonitem(obj, "IMSI");
+
+	if (!imsi) {
+		x_printf(E, "get IMSI item failed !\n");
+		goto jsonerr;
+	}
+
 	// int min_retnum = 2147483;
 	retnum = getjsonarry(obj, latvalue, DATANUM, "latitude");
 
@@ -170,23 +173,27 @@ int cjson_topb(const char *data, char **result, data_count_t *dt)
 	}
 
 #ifdef _ENCRYPT
-        snprintf(id_buff, 32, "%s%s", imei->valuestring, imsi->valuestring);
-        u_date = gpstimevalue[0]->valueint;
-        p = localtime(&u_date);
-        if(p->tm_hour < 3) {
-                if(p->tm_mday > 0)
-                        p->tm_mday -= 1;
-                snprintf(get_date, 16, "%d%d%d", 1900 + p->tm_year, 1 + p->tm_mon, p->tm_mday);
-        }
-        else
-                snprintf(get_date, 16, "%d%d%d", 1900 + p->tm_year, 1 + p->tm_mon, p->tm_mday);
-        date = atol(get_date);
-        if (id_cmd_out(count_handler, id_buff, date, ciphertext, encrypt_text) < 0) {
-                cJSON_Delete(obj);
-                return -1;
-        }
+	snprintf(id_buff, 32, "%s%s", imei->valuestring, imsi->valuestring);
+	u_date = gpstimevalue[0]->valueint;
+	p = localtime(&u_date);
 
-#endif
+	if (p->tm_hour < 3) {
+		if (p->tm_mday > 0) {
+			p->tm_mday -= 1;
+		}
+
+		snprintf(get_date, 16, "%d%d%d", 1900 + p->tm_year, 1 + p->tm_mon, p->tm_mday);
+	} else {
+		snprintf(get_date, 16, "%d%d%d", 1900 + p->tm_year, 1 + p->tm_mon, p->tm_mday);
+	}
+
+	date = atol(get_date);
+
+	if (id_cmd_out(count_handler, id_buff, date, ciphertext, encrypt_text) < 0) {
+		cJSON_Delete(obj);
+		return -1;
+	}
+#endif // ifdef _ENCRYPT
 	count = pack_data_encode(&citywl_gpsdata,
 			idvalue, encrypt_text, latvalue, lngvalue,
 			speedvalue, anglevalue, gpstimevalue, retnum);
@@ -217,9 +224,9 @@ int cjson_topb(const char *data, char **result, data_count_t *dt)
 
 	memcpy(*result, ret, size);
 
-        memset(id_buff, 0, sizeof(id_buff));
-        strncpy(imei_slice, imei->valuestring+10, 4);
-        snprintf(id_buff, 32, "%s%s", imei_slice, imsi->valuestring);
+	memset(id_buff, 0, sizeof(id_buff));
+	strncpy(imei_slice, imei->valuestring + 10, 4);
+	snprintf(id_buff, 32, "%s%s", imei_slice, imsi->valuestring);
 	dt->IMEI = strtoull(id_buff, NULL, 10);
 	dt->data_cnt = count;
 	dt->data_size = size;
@@ -285,7 +292,7 @@ int single_data_encode(CiTyWLPosition *citywl_position,
 	cJSON *anglevalue, cJSON *gpstimevalue)
 {
 #ifdef _ENCRYPT
-        citywl_position->set_imei((const char*)ciphertext);
+	citywl_position->set_imei((const char *)ciphertext);
 #else
 	citywl_position->set_imei(idvalue->valuestring);
 #endif

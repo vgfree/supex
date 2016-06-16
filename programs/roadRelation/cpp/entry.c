@@ -43,7 +43,7 @@ static int put_number_out(struct cache *p_cache, uint64_t nb)
 static int entry_topo_main_call(struct data_node *p_node, uint64_t idx, TOPO_CALLBACK topo_cb, int max)
 {
 	int                     ok = false;
-	struct cache        *p_cache = &p_node->mdl_send.cache;
+	struct cache            *p_cache = &p_node->mdl_send.cache;
 	uint64_t                slot[max];
 	struct query_args       info = {};
 
@@ -82,12 +82,12 @@ static int entry_topo_main_call(struct data_node *p_node, uint64_t idx, TOPO_CAL
 static int entry_topo_with_data_call(struct data_node *p_node, uint64_t idx, TOPO_CALLBACK topo_cb, int max)
 {
 	int                     ok = false;
-	struct cache        *p_cache = &p_node->mdl_send.cache;
+	struct cache            *p_cache = &p_node->mdl_send.cache;
 	uint64_t                slot[max];
 	char                    *p_buf = cache_data_address(&p_node->mdl_recv.cache);
 	struct redis_status     *p_rst = &p_node->mdl_recv.parse.redis_info.rs;
 
-	struct query_args       info = {};
+	struct query_args info = {};
 
 	memset(&info, 0, sizeof(info));
 	info.idx = idx;

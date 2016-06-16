@@ -5,17 +5,17 @@
 extern "C" {
 #endif
 
-#define	USRSTOP	(SIGSTOP + 32)
-#define	USRCONT	(SIGCONT + 32)
+#define USRSTOP (SIGSTOP + 32)
+#define USRCONT (SIGCONT + 32)
 
-enum tlpool_task_type {
+enum tlpool_task_type
+{
 	TLPOOL_TASK_SEIZE = 0,
 	TLPOOL_TASK_SHARE,
 	TLPOOL_TASK_ALONE,
 };
 
 typedef struct tlpool tlpool_t;
-
 
 tlpool_t *tlpool_init(int num_threads, unsigned int max_queue, unsigned int task_size, void *data);
 
@@ -42,7 +42,7 @@ bool tlpool_push(tlpool_t *pool, void *task, enum tlpool_task_type type, unsigne
 
 bool tlpool_pull(tlpool_t *pool, void *task, enum tlpool_task_type type, unsigned int index);
 
-
 #ifdef __cplusplus
 }
 #endif
+

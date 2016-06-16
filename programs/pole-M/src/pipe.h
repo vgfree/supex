@@ -18,7 +18,7 @@ typedef struct pipe_struct
 
 typedef struct pipe_entry_struct
 {
-	xlist_t  list;
+	xlist_t list;
 	event_t *event;
 } pipe_entry_t;
 

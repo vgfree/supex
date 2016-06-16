@@ -24,6 +24,7 @@ void ExceptRaise(bool skipable, const char *function, const char *file, int line
 			abort();
 		}
 	}
+
 	do {
 		ptr = PopExceptFrame();
 	} while (ptr->skipable != skipable);

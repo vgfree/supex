@@ -15,11 +15,11 @@
 /*存储line的相关信息*/
 typedef struct map_line_info
 {
-        uint8_t         sgid;
+	uint8_t         sgid;
 	uint8_t         tfid;
-        int16_t         dir;
+	int16_t         dir;
 	uint32_t        rr_id;
-        uint32_t        line_id;
+	uint32_t        line_id;
 	double          start_lon;
 	double          start_lat;
 	double          end_lon;

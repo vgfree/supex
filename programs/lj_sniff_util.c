@@ -39,19 +39,21 @@ int sniff_vms_cntl(void *user, union virtual_system **VMS, struct sniff_task_nod
 			return 0;
 	}
 	error = lua_pcall(*L, 3, 0, 0);
+
 	if (error) {
 		assert(*L);
 		x_printf(E, "%s", lua_tostring(*L, -1));
 		lua_pop(*L, 1);
 	}
+
 	return error;
 }
 
-
 int sniff_vms_exit(void *user, union virtual_system **VMS, struct sniff_task_node *task)
 {
-	int error = 0;
+	int             error = 0;
 	lua_State       **L = VMS;
+
 	x_printf(S, "exit one batch LUA!\n");
 
 	lua_getglobal(*L, "app_exit");
@@ -67,63 +69,69 @@ int sniff_vms_exit(void *user, union virtual_system **VMS, struct sniff_task_nod
 	return 0;	/*must return 0*/
 }
 
-
 int sniff_vms_rfsh(void *user, union virtual_system **VMS, struct sniff_task_node *task)
 {
-	int error = 0;
+	int             error = 0;
 	lua_State       **L = VMS;
+
 	lua_getglobal(*L, "app_rfsh");
 	lua_pushboolean(*L, task->last);
 	lua_pushinteger(*L, task->sfd);
 	error = lua_pcall(*L, 2, 0, 0);
+
 	if (error) {
 		assert(*L);
 		x_printf(E, "%s", lua_tostring(*L, -1));
 		lua_pop(*L, 1);
 	}
+
 	return error;
 }
 
-
 int sniff_vms_sync(void *user, union virtual_system **VMS, struct sniff_task_node *task)
 {
-	int error = 0;
+	int             error = 0;
 	lua_State       **L = VMS;
+
 	lua_getglobal(*L, "app_push");
 	lua_pushboolean(*L, task->last);
 	lua_pushinteger(*L, task->sfd);
 	error = lua_pcall(*L, 2, 0, 0);
+
 	if (error) {
 		assert(*L);
 		x_printf(E, "%s", lua_tostring(*L, -1));
 		lua_pop(*L, 1);
 	}
+
 	return error;
 }
 
 /*=============================================================*/
 int sniff_vms_gain(void *user, union virtual_system **VMS, struct sniff_task_node *task)
 {
-	int error = 0;
+	int             error = 0;
 	lua_State       **L = VMS;
+
 	lua_getglobal(*L, "app_pull");
 	lua_pushboolean(*L, task->last);
 	lua_pushinteger(*L, task->sfd);
 	error = lua_pcall(*L, 2, 0, 0);
+
 	if (error) {
 		assert(*L);
 		x_printf(E, "%s", lua_tostring(*L, -1));
 		lua_pop(*L, 1);
 	}
+
 	return error;
 }
 
-
 int sniff_vms_call(void *user, union virtual_system **VMS, struct sniff_task_node *task)
 {
-	int error = 0;
+	int             error = 0;
 	lua_State       **L = VMS;
-	time_t                  delay = time(NULL) - task->stamp;
+	time_t          delay = time(NULL) - task->stamp;
 
 	x_printf(S, "task <shift> %d\t<come> %ld\t<delay> %ld",
 		task->base.shift, task->stamp, delay);
@@ -134,26 +142,28 @@ int sniff_vms_call(void *user, union virtual_system **VMS, struct sniff_task_nod
 		x_printf(W, "overlook one task");
 		return -1;
 	}
+
 	x_printf(S, "task <thread> %d\t<shift> %d\t<come> %d\t<delay> %d\n",
 		task->thread_id, task->base.shift, task->stamp, time(NULL) - task->stamp);
 	lua_getglobal(*L, "app_call_all");
 	lua_pushboolean(*L, task->last);
 	lua_pushlstring(*L, (const char *)task->data, task->size);
 	error = lua_pcall(*L, 2, 0, 0);
+
 	if (error) {
 		assert(*L);
 		x_printf(E, "%s", lua_tostring(*L, -1));
 		lua_pop(*L, 1);
 	}
+
 	return error;
 }
 
-
 int sniff_vms_exec(void *user, union virtual_system **VMS, struct sniff_task_node *task)
 {
-	int error = 0;
+	int             error = 0;
 	lua_State       **L = VMS;
-	time_t                  delay = time(NULL) - task->stamp;
+	time_t          delay = time(NULL) - task->stamp;
 
 	x_printf(S, "task <shift> %d\t<come> %ld\t<delay> %ld",
 		task->base.shift, task->stamp, delay);
@@ -171,11 +181,13 @@ int sniff_vms_exec(void *user, union virtual_system **VMS, struct sniff_task_nod
 	lua_pushboolean(*L, task->last);
 	lua_pushlstring(*L, (const char *)task->data, task->size);
 	error = lua_pcall(*L, 2, 0, 0);
+
 	if (error) {
 		assert(*L);
 		x_printf(E, "%s", lua_tostring(*L, -1));
 		lua_pop(*L, 1);
 	}
+
 	return error;
 }
 
@@ -188,16 +200,20 @@ int sniff_vms_exec(void *user, union virtual_system **VMS, struct sniff_task_nod
  */
 int sniff_vms_monitor(void *user, union virtual_system **VMS, struct sniff_task_node *task)
 {
-	int error = 0;
+	int             error = 0;
 	lua_State       **L = VMS;
+
 	lua_getglobal(*L, "app_monitor");
 	lua_pushboolean(*L, task->last);
 	lua_pushinteger(*L, tlpool_get_thread_index(user));
 	error = lua_pcall(*L, 2, 0, 0);
+
 	if (error) {
 		assert(*L);
 		x_printf(E, "%s", lua_tostring(*L, -1));
 		lua_pop(*L, 1);
 	}
+
 	return error;
 }
+

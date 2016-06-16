@@ -38,6 +38,7 @@ static void luaL_setfuncs(lua_State *l, const luaL_Reg *reg, int nup)
 static int protoInit(lua_State *L)
 {
 	struct list *head = proto_init();
+
 	if (head == NULL) {
 		return luaL_error(L, "%s", "no enough memory");
 	}
@@ -59,8 +60,8 @@ static int protoAppend(lua_State *L)
 		return luaL_error(L, "%s", "no enough memory");
 	}
 
-	size_t len = 0;
-	const char *str = lua_tolstring(L, 2, &len);
+	size_t          len = 0;
+	const char      *str = lua_tolstring(L, 2, &len);
 
 	proto_append(head, str, (int)len);
 
@@ -96,7 +97,7 @@ static int protoParse(lua_State *L)
 		return luaL_error(L, "%s", "argument error");
 	}
 
-	struct list *head = (struct list *)lua_touserdata(L, 1);
+	struct list     *head = (struct list *)lua_touserdata(L, 1);
 	char            *p_str = lua_touserdata(L, 2);
 
 	if (p_str == NULL) {

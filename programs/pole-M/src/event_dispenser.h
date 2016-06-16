@@ -1,4 +1,3 @@
-
 /***********************************************************************
  * Copyright (C), 2010-2016,
  * ShangHai Language Mirror Automobile Information Technology Co.,Ltd.
@@ -26,7 +25,7 @@
 #include "netmod.h"
 
 int get_thread_id_by(int threads, const char *id);
-int event_dispenser_startup(event_ctx_t *ev_ctx, int threads);
 
+int event_dispenser_startup(event_ctx_t *ev_ctx, int threads);
 #endif
 

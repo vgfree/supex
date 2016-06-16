@@ -4,7 +4,9 @@
 #include "appsrv.h"
 
 void init_recv(void *ctx);
+
 void destroy_recv();
+
 int recv_all_msg(struct app_msg *msg, int *more, int flag);
-  
 #endif
+

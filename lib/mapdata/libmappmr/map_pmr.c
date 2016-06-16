@@ -15,8 +15,6 @@
 #include <string.h>
 #include <assert.h>
 
-
-
 static map_pmr_cfg g_pmr_cfg;
 
 /*加在配置文件*/
@@ -167,3 +165,4 @@ int pmr_locate(map_line_info **pp_line, short direction, double longitude, doubl
 
 	return 0;
 }
+

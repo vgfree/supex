@@ -94,7 +94,7 @@ uint32_t data_load(file_seg_info *p_file_buf)
 		}
 
 		(ptr_sgid + sgid - 1)->sgid_rt = temp->sgid_rt;
-                (ptr_sgid + sgid - 1)->countyCode = temp->countyCode;
+		(ptr_sgid + sgid - 1)->countyCode = temp->countyCode;
 		(ptr_sgid + sgid - 1)->start_grade = temp->start_grade;
 		(ptr_sgid + sgid - 1)->end_grade = temp->end_grade;
 		(ptr_sgid + sgid - 1)->sgid_id = temp->sgid_id;

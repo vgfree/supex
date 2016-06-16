@@ -281,7 +281,7 @@ xmq_consumer_t *xmq_get_consumer(xmq_ctx_t *ctx, const char *cid)
 
 static bool has_next(xmq_ctx_t *xmq)
 {
-	return (xmq->indicator->next != &xmq->list_consumers);
+	return xmq->indicator->next != &xmq->list_consumers;
 }
 
 static xmq_consumer_t *next(xmq_ctx_t *xmq)
@@ -295,7 +295,7 @@ xmq_consiter_t xmq_get_consumer_iterator(xmq_ctx_t *xmq)
 {
 	xmq->indicator = &xmq->list_consumers;
 
-	xmq_consiter_t  xiter = {.next = next, .has_next = has_next };
+	xmq_consiter_t xiter = { .next = next, .has_next = has_next };
 
 	return xiter;
 }
@@ -521,7 +521,7 @@ int __load_all_resouces(xmq_ctx_t *ctx)
 
 	/* First loading the XMQ_DATABASE_WRITEPOS (0~18446744073709551615UL)*/
 	uint64_t        write_pos = 0;
-	int             res = __load_uint64(ctx, ctx->g_state_ctx, XMQ_DATABASE_WRITEPOS, &write_pos);//TODO:return value to macro
+	int             res = __load_uint64(ctx, ctx->g_state_ctx, XMQ_DATABASE_WRITEPOS, &write_pos);	// TODO:return value to macro
 
 	if (res == 0) {
 		/* Loading all the used databases to list_databases.
@@ -666,7 +666,7 @@ int __open_database(xmq_ctx_t *ctx, uint64_t last_writepos)
 {
 	return_if_false(ctx, -1);
 
-	/* last_writepos's value % ctx->kv_max_records == 1 *///TODO:add
+	/* last_writepos's value % ctx->kv_max_records == 1 */	// TODO:add
 	if (!__get_db_handler(ctx, last_writepos)) {
 		char *dbname = __get_KV_dbname(last_writepos, ctx->kv_max_records - 1);
 
@@ -706,7 +706,7 @@ int __load_database(xmq_ctx_t *ctx, const char *name)
 	return_if_false(db, -1);
 
 	/* name like: 00000000000000000001-00000000000000500000 */
-	strncpy(db->db_name, name, sizeof(db->db_name) - 1);//-1 FIXME
+	strncpy(db->db_name, name, sizeof(db->db_name) - 1);	// -1 FIXME
 	db->db_start = __atou64(name, XMQ_KEY_LEN - 1);
 	db->db_end = __atou64(name + XMQ_KEY_LEN, XMQ_KEY_LEN - 1);
 	db->db_handler = kv_ctx;
@@ -802,7 +802,7 @@ int __csv_to_list(xmq_ctx_t *ctx, csv_parser_t *csv, xlist_t *head, int type)
 				consumer->xmq_ctx = ctx;
 
 				list_init(&consumer->node);
-				list_add_tail(&consumer->node, &ctx->list_consumers);//FIXME:如何取得客户端的所有状态信息?
+				list_add_tail(&consumer->node, &ctx->list_consumers);	// FIXME:如何取得客户端的所有状态信息?
 				x_printf(I, "Loding consumer [%s] last_fetchpos:%llu to list_consumers succeed.", consumer->identity, consumer->last_fetch_seq);
 
 				break;
@@ -850,7 +850,7 @@ int __load_string_list(xmq_ctx_t *ctx, const char *key, xlist_t *head, int type)
 		value = __load_string_string(ctx, key);
 		return_if_false((value != (char *)-1), -1);
 
-		if (value == (char *)1) {//FIXME
+		if (value == (char *)1) {	// FIXME
 			x_printf(I, "__load_string_string: (Key:%s Val:(char *)1). The Key doesn't exist.", key);
 			return 0;
 		}
@@ -864,7 +864,7 @@ int __load_string_list(xmq_ctx_t *ctx, const char *key, xlist_t *head, int type)
 	free(value);
 	return_if_false((fields != -1), -1);
 
-	if (-1 == __csv_to_list(ctx, &csv, head, type)) {//TODO:bug database名字前缀丢失
+	if (-1 == __csv_to_list(ctx, &csv, head, type)) {	// TODO:bug database名字前缀丢失
 		x_printf(E, "__csv_to_list: (type:%s) failed!",
 			(type == XMQ_TYPE_DATABASE) ? "XMQ_TYPE_DATABASE" :
 			((type == XMQ_TYPE_PRODUCER) ? "XMQ_TYPE_PRODUCER" : "XMQ_TYPE_CONSUMER"));
@@ -985,7 +985,7 @@ int __load_uint64(xmq_ctx_t *ctx, void *kv_ctx, const char *key, uint64_t *value
 	return_if_false((res == 0), res);
 
 	*value = *u64;
-	free(u64);//TODO:HAVE bug.
+	free(u64);	// TODO:HAVE bug.
 
 	return 0;
 }
@@ -1020,7 +1020,7 @@ char *__load_string_string(xmq_ctx_t *ctx, const char *key)
 
 	int res = __load_string_bin(ctx, ctx->g_state_ctx, key, &val, &len);
 
-	return (res) ? (char *)res : (char *)val;//FIXME
+	return (res) ? (char *)res : (char *)val;	// FIXME
 }
 
 char *__string_delete_by_substr(char *src, const char *substr)
@@ -1115,7 +1115,7 @@ char *__string_append_3rd(const char *prefix, const char *split, const char *fir
 
 char *__get_KV_dbname(uint64_t start, size_t offset)
 {
-	char *des = (char *)calloc(1, 2 * XMQ_KEY_LEN);//TODO:
+	char *des = (char *)calloc(1, 2 * XMQ_KEY_LEN);	// TODO:
 
 	return_if_false(des, NULL);
 

@@ -54,10 +54,10 @@ struct vehicle_obj
 {
 	double          longitude;
 	double          latitude;
-        long long       imei;
-        int             magic;
+	long long       imei;
+	int             magic;
 
-        uint64_t        roadid;
+	uint64_t        roadid;
 	int             priority;
 	int             speed;
 	TP_LINE_OBJ     road;

@@ -41,9 +41,9 @@ struct swift_settings
 
 #define SWIFT_WORKER_PTHREAD HANDER_PTHREAD
 
-extern tlpool_t *g_swift_tlpool;
-extern SWIFT_WORKER_PTHREAD    *g_swift_worker_pthread;
-extern int     G_SWIFT_WORKER_COUNTS;
+extern tlpool_t                 *g_swift_tlpool;
+extern SWIFT_WORKER_PTHREAD     *g_swift_worker_pthread;
+extern int                      G_SWIFT_WORKER_COUNTS;
 /*******************************************/
 int swift_mount(struct swift_cfg_list *conf);
 

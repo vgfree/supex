@@ -13,12 +13,12 @@ static void init_rr_cfg(struct rr_cfg_file *p_cfg)
 
 static void copy_rr_cfg(struct rr_cfg_file *dest, struct rr_cfg_file *src)
 {
-    assert(dest);
+	assert(dest);
 	assert(src);
 
-    *dest  = *src;
+	*dest = *src;
 	dest->appKey = x_strdup(src->appKey);
-    dest->secret = x_strdup(src->secret);
+	dest->secret = x_strdup(src->secret);
 }
 
 static void free_rr_cfg(struct rr_cfg_file *p_cfg)
@@ -26,47 +26,52 @@ static void free_rr_cfg(struct rr_cfg_file *p_cfg)
 	assert(p_cfg);
 
 	Free(p_cfg->appKey);
-    Free(p_cfg->secret);
+	Free(p_cfg->secret);
 }
 
 bool fill_link(struct json_object *obj, char *obj_name, struct rr_link *p_link)
 {
-    struct json_object *sub_obj = NULL;
-    struct json_object *host_obj = NULL;
-    struct json_object *port_obj = NULL;
-    if(!obj || !obj_name || !p_link)
-        goto fill_fail;
+	struct json_object      *sub_obj = NULL;
+	struct json_object      *host_obj = NULL;
+	struct json_object      *port_obj = NULL;
 
-    if (!json_object_object_get_ex(obj, obj_name, &sub_obj))
-        goto fill_fail;
+	if (!obj || !obj_name || !p_link) {
+		goto fill_fail;
+	}
 
-    if (!json_object_object_get_ex(sub_obj, "host", &host_obj))
-        goto fill_fail;
+	if (!json_object_object_get_ex(obj, obj_name, &sub_obj)) {
+		goto fill_fail;
+	}
 
-    if (!json_object_object_get_ex(sub_obj, "port", &port_obj))
-        goto fill_fail;
+	if (!json_object_object_get_ex(sub_obj, "host", &host_obj)) {
+		goto fill_fail;
+	}
 
-    const char *server_host = json_object_get_string(host_obj);
-    short server_port = (short)json_object_get_int(port_obj);
+	if (!json_object_object_get_ex(sub_obj, "port", &port_obj)) {
+		goto fill_fail;
+	}
 
-    memset(p_link->host, 0, sizeof(p_link->host));
-    strncpy(p_link->host, server_host, sizeof(p_link->host) - 1);
-    p_link->port = server_port;
+	const char      *server_host = json_object_get_string(host_obj);
+	short           server_port = (short)json_object_get_int(port_obj);
 
-    return true;
+	memset(p_link->host, 0, sizeof(p_link->host));
+	strncpy(p_link->host, server_host, sizeof(p_link->host) - 1);
+	p_link->port = server_port;
+
+	return true;
 
 fill_fail:
-    x_printf(E, "cann't find %s \n", obj_name);
-    return false;
+	x_printf(E, "cann't find %s \n", obj_name);
+	return false;
 }
 
 bool read_rr_cfg(struct rr_cfg_file *p_cfg, char *name)
 {
-	const char      *str_val = NULL;
+	const char *str_val = NULL;
 
 	struct json_object      *obj = NULL;
 	struct json_object      *cfg = NULL;
-    struct json_object      *ary = NULL;
+	struct json_object      *ary = NULL;
 	struct rr_cfg_file      oldcfg = {};
 
 	assert(p_cfg);
@@ -140,62 +145,62 @@ bool read_rr_cfg(struct rr_cfg_file *p_cfg, char *name)
 
 	p_cfg->redis_conn = (int)json_object_get_int(obj);
 
-    /*servers*/
-    if (!json_object_object_get_ex(cfg, "servers", &obj)) {
-        goto fail;
-    }
-
-    if(!fill_link(obj,"pmr_server", &(p_cfg->pmr_server)))  {
-        goto fail;
-    }
-
-    if(!fill_link(obj,"trafficapi_server", &(p_cfg->trafficapi_server)))  {
-        goto fail;
-    }
-
-    if(!fill_link(obj,"forward_server", &(p_cfg->forward_server)))  {
-        goto fail;
-    }
-
-	/*links*/
-    if (!json_object_object_get_ex(cfg, "links", &obj)) {
-        x_printf(E, "can't found [links].");
+	/*servers*/
+	if (!json_object_object_get_ex(cfg, "servers", &obj)) {
 		goto fail;
 	}
 
-    if(!fill_link(obj,"road_traffic", &(p_cfg->road_traffic_server)))  {
-        goto fail;
-    }
+	if (!fill_link(obj, "pmr_server", &(p_cfg->pmr_server))) {
+		goto fail;
+	}
 
-    if(!fill_link(obj,"city_traffic", &(p_cfg->city_traffic_server)))  {
-        goto fail;
-    }
+	if (!fill_link(obj, "trafficapi_server", &(p_cfg->trafficapi_server))) {
+		goto fail;
+	}
 
-    if(!fill_link(obj,"county_traffic", &(p_cfg->county_traffic_server)))  {
-        goto fail;
-    }
+	if (!fill_link(obj, "forward_server", &(p_cfg->forward_server))) {
+		goto fail;
+	}
 
+	/*links*/
+	if (!json_object_object_get_ex(cfg, "links", &obj)) {
+		x_printf(E, "can't found [links].");
+		goto fail;
+	}
 
-    /*forward_imei*/
-    if (!json_object_object_get_ex(cfg, "forward_imei", &ary)) {
-        x_printf(E, "can't found [forward_imei].");
-        goto fail;
-    }
+	if (!fill_link(obj, "road_traffic", &(p_cfg->road_traffic_server))) {
+		goto fail;
+	}
 
-    int add = json_object_array_length(ary);
-    p_cfg->imei_count = add;
+	if (!fill_link(obj, "city_traffic", &(p_cfg->city_traffic_server))) {
+		goto fail;
+	}
 
-    if (p_cfg->imei_count > MAX_TEST_IMEI ) {
-        x_printf(E, "the member of [forward_imei] is too much.");
-        goto fail;
-    }
+	if (!fill_link(obj, "county_traffic", &(p_cfg->county_traffic_server))) {
+		goto fail;
+	}
 
-    int i;
-    for (i = 0; i < add; i++) {
-        struct json_object *tmp = NULL;
-        tmp = json_object_array_get_idx(ary, i);
-        p_cfg->imei_buff[i] = (long long)json_object_get_int64(tmp);
-    }
+	/*forward_imei*/
+	if (!json_object_object_get_ex(cfg, "forward_imei", &ary)) {
+		x_printf(E, "can't found [forward_imei].");
+		goto fail;
+	}
+
+	int add = json_object_array_length(ary);
+	p_cfg->imei_count = add;
+
+	if (p_cfg->imei_count > MAX_TEST_IMEI) {
+		x_printf(E, "the member of [forward_imei] is too much.");
+		goto fail;
+	}
+
+	int i;
+
+	for (i = 0; i < add; i++) {
+		struct json_object *tmp = NULL;
+		tmp = json_object_array_get_idx(ary, i);
+		p_cfg->imei_buff[i] = (long long)json_object_get_int64(tmp);
+	}
 
 	free_rr_cfg(&oldcfg);
 	json_object_put(cfg);

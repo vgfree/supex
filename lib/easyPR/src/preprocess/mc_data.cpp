@@ -9,178 +9,187 @@
 #include "easypr/util/util.h"
 
 #ifdef OS_WINDOWS
-#include <io.h>
+  #include <io.h>
 #endif
 
 namespace easypr {
+	namespace preprocess {
+		// std::map<std::string, std::string> mc_map = {
+		//        {"E00", "未识别"},
+		//        {"A01", "京"},
+		//        {"A02", "津"},
+		//        {"A03", "沪"},
+		//        {"A04", "渝"},
+		//        {"B01", "桂"},
+		//        {"B02", "蒙"},
+		//        {"B03", "宁"},
+		//        {"B04", "新"},
+		//        {"B05", "藏"},
+		//        {"S01", "皖"},
+		//        {"S02", "闽"},
+		//        {"S03", "粤"},
+		//        {"S04", "甘"},
+		//        {"S05", "贵"},
+		//        {"S06", "鄂"},
+		//        {"S07", "冀"},
+		//        {"S08", "黑"},
+		//        {"S09", "湘"},
+		//        {"S10", "豫"},
+		//        {"S11", "琼"},
+		//        {"S12", "吉"},
+		//        {"S13", "苏"},
+		//        {"S14", "赣"},
+		//        {"S15", "辽"},
+		//        {"S16", "青"},
+		//        {"S17", "川"},
+		//        {"S18", "鲁"},
+		//        {"S19", "陕"},
+		//        {"S20", "晋"},
+		//        {"S21", "云"},
+		//        {"S22", "浙"},
+		//        {"J01", "军"},
+		//        {"J02", "海"},
+		//        {"J03", "空"},
+		//        {"J04", "北"},
+		//        {"J05", "成"},
+		//        {"J06", "广"},
+		//        {"J07", "济"},
+		//        {"J08", "兰"},
+		//        {"J09", "南"},
+		//        {"J10", "沈"}
+		// };
 
-namespace preprocess {
+		// 切去上部与底部干扰的细节
 
-// std::map<std::string, std::string> mc_map = {
-//        {"E00", "未识别"},
-//        {"A01", "京"},
-//        {"A02", "津"},
-//        {"A03", "沪"},
-//        {"A04", "渝"},
-//        {"B01", "桂"},
-//        {"B02", "蒙"},
-//        {"B03", "宁"},
-//        {"B04", "新"},
-//        {"B05", "藏"},
-//        {"S01", "皖"},
-//        {"S02", "闽"},
-//        {"S03", "粤"},
-//        {"S04", "甘"},
-//        {"S05", "贵"},
-//        {"S06", "鄂"},
-//        {"S07", "冀"},
-//        {"S08", "黑"},
-//        {"S09", "湘"},
-//        {"S10", "豫"},
-//        {"S11", "琼"},
-//        {"S12", "吉"},
-//        {"S13", "苏"},
-//        {"S14", "赣"},
-//        {"S15", "辽"},
-//        {"S16", "青"},
-//        {"S17", "川"},
-//        {"S18", "鲁"},
-//        {"S19", "陕"},
-//        {"S20", "晋"},
-//        {"S21", "云"},
-//        {"S22", "浙"},
-//        {"J01", "军"},
-//        {"J02", "海"},
-//        {"J03", "空"},
-//        {"J04", "北"},
-//        {"J05", "成"},
-//        {"J06", "广"},
-//        {"J07", "济"},
-//        {"J08", "兰"},
-//        {"J09", "南"},
-//        {"J10", "沈"}
-//};
+		cv::Mat cut_top_bottom(const cv::Mat &img)
+		{
+			int     width = img.size().width;
+			int     height = img.size().height;
+			// TODO: it seems not correctly.
+			cv::Rect rect(0, 0, width, int(height * 0.97));
 
-// 切去上部与底部干扰的细节
+			return img(rect);
+		}
 
-cv::Mat cut_top_bottom(const cv::Mat& img) {
-  int width = img.size().width;
-  int height = img.size().height;
-  // TODO: it seems not correctly.
-  cv::Rect rect(0, 0, width, int(height * 0.97));
-  return img(rect);
-}
+		// std::string code_to_province(const std::string& code) {
+		//  return (mc_map.find(code) != mc_map.end()) ? mc_map[code] : "无";
+		// }
 
-// std::string code_to_province(const std::string& code) {
-//  return (mc_map.find(code) != mc_map.end()) ? mc_map[code] : "无";
-//}
+		//// 通过filepath获取车牌号码
+		//// 文件名格式：A01_00000
+		// std::string plate_from_path(const std::string& path) {
+		//  auto filename = Utils::getFileName(path);
+		//  auto code = filename.substr(0, 3);
+		//  return code_to_province(code) + filename.substr(3);
+		// }
 
-//// 通过filepath获取车牌号码
-//// 文件名格式：A01_00000
-// std::string plate_from_path(const std::string& path) {
-//  auto filename = Utils::getFileName(path);
-//  auto code = filename.substr(0, 3);
-//  return code_to_province(code) + filename.substr(3);
-//}
+		// 将rawdata截取部分数据到learndata中
 
-// 将rawdata截取部分数据到learndata中
+		void create_learn_data(const char *raw_data_folder, const char *out_data_folder,
+			const int how_many /* = 5000 */)
+		{
+			assert(raw_data_folder);
+			assert(out_data_folder);
 
-void create_learn_data(const char* raw_data_folder, const char* out_data_folder,
-                       const int how_many /* = 5000 */) {
-  assert(raw_data_folder);
-  assert(out_data_folder);
+			auto files = Utils::getFiles(raw_data_folder);
 
-  auto files = Utils::getFiles(raw_data_folder);
+			size_t size = files.size();
 
-  size_t size = files.size();
-  if (0 == size) {
-    std::cout << "No file found in " << raw_data_folder << std::endl;
-    return;
-  }
+			if (0 == size) {
+				std::cout << "No file found in " << raw_data_folder << std::endl;
+				return;
+			}
 
-  // 随机排列rawdata
+			// 随机排列rawdata
 
-  srand(unsigned(time(NULL)));
-  std::random_shuffle(files.begin(), files.end());
+			srand(unsigned(time(NULL)));
+			std::random_shuffle(files.begin(), files.end());
 
-  int count = 0;
-  for (auto f : files) {
+			int count = 0;
 
-    // 选取前how_many个rawdata数据作为learndata
+			for (auto f : files) {
+				// 选取前how_many个rawdata数据作为learndata
 
-    if (count++ >= how_many) {
-      break;
-    }
+				if (count++ >= how_many) {
+					break;
+				}
 
-    //读取数据，并对图片进行预处理
+				// 读取数据，并对图片进行预处理
 
-    cv::Mat img = cv::imread(f);
-    img = cut_top_bottom(img);
+				cv::Mat img = cv::imread(f);
+				img = cut_top_bottom(img);
 
-    std::string save_to(out_data_folder);
-    if (*(save_to.end() - 1) != '/') {
-      save_to.push_back('/');
-    }
-    save_to.append(Utils::getFileName(f, true));
+				std::string save_to(out_data_folder);
 
-    utils::imwrite(save_to, img);
-    std::cout << f << " -> " << save_to << std::endl;
-  }
-  std::cout << "Learn data created successfully!" << std::endl;
-}
+				if (*(save_to.end() - 1) != '/') {
+					save_to.push_back('/');
+				}
 
-// 定位并判断车牌有无，放置在指定位置
+				save_to.append(Utils::getFileName(f, true));
 
-void tag_data(const char* source_folder, const char* has_plate_folder,
-              const char* no_plate_folder, const char* svm_model) {
-  assert(source_folder);
-  assert(has_plate_folder);
-  assert(no_plate_folder);
-  assert(svm_model);
+				utils::imwrite(save_to, img);
+				std::cout << f << " -> " << save_to << std::endl;
+			}
 
-  auto files = Utils::getFiles(source_folder);
+			std::cout << "Learn data created successfully!" << std::endl;
+		}
 
-  size_t size = files.size();
-  if (0 == size) {
-    std::cout << "No file found in " << source_folder << std::endl;
-    return;
-  }
+		// 定位并判断车牌有无，放置在指定位置
 
-  CPlateLocate locator;
+		void tag_data(const char *source_folder, const char *has_plate_folder,
+			const char *no_plate_folder, const char *svm_model)
+		{
+			assert(source_folder);
+			assert(has_plate_folder);
+			assert(no_plate_folder);
+			assert(svm_model);
 
-  for (auto f : files) {
-    auto filename = Utils::getFileName(f);
-    std::cout << "Tagging: " << f << std::endl;
+			auto files = Utils::getFiles(source_folder);
 
-    // auto plate_string = plate_from_path(f);
-    cv::Mat image = cv::imread(f);
-    assert(!image.empty());
+			size_t size = files.size();
 
-    std::vector<cv::Mat> maybe_plates;
-    locator.plateLocate(image, maybe_plates);
+			if (0 == size) {
+				std::cout << "No file found in " << source_folder << std::endl;
+				return;
+			}
 
-    int plate_index = 0;
-    for (auto plate : maybe_plates) {
-      char save_to[255] = {0};
-      int result = 0;
-      PlateJudge::instance()->plateJudge(plate, result);
-      if (result == 1) {
-        // it's a plate
-        sprintf(save_to, "%s/%s_%d.jpg", has_plate_folder, filename.c_str(),
-                plate_index);
-        std::cout << "[Y] -> " << save_to << std::endl;
-      } else {
-        // no plate found
-        sprintf(save_to, "%s/%s_%d.jpg", no_plate_folder, filename.c_str(),
-                plate_index);
-        std::cout << "[N] -> " << save_to << std::endl;
-      }
-      utils::imwrite(save_to, plate);
-      ++plate_index;
-    }
-  }
-}
+			CPlateLocate locator;
 
-}  // namespace preprocess
+			for (auto f : files) {
+				auto filename = Utils::getFileName(f);
+				std::cout << "Tagging: " << f << std::endl;
 
-}  // namespace easypr
+				// auto plate_string = plate_from_path(f);
+				cv::Mat image = cv::imread(f);
+				assert(!image.empty());
+
+				std::vector <cv::Mat> maybe_plates;
+				locator.plateLocate(image, maybe_plates);
+
+				int plate_index = 0;
+
+				for (auto plate : maybe_plates) {
+					char    save_to[255] = { 0 };
+					int     result = 0;
+					PlateJudge::instance()->plateJudge(plate, result);
+
+					if (result == 1) {
+						// it's a plate
+						sprintf(save_to, "%s/%s_%d.jpg", has_plate_folder, filename.c_str(),
+							plate_index);
+						std::cout << "[Y] -> " << save_to << std::endl;
+					} else {
+						// no plate found
+						sprintf(save_to, "%s/%s_%d.jpg", no_plate_folder, filename.c_str(),
+							plate_index);
+						std::cout << "[N] -> " << save_to << std::endl;
+					}
+
+					utils::imwrite(save_to, plate);
+					++plate_index;
+				}
+			}
+		}
+	}	// namespace preprocess
+}		// namespace easypr
+

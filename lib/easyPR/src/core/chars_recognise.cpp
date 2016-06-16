@@ -2,27 +2,34 @@
 #include "easypr/util/util.h"
 
 namespace easypr {
+	CCharsRecognise::CCharsRecognise()
+	{
+		m_charsSegment = new CCharsSegment();
+	}
 
-CCharsRecognise::CCharsRecognise() { m_charsSegment = new CCharsSegment(); }
+	CCharsRecognise::~CCharsRecognise()
+	{
+		SAFE_RELEASE(m_charsSegment);
+	}
 
-CCharsRecognise::~CCharsRecognise() { SAFE_RELEASE(m_charsSegment); }
+	int CCharsRecognise::charsRecognise(Mat plate, std::string &plateLicense)
+	{
+		std::vector <Mat> matChars;
 
-int CCharsRecognise::charsRecognise(Mat plate, std::string& plateLicense) {
-  std::vector<Mat> matChars;
+		int result = m_charsSegment->charsSegment(plate, matChars);
 
-  int result = m_charsSegment->charsSegment(plate, matChars);
-  if (result == 0) {
-    for (auto block : matChars) {
-      auto character = CharsIdentify::instance()->identify(block);
-      plateLicense.append(character.second);
-    }
-  }
+		if (result == 0) {
+			for (auto block : matChars) {
+				auto character = CharsIdentify::instance()->identify(block);
+				plateLicense.append(character.second);
+			}
+		}
 
-  if (plateLicense.size() < 7) {
-    return -1;
-  }
+		if (plateLicense.size() < 7) {
+			return -1;
+		}
 
-  return result;
-
+		return result;
+	}
 }
-}
+

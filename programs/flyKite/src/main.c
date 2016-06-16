@@ -21,7 +21,6 @@
 
 #include "sniff_evcoro_lua_api.h"
 
-
 struct swift_cfg_list   g_swift_cfg_list = {};
 struct sniff_cfg_list   g_sniff_cfg_list = {};
 
@@ -32,7 +31,6 @@ static void swift_pthrd_init(void *user)
 	p_swift_worker->mount = sniff_start(p_swift_worker->index);
 }
 
-
 static void swift_entry_init(void)
 {
 	app_queue_init();
@@ -42,7 +40,7 @@ static void swift_entry_init(void)
 	// same_kill("gopath");
 #endif
 
-	//init_session_cmd();
+	// init_session_cmd();
 
 	if (!kvpool_init()) {
 		exit(EXIT_FAILURE);
@@ -104,7 +102,7 @@ int main(int argc, char **argv)
 	g_swift_cfg_list.entry_init = swift_entry_init;
 	g_swift_cfg_list.pthrd_init = swift_pthrd_init;
 
-	//g_swift_cfg_list.shut_down = swift_shut_down;
+	// g_swift_cfg_list.shut_down = swift_shut_down;
 
 	swift_mount(&g_swift_cfg_list);
 

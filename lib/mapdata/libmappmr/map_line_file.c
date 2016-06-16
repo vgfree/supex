@@ -61,13 +61,13 @@ int32_t map_line_load_file(char *file_name, map_line_manager *p_manage, uint32_t
 		map_line_info *p_buf = (map_line_info *)calloc(load_once, sizeof(map_line_info));
 		fread((void *)p_buf, sizeof(map_line_info), load_once, p_file);
 		pp_lines[index] = p_buf;
-                //x_printf(D, "load line info count:%d", index * load_once);
+		// x_printf(D, "load line info count:%d", index * load_once);
 	}
 
 	fclose(p_file);
 	p_manage->ptr_arry = pp_lines;
 	p_manage->min_line_id = header.min_id;
-        p_manage->max_line_id = header.max_id;
+	p_manage->max_line_id = header.max_id;
 	p_manage->destory_long = index_count;
 
 	return count;
@@ -120,15 +120,15 @@ static int64_t fetch_line_cb(MYSQL_RES *res, void *args)
 		assert(offset < p_line_buf->size);
 
 		(ptr_info + offset)->line_id = line_id_number;
-                (ptr_info + offset)->start_lon = strtod(res_row[1], NULL);
-                (ptr_info + offset)->start_lat = strtod(res_row[2], NULL);
-                (ptr_info + offset)->end_lon = strtod(res_row[3], NULL);
-                (ptr_info + offset)->end_lat = strtod(res_row[4], NULL);
-                (ptr_info + offset)->dir = atoi(res_row[5]);
-                (ptr_info + offset)->sgid = (unsigned int)atol(res_row[6]);
-//                (ptr_info + offset)->tfid = (unsigned int)atol(res_row[7]);
-                (ptr_info + offset)->tfid = 0;
-                (ptr_info + offset)->rr_id = atol(res_row[8]);
+		(ptr_info + offset)->start_lon = strtod(res_row[1], NULL);
+		(ptr_info + offset)->start_lat = strtod(res_row[2], NULL);
+		(ptr_info + offset)->end_lon = strtod(res_row[3], NULL);
+		(ptr_info + offset)->end_lat = strtod(res_row[4], NULL);
+		(ptr_info + offset)->dir = atoi(res_row[5]);
+		(ptr_info + offset)->sgid = (unsigned int)atol(res_row[6]);
+		//                (ptr_info + offset)->tfid = (unsigned int)atol(res_row[7]);
+		(ptr_info + offset)->tfid = 0;
+		(ptr_info + offset)->rr_id = atol(res_row[8]);
 
 		/*
 		 *   if( res_row[11])
@@ -172,7 +172,7 @@ int32_t map_line_gen_file(char *file_name, map_line_load_cfg *p_line_cfg)
 		return -1;
 	}
 
-        char                    *sql_format = "select PMRID, SL, SB, EL, EB, ANG, SGID, TFID, RRID   from %s.%s where PMRID > %d and PMRID <= %d";
+	char                    *sql_format = "select PMRID, SL, SB, EL, EB, ANG, SGID, TFID, RRID   from %s.%s where PMRID > %d and PMRID <= %d";
 	char                    sql[1024];
 	unsigned int            start_id = 0;
 	unsigned int            end_id = p_line_cfg->load_once;

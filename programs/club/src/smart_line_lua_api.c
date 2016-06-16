@@ -4,8 +4,6 @@
 #include "smart_api.h"
 #include "smart_line_lua_api.h"
 
-
-
 static lua_State *_vms_new(void)
 {
 	int             error = 0;

@@ -63,7 +63,7 @@ void run()
 	}
 
 	ctrl_loop(&g_frame);
-	
+
 	SignalIntr(SIGINT, _deal_signal);
 	SignalIntr(SIGQUIT, _deal_signal);
 }

@@ -26,6 +26,7 @@ bool sniff_task_report(void *user, void *task)
 	bool ok = false;
 
 	ok = tlpool_push(user, task, TLPOOL_TASK_SEIZE, 0);
+
 	if (ok) {
 		x_printf(D, "push queue ok!");
 	} else {
@@ -40,6 +41,7 @@ bool sniff_task_lookup(void *user, void *task)
 	bool ok = false;
 
 	ok = tlpool_pull(user, task, TLPOOL_TASK_SEIZE, 0);
+
 	if (ok) {
 		x_printf(D, "pull queue ok!");
 	}
@@ -54,7 +56,6 @@ static void alive_pthrd_init(void *user)
 	p_alive_worker->mount = sniff_start(0);
 }
 
-
 /**
  * 根据条件编译初始化文件队列和内存队列
  */
@@ -64,8 +65,6 @@ static void alive_entry_init(void)
 		exit(EXIT_FAILURE);
 	}
 }
-
-
 
 int main(int argc, char **argv)
 {
@@ -82,27 +81,27 @@ int main(int argc, char **argv)
 
 	struct json_object      *obj = NULL;
 	struct json_object      *cfg = NULL;
-  const char* redis_host = NULL;
-  short redis_port = 0;
+	const char              *redis_host = NULL;
+	short                   redis_port = 0;
 
 	cfg = json_object_from_file(g_alive_cfg_list.argv_info.conf_name);
 
 	if (json_object_object_get_ex(cfg, "redis_host", &obj)) {
 		redis_host = json_object_get_string(obj);
-	} else { 
+	} else {
 		x_printf(E, "can't get redis_host from mttpSvp_conf.json");
 		exit(EXIT_FAILURE);
-  }
+	}
 
 	if (json_object_object_get_ex(cfg, "redis_port", &obj)) {
 		redis_port = (short)json_object_get_int(obj);
-	} else { 
+	} else {
 		x_printf(E, "can't get redis_port from mttpSvp_conf.json");
 		exit(EXIT_FAILURE);
-  }
+	}
 
-  mttpsvp_redis_init(redis_host, redis_port);
-  mttpsvp_libkv_init();
+	mttpsvp_redis_init(redis_host, redis_port);
+	mttpsvp_libkv_init();
 
 	g_alive_cfg_list.func_info[UPSTREAM_FUNC_ORDER].type = BIT8_TASK_TYPE_ALONE;
 	g_alive_cfg_list.func_info[UPSTREAM_FUNC_ORDER].func = (TASK_VMS_FCB)alive_vms_call;
@@ -116,9 +115,6 @@ int main(int argc, char **argv)
 	g_alive_cfg_list.entry_init = alive_entry_init;
 
 	g_alive_cfg_list.pthrd_init = alive_pthrd_init;
-
-
-
 
 	alive_mount(&g_alive_cfg_list);
 

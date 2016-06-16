@@ -14,14 +14,14 @@
 #include "load_cfg.h"
 
 #define capacity 10
-static struct smart_cfg_list g_cfg_list = {};
-PriorityQueue g_H;
+static struct smart_cfg_list    g_cfg_list = {};
+PriorityQueue                   g_H;
 
-void entry_init(void) 
+void entry_init(void)
 {
-        topo_start("rrtopo_conf.json");
-        g_H = Initialize(capacity); 
-        update_start(1);
+	topo_start("rrtopo_conf.json");
+	g_H = Initialize(capacity);
+	update_start(1);
 }
 
 int main(int argc, char **argv)
@@ -36,7 +36,7 @@ int main(int argc, char **argv)
 
 	smart_mount(&g_cfg_list);
 	smart_start();
-        Destroy(g_H);
+	Destroy(g_H);
 	return 0;
 }
 

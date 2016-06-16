@@ -63,11 +63,13 @@ int sniff_vms_call(void *user, void *task)
 	if (delay >= OVERLOOK_DELAY_LIMIT) {
 		x_printf(W, "overlook one task");
 		return -1;
-        }
+	}
 
-        int ret = rr_task_handle(loop, p_task->data);
-        if(ret < 0)
-                return -1;
+	int ret = rr_task_handle(loop, p_task->data);
+
+	if (ret < 0) {
+		return -1;
+	}
 
 	return 0;
 }

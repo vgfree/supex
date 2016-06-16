@@ -16,7 +16,6 @@ struct sniff_settings
 	struct sniff_cfg_list *conf;
 };
 
-
 extern int G_SNIFF_WORKER_COUNTS;
 /* -------------                             */
 

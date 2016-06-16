@@ -14,10 +14,10 @@
 
 __BEGIN_DECLS
 
-#define REDIS_BASE_FIELDS 128
+#define REDIS_BASE_FIELDS       128
 
 #ifndef REDIS_MAX_FIELDS
-  #define REDIS_MAX_FIELDS (1024 * 1024)
+  #define REDIS_MAX_FIELDS      (1024 * 1024)
 #endif
 
 #if REDIS_MAX_FIELDS < 1
@@ -32,21 +32,21 @@ struct redis_field
 
 struct redis_status
 {
-	unsigned        error;	/**< !=0 表示出错*/
-	unsigned        type;	/**< 分析类型：请求／响应*/
-	int             fields;	/**< 结果字段数量 -1表示结果为空对象 或 >=1 单结果或结果列表*/
+	unsigned                error;	/**< !=0 表示出错*/
+	unsigned                type;	/**< 分析类型：请求／响应*/
+	int                     fields;	/**< 结果字段数量 -1表示结果为空对象 或 >=1 单结果或结果列表*/
 	union
 	{
 		unsigned        reply_type;	/**< 响应类型，对应响应分析有效*/
 		uint64_t        command_type;	/**< 命令类型，对应请求分析有效*/
 	};
-	struct redis_field               base[REDIS_BASE_FIELDS];
-	struct redis_field               *field;	/**< 字段集合，有效数量以fields字段确定*/
-	char *const     *data;				/**< 当前被分析数据首地址的指针*/
-	unsigned const  *size;				/**< 当前被分析数据的长度地址*/
-	bool            over;				/**< 当前分析是否结束*/
-	unsigned        dosize;				/**< 当前已分析长度*/
-	unsigned        step;				/**< 当前分析进行了多少次*/
+	struct redis_field      base[REDIS_BASE_FIELDS];
+	struct redis_field      *field;			/**< 字段集合，有效数量以fields字段确定*/
+	char *const             *data;			/**< 当前被分析数据首地址的指针*/
+	unsigned const          *size;			/**< 当前被分析数据的长度地址*/
+	bool                    over;			/**< 当前分析是否结束*/
+	unsigned                dosize;			/**< 当前已分析长度*/
+	unsigned                step;			/**< 当前分析进行了多少次*/
 };
 
 struct redis_parse_info

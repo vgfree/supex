@@ -4,7 +4,7 @@
 #include <unistd.h>
 #include <assert.h>
 
-#include <openssl/evp.h>               
+#include <openssl/evp.h>
 #include <openssl/aes.h>
 #include <openssl/err.h>
 
@@ -57,18 +57,17 @@ static void swift_pthrd_init(void *user)
 	p_swift_worker->mount = sniff_start(p_swift_worker->index);
 }
 
-
 /**
  * 根据条件编译初始化文件队列和内存队列
  */
 static void swift_entry_init(void)
 {
-
 	app_queue_init();
+
 	/*
 	 * 初始化支持的命令
 	 */
-	//init_session_cmd();
+	// init_session_cmd();
 
 	conn_xpool_init(g_rr_cfg_file.gaode_host, g_rr_cfg_file.gaode_port, 200, true);
 
@@ -81,9 +80,9 @@ static void swift_entry_init(void)
 	// init statistics pthread
 	statistics_start(1);
 
-        //openssl init
-        OpenSSL_add_all_algorithms();
-        ERR_load_crypto_strings();
+	// openssl init
+	OpenSSL_add_all_algorithms();
+	ERR_load_crypto_strings();
 }
 
 static void swift_shut_down(void)
@@ -193,7 +192,6 @@ int main(int argc, char **argv)
 
 	g_swift_cfg_list.pthrd_init = swift_pthrd_init;
 
-
 	g_swift_cfg_list.reload_cfg = swift_reload_cfg;
 
 	g_swift_cfg_list.shut_down = swift_shut_down;
@@ -232,8 +230,8 @@ int main(int argc, char **argv)
 
 	kvhandler_destroy(count_handler);
 	kvhandler_destroy(city_handler);
-        ERR_free_strings();
-        EVP_cleanup();
+	ERR_free_strings();
+	EVP_cleanup();
 	return 0;
 }
 

@@ -232,12 +232,12 @@
 #define _SCENE_NULL_VALUE_(scene)       ""
 
 #ifdef ENABLE_LOG_COLOR
-  #define PALETTE_NULL "\x1B[m"
+  #define PALETTE_NULL  "\x1B[m"
   #define PALETTE_FULL(color, depth, style, scene) \
 	PALETTE_NULL color##VALUE_(color) depth##VALUE_(depth) style##VALUE_(style) scene##VALUE_(scene)
 #else
-  #define PALETTE_NULL	""
-  #define PALETTE_FULL(color, depth, style, scene)	""
+  #define PALETTE_NULL  ""
+  #define PALETTE_FULL(color, depth, style, scene) ""
 #endif
 
 /* -------------------------------------------                */

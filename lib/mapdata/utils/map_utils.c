@@ -12,8 +12,8 @@
 #include <stdlib.h>
 #include <math.h>
 
-#define EARTH_RADIUS 6378.137
-#define PI 3.1415926535898
+#define EARTH_RADIUS    6378.137
+#define PI              3.1415926535898
 
 /*将经度或者纬度转换为千分之五网格的坐标*/
 int get_coor_5thousand(double coor1)
@@ -80,7 +80,7 @@ unsigned int dist_p2l(double pt_lon, double pt_lat, double line_st_lon, double l
 	unsigned int    dist = 2 * sqrt(abs(p * (p - a) * (p - b) * (p - c))) / c;
 
 	return dist;
-	//return (abs(a * a - b * b) > c * c) ? ((a > b) ? b : a) : dist;
+	// return (abs(a * a - b * b) > c * c) ? ((a > b) ? b : a) : dist;
 }
 
 /*计算两个方向角的角度差的绝对值*/
@@ -92,33 +92,38 @@ unsigned short direction_sub(unsigned short dir1, unsigned short dir2)
 }
 
 /* 两直线的夹角，返回角度值，非弧度值 */
-double IncludedAngle(long line1_x, long line1_y,long line2_x, long line2_y)
-
+double IncludedAngle(long line1_x, long line1_y, long line2_x, long line2_y)
 {
-        double v = line1_x * line2_x + line1_y * line2_y;
-        if (v == 0)	// 两直线垂直
-                return 90;
+	double v = line1_x * line2_x + line1_y * line2_y;
 
-        // 如果v=0, 则t为无穷大（输出则为inf. =infinity）
-        // atan仍有返回值，为90度，并没有出错。
-        double t = (line1_x*line2_y-line2_x*line1_y) / v;
-        if (t < 0)
-                t = 0 - t;
+	if (v == 0) {	// 两直线垂直
+		return 90;
+	}
 
-        return atan(t) * 180 / PI;
+	// 如果v=0, 则t为无穷大（输出则为inf. =infinity）
+	// atan仍有返回值，为90度，并没有出错。
+	double t = (line1_x * line2_y - line2_x * line1_y) / v;
+
+	if (t < 0) {
+		t = 0 - t;
+	}
+
+	return atan(t) * 180 / PI;
 }
 
 int is_in_line_range(double pt_lon, double pt_lat, double sl, double sb, double el, double eb)
 {
-        long line1_x = (sl - pt_lon) * 1000000;
-        long line1_y = (sb - pt_lat) * 1000000;
-        long line2_x = (el - pt_lon) * 1000000;
-        long line2_y = (eb - pt_lat) * 1000000;
+	long    line1_x = (sl - pt_lon) * 1000000;
+	long    line1_y = (sb - pt_lat) * 1000000;
+	long    line2_x = (el - pt_lon) * 1000000;
+	long    line2_y = (eb - pt_lat) * 1000000;
 
-        double ang = IncludedAngle(line1_x, line1_y, line2_x, line2_y);
+	double ang = IncludedAngle(line1_x, line1_y, line2_x, line2_y);
 
-        if(ang < 100)
-                return 0;
-        else
-                return -1;
+	if (ang < 100) {
+		return 0;
+	} else {
+		return -1;
+	}
 }
+

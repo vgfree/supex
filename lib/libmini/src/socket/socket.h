@@ -14,6 +14,7 @@
 __BEGIN_DECLS
 
 typedef void (*SetSocketCB)(int, void *);
+
 /**
  * 建立一个侦听服务器套接字
  * @param host 主机名，可以是ip地址或域名

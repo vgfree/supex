@@ -5,7 +5,7 @@ extern struct rr_cfg_file g_rr_cfg_file;
 
 int gps_decode(struct ev_loop *loop, const char *data, GPS_INFO *gps_info)
 {
-    int     i;
+	int     i;
 	cJSON   *arr = NULL;
 	cJSON   *son = NULL;
 	cJSON   *obj = cJSON_Parse(data);
@@ -25,12 +25,12 @@ int gps_decode(struct ev_loop *loop, const char *data, GPS_INFO *gps_info)
 
 	gps_info->IMEI = atoll(son->valuestring);
 
-    /*检查imei是否是测试imei*/
-    if(forward_imei_check(gps_info->IMEI)) {
-        forward_data(data, loop, g_rr_cfg_file.forward_server.host, g_rr_cfg_file.forward_server.port);
-        cJSON_Delete(obj);
-        return -1;
-    }
+	/*检查imei是否是测试imei*/
+	if (forward_imei_check(gps_info->IMEI)) {
+		forward_data(data, loop, g_rr_cfg_file.forward_server.host, g_rr_cfg_file.forward_server.port);
+		cJSON_Delete(obj);
+		return -1;
+	}
 
 	/*parse speed*/
 	son = cJSON_GetObjectItem(obj, "speed");
@@ -69,7 +69,7 @@ int gps_decode(struct ev_loop *loop, const char *data, GPS_INFO *gps_info)
 	x_printf(D, "max speed\t%d\n", gps_info->max_speed);
 
 	if (gps_info->max_speed < g_rr_cfg_file.min_speed_limit) {
-        x_printf(I, "max speed < %d!, %s", g_rr_cfg_file.min_speed_limit, data);
+		x_printf(I, "max speed < %d!, %s", g_rr_cfg_file.min_speed_limit, data);
 		goto fail;
 	}
 
@@ -140,7 +140,7 @@ int gps_decode(struct ev_loop *loop, const char *data, GPS_INFO *gps_info)
 	cJSON_Delete(obj);
 
 	x_printf(D, "<=====================================================================>");
-    x_printf(D, "direction:%d, longitude:%f, latitude:%f, start_time:%ld, end_time:%ld, IMEI:%lld",
+	x_printf(D, "direction:%d, longitude:%f, latitude:%f, start_time:%ld, end_time:%ld, IMEI:%lld",
 		gps_info->direction, gps_info->longitude, gps_info->latitude,
 		gps_info->start_time, gps_info->end_time, gps_info->IMEI);
 	return 0;

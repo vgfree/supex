@@ -13,14 +13,12 @@
 #include <opencv2/opencv.hpp>
 
 namespace easypr {
+	namespace preprocess {
+		int deface();
 
-namespace preprocess {
-
-int deface();
-
-cv::Mat detectAndMaskFace(cv::Mat& img, cv::CascadeClassifier& cascade,
-                          double scale);
+		cv::Mat detectAndMaskFace(cv::Mat &img, cv::CascadeClassifier &cascade,
+			double scale);
+	}
 }
-}
+#endif	// EASYPR_CORE_DEFACE_H_
 
-#endif  // EASYPR_CORE_DEFACE_H_

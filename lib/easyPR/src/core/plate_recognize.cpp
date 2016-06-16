@@ -2,87 +2,95 @@
 #include "easypr/config.h"
 
 namespace easypr {
+	CPlateRecognize::CPlateRecognize() {}
 
-CPlateRecognize::CPlateRecognize() { }
+	// !车牌识别模块
 
-// !车牌识别模块
+	int CPlateRecognize::plateRecognize(Mat src,
+		std::vector <std::string>      &licenseVec)
+	{
+		// 车牌方块集合
 
-int CPlateRecognize::plateRecognize(Mat src,
-                                    std::vector<std::string> &licenseVec) {
+		std::vector <CPlate> plateVec;
 
-  // 车牌方块集合
+		// 进行深度定位，使用颜色信息与二次Sobel
 
-  std::vector<CPlate> plateVec;
+		int resultPD = plateDetect(src, plateVec, kDebug, 0);
 
-  // 进行深度定位，使用颜色信息与二次Sobel
+		if (resultPD == 0) {
+			size_t  num = plateVec.size();
+			int     index = 0;
 
-  int resultPD = plateDetect(src, plateVec, kDebug, 0);
+			// 依次识别每个车牌内的符号
 
-  if (resultPD == 0) {
-    size_t num = plateVec.size();
-    int index = 0;
+			for (size_t j = 0; j < num; j++) {
+				CPlate  item = plateVec[j];
+				Mat     plate = item.getPlateMat();
 
-    //依次识别每个车牌内的符号
+				// 获取车牌颜色
 
-    for (size_t j = 0; j < num; j++) {
-      CPlate item = plateVec[j];
-      Mat plate = item.getPlateMat();
+				std::string plateType = getPlateColor(plate);
 
-      //获取车牌颜色
+				// 获取车牌号
 
-      std::string plateType = getPlateColor(plate);
+				std::string     plateIdentify = "";
+				int             resultCR = charsRecognise(plate, plateIdentify);
 
-      //获取车牌号
+				if (resultCR == 0) {
+					std::string license = plateType + ":" + plateIdentify;
+					licenseVec.push_back(license);
+				}
+			}
 
-      std::string plateIdentify = "";
-      int resultCR = charsRecognise(plate, plateIdentify);
-      if (resultCR == 0) {
-        std::string license = plateType + ":" + plateIdentify;
-        licenseVec.push_back(license);
-      }
-    }
+			// 完整识别过程到此结束
 
-    //完整识别过程到此结束
+			// 如果是Debug模式，则还需要将定位的图片显示在原图左上角
 
-    //如果是Debug模式，则还需要将定位的图片显示在原图左上角
+			if (getPDDebug()) {
+				Mat result;
+				src.copyTo(result);
 
-    if (getPDDebug()) {
-      Mat result;
-      src.copyTo(result);
+				for (size_t j = 0; j < num; j++) {
+					CPlate  item = plateVec[j];
+					Mat     plate = item.getPlateMat();
 
-      for (size_t j = 0; j < num; j++) {
-        CPlate item = plateVec[j];
-        Mat plate = item.getPlateMat();
+					int     height = 36;
+					int     width = 136;
 
-        int height = 36;
-        int width = 136;
-        if (height * index + height < result.rows) {
-          Mat imageRoi = result(Rect(0, 0 + height * index, width, height));
-          addWeighted(imageRoi, 0, plate, 1, 0, imageRoi);
-        }
-        index++;
+					if (height * index + height < result.rows) {
+						Mat imageRoi = result(Rect(0, 0 + height * index, width, height));
+						addWeighted(imageRoi, 0, plate, 1, 0, imageRoi);
+					}
 
-        RotatedRect minRect = item.getPlatePos();
-        Point2f rect_points[4];
-        minRect.points(rect_points);
+					index++;
 
-        Scalar lineColor = Scalar(255, 255, 255);
+					RotatedRect     minRect = item.getPlatePos();
+					Point2f         rect_points[4];
+					minRect.points(rect_points);
 
-        if (item.getPlateLocateType() == SOBEL) lineColor = Scalar(255, 0, 0);
+					Scalar lineColor = Scalar(255, 255, 255);
 
-        if (item.getPlateLocateType() == COLOR) lineColor = Scalar(0, 255, 0);
+					if (item.getPlateLocateType() == SOBEL) {
+						lineColor = Scalar(255, 0, 0);
+					}
 
-        for (int j = 0; j < 4; j++)
-          line(result, rect_points[j], rect_points[(j + 1) % 4], lineColor, 2,
-               8);
-      }
+					if (item.getPlateLocateType() == COLOR) {
+						lineColor = Scalar(0, 255, 0);
+					}
 
-      //显示定位框的图片
+					for (int j = 0; j < 4; j++) {
+						line(result, rect_points[j], rect_points[(j + 1) % 4], lineColor, 2,
+							8);
+					}
+				}
 
-      showResult(result);
-    }
-  }
+				// 显示定位框的图片
 
-  return resultPD;
+				showResult(result);
+			}
+		}
+
+		return resultPD;
+	}
 }
-}
+

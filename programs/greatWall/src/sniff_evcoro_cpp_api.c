@@ -14,21 +14,20 @@
 
 extern struct dams_cfg_file g_dams_cfg_file;
 
-
 #if 1
 static int forward_to_server(char *host, int port, const char *data, size_t size, struct ev_loop *loop)
 {
+	struct xpool            *cpool = conn_xpool_find(host, port);
+	struct async_api        *api = async_api_initial(loop, 1, true, QUEUE_TYPE_FIFO, NEXUS_TYPE_TEAM, NULL, NULL, NULL);
 
-	struct xpool    *cpool = conn_xpool_find(host, port);
-	struct async_api *api = async_api_initial(loop, 1, true, QUEUE_TYPE_FIFO, NEXUS_TYPE_TEAM, NULL, NULL, NULL);
 	if (api && cpool) {
 		/*send*/
 		struct command_node *cmd = async_api_command(api, PROTO_TYPE_HTTP, cpool, data, size, NULL, NULL);
+
 		if (cmd == NULL) {
 			async_api_distory(api);
 			return (POOL_API_ERR_IS_FULL == errno) ? -2 : -1;
 		}
-
 
 		async_api_startup(api);
 		return 0;
@@ -39,7 +38,7 @@ static int forward_to_server(char *host, int port, const char *data, size_t size
 
 static int safe_fresh_http(const char *host, int port, const char *data, size_t size, int mark)
 {
-	static __thread time_t status[MAX_LINK_INDEX] = { 0 };
+	static __thread time_t  status[MAX_LINK_INDEX] = { 0 };
 	struct ev_loop          *loop = supex_get_default()->scheduler->listener;
 
 	int     ok = 0;
@@ -72,20 +71,19 @@ static int safe_fresh_http(const char *host, int port, const char *data, size_t 
 	return (ok >= 0) ? 0 : -1;
 }
 
-
-
 static int safe_delay_http(const char *host, int port, const char *data, size_t size, int mark)
 {
-	unsigned int            idx = 0;
-	struct ev_loop          *loop = supex_get_default()->scheduler->listener;
+	unsigned int    idx = 0;
+	struct ev_loop  *loop = supex_get_default()->scheduler->listener;
 
-	struct xpool    *cpool = conn_xpool_find(host, port);
-	struct async_api *api = async_api_initial(loop, 1, true, QUEUE_TYPE_FIFO, NEXUS_TYPE_TEAM, NULL, NULL, NULL);
+	struct xpool            *cpool = conn_xpool_find(host, port);
+	struct async_api        *api = async_api_initial(loop, 1, true, QUEUE_TYPE_FIFO, NEXUS_TYPE_TEAM, NULL, NULL, NULL);
 
 	if (api && cpool) {
 		do {
 			/*send*/
 			struct command_node *cmd = async_api_command(api, PROTO_TYPE_HTTP, cpool, data, size, NULL, NULL);
+
 			if (cmd == NULL) {
 				if (0 == ++idx % 3) {
 					usleep(MIN(5000 * idx, 5000000));
@@ -95,13 +93,13 @@ static int safe_delay_http(const char *host, int port, const char *data, size_t 
 			}
 		} while (1);
 
-
 		async_api_startup(api);
 		return 0;
 	}
 
 	return -1;
 }
+
 #else
 static int safe_fresh_http(const char *host, int port, const char *data, size_t size, int mark)
 {
@@ -155,7 +153,7 @@ static int safe_delay_http(const char *host, int port, const char *data, size_t 
 	} while (ok == TCP_ERR_CONNECT || ok == TCP_ERR_SEND);
 	return 0;
 }
-#endif
+#endif /* if 1 */
 
 int sniff_vms_call_rlpushx(void *user, union virtual_system **VMS, struct sniff_task_node *task)
 {

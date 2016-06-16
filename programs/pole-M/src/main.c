@@ -8,7 +8,6 @@
 #include "event_handler.h"
 
 #include "ldb_cb.h"
-#include "log.h"
 #include "libmini.h"
 #include "conf.h"
 
@@ -22,8 +21,8 @@
 
 // ---------------Global Area---------------------//
 //
-struct swift_cfg_list g_swift_cfg_list = {};
-struct pole_conf g_pole_conf = {};
+struct swift_cfg_list   g_swift_cfg_list = {};
+struct pole_conf        g_pole_conf = {};
 
 // g_xmq_producer: Just for swift module.
 xmq_producer_t *g_xmq_producer = NULL;
@@ -192,7 +191,7 @@ int __load_porters(event_ctx_t *ev_ctx, xmq_ctx_t *xmq_ctx)
 	}
 	return 0;
 }
-#endif
+#endif /* ifdef TC_THREAD */
 
 int main(int argc, char **argv)
 {
@@ -204,7 +203,6 @@ int main(int argc, char **argv)
 	// Loading Pole-M's configuration.
 	config_init(&g_pole_conf, g_swift_cfg_list.argv_info.conf_name);
 
-
 	// INIT XMQ's context.
 	xmq_ctx_t *xmq_ctx = xmq_context_init("./data", g_pole_conf.max_records, ldb_pvt_create, driver_ldb_put, driver_ldb_get, ldb_pvt_destroy);
 	assert(xmq_ctx != NULL);
@@ -213,8 +211,8 @@ int main(int argc, char **argv)
 	g_xmq_producer = xmq_get_producer(xmq_ctx, "P1");
 
 	// INIT NETMOD's context.
-	int error = 0;
-	event_ctx_t *ev_ctx = event_ctx_init(&error, SOCK_SERVER, g_pole_conf.bind_uri, NULL);
+	int             error = 0;
+	event_ctx_t     *ev_ctx = event_ctx_init(&error, SOCK_SERVER, g_pole_conf.bind_uri, NULL);
 	assert(ev_ctx);
 
 	// Startup the input data thread.

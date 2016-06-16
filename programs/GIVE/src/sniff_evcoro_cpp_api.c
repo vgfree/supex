@@ -27,8 +27,6 @@ extern int gzpb_to_str(char *value, int data_len);
 
 extern kv_handler_t *count_handler;
 
-
-
 int sniff_vms_call(void *user, union virtual_system **VMS, struct sniff_task_node *task)
 {
 	struct sniff_task_node  *p_task = (struct sniff_task_node *)task;
@@ -53,7 +51,7 @@ int sniff_vms_call(void *user, union virtual_system **VMS, struct sniff_task_nod
 		return GV_ERR;
 	}
 
-	struct xpool *cpool = NULL;
+	struct xpool    *cpool = NULL;
 	void            *sfd = (void *)-1;
 	int             rc = conn_xpool_gain(&cpool, g_rr_cfg_file.gaode_host, g_rr_cfg_file.gaode_port, &sfd);
 

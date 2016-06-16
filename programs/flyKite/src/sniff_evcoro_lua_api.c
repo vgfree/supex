@@ -11,7 +11,6 @@
   #include "topo_api.h"
 #endif
 
-
 #ifdef OPEN_TOPO
 static int lua_get_export_road_by_road(lua_State *L)
 {
@@ -96,11 +95,11 @@ static lua_State *_vms_new(void)
 	return L;
 }
 
-
 int sniff_vms_init(void *user, union virtual_system **VMS, struct sniff_task_node *task)
 {
 	int             error = 0;
 	lua_State       **L = VMS;
+
 	if (*L != NULL) {
 		x_printf(S, "No need to init LUA VM!\n");
 		return 0;
@@ -112,11 +111,13 @@ int sniff_vms_init(void *user, union virtual_system **VMS, struct sniff_task_nod
 	lua_pushinteger(*L, supex_get_default()->scheduler);
 	lua_pushinteger(*L, 0);
 	error = lua_pcall(*L, 2, 0, 0);
+
 	if (error) {
 		x_printf(E, "%s", lua_tostring(*L, -1));
 		lua_pop(*L, 1);
 		exit(EXIT_FAILURE);
 	}
+
 	return error;
 }
 

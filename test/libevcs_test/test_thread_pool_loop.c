@@ -16,39 +16,48 @@ EVCS_MODULE_SETUP(evcs, evcs_init, evcs_exit, &g_evcs_evts);
 #include "evcoro_async_tasks.h"
 #include "thread_pool_loop/tlpool.h"
 
-struct user_task {
+struct user_task
+{
 	char TASK[64];
 };
 
-char                    DATA[] = "GET / HTTP/1.0\r\nUser-Agent: curl/7.38.0\r\nHost: www.sina.com\r\nAccept: */*\r\n\r\n";
+char DATA[] = "GET / HTTP/1.0\r\nUser-Agent: curl/7.38.0\r\nHost: www.sina.com\r\nAccept: */*\r\n\r\n";
 
 static bool task_lookup(void *user, void *task)
 {
-	tlpool_t *pool = user;
-	bool ok = false;
-	int idx = tlpool_get_thread_index(pool);
+	tlpool_t        *pool = user;
+	bool            ok = false;
+	int             idx = tlpool_get_thread_index(pool);
+
 	ok = tlpool_pull(pool, task, TLPOOL_TASK_SHARE, idx);
+
 	if (ok) {
 		printf("get from share queue!\n");
 		return ok;
 	}
+
 	ok = tlpool_pull(pool, task, TLPOOL_TASK_SEIZE, idx);
+
 	if (ok) {
 		printf("get from seize queue!\n");
 		return ok;
 	}
+
 	ok = tlpool_pull(pool, task, TLPOOL_TASK_ALONE, idx);
+
 	if (ok) {
 		printf("get from alone queue!\n");
 		return ok;
 	}
+
 	return ok;
 }
 
 static bool task_report(void *user, void *task)
 {
-	tlpool_t *pool = user;
-	bool ok = false;
+	tlpool_t        *pool = user;
+	bool            ok = false;
+
 	ok = tlpool_push(pool, task, TLPOOL_TASK_SEIZE, 0);
 	ok = tlpool_push(pool, task, TLPOOL_TASK_SHARE, 1);
 	ok = tlpool_push(pool, task, TLPOOL_TASK_ALONE, 2);
@@ -57,8 +66,9 @@ static bool task_report(void *user, void *task)
 
 void *task_handle(struct supex_evcoro *evcoro, int step)
 {
-	struct user_task *p_task = &((struct user_task *)evcoro->task)[step];
-	int idx = tlpool_get_thread_index(evcoro->data);
+	struct user_task        *p_task = &((struct user_task *)evcoro->task)[step];
+	int                     idx = tlpool_get_thread_index(evcoro->data);
+
 	printf("thread %p index %d get [%s]\n", pthread_self(), idx, p_task->TASK);
 	printf("------------华丽的分割线------------\n");
 #if 0
@@ -82,12 +92,13 @@ void *task_handle(struct supex_evcoro *evcoro, int step)
 void work(void *data)
 {
 	tlpool_t *pool = data;
+
 	/*load module*/
 	EVCS_MODULE_MOUNT(kernel);
 	EVCS_MODULE_ENTRY(kernel, true);
 
 	struct evcs_argv_settings sets = {
-		.num    = 5/*协程数*/
+		.num    = 5	/*协程数*/
 		, .tsz  = sizeof(struct user_task)
 		, .data = data
 		, .task_lookup= task_lookup
@@ -101,14 +112,12 @@ void work(void *data)
 	EVCS_MODULE_START();
 }
 
-
-
 void main(void)
 {
 	conn_xpool_init("www.sina.com", 80, 10, true);
 
 	tlpool_t *tlpool = tlpool_init(3, 100, sizeof(struct user_task), NULL);
-	
+
 	tlpool_bind(tlpool, (void (*)(void *))work, tlpool, 0);
 	tlpool_bind(tlpool, (void (*)(void *))work, tlpool, 1);
 	tlpool_bind(tlpool, (void (*)(void *))work, tlpool, 2);
@@ -116,8 +125,9 @@ void main(void)
 	tlpool_boot(tlpool);
 
 	int i = 1;
+
 	while (i-- > 0) {
-		struct user_task task = {0};
+		struct user_task task = { 0 };
 		sprintf(task.TASK, "task %d", i);
 		task_report(tlpool, &task);
 		sleep(5);
@@ -141,3 +151,4 @@ void main(void)
 	sleep(1);
 	tlpool_free(tlpool);
 }
+

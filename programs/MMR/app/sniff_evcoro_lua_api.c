@@ -13,7 +13,6 @@
 #include "lua_mappoi.h"
 // #include "luakvcore.h"
 
-
 static int _getProgName(lua_State *L)
 {
 	char            buff[32] = {};
@@ -25,8 +24,6 @@ static int _getProgName(lua_State *L)
 
 	return 1;
 }
-
-
 
 /******************************************************************************************/
 static lua_State *_vms_new(void)
@@ -97,7 +94,6 @@ static lua_State *_vms_new(void)
 	return L;
 }
 
-
 /*
  * 函 数:sniff_vms_init
  * 功 能:初始化虚拟机
@@ -109,6 +105,7 @@ int sniff_vms_init(void *user, union virtual_system **VMS, struct sniff_task_nod
 {
 	int             error = 0;
 	lua_State       **L = VMS;
+
 	if (*L != NULL) {
 		x_printf(S, "No need to init LUA VM!\n");
 		return 0;
@@ -120,31 +117,35 @@ int sniff_vms_init(void *user, union virtual_system **VMS, struct sniff_task_nod
 	lua_pushinteger(*L, supex_get_default()->scheduler);
 	lua_pushinteger(*L, 0);
 	error = lua_pcall(*L, 2, 0, 0);
+
 	if (error) {
 		x_printf(E, "%s", lua_tostring(*L, -1));
 		lua_pop(*L, 1);
 		exit(EXIT_FAILURE);
 	}
+
 	return error;
 }
 
 /******************************************************************************************/
 
-
 int sniff_vms_call1(void *user, union virtual_system **VMS, struct sniff_task_node *task)
 {
 	int             error = 0;
 	lua_State       **L = VMS;
+
 	x_printf(S, "task <thread> %d\t<shift> %d\t<come> %d\t<delay> %d\n",
 		task->thread_id, task->base.shift, task->stamp, time(NULL) - task->stamp);
 	lua_getglobal(*L, "app_call_1");
 	lua_pushboolean(*L, task->last);
 	lua_pushinteger(*L, task->sfd);
 	error = lua_pcall(*L, 2, 0, 0);
+
 	if (error) {
 		x_printf(E, "%s", lua_tostring(*L, -1));
 		lua_pop(*L, 1);
 	}
+
 	return error;
 }
 
@@ -152,7 +153,7 @@ int sniff_vms_call_ext(void *user, union virtual_system **VMS, struct sniff_task
 {
 	int             error = 0;
 	lua_State       **L = VMS;
-	time_t delay = time(NULL) - task->stamp;
+	time_t          delay = time(NULL) - task->stamp;
 
 	x_printf(S, "task <thread> %d\t<shift> %d\t<come> %d\t<delay> %d\n",
 		task->thread_id, task->base.shift, task->stamp, delay);
@@ -166,22 +167,22 @@ int sniff_vms_call_ext(void *user, union virtual_system **VMS, struct sniff_task
 	lua_pushboolean(*L, task->last);
 	lua_pushlstring(*L, (const char *)task->data, task->size);
 	error = lua_pcall(*L, 2, 0, 0);
+
 	if (error) {
 		x_printf(E, "%s", lua_tostring(*L, -1));
 		lua_pop(*L, 1);
 	}
+
 	return error;
 }
-
-
 
 /******************************************************************************************/
 int sniff_vms_sync_ext(void *user, union virtual_system **VMS, struct sniff_task_node *task)
 {
 	int             error = 0;
 	lua_State       **L = VMS;
-	long    *addr = task->data;
-	int     *all = *addr;
+	long            *addr = task->data;
+	int             *all = *addr;
 
 	AO_F_SUB(all, 1);
 
@@ -189,23 +190,26 @@ int sniff_vms_sync_ext(void *user, union virtual_system **VMS, struct sniff_task
 	lua_pushboolean(*L, task->last);
 	lua_pushinteger(*L, task->sfd);
 	error = lua_pcall(*L, 2, 0, 0);
+
 	if (error) {
 		x_printf(E, "%s", lua_tostring(*L, -1));
 		lua_pop(*L, 1);
 	}
+
 	return error;
 }
-
 
 /******************************************************************************************/
 int sniff_vms_gain_ext(void *user, union virtual_system **VMS, struct sniff_task_node *task)
 {
 	int             error = 0;
 	lua_State       **L = VMS;
+
 	lua_getglobal(*L, "app_pull");
 	lua_pushboolean(*L, task->last);
 	lua_pushinteger(*L, task->sfd);
 	error = lua_pcall(*L, 2, 0, 0);
+
 	if (error) {
 		x_printf(E, "%s", lua_tostring(*L, -1));
 		lua_pop(*L, 1);

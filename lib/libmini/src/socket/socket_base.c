@@ -361,11 +361,12 @@ bool SA_CompareAddr(struct sockaddr *a, struct sockaddr *b)
 
 ssize_t SIO_ReadPeek(int fd, char *buff, size_t len)
 {
-	char			t[1] = { 0 };
+	char            t[1] = { 0 };
 	ssize_t         bytes = -1;
 	struct msghdr   hdr;
 	struct iovec    vec;
-//	assert(buff);
+
+	//	assert(buff);
 
 	bzero(&hdr, sizeof(hdr));
 	hdr.msg_iov = &vec;

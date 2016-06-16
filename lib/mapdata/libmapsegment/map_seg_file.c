@@ -119,9 +119,9 @@ static int64_t load_seg_info(MYSQL_RES *res, void *args)
 			temp->sgid_count = atoi(res_row[16]);
 		}
 
-                if (res_row[17]) {
-                        temp->countyCode = atoi(res_row[17]);
-                }
+		if (res_row[17]) {
+			temp->countyCode = atoi(res_row[17]);
+		}
 
 		back_row++;
 	}
@@ -223,7 +223,7 @@ int map_seg_file(char *sgid_file, map_seg_cfg *p_seg_cfg)
 		}
 	}
 
-        x_printf(D, "count= %-10ld\n", count);
+	x_printf(D, "count= %-10ld\n", count);
 	free(header);
 	header = NULL;
 	return 0;

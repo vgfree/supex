@@ -69,7 +69,7 @@ void SO_SetTimeOption(int fd, int level, int name, long usec)
 	struct timeval  tv = {};
 	int             rc = -1;
 
-//	return_if_fail(usec > -1);
+	//	return_if_fail(usec > -1);
 
 	if (usec >= 0) {
 		tv.tv_sec = usec / 1000000;
@@ -77,7 +77,7 @@ void SO_SetTimeOption(int fd, int level, int name, long usec)
 	} else {
 		tv.tv_sec = UINT32_MAX;
 	}
-	
+
 	rc = setsockopt(fd, level, name, &tv, (socklen_t)sizeof(tv));
 
 	if (unlikely(rc < 0)) {

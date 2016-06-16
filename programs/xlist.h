@@ -10,8 +10,8 @@
 /*链表结构*/
 typedef struct _xlist_t
 {
-	struct _xlist_t  *prev;
-	struct _xlist_t  *next;
+	struct _xlist_t *prev;
+	struct _xlist_t *next;
 } xlist_t;
 
 /*list_init - 初始化链表，前后指向自身

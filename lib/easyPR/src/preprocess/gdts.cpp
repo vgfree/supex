@@ -3,84 +3,87 @@
 #include "easypr/util/util.h"
 
 namespace easypr {
+	namespace preprocess {
+		// TODO 将下面的路径改成你的原始图片路径
+		// 图片不要多，10-30张就足够了，EasyPR对GDTS数据集的使用不以量为主要指标
+		// 只要这些图片足够反映你数据集的主要特征即可
 
-namespace preprocess {
+		const char *src_path = "F:/data/easypr-data/tmp-1";
 
-// TODO 将下面的路径改成你的原始图片路径
-// 图片不要多，10-30张就足够了，EasyPR对GDTS数据集的使用不以量为主要指标
-// 只要这些图片足够反映你数据集的主要特征即可
+		// TODO 将下面的路径改成你希望生成捐赠给GDTS数据存放的新路径
 
-const char* src_path = "F:/data/easypr-data/tmp-1";
+		const char *dst_path = "F:/data/easypr-data/tmp-2";
 
-// TODO 将下面的路径改成你希望生成捐赠给GDTS数据存放的新路径
+		int generate_gdts()
+		{
+			// 获取人脸识别文件
 
-const char* dst_path = "F:/data/easypr-data/tmp-2";
+			cv::CascadeClassifier   cascade;
+			std::string             cascadeName =
+				"resources/model/haarcascade_frontalface_alt_tree.xml";
 
-int generate_gdts() {
+			////获取该路径下的所有文件
 
-  // 获取人脸识别文件
+			auto    files = Utils::getFiles(src_path);
+			size_t  size = files.size();
 
-  cv::CascadeClassifier cascade;
-  std::string cascadeName =
-      "resources/model/haarcascade_frontalface_alt_tree.xml";
+			if (0 == size) {
+				std::cout << "No File Found!" << std::endl;
+				return 0;
+			}
 
-  ////获取该路径下的所有文件
+			std::cout << "Begin to prepare generate_gdts!" << std::endl;
 
-  auto files = Utils::getFiles(src_path);
-  size_t size = files.size();
+			for (size_t i = 0; i < size; i++) {
+				std::string filepath = files[i].c_str();
+				std::cout << "------------------" << std::endl;
+				std::cout << filepath << std::endl;
 
-  if (0 == size) {
-    std::cout << "No File Found!" << std::endl;
-    return 0;
-  }
+				// EasyPR读取原图片
 
-  std::cout << "Begin to prepare generate_gdts!" << std::endl;
+				cv::Mat src = cv::imread(filepath);
 
-  for (size_t i = 0; i < size; i++) {
-    std::string filepath = files[i].c_str();
-    std::cout << "------------------" << std::endl;
-    std::cout << filepath << std::endl;
+				// EasyPR开始对图片进行模糊化与裁剪化处理
 
-    // EasyPR读取原图片
+				cv::Mat img = imageProcess(src);
 
-    cv::Mat src = cv::imread(filepath);
+				// EasyPR开始对图片进行人脸识别处理
 
-    // EasyPR开始对图片进行模糊化与裁剪化处理
+				cv::Mat dst = detectAndMaskFace(img, cascade, 1.5);
 
-    cv::Mat img = imageProcess(src);
+				// 将图片导出到新路径
 
-    // EasyPR开始对图片进行人脸识别处理
+				std::vector <std::string> spilt_path = Utils::splitString(filepath, '\\');
 
-    cv::Mat dst = detectAndMaskFace(img, cascade, 1.5);
+				size_t          spiltsize = spilt_path.size();
+				std::string     filename = "";
 
-    // 将图片导出到新路径
+				if (spiltsize != 0) {
+					filename = spilt_path[spiltsize - 1];
+				}
 
-    std::vector<std::string> spilt_path = Utils::splitString(filepath, '\\');
+				std::stringstream ss(std::stringstream::in | std::stringstream::out);
+				ss << dst_path << "/" << filename;
+				utils::imwrite(ss.str(), dst);
+			}
 
-    size_t spiltsize = spilt_path.size();
-    std::string filename = "";
+			return 0;
+		}
 
-    if (spiltsize != 0) filename = spilt_path[spiltsize - 1];
+		// EasyPR的图像预处理函数，进行模糊化与裁剪化处理
 
-    std::stringstream ss(std::stringstream::in | std::stringstream::out);
-    ss << dst_path << "/" << filename;
-    utils::imwrite(ss.str(), dst);
-  }
+		cv::Mat imageProcess(cv::Mat img)
+		{
+			int                     width = img.size().width;
+			int                     height = img.size().height;
+			cv::Rect_ <double>      rect(width * 0.01, height * 0.01, width * 0.99,
+			height * 0.99);
 
-  return 0;
+			cv::Mat dst = img(rect);
+
+			// GaussianBlur( dst, dst, Size(1, 1), 0, 0, BORDER_DEFAULT );
+			return dst;
+		}
+	}
 }
 
-// EasyPR的图像预处理函数，进行模糊化与裁剪化处理
-
-cv::Mat imageProcess(cv::Mat img) {
-  int width = img.size().width;
-  int height = img.size().height;
-  cv::Rect_<double> rect(width * 0.01, height * 0.01, width * 0.99,
-                         height * 0.99);
-
-  cv::Mat dst = img(rect);
-  // GaussianBlur( dst, dst, Size(1, 1), 0, 0, BORDER_DEFAULT );
-  return dst;
-}
-}
-}

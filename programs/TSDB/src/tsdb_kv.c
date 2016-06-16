@@ -38,7 +38,7 @@ int tsdb_kv_close(void)
 int tsdb_kv_set(struct data_node *p_node)
 {
 	char                    *p_buf = cache_data_address(&p_node->mdl_recv.cache);
-	unsigned	u_size = cache_data_length(&p_node->mdl_recv.cache);
+	unsigned                u_size = cache_data_length(&p_node->mdl_recv.cache);
 	struct redis_status     *p_rst = &p_node->mdl_recv.parse.redis_info.rs;
 	kv_answer_t             *ans = NULL;
 	kv_answer_value_t       *value = 0;
@@ -120,7 +120,7 @@ int tsdb_kv_set(struct data_node *p_node)
 int tsdb_kv_del(struct data_node *p_node)
 {
 	char                    *p_buf = cache_data_address(&p_node->mdl_recv.cache);
-	unsigned	u_size = cache_data_length(&p_node->mdl_recv.cache);
+	unsigned                u_size = cache_data_length(&p_node->mdl_recv.cache);
 	struct redis_status     *p_rst = &p_node->mdl_recv.parse.redis_info.rs;
 	kv_answer_t             *ans = NULL;
 	kv_answer_value_t       *value = 0;
@@ -175,7 +175,7 @@ int tsdb_kv_del(struct data_node *p_node)
 int tsdb_kv_mset(struct data_node *p_node)
 {
 	char                    *p_buf = cache_data_address(&p_node->mdl_recv.cache);
-	unsigned	u_size = cache_data_length(&p_node->mdl_recv.cache);
+	unsigned                u_size = cache_data_length(&p_node->mdl_recv.cache);
 	struct redis_status     *p_rst = &p_node->mdl_recv.parse.redis_info.rs;
 	kv_answer_t             *ans = NULL;
 	kv_answer_value_t       *value = 0;
@@ -269,7 +269,7 @@ int tsdb_kv_mset(struct data_node *p_node)
 int tsdb_kv_get(struct data_node *p_node)
 {
 	char                    *p_buf = cache_data_address(&p_node->mdl_recv.cache);
-	unsigned	u_size = cache_data_length(&p_node->mdl_recv.cache);
+	unsigned                u_size = cache_data_length(&p_node->mdl_recv.cache);
 	struct redis_status     *p_rst = &p_node->mdl_recv.parse.redis_info.rs;
 	kv_answer_t             *ans = NULL;
 	kv_answer_value_t       *value = 0;

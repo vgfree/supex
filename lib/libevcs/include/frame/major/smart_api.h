@@ -46,11 +46,11 @@ typedef struct
 #ifdef OPEN_EVCORO
 #endif
 
-	void                    *data;
-	int                     batch;	/**<*/
-	int                     index;	/**< 所属线程池的下标*/
-	pthread_t               pid;	/* unique ID of this thread */
-	long                    tid;
+	void            *data;
+	int             batch;		/**<*/
+	int             index;		/**< 所属线程池的下标*/
+	pthread_t       pid;		/* unique ID of this thread */
+	long            tid;
 } SMART_WORKER_PTHREAD;
 
 /*

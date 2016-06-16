@@ -227,8 +227,7 @@ void *thrd_netCenter(void *args)
 		res = zmq_poll(&items, 1, 0);
 
 		if ((res > 0) && (items.revents & ZMQ_POLLIN)) {
-
-			++tasks; /* Flag, to show how many tasks to handle. */
+			++tasks;/* Flag, to show how many tasks to handle. */
 
 			// printf("ZMQ_POLL RECV F_NETWORK: %s.\n", _systime());
 			/* Receive Client Identity. If current socket is Server. */
@@ -290,20 +289,21 @@ RECV_BODY:
 			x_printf(E, "WARN: thrd_netCenter:-> zmq_poll: fail. Error:%s\n", zmq_strerror(errno));
 			print_monitor_event(ev_ctx->zmq_monitor);
 		} else if (res == 0) {
-			tasks = -1; /* Now, The poll I/O have no task to handle.*/
+			tasks = -1;	/* Now, The poll I/O have no task to handle.*/
 		}
 
 		/* =======================SEND EVENT=======================*/
 SEND_PKG:
-		ev_des = queue_pull(ev_ctx->send_queue, 0);//TODO:
+		ev_des = queue_pull(ev_ctx->send_queue, 0);	// TODO:
 
 		if (!ev_des) {
 			if (tasks == -1) {
 				/* When the receive and send module has no task to handle, sleep(0.01s).*/
 				usleep(10000);
 			}
+
 			continue;
-		}else{
+		} else {
 			++tasks;
 		}
 

@@ -29,13 +29,13 @@
 #include "xmq_msg.h"
 #include "xlist.h"
 
-#define  XMQ_DBNAME_LEN        42  // 00000000000000000001-00000000000005000000
-#define  XMQ_IDENTITY_LEN      32
-#define  XMQ_PATH_LEN          256
+#define  XMQ_DBNAME_LEN         42	// 00000000000000000001-00000000000005000000
+#define  XMQ_IDENTITY_LEN       32
+#define  XMQ_PATH_LEN           256
 
-typedef struct _bin_entry_t    bin_entry_t;
-typedef struct _xmq_ctx_t      xmq_ctx_t;
-typedef struct _xmq_db_t       xmq_db_t;
+typedef struct _bin_entry_t bin_entry_t;
+typedef struct _xmq_ctx_t xmq_ctx_t;
+typedef struct _xmq_db_t xmq_db_t;
 typedef struct _xmq_producer_t xmq_producer_t;
 typedef struct _xmq_consumer_t xmq_consumer_t;
 typedef struct _xmq_consiter_t xmq_consiter_t;
@@ -49,7 +49,7 @@ typedef int (xmq_kv_ctx_destroy)(void *kv_ctx);
 struct _bin_entry_t
 {
 	void    *data;
-	size_t    len;
+	size_t  len;
 };
 
 #define set_bin_entry(bin, ptr, size)	     \
@@ -69,38 +69,38 @@ struct _bin_entry_t
 /* */
 struct _xmq_ctx_t
 {
-	char       kv_db_path[XMQ_PATH_LEN];  // The databases path, init by user transmit.
-	size_t              kv_max_records;   // The maxmium of one KV database.
-	void               *g_state_ctx;      // The single database handle for moniter global state.
+	char                    kv_db_path[XMQ_PATH_LEN];	// The databases path, init by user transmit.
+	size_t                  kv_max_records;			// The maxmium of one KV database.
+	void                    *g_state_ctx;			// The single database handle for moniter global state.
 
 	/* Chain list(s), to load all the states information from db "./moniter". */
-	xlist_t             list_databases;   // All the been used databases. <db1,db2,..,dbN>
-	xlist_t             list_producers;   // Load all the producers. <P1,P2...>
-	xlist_t             list_consumers;   // Load all the consumers. <master,node1,node2.>
-	xlist_t            *indicator;        // The indicator, point to '&list_consumers'.
+	xlist_t                 list_databases;	// All the been used databases. <db1,db2,..,dbN>
+	xlist_t                 list_producers;	// Load all the producers. <P1,P2...>
+	xlist_t                 list_consumers;	// Load all the consumers. <master,node1,node2.>
+	xlist_t                 *indicator;	// The indicator, point to '&list_consumers'.
 
 	/* For producers. */
-	xmq_db_t           *last_write_db;    // Last write K/V database object.
-	uint64_t            last_write_db_seq;// Last K/V database's wrote sequence.
-	pthread_mutex_t     lock_write;	      // Lock for producers writting the database data[0-N].
-	pthread_cond_t      lock_cond;	      // The mutex condition for fetch.
-	int                 waiters;	      // Count of waiters to fetch XMQ queue.
+	xmq_db_t                *last_write_db;		// Last write K/V database object.
+	uint64_t                last_write_db_seq;	// Last K/V database's wrote sequence.
+	pthread_mutex_t         lock_write;		// Lock for producers writting the database data[0-N].
+	pthread_cond_t          lock_cond;		// The mutex condition for fetch.
+	int                     waiters;		// Count of waiters to fetch XMQ queue.
 
 	/* Operater the leveldb or redis K/V database. init by user transmi. */
-	xmq_kv_ctx_init    *kv_ctx_init;      //
-	xmq_kv_put         *kv_put;           //
-	xmq_kv_get         *kv_get;           //
-	xmq_kv_ctx_destroy *kv_ctx_destroy;   //
+	xmq_kv_ctx_init         *kv_ctx_init;		//
+	xmq_kv_put              *kv_put;		//
+	xmq_kv_get              *kv_get;		//
+	xmq_kv_ctx_destroy      *kv_ctx_destroy;	//
 };
 
 /* */
 struct _xmq_db_t
 {
 	xlist_t         node;
-	uint64_t        db_start;             // database start index;
-	uint64_t        db_end;	              // database end   index;
-	char            db_name[XMQ_DBNAME_LEN]; // "00000000000000000001-00000000000005000000"
-	void            *db_handler; // The database handle pointer, returned by xmq_ctx_init("db_name").
+	uint64_t        db_start;			// database start index;
+	uint64_t        db_end;				// database end   index;
+	char            db_name[XMQ_DBNAME_LEN];	// "00000000000000000001-00000000000005000000"
+	void            *db_handler;			// The database handle pointer, returned by xmq_ctx_init("db_name").
 };
 
 /* */
@@ -125,8 +125,8 @@ struct _xmq_consumer_t
  * 重新加载之前已经正常同步的客户端(消费者)状态信息 */
 struct _xmq_consiter_t
 {
-	bool (* has_next)(xmq_ctx_t *xmq);
-	xmq_consumer_t *(* next)(xmq_ctx_t *xmq);
+	bool            (*has_next)(xmq_ctx_t *xmq);
+	xmq_consumer_t  *(*next)(xmq_ctx_t *xmq);
 };
 
 extern xmq_ctx_t *xmq_context_init(const char *kv_dbname, size_t kv_max_records,

@@ -34,14 +34,13 @@ static void swift_pthrd_init(void *user)
 	p_swift_worker->mount = sniff_start(p_swift_worker->index);
 }
 
-
 /**
  * 根据条件编译初始化文件队列和内存队列
  */
 static void swift_entry_init(void)
 {
-
 	app_queue_init();
+
 	/*
 	 * 初始化支持的命令
 	 */
@@ -50,13 +49,13 @@ static void swift_entry_init(void)
 	// ---> init libkv
 	g_kv_cache = kv_cache_create(g_rr_cfg_file.kv_cache_count);
 
-    conn_xpool_init(g_rr_cfg_file.pmr_server.host, g_rr_cfg_file.pmr_server.port, g_rr_cfg_file.redis_conn, false);
-    conn_xpool_init(g_rr_cfg_file.trafficapi_server.host, g_rr_cfg_file.trafficapi_server.port, g_rr_cfg_file.redis_conn, false);
-    conn_xpool_init(g_rr_cfg_file.forward_server.host, g_rr_cfg_file.forward_server.port, g_rr_cfg_file.redis_conn/10, false);
+	conn_xpool_init(g_rr_cfg_file.pmr_server.host, g_rr_cfg_file.pmr_server.port, g_rr_cfg_file.redis_conn, false);
+	conn_xpool_init(g_rr_cfg_file.trafficapi_server.host, g_rr_cfg_file.trafficapi_server.port, g_rr_cfg_file.redis_conn, false);
+	conn_xpool_init(g_rr_cfg_file.forward_server.host, g_rr_cfg_file.forward_server.port, g_rr_cfg_file.redis_conn / 10, false);
 
-    conn_xpool_init(g_rr_cfg_file.road_traffic_server.host, g_rr_cfg_file.road_traffic_server.port, g_rr_cfg_file.redis_conn, false);
-    conn_xpool_init(g_rr_cfg_file.city_traffic_server.host, g_rr_cfg_file.city_traffic_server.port, g_rr_cfg_file.redis_conn, false);
-    conn_xpool_init(g_rr_cfg_file.county_traffic_server.host, g_rr_cfg_file.county_traffic_server.port, g_rr_cfg_file.redis_conn, false);
+	conn_xpool_init(g_rr_cfg_file.road_traffic_server.host, g_rr_cfg_file.road_traffic_server.port, g_rr_cfg_file.redis_conn, false);
+	conn_xpool_init(g_rr_cfg_file.city_traffic_server.host, g_rr_cfg_file.city_traffic_server.port, g_rr_cfg_file.redis_conn, false);
+	conn_xpool_init(g_rr_cfg_file.county_traffic_server.host, g_rr_cfg_file.county_traffic_server.port, g_rr_cfg_file.redis_conn, false);
 }
 
 static void swift_shut_down(void)

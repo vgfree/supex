@@ -27,7 +27,6 @@ void load_swift_cfg_file(struct swift_cfg_file *p_cfg, char *name)
 		p_cfg->tasker_counts = (short)json_object_get_int(obj);
 	} else { goto fail; }
 
-
 	if (json_object_object_get_ex(cfg, "swift_protocol", &obj)) {
 		str_val = json_object_get_string(obj);
 

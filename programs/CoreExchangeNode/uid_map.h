@@ -4,7 +4,6 @@
 #include "stdint.h"
 #include "libkv.h"
 
-
 void init_uid_map();
 
 int find_fd(char *uid);
@@ -18,5 +17,5 @@ int remove_fd(char *uid);
 int remove_uid(int fd);
 
 void destroy_uid_map();
-
 #endif
+

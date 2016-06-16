@@ -16,3 +16,4 @@ int put_double_out(struct cache *p_cache, double d);
 void send_error(struct cache *p_cache, char *p_error);
 
 int check_parameter_locate(struct data_node *p_node, double *p_lon, double *p_lat, short *p_dir);
+

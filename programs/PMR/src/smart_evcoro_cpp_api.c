@@ -11,7 +11,7 @@
 
 int api_hmget(void *user, union virtual_system **VMS, struct adopt_task_node *task)
 {
-	struct data_node        *p_node = get_pool_data(task->sfd);
+	struct data_node *p_node = get_pool_data(task->sfd);
 
 	char                    *p_buf = cache_data_address(&p_node->mdl_recv.cache);
 	struct redis_status     *p_rst = &p_node->mdl_recv.parse.redis_info.rs;
@@ -25,14 +25,13 @@ int api_hmget(void *user, union virtual_system **VMS, struct adopt_task_node *ta
 		return entry_cmd_mlocate(p_node);
 	}
 
-
 	cache_append(&p_node->mdl_send.cache, OPT_MULTI_BULK_FALSE, strlen(OPT_MULTI_BULK_FALSE));
 	return 0;
 }
 
 int api_hgetall(void *user, union virtual_system **VMS, struct adopt_task_node *task)
 {
-	struct data_node        *p_node = get_pool_data(task->sfd);
+	struct data_node *p_node = get_pool_data(task->sfd);
 
 	cache_append(&p_node->mdl_send.cache, OPT_MULTI_BULK_FALSE, strlen(OPT_MULTI_BULK_FALSE));
 	return -1;

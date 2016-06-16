@@ -53,14 +53,13 @@ static void swift_pthrd_init(void *user)
 	p_swift_worker->mount = sniff_start(p_swift_worker->index);
 }
 
-
 /**
  * 根据条件编译初始化文件队列和内存队列
  */
 static void swift_entry_init(void)
 {
-
 	app_queue_init();
+
 	/*
 	 * 初始化支持的命令
 	 */
@@ -94,7 +93,6 @@ static void swift_shut_down(void)
 
 	/*通过每个swift_worker挂起sniff_worker的所有线程*/
 	for (i = 0; i < swift_worker_total; i++) {
-
 		thds++;
 
 		sniff_suspend_thread(swift_worker[i].mount, cond);

@@ -5,25 +5,23 @@
 #include <string>
 
 namespace easypr {
+	class Kv {
+public:
+		Kv();
 
-class Kv {
- public:
-  Kv();
+		void load(const std::string &file);
 
-  void load(const std::string &file);
+		std::string get(const std::string &key);
 
-  std::string get(const std::string &key);
+		void add(const std::string &key, const std::string &value);
 
-  void add(const std::string &key, const std::string &value);
+		void remove(const std::string &key);
 
-  void remove(const std::string &key);
+		void clear();
 
-  void clear();
-
- private:
-  std::map<std::string, std::string> data_;
-};
-
+private:
+		std::map <std::string, std::string> data_;
+	};
 }
+#endif	// EASYPR_UTIL_KV_H_
 
-#endif // EASYPR_UTIL_KV_H_

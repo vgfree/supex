@@ -41,7 +41,7 @@ static int insert_grid(int lon_num, int lat_num, int *lon_array, int *lat_array,
 	*(lat_array + *p_count) = lat_num;
 	(*p_count)++;
 
-        x_printf(D, "insert grid:%d&%d\n", lon_num, lat_num);
+	x_printf(D, "insert grid:%d&%d\n", lon_num, lat_num);
 
 	return 0;
 }
@@ -125,7 +125,7 @@ int map_grid_query(double lon, double lat, PMR_GRID_CB func_pmr_cb, void *arg)
 	for (i = 0; i < grid_count; i++) {
 		int32_t         grid_index = (grid_lat[i] - g_grid_manager.lat_begin) / 5 * g_grid_manager.lon_size + (grid_lon[i] - g_grid_manager.lon_begin) / 5;
 		map_grid_info   *p_grid_info = find_map_grid_index(&g_grid_manager.index_list, grid_index);
-                x_printf(D, "map_grid_query grid:%d&%d, index:%d,ptr:%p\n", grid_lon[i], grid_lat[i], grid_index, p_grid_info);
+		x_printf(D, "map_grid_query grid:%d&%d, index:%d,ptr:%p\n", grid_lon[i], grid_lat[i], grid_index, p_grid_info);
 
 		if (!p_grid_info) {
 			continue;

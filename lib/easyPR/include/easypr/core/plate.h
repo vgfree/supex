@@ -12,50 +12,76 @@
 #include "core_func.h"
 
 /*! \namespace easypr
-Namespace where all the C++ EasyPR functionality resides
-*/
+ *   Namespace where all the C++ EasyPR functionality resides
+ */
 namespace easypr {
+	class CPlate {
+public:
+		bool bColored;
 
-class CPlate {
- public:
-  bool bColored;
+		// ! 构造函数
 
-  //! 构造函数
+		CPlate();
 
-  CPlate();
+		// ! 设置与读取变量
 
-  //! 设置与读取变量
+		inline void setPlateMat(Mat param)
+		{
+			m_plateMat = param;
+		}
 
-  inline void setPlateMat(Mat param) { m_plateMat = param; }
-  inline Mat getPlateMat() const { return m_plateMat; }
+		inline Mat getPlateMat() const
+		{
+			return m_plateMat;
+		}
 
-  inline void setPlatePos(RotatedRect param) { m_platePos = param; }
-  inline RotatedRect getPlatePos() const { return m_platePos; }
+		inline void setPlatePos(RotatedRect param)
+		{
+			m_platePos = param;
+		}
 
-  inline void setPlateStr(String param) { m_plateStr = param; }
-  inline String getPlateStr() const { return m_plateStr; }
+		inline RotatedRect getPlatePos() const
+		{
+			return m_platePos;
+		}
 
-  inline void setPlateLocateType(LocateType param) { m_locateType = param; }
-  inline LocateType getPlateLocateType() const { return m_locateType; }
+		inline void setPlateStr(String param)
+		{
+			m_plateStr = param;
+		}
 
- private:
-  //! 车牌的图块
+		inline String getPlateStr() const
+		{
+			return m_plateStr;
+		}
 
-  Mat m_plateMat;
+		inline void setPlateLocateType(LocateType param)
+		{
+			m_locateType = param;
+		}
 
-  //! 车牌在原图的位置
+		inline LocateType getPlateLocateType() const
+		{
+			return m_locateType;
+		}
 
-  RotatedRect m_platePos;
+private:
+		// ! 车牌的图块
 
-  //! 车牌字符串
+		Mat m_plateMat;
 
-  String m_plateStr;
+		// ! 车牌在原图的位置
 
-  //! 车牌定位的方法
+		RotatedRect m_platePos;
 
-  LocateType m_locateType;
-};
+		// ! 车牌字符串
 
-} /*! \namespace easypr*/
+		String m_plateStr;
 
-#endif  // EASYPR_CORE_PLATE_H_
+		// ! 车牌定位的方法
+
+		LocateType m_locateType;
+	};
+}	/*! \namespace easypr*/
+#endif	// EASYPR_CORE_PLATE_H_
+

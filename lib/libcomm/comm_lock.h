@@ -12,12 +12,11 @@
 extern "C" {
 #endif
 
-
-     
-struct comm_lock{
-	bool		init;		/* 锁的初始化标志，1为已初始化 */
+struct comm_lock
+{
+	bool            init;		/* 锁的初始化标志，1为已初始化 */
 	pthread_mutex_t mutex;		/* 互斥量 */
-	pthread_cond_t	cond;		/* 条件变量 */
+	pthread_cond_t  cond;		/* 条件变量 */
 };
 
 /* 初始化锁 */
@@ -36,15 +35,13 @@ bool commlock_trylock(struct comm_lock *commlock);
 bool commlock_unlock(struct comm_lock *commlock);
 
 /* 等待@addr地址上的值变为@value或者@timeout超时返回，如果超时没有设置，则阻塞等待 @locked:调用此函数之前是否已经锁住此锁 */
-bool commlock_wait(struct comm_lock *commlock, int *addr,  int value, int timeout, bool locked);
+bool commlock_wait(struct comm_lock *commlock, int *addr, int value, int timeout, bool locked);
 
 /* 设置@addr地址上的值为@value并唤醒等待线程 @locked:在调用此函数之前是否已经锁住此锁 */
-bool commlock_wake(struct comm_lock *commlock, int *addr,  int value, bool locked);
+bool commlock_wake(struct comm_lock *commlock, int *addr, int value, bool locked);
 
-
-     
 #ifdef __cplusplus
-	}
-#endif 
+}
+#endif
+#endif	/* ifndef __COMM_LOCK_H__ */
 
-#endif /* ifndef __COMM_LOCK_H__ */

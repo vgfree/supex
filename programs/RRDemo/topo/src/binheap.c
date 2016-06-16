@@ -33,8 +33,8 @@ PriorityQueue Initialize(int MaxElements)
 
 	H->Capacity = MaxElements;
 	H->Size = 0;
-        H->lazy = 0;
-        H->count= 0;
+	H->lazy = 0;
+	H->count = 0;
 	H->Elements[0]->priority = MinData;
 
 	return H;
@@ -51,7 +51,7 @@ void Insert(ElementType X, PriorityQueue H)
 	}
 
 	for (i = ++H->Size; H->Elements[i / 2]->priority > X->priority; i /= 2) {	/* The new element is percolated up the heap  */
-		H->Elements[i] = H->Elements[i / 2];		/* until the correct location is found */
+		H->Elements[i] = H->Elements[i / 2];					/* until the correct location is found */
 	}
 
 	H->Elements[i] = X;
@@ -128,25 +128,29 @@ void Destroy(PriorityQueue H)
 
 void Update(PriorityQueue H, UpdateItem X)
 {
-        int num = 0;
+	int num = 0;
 
-        if( IsEmpty( H ) ) {
-            Error("PriorityQueue is Empty");
-            return;
-        }
-        
-        if( X <=0 ) {
-                printf("X <= 0 \n");
-                return;
-        }
+	if (IsEmpty(H)) {
+		Error("PriorityQueue is Empty");
+		return;
+	}
 
-        num = H->Size;
-        while(num > 0) {
-                printf("## id:%d priority:%d %d\n", H->Elements[num]->roadid, H->Elements[num]->priority, X);
-                H->Elements[num]->priority -= X;
-                if(H->Elements[num]->priority == 0)
-                        H->count++;
+	if (X <= 0) {
+		printf("X <= 0 \n");
+		return;
+	}
 
-                num--;
-        }
+	num = H->Size;
+
+	while (num > 0) {
+		printf("## id:%d priority:%d %d\n", H->Elements[num]->roadid, H->Elements[num]->priority, X);
+		H->Elements[num]->priority -= X;
+
+		if (H->Elements[num]->priority == 0) {
+			H->count++;
+		}
+
+		num--;
+	}
 }
+

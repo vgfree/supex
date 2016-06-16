@@ -6,20 +6,19 @@
 #include <opencv2/opencv.hpp>
 
 namespace easypr {
+	class CharsIdentify {
+public:
+		static CharsIdentify *instance();
 
-class CharsIdentify {
- public:
-  static CharsIdentify* instance();
+		std::pair <std::string, std::string> identify(cv::Mat input);
 
-  std::pair<std::string, std::string> identify(cv::Mat input);
+private:
+		CharsIdentify();
 
- private:
-  CharsIdentify();
-
-  static CharsIdentify* instance_;
-  cv::Ptr<cv::ml::ANN_MLP> ann_;
-  std::shared_ptr<Kv> kv_;
-};
+		static CharsIdentify            *instance_;
+		cv::Ptr <cv::ml::ANN_MLP>       ann_;
+		std::shared_ptr <Kv>            kv_;
+	};
 }
+#endif	//  EASYPR_CORE_CHARSIDENTIFY_H_
 
-#endif  //  EASYPR_CORE_CHARSIDENTIFY_H_

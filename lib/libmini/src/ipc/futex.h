@@ -28,7 +28,7 @@ bool futex_cond_wait(int *uaddr, int until, int trys);
 	({					       \
 		bool _ret = false;		       \
 		int _old = -1;			       \
-		_old = AO_SWAP((uptr), (cond));    \
+		_old = AO_SWAP((uptr), (cond));	       \
 		if (likely(_old != (cond))) {	       \
 			futex_wake((uptr), (waiters)); \
 			_ret = true;		       \
@@ -41,7 +41,7 @@ bool futex_cond_wait(int *uaddr, int until, int trys);
  */
 #define futex_add_signal(uptr, inc, waiters) \
 	STMT_BEGIN			     \
-	AO_ADD((uptr), (inc));	     \
+	AO_ADD((uptr), (inc));		     \
 	futex_wake((uptr), (waiters));	     \
 	STMT_END
 
@@ -50,7 +50,7 @@ bool futex_cond_wait(int *uaddr, int until, int trys);
  */
 #define futex_sub_signal(uptr, dec, waiters) \
 	STMT_BEGIN			     \
-	AO_SUB((uptr), (dec));	     \
+	AO_SUB((uptr), (dec));		     \
 	futex_wake((uptr), (waiters));	     \
 	STMT_END
 

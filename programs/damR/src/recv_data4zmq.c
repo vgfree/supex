@@ -43,11 +43,14 @@ void *recv_data4zmq(void *arg)
 
 		futex_set_signal((int *)&proc->stat, PROC_STAT_RUN, -1);
 		flag = futex_cond_wait((int *)&frame->stat, FRAME_STAT_RUN, 10);
-		if (unlikely(!flag)) ReturnValue(NULL);
+
+		if (unlikely(!flag)) {
+			ReturnValue(NULL);
+		}
 
 		New(io);
 		AssertError(io, ENOMEM);
-		
+
 		io->linger = 0;
 		io->type = SOCK_ZMQ_BIND;
 		io->zmq.ctx = zmq_ctx_new();
@@ -118,11 +121,11 @@ static void recv_data(struct evcoro_scheduler *scheduler, void *usr)
 	struct cfg                      *cfg = NULL;
 	struct zmqframe *volatile       zframe = NULL;
 	int                             zframes = 0;
-	
+
 	frame = proc->frame;
 	mq = frame->queue;
 	cfg = frame->cfg;
-	
+
 	ASSERTOBJ(mq);
 	ASSERTOBJ(cfg);
 
@@ -131,20 +134,25 @@ static void recv_data(struct evcoro_scheduler *scheduler, void *usr)
 
 	evcoro_cleanup_push(scheduler, (evcoro_destroycb)zmqframe_free, zframe);
 	x_printf(D, "start receive data ...");
-	
+
 	do {
 		zframes = read_zmqdata(io->zmq.skt, zframe);
+
 		if (likely(zframes > 0)) {
 			int     size = 0;
 			bool    flag = false;
-			
+
 			do {
 				// push into (file) queue
 				flag = mq->push(mq->queue, (char *)zframe, zframe->offset, &size);
-				if (likely(flag)) break;
+
+				if (likely(flag)) {
+					break;
+				}
+
 				evcoro_fastswitch(scheduler);
 			} while (1);
-			
+
 			AssertError(size == zframe->offset, ENOMEM);
 			futex_wake(mq->nodes, -1);
 			UNREFOBJ(zframe);

@@ -108,7 +108,7 @@ int tsdb_ldb_del(struct data_node *p_node)
 	int                     ok = 0;
 	char                    *p_buf = cache_data_address(&p_node->mdl_recv.cache);
 	struct redis_status     *p_rst = &p_node->mdl_recv.parse.redis_info.rs;
-	
+
 	if ((LDB_READONLY_SWITCH == 1) || (p_rst->fields < 1)) {
 		cache_append(&p_node->mdl_send.cache, OPT_CMD_ERROR, strlen(OPT_CMD_ERROR));
 		return X_EXECUTE_ERROR;

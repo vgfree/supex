@@ -46,7 +46,10 @@ void *send_data4zmq(void *arg)
 
 		futex_set_signal((int *)&proc->stat, PROC_STAT_RUN, -1);
 		flag = futex_cond_wait((int *)&frame->stat, FRAME_STAT_RUN, 10);
-		if (unlikely(!flag)) ReturnValue(NULL);
+
+		if (unlikely(!flag)) {
+			ReturnValue(NULL);
+		}
 
 		New(io);
 		AssertError(io, ENOMEM);
@@ -82,7 +85,7 @@ void *send_data4zmq(void *arg)
 	{
 		evcoro_destroy(proc->coroloop, NULL);
 		iohandle_destroy(io);
-		
+
 		x_printf(E, "send data thread `%ld` end.", proc->tid);
 	}
 	END;
@@ -99,11 +102,11 @@ static void send_idle(struct evcoro_scheduler *scheduler, void *usr)
 	struct queue    *queue = frame->queue;
 
 	x_printf(D, "check status of system.");
-	
+
 	ASSERTOBJ(queue);
 
 	if (unlikely((frame->stat != FRAME_STAT_RUN) ||
-		evcoro_actives(scheduler) < 1)) {
+		(evcoro_actives(scheduler) < 1))) {
 		evcoro_stop(proc->coroloop);
 	} else {
 		futex_wait(queue->nodes, 0, 1000);
@@ -113,12 +116,12 @@ static void send_idle(struct evcoro_scheduler *scheduler, void *usr)
 /*接收发送请求数据包*/
 static void recv_data(struct evcoro_scheduler *scheduler, void *usr)
 {
-	struct iohandle				*io = usr;
-	struct proc					*proc = NULL;
-	struct frame				*frame = NULL;
-	struct zmqframe *volatile	zframe = NULL;
-	struct  reqconn				*reqconn = NULL;
-	
+	struct iohandle                 *io = usr;
+	struct proc                     *proc = NULL;
+	struct frame                    *frame = NULL;
+	struct zmqframe *volatile       zframe = NULL;
+	struct  reqconn                 *reqconn = NULL;
+
 	assert(io);
 	proc = evcoro_get_usrdata(scheduler);
 	frame = proc->frame;
@@ -135,36 +138,41 @@ static void recv_data(struct evcoro_scheduler *scheduler, void *usr)
 		zframes = read_zmqdata(io->zmq.skt, zframe);
 		RAISE_SYS_ERROR(zframes);
 
-		if (likely(zframe->frames == 1 && sizeof(*reqconn) == zframe->frame[0])) {
-			struct  iohandle	*conn = NULL;
-			union evcoro_event	tevent = {};
-			
+		if (likely((zframe->frames == 1) && (sizeof(*reqconn) == zframe->frame[0]))) {
+			struct  iohandle        *conn = NULL;
+			union evcoro_event      tevent = {};
+
 			New(conn);
+
 			if (unlikely(!conn)) {
 				x_printf(W, "processor has used too much memory");
 				continue;
 			}
-			
+
 			int byte = 0;
 			byte = snprintf(conn->name, sizeof(conn->name), "tcp://%s:%d", reqconn->ipaddr, ntohs(reqconn->port));
 			AssertError(byte < sizeof(conn->name), ENOMEM);
-			
+
 			x_printf(D, "new request of connection `%s`", conn->name);
-			
+
 			/*延迟关闭*/
 			conn->linger = 2 * 1000;
 			conn->type = SOCK_ZMQ_CONN;
 			conn->zmq.ctx = io->zmq.ctx;
 			conn->usr = proc;
-			
+
 			bool flag = false;
 			flag = add_connection(conn);
-			
+
 			if (unlikely(flag)) {
 				/*新连接，则新增一个任务处理*/
 				while (1) {
 					flag = evcoro_push(scheduler, send_data, conn, 0);
-					if (likely(flag)) break;
+
+					if (likely(flag)) {
+						break;
+					}
+
 					evcoro_timer_init(&tevent, .5);
 					/*为防止切出后，协程随循环直接退出，则压入清理*/
 					evcoro_cleanup_push(scheduler, (evcoro_destroycb)iohandle_destroy, conn);
@@ -194,17 +202,17 @@ static void recv_data(struct evcoro_scheduler *scheduler, void *usr)
 	} while (1);
 
 	evcoro_cleanup_pop(scheduler, true);
-	
+
 	x_printf(W, "receive request data over.");
 }
 
 static void send_data(struct evcoro_scheduler *scheduler, void *usr)
 {
-	struct iohandle         *io = usr;
-	struct frame            *frame = NULL;
-	struct queue            *mq = NULL;
-	struct zmqframe         *zframe = NULL;
-	struct proc             *proc = io->usr;
+	struct iohandle *io = usr;
+	struct frame    *frame = NULL;
+	struct queue    *mq = NULL;
+	struct zmqframe *zframe = NULL;
+	struct proc     *proc = io->usr;
 
 	assert(io);
 	ASSERTOBJ(proc);
@@ -212,16 +220,16 @@ static void send_data(struct evcoro_scheduler *scheduler, void *usr)
 	ASSERTOBJ(frame);
 	mq = frame->queue;
 	ASSERTOBJ(mq);
-	
+
 	evcoro_cleanup_push(scheduler, (evcoro_destroycb)iohandle_destroy, io);
 	evcoro_cleanup_push(scheduler, (evcoro_destroycb)delete_connection, io);
 
 	zframe = zmqframe_new(mq->cellsize);
 	AssertError(zframe, ENOMEM);
 	evcoro_cleanup_push(scheduler, (evcoro_destroycb)zmqframe_free, zframe);
-	
+
 	x_printf(D, "start connect to %s", io->name);
-	
+
 	/*连接对端*/
 	io->zmq.skt = zmq_socket(io->zmq.ctx, ZMQ_PUSH);
 	AssertRaise(io->zmq.skt, EXCEPT_SYS);
@@ -231,19 +239,21 @@ static void send_data(struct evcoro_scheduler *scheduler, void *usr)
 
 	int rc = 0;
 	rc = zmq_connect(io->zmq.skt, io->name);
+
 	if (unlikely(rc < 0)) {
 		/*连接发送错误，断开连接*/
 		x_perror("zmq_connect() by `%s` error : %s", io->name, x_strerror(errno));
 		return;
 	}
-	
+
 	io->zmq.fd = get_zmqopt(io->zmq.skt, ZMQ_FD);
 	/*测试是否已经连接*/
-	union evcoro_event	wevent = {};
-	bool				flag = false;
+	union evcoro_event      wevent = {};
+	bool                    flag = false;
 	evcoro_io_init(&wevent, io->zmq.fd, .1);
-	
+
 	flag = evcoro_idleswitch(scheduler, &wevent, EVCORO_WRITE);
+
 	if (unlikely(!flag)) {
 		x_printf(W, "connect to %s timed out", io->name);
 		return;
@@ -251,8 +261,8 @@ static void send_data(struct evcoro_scheduler *scheduler, void *usr)
 
 	/*开始发送*/
 	do {
-		int size = 0;
-		int zframes = 0;
+		int     size = 0;
+		int     zframes = 0;
 		/*弹出一个待发送数据*/
 		flag = mq->pull(mq->queue, (char *)zframe, zframe->size, &size);
 
@@ -276,6 +286,7 @@ snd_again:
 			// slowly switch to another coroutine
 			evcoro_idleswitch(scheduler, &tevent, EVCORO_TIMER);
 			flag = check_zmqwrite(io->zmq.skt, 0);
+
 			if (likely(flag)) {
 				goto snd_again;
 			} else {

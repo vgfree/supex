@@ -12,8 +12,8 @@ extern struct sniff_cfg_list g_sniff_cfg_list;
 
 int swift_vms_call(void *user, union virtual_system **VMS, struct adopt_task_node *task)
 {
-	tlpool_t	*tlpool = user;
-	int idx = tlpool_get_thread_index(tlpool);
+	tlpool_t                *tlpool = user;
+	int                     idx = tlpool_get_thread_index(tlpool);
 	SWIFT_WORKER_PTHREAD    *p_swift_worker = (SWIFT_WORKER_PTHREAD *)&g_swift_worker_pthread[idx];
 	struct data_node        *p_node = get_pool_data(task->sfd);
 	char                    *p_buf = cache_data_address(&p_node->mdl_recv.cache);
@@ -41,8 +41,6 @@ int swift_vms_call(void *user, union virtual_system **VMS, struct adopt_task_nod
 	sniff_task.stamp = time(NULL);
 	sniff_task.size = p_hst->body_size;
 	memcpy(sniff_task.data, (const char *)(p_buf + p_hst->body_offset), p_hst->body_size);
-
-
 
 	g_sniff_cfg_list.task_report(p_swift_worker->mount, &sniff_task);
 	return 0;

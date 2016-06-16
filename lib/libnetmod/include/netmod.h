@@ -69,7 +69,7 @@ typedef struct _event_t
 	char    id[IDENTITY_SIZE];	/* Client unique identity. */
 	int     ev_type;		/* Event type, EV_XXX_(REQ|REP) */
 	int     ev_state;		/* Last event excute state. */
-	xlist_t  list;			/* List node for recv and send queue. */
+	xlist_t list;			/* List node for recv and send queue. */
 	union
 	{
 		/* Increment SQL request. */

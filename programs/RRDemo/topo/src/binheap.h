@@ -14,14 +14,14 @@
 #define MinData         (-32767)
 
 #define UpdateItem      int
-typedef struct vehicle_obj* ElementType;
+typedef struct vehicle_obj *ElementType;
 
 struct HeapStruct
 {
 	int             Capacity;
 	int             Size;
-        int             lazy;
-        int             count;
+	int             lazy;
+	int             count;
 	ElementType     *Elements;
 };
 

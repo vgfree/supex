@@ -18,35 +18,38 @@ EVCS_MODULE_SETUP(evcs, evcs_init, evcs_exit, &g_evcs_evts);
 #include "evcoro_async_tasks.h"
 #include "thread_pool_loop/tlpool.h"
 
-#define SET_DATA_PROCESS 0
+#define SET_DATA_PROCESS                0
 
-#define MAX_SET_DATA_PROCESS_NUMBER 2
+#define MAX_SET_DATA_PROCESS_NUMBER     2
 
-#define PROCESS_ID (MAX_SET_DATA_PROCESS_NUMBER + SET_DATA_PROCESS)
+#define PROCESS_ID                      (MAX_SET_DATA_PROCESS_NUMBER + SET_DATA_PROCESS)
 
 tlpool_t *tlpool = NULL;
 
 struct free_queue_list  glist;
-char TASK[64] = { 0 };
+char                    TASK[64] = { 0 };
 
-struct user_task {
+struct user_task
+{
 	int TASK;
 };
 
-struct user_data {
-	char *p_buf;
-	struct redis_status *status;
+struct user_data
+{
+	char                    *p_buf;
+	struct redis_status     *status;
 };
 
-struct user_data UserData; 
+struct user_data UserData;
 
 static bool task_lookup(void *user, void *task)
 {
-	tlpool_t *pool = user;
-	bool ok = false;
-	int idx = tlpool_get_thread_index(pool);
+	tlpool_t        *pool = user;
+	bool            ok = false;
+	int             idx = tlpool_get_thread_index(pool);
 
 	ok = tlpool_pull(pool, task, TLPOOL_TASK_SEIZE, idx);
+
 	if (ok) {
 		return ok;
 	}
@@ -56,21 +59,23 @@ static bool task_lookup(void *user, void *task)
 
 static bool task_report(void *user, void *task)
 {
-	tlpool_t *pool = user;
-	bool ok = false;
+	tlpool_t        *pool = user;
+	bool            ok = false;
+
 	ok = tlpool_push(pool, task, TLPOOL_TASK_SEIZE, NULL);
 	return ok;
 }
 
 static void __ConfigSetProcess()
 {
-	int i = 0;
-	struct user_task task;
-	if (UserData.p_buf == NULL || UserData.status == NULL) {
+	int                     i = 0;
+	struct user_task        task;
+
+	if ((UserData.p_buf == NULL) || (UserData.status == NULL)) {
 		printf("Did not get data yet !\n");
 		return;
 	}
-	
+
 	if (!tlpool) {
 		printf("The point of process pool is invalid.\n");
 		exit(0);
@@ -81,15 +86,16 @@ static void __ConfigSetProcess()
 	while (i-- > 1) {
 		printf("Start set data process, taskid = %d\n", i);
 		task.TASK = i;
-		//sprintf(task.TASK, "task %d", i);
+		// sprintf(task.TASK, "task %d", i);
 		task_report(tlpool, &task);
 	}
 }
 
 void GetData_task()
 {
-	int len = 0;
-	char *proto = NULL;
+	int     len = 0;
+	char    *proto = NULL;
+
 	UserData.p_buf = NULL;
 	UserData.status = NULL;
 
@@ -105,24 +111,25 @@ void GetData_task()
 
 	printf("%.*s", command->cache.end - command->cache.start, &command->cache.buff[command->cache.start]);
 	UserData.p_buf = cache_data_address(&command->cache);
-        UserData.status = &command->parse.redis_info.rs;
+	UserData.status = &command->parse.redis_info.rs;
 	printf("redis data fields = %d\n", UserData.status->fields);
 
 	__ConfigSetProcess();
-	
+
 	evtask_distory(tasker);
 }
 
 void *SetData_task_handle(struct supex_evcoro *evcoro, void *step)
 {
-	int len = 0;
-	char *proto = NULL;
-	char *time = "20160616104";
+	int     len = 0;
+	char    *proto = NULL;
+	char    *time = "20160616104";
 
-	int idx_task = (int)(uintptr_t)step;
-	struct user_task *p_task = &((struct user_task *)evcoro->task)[idx_task];
+	int                     idx_task = (int)(uintptr_t)step;
+	struct user_task        *p_task = &((struct user_task *)evcoro->task)[idx_task];
 
 	char *userName = malloc(UserData.status->field[p_task->TASK - 1].len + 1);
+
 	memset(userName, 0, UserData.status->field[p_task->TASK - 1].len + 1);
 	memcpy(userName, UserData.p_buf + UserData.status->field[p_task->TASK - 1].offset, UserData.status->field[p_task->TASK - 1].len);
 
@@ -136,43 +143,43 @@ void *SetData_task_handle(struct supex_evcoro *evcoro, void *step)
 
 void SetDataWork(void *data)
 {
-        /*load module*/
-        EVCS_MODULE_MOUNT(kernel);
-        EVCS_MODULE_ENTRY(kernel, true);
+	/*load module*/
+	EVCS_MODULE_MOUNT(kernel);
+	EVCS_MODULE_ENTRY(kernel, true);
 
-        struct evcs_argv_settings sets = {
-                .num    = MAX_SET_DATA_PROCESS_NUMBER /*协程数*/
-                , .tsz  = sizeof(struct user_task)
-                , .data = data
-                , .task_lookup= task_lookup
-                , .task_handle= (void (*)(void *data,        void *addr))SetData_task_handle
-        };
-        EVCS_MODULE_CARRY(evcs, &sets);
-        EVCS_MODULE_MOUNT(evcs);
-        EVCS_MODULE_ENTRY(evcs, true);
+	struct evcs_argv_settings sets = {
+		.num    = MAX_SET_DATA_PROCESS_NUMBER	/*协程数*/
+		, .tsz  = sizeof(struct user_task)
+		, .data = data
+		, .task_lookup= task_lookup
+		, .task_handle= (void (*)(void *data,        void *addr))SetData_task_handle
+	};
+	EVCS_MODULE_CARRY(evcs, &sets);
+	EVCS_MODULE_MOUNT(evcs);
+	EVCS_MODULE_ENTRY(evcs, true);
 
-        EVCS_MODULE_START();
+	EVCS_MODULE_START();
 }
 
 static void exitFunction(tlpool_t *tlpool)
 {
 	sleep(3);
-        printf("stop!\n");
-        tlpool_stop(tlpool);
+	printf("stop!\n");
+	tlpool_stop(tlpool);
 
-        sleep(6);
-        printf("cont!\n");
-        tlpool_cont(tlpool);
+	sleep(6);
+	printf("cont!\n");
+	tlpool_cont(tlpool);
 
-        sleep(7);
-        printf("exit!\n");
-        tlpool_exit(tlpool);
+	sleep(7);
+	printf("exit!\n");
+	tlpool_exit(tlpool);
 
-        sleep(1);
-        tlpool_wait(tlpool);
+	sleep(1);
+	tlpool_wait(tlpool);
 
-        sleep(1);
-        tlpool_free(tlpool);
+	sleep(1);
+	tlpool_free(tlpool);
 }
 
 static int StartTime = 1466064900;
@@ -180,15 +187,16 @@ static int StartTime = 1466064900;
 void TimeProcessFunction(startTime)
 {
 	printf("enter TimeProcessFunction\n");
-	time_t t;
-    	int currentTime;
+	time_t  t;
+	int     currentTime;
+
 	if (time(&t) > startTime) {
 		printf("startTime is incorrent !\n");
 		exit(0);
 	}
 
 	while ((currentTime = time(&t)) < startTime) {
-		sleep(0.2);		
+		sleep(0.2);
 	}
 
 	StartTime += 60;
@@ -207,7 +215,7 @@ static bool task_report_main(void *user, void *task)
 
 void *getData_task_handle()
 {
-	while(1) {
+	while (1) {
 		TimeProcessFunction(StartTime);
 		GetData_task();
 		sleep(1);
@@ -217,36 +225,38 @@ void *getData_task_handle()
 int main(void)
 {
 	int processIndex;
-	conn_xpool_init("192.168.1.12", 9001, 10, true);  //redis, for get data process
-	tlpool = tlpool_init(PROCESS_ID, 100, sizeof(struct user_task), NULL);	
+
+	conn_xpool_init("192.168.1.12", 9001, 10, true);	// redis, for get data process
+	tlpool = tlpool_init(PROCESS_ID, 100, sizeof(struct user_task), NULL);
 
 	for (processIndex = SET_DATA_PROCESS; processIndex < PROCESS_ID; processIndex++) {
 		tlpool_bind(tlpool, (void (*)(void *))SetDataWork, tlpool, processIndex);
-	}	
+	}
 
 	tlpool_boot(tlpool);
 
 	free_queue_init(&glist, sizeof(TASK), 8);
 	task_report_main(NULL, TASK);
-        /*load module*/
-        EVCS_MODULE_MOUNT(kernel);
-        EVCS_MODULE_ENTRY(kernel, true);
+	/*load module*/
+	EVCS_MODULE_MOUNT(kernel);
+	EVCS_MODULE_ENTRY(kernel, true);
 
 	struct evcs_argv_settings sets = {
 		.num    = 1
 		, .tsz  = sizeof(TASK)
 		, .data = NULL
 		, .task_lookup= task_lookup_main
-                , .task_handle= (void (*)(void *data,        void *addr))getData_task_handle
+		, .task_handle= (void (*)(void *data,        void *addr))getData_task_handle
 	};
-        EVCS_MODULE_CARRY(evcs, &sets);
-        EVCS_MODULE_MOUNT(evcs);
-        EVCS_MODULE_ENTRY(evcs, true);
+	EVCS_MODULE_CARRY(evcs, &sets);
+	EVCS_MODULE_MOUNT(evcs);
+	EVCS_MODULE_ENTRY(evcs, true);
 
-        EVCS_MODULE_START();
+	EVCS_MODULE_START();
 
 	exitFunction(tlpool);
 	sleep(2);
 
 	return 0;
 }
+

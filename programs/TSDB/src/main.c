@@ -13,8 +13,8 @@
 #include "tsdb_cfg.h"
 #include "tsdb_entry.h"
 
-#define DEFINE_LDB_CMD_LIST(name)					   \
-	static struct cmd_list s_##name##_cmd_list[] = {		   \
+#define DEFINE_LDB_CMD_LIST(name)					  \
+	static struct cmd_list s_##name##_cmd_list[] = {		  \
 		{ SET_FUNC_ORDER,     (TASK_VMS_FCB)name##_ldb_set     }, \
 		{ DEL_FUNC_ORDER,     (TASK_VMS_FCB)name##_ldb_del     }, \
 		{ MSET_FUNC_ORDER,    (TASK_VMS_FCB)name##_ldb_mset    }, \

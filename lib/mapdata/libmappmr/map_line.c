@@ -27,13 +27,13 @@ int map_line_load(char *line_file)
 		return -1;
 	}
 
-        ptr_line_manager = (map_line_manager *)calloc(1, sizeof(struct map_line_manager));
+	ptr_line_manager = (map_line_manager *)calloc(1, sizeof(struct map_line_manager));
 
-        if (NULL == ptr_line_manager) {
+	if (NULL == ptr_line_manager) {
 		return -1;
 	}
 
-        map_line_load_file(line_file, ptr_line_manager, LOAD_STEP);
+	map_line_load_file(line_file, ptr_line_manager, LOAD_STEP);
 
 	return 0;
 }
@@ -46,22 +46,22 @@ int map_line_load(char *line_file)
  */
 map_line_info *map_line_query(unsigned int line_id)
 {
-        if ((line_id <= 0) || (ptr_line_manager->max_line_id < line_id) || (line_id < ptr_line_manager->min_line_id)) {
+	if ((line_id <= 0) || (ptr_line_manager->max_line_id < line_id) || (line_id < ptr_line_manager->min_line_id)) {
 		return NULL;
 	}
 
-        if (NULL == ptr_line_manager) {
+	if (NULL == ptr_line_manager) {
 		return NULL;
 	}
 
-        int64_t temp_line_id = line_id - ptr_line_manager->min_line_id;
+	int64_t temp_line_id = line_id - ptr_line_manager->min_line_id;
 
 	if (temp_line_id < 0) {
 		return NULL;
 	}
 
 	int64_t         arry_offset = temp_line_id / LOAD_STEP;
-        map_line_info   **back_temp = ptr_line_manager->ptr_arry + arry_offset;
+	map_line_info   **back_temp = ptr_line_manager->ptr_arry + arry_offset;
 
 	if (NULL == *back_temp) {
 		return NULL;
@@ -89,13 +89,13 @@ map_line_info *map_line_query(unsigned int line_id)
  */
 int map_line_destory()
 {
-        if (NULL == ptr_line_manager) {
+	if (NULL == ptr_line_manager) {
 		return 0;
 	}
 
-        map_line_manager_destory(ptr_line_manager);
-        free(ptr_line_manager);
-        ptr_line_manager = NULL;
+	map_line_manager_destory(ptr_line_manager);
+	free(ptr_line_manager);
+	ptr_line_manager = NULL;
 	return 0;
 }
 

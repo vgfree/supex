@@ -12,7 +12,6 @@
 #include "pmr_cfg.h"
 #include "map_line_file.h"
 
-
 #define GRID_BORDER_LIMIT 0.00025
 
 // int map_line_load(map_line_load_cfg *p_cfg);

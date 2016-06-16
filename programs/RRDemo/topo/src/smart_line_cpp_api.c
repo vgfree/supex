@@ -10,7 +10,7 @@
 #include "smart_api.h"
 #include "utils.h"
 
-extern PriorityQueue g_H; 
+extern PriorityQueue g_H;
 
 int insert_call(void *user, void *task)
 {
@@ -20,16 +20,18 @@ int insert_call(void *user, void *task)
 	char                    *p_buf = p_node->recv.buf_addr;
 	struct http_status      *p_rst = &p_node->http_info.hs;
 
-        //printf("%s\n", p_buf);
+	// printf("%s\n", p_buf);
 
-        VEHICLE_OBJ *veh = ( VEHICLE_OBJ* )malloc( sizeof(VEHICLE_OBJ) );//FIXME 内存未释放
-        memset(veh, 0, sizeof(veh));
+	VEHICLE_OBJ *veh = (VEHICLE_OBJ *)malloc(sizeof(VEHICLE_OBJ));	// FIXME 内存未释放
 
-        int ret = decode_data((const char *)(p_node->recv.buf_addr + p_rst->body_offset), veh);
-        if (ret > 0) {
-                update_priority(veh);
-        }
-        
+	memset(veh, 0, sizeof(veh));
+
+	int ret = decode_data((const char *)(p_node->recv.buf_addr + p_rst->body_offset), veh);
+
+	if (ret > 0) {
+		update_priority(veh);
+	}
+
 	return 0;
 }
 

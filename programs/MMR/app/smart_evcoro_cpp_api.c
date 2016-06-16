@@ -47,7 +47,6 @@ int smart_vms_gain_ext(void *user, union virtual_system **VMS, struct adopt_task
 	return 0;
 }
 
-
 int smart_vms_sync_ext(void *user, union virtual_system **VMS, struct adopt_task_node *task)
 {
 	if (task->last != true) {
@@ -84,7 +83,6 @@ int smart_vms_sync_ext(void *user, union virtual_system **VMS, struct adopt_task
 	return 0;
 }
 
-
 int smart_vms_monitor_ext(void *user, union virtual_system **VMS, struct adopt_task_node *task)
 {
 	if (task->last != true) {
@@ -103,7 +101,7 @@ int smart_vms_monitor_ext(void *user, union virtual_system **VMS, struct adopt_t
 		sniff_task.type = BIT8_TASK_TYPE_WHOLE;
 		sniff_task.origin = task->origin;
 		sniff_task.func = (SNIFF_VMS_FCB)sniff_vms_monitor;	// fix to use xxxx;
-		sniff_task.last = (i == (m - 1)) ? true : false;		// FIXME
+		sniff_task.last = (i == (m - 1)) ? true : false;	// FIXME
 		sniff_task.stamp = time(NULL);
 		sniff_task.size = 0;
 

@@ -14,7 +14,6 @@
 #include "calculate_data.h"
 #include "cache/cache.h"
 
-
 #if TEST
 AO_T g_TestCnt = 0;
 #endif
@@ -51,7 +50,10 @@ void *route_data(void *usr)
 		/* wait main thread*/
 		futex_set_signal((int *)&proc->stat, PROC_STAT_RUN, 1);
 		flag = futex_cond_wait((int *)&proc->frame->stat, FRAME_STAT_RUN, 10);
-		if (unlikely(!flag)) ReturnValue(NULL);
+
+		if (unlikely(!flag)) {
+			ReturnValue(NULL);
+		}
 
 		x_printf(D, "route thread `%ld` start.", proc->tid);
 
@@ -82,25 +84,25 @@ void *route_data(void *usr)
 void start_route_data(struct taskdata *data)
 {
 	assert(data);
-	
-	struct allcfg*					cfg = data->cfg;
-	bool							ischeckfd = cfg->ischeckfd;
+
+	struct allcfg                   *cfg = data->cfg;
+	bool                            ischeckfd = cfg->ischeckfd;
 	struct async_ctx *volatile      ac = NULL;
-	volatile int					i = 0;
+	volatile int                    i = 0;
 	TRY
 	{
 		_route_make_rtdata(data);
 		data->acounter = 0;
 		data->needcts = 0;
-		
+
 		ac = async_initial(data->proc->evloop, QUEUE_TYPE_CORO,
 				_route_fail, _route_all_finish, data, 0);
 		AssertError(ac, ENOMEM);
 
 		for (i = 0; i < data->rthosts; i++) {
 			if (unlikely(!data->rtdata[i].host ||
-						 /*有失败的情况*/
-						 data->rtdata[i].host->errconn != 0)) {
+				/*有失败的情况*/
+				(data->rtdata[i].host->errconn != 0))) {
 				continue;
 			}
 
@@ -110,35 +112,37 @@ void start_route_data(struct taskdata *data)
 					data->rtdata[i].host->ip,
 					data->rtdata[i].host->port,
 					(void **)&data->rtdata[i].fd);
+
 			/*保证描述符没有被对端关闭*/
-			if (unlikely(ischeckfd && rc == POOL_API_OK &&
-						 SF_IsClosed((int)data->rtdata[i].fd))) {
-			check_fd:
+			if (unlikely(ischeckfd && (rc == POOL_API_OK) &&
+				SF_IsClosed((int)data->rtdata[i].fd))) {
+check_fd:
 				conn_xpool_free(data->rtdata[i].cntpool,
-							  (void **)&data->rtdata[i].fd);
+					(void **)&data->rtdata[i].fd);
 				rc = conn_xpool_pull(data->rtdata[i].cntpool,
-								   (void **)&data->rtdata[i].fd);
+						(void **)&data->rtdata[i].fd);
 			}
-			
+
 			if (likely(rc == POOL_API_OK)) {
 				if (unlikely(ischeckfd &&
-							 SF_IsClosed((int)data->rtdata[i].fd))) {
+					SF_IsClosed((int)data->rtdata[i].fd))) {
 					goto check_fd;
 				}
 			} else {
 				if (unlikely(rc == POOL_API_ERR_OP_FAIL)) {
 					AO_INC(&data->rtdata[i].host->errconn);
 					x_printf(E, "can't connect %s:%d",
-							 data->rtdata[i].host->ip,
-							 data->rtdata[i].host->port);
+						data->rtdata[i].host->ip,
+						data->rtdata[i].host->port);
 				} else {
 					x_printf(W, "the pool of connection (%s:%d) is full",
-							 data->rtdata[i].host->ip,
-							 data->rtdata[i].host->port);
+						data->rtdata[i].host->ip,
+						data->rtdata[i].host->port);
 				}
+
 				continue;
 			}
-			
+
 			async_command(ac, data->rtdata[i].proto,
 				(int)data->rtdata[i].fd,
 				data->rtdata[i].cntpool,
@@ -163,7 +167,7 @@ void start_route_data(struct taskdata *data)
 		if (errno == ECONNREFUSED) {
 			/*连接失败计数*/
 		}
-		
+
 		x_printf(W, "route data fail by `%p`!!!", data);
 
 		if (unlikely(ac)) {
@@ -181,19 +185,19 @@ static void _route_idle(struct ev_loop *loop, ev_idle *idle, int event)
 	struct taskdata *volatile       data = NULL;
 	MemQueueT                       mqueue = NULL;
 	SQueueT                         squeue = NULL;
-	struct allcfg					*cfg = NULL;
+	struct allcfg                   *cfg = NULL;
 	bool                            flag = false;
 
 	assert(proc);
 	cfg = proc->cfg;
 	assert(cfg);
-	
+
 	TRY
 	{
 		mqueue = proc->frame->queue;
 		squeue = mqueue->data;
 
-		//x_printf(D, "get route data idle ...");
+		// x_printf(D, "get route data idle ...");
 
 		if (proc->frame->stat != FRAME_STAT_RUN) {
 			ev_idle_stop(loop, idle);
@@ -202,7 +206,9 @@ static void _route_idle(struct ev_loop *loop, ev_idle *idle, int event)
 		}
 
 		/* 是否已达到最大处理数*/
-		if (unlikely(proc->dealtasks >= cfg->paralleltasks)) ReturnVoid();
+		if (unlikely(proc->dealtasks >= cfg->paralleltasks)) {
+			ReturnVoid();
+		}
 
 		/* pull source data from queue*/
 		flag = MEM_QueuePull(mqueue, (char *)&data, sizeof(data), NULL);
@@ -218,6 +224,7 @@ static void _route_idle(struct ev_loop *loop, ev_idle *idle, int event)
 		/* modify owner of data*/
 		assert(data);
 		data->proc = proc;
+
 		/* 决定是否需要中间计算过程*/
 		if (cfg->calculate) {
 			start_calculate_data(data);
@@ -265,85 +272,90 @@ static const char RTDATA_TEMPLATE[] =
 
 static void _route_make_rtdata(struct taskdata *task)
 {
-	struct cache 	json = { };
+	struct cache json = {};
+
 	AssertError(task->rthost && task->rthosts > 0, EINVAL);
 
 	TRY
 	{
 		/*确定组合所有待发送数据的长度*/
 		/*组合所有待发送数据为一个json*/
-		int				i = 0;
-		bool			flag = false;
-		ssize_t			size = 0;
+		int             i = 0;
+		bool            flag = false;
+		ssize_t         size = 0;
 		const char      *start = NULL;
 		const char      *end = NULL;
-		
+
 		flag = cache_initial(&json);
 		AssertError(flag, ENOMEM);
-		
+
 		size = cache_append(&json, "{", 1);
 		RAISE_SYS_ERROR(size);
-		
+
 		/*仅发送json数据*/
 		/*原数据*/
 		if (likely(cache_data_length(&task->src.cache) > 0)) {
 			start = x_strchr(cache_data_address(&task->src.cache),
-							 cache_data_length(&task->src.cache), '{');
+					cache_data_length(&task->src.cache), '{');
 			AssertRaise(start, EXCEPT_RCVDATA_FAIL);
 			end = x_strrchr(cache_data_address(&task->src.cache),
-							cache_data_length(&task->src.cache), '}');
+					cache_data_length(&task->src.cache), '}');
 			AssertRaise(end && start + 1 < end, EXCEPT_RCVDATA_FAIL);
 			cache_appendf(&json, "%.*s", (int)(end - start - 1), start + 1);
 		}
+
 		/*计算数据*/
 		for (i = 0; i < task->caldatas; i++) {
 			start = x_strchr(cache_data_address(&task->caldata[i].cache),
-							 cache_data_length(&task->caldata[i].cache), '{');
+					cache_data_length(&task->caldata[i].cache), '{');
 			AssertRaise(start, EXCEPT_RCVDATA_FAIL);
 			end = x_strrchr(cache_data_address(&task->caldata[i].cache),
-							cache_data_length(&task->caldata[i].cache), '}');
+					cache_data_length(&task->caldata[i].cache), '}');
 			AssertRaise(end && start + 1 < end, EXCEPT_RCVDATA_FAIL);
 			size = cache_appendf(&json, ",%.*s", (int)(end - start - 1), start + 1);
 			RAISE_SYS_ERROR(size);
 		}
-		
+
 		size = cache_append(&json, "}", 1);
 		RAISE_SYS_ERROR(size);
-		
+
 		x_printf(I, "body of route data : %.*s",
-				 cache_data_length(&json),
-				 cache_data_address(&json));
-		
+			cache_data_length(&json),
+			cache_data_address(&json));
+
 		task->rtdatas = task->rthosts;
 		NewArray0(task->rtdatas, task->rtdata);
 		AssertError(task->rtdata, ENOMEM);
-		
+
 		for (i = 0; i < task->rthosts; i++) {
 			/*初始化路由缓冲信息*/
 			struct hostentry *host = task->rthost[i];
-			
-			if (unlikely(!host)) continue;
+
+			if (unlikely(!host)) {
+				continue;
+			}
+
 			task->rtdata[i].fd = -1;
 			task->rtdata[i].task = task;
 			task->rtdata[i].host = host;
 			task->rtdata[i].proto = host->proto;
-			
+
 			flag = cache_initial(&task->rtdata[i].cache);
 			AssertRaise(flag, EXCEPT_SYS);
-			
+
 			if (likely(host->proto == PROTO_TYPE_HTTP)) {
 				size = cache_appendf(&task->rtdata[i].cache, RTDATA_TEMPLATE,
-									 host->url ? host->url : RTDATA_URL,
-									 host->ip, host->port,
-									 cache_data_length(&json));
+						host->url ? host->url : RTDATA_URL,
+						host->ip, host->port,
+						cache_data_length(&json));
 				RAISE_SYS_ERROR(size);
 				size = cache_append(&task->rtdata[i].cache,
-									cache_data_address(&json),
-									cache_data_length(&json));
-				
+						cache_data_address(&json),
+						cache_data_length(&json));
+
 				x_printf(I, "route data : %.*s",
-						 cache_data_length(&task->rtdata[i].cache),
-						 cache_data_address(&task->rtdata[i].cache));
+					cache_data_length(&task->rtdata[i].cache),
+					cache_data_address(&task->rtdata[i].cache));
 			} else {
 				RAISE_SYS_ERROR_ERRNO(ENOPROTOOPT);
 			}

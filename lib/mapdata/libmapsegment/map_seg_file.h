@@ -21,7 +21,7 @@ typedef struct file_seg_info
 	uint8_t         sgid_id;		// 路段奇偶编号
 	uint8_t         sgid;			// SG编号
 	uint8_t         next_sgid;		//下一路SGID
-        uint32_t        countyCode;
+	uint32_t        countyCode;
 	uint64_t        next_rrid;		//下一路段编号
 	uint64_t        rrid;			// 路段编号
 	uint64_t        name_id;		// 道路名称编号

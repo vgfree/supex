@@ -58,26 +58,26 @@ void InitProcess();
 /*
  * 回收进程
  */
-#define     ForkWaitProcess(pid, wait)					      \
-	do {								      \
-		int     _pStat = -1;					      \
-		pid_t   _pid;						      \
-		_pid = waitpid((pid), &_pStat, (wait) ? 0 : WNOHANG);	      \
-		if (unlikely(_pid < 0)) {				      \
-			if (likely(errno == EINTR)) {			      \
-				continue;				      \
-			} else {					      \
-				RAISE(EXCEPT_SYS);			      \
-			}						      \
-		}							      \
-		if (likely((_pid == pid) && WIFEXITED(_pStat) &&	      \
-			(WEXITSTATUS(_pStat) == EXIT_SUCCESS))) {	      \
+#define     ForkWaitProcess(pid, wait)					   \
+	do {								   \
+		int     _pStat = -1;					   \
+		pid_t   _pid;						   \
+		_pid = waitpid((pid), &_pStat, (wait) ? 0 : WNOHANG);	   \
+		if (unlikely(_pid < 0)) {				   \
+			if (likely(errno == EINTR)) {			   \
+				continue;				   \
+			} else {					   \
+				RAISE(EXCEPT_SYS);			   \
+			}						   \
+		}							   \
+		if (likely((_pid == pid) && WIFEXITED(_pStat) &&	   \
+			(WEXITSTATUS(_pStat) == EXIT_SUCCESS))) {	   \
 			x_pdebug("Child process [%d] normal exit.", _pid); \
-		} else {						      \
+		} else {						   \
 			x_pdebug("Child process [%d] exit by %d.", _pid,   \
-				WEXITSTATUS(_pStat));			      \
-		}							      \
-		break;							      \
+				WEXITSTATUS(_pStat));			   \
+		}							   \
+		break;							   \
 	} while (1)
 
 /*

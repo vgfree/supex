@@ -5,36 +5,41 @@
 
 #define MAX_STRING_SIZE 50
 
-struct string {
-  char buf[MAX_STRING_SIZE];
-  int size;
+struct string
+{
+	char    buf[MAX_STRING_SIZE];
+	int     size;
 };
 
-struct string_pair {
-  struct string key;
-  struct string value;
+struct string_pair
+{
+	struct string   key;
+	struct string   value;
 };
 
-struct string_map {
-  struct string_pair *pair;
-  int cap;
-  int max_valid;
+struct string_map
+{
+	struct string_pair      *pair;
+	int                     cap;
+	int                     max_valid;
 };
 
 struct config_reader
 {
-  int m_load_ok;
-  struct string_map m_config_map;
-  char m_config_file[MAX_STRING_SIZE];
+	int                     m_load_ok;
+	struct string_map       m_config_map;
+	char                    m_config_file[MAX_STRING_SIZE];
 };
 
 int get_ip(const char *src, char *dest);
 
-struct config_reader* init_config_reader(const char *filename);
+struct config_reader    *init_config_reader(const char *filename);
+
 void destroy_config_reader(struct config_reader *config);
 
-char* get_config_name(struct config_reader *config, const char* name);
-int set_config_value(struct config_reader *config,
-                     const char *name, const char*  value);
+char *get_config_name(struct config_reader *config, const char *name);
 
-#endif /* _CONFIG_READER_H_ */
+int set_config_value(struct config_reader *config,
+	const char *name, const char *value);
+#endif	/* _CONFIG_READER_H_ */
+

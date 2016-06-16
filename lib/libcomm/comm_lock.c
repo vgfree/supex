@@ -13,14 +13,15 @@ bool commlock_init(struct comm_lock *commlock)
 	if (pthread_mutex_init(&commlock->mutex, NULL) != 0) {
 		return false;
 	}
+
 	if (pthread_cond_init(&commlock->cond, NULL) != 0) {
 		pthread_mutex_destroy(&commlock->mutex);
 		return false;
 	}
+
 	commlock->init = true;
 	return true;
 }
-
 
 inline bool commlock_lock(struct comm_lock *commlock)
 {
@@ -34,29 +35,27 @@ inline bool commlock_trylock(struct comm_lock *commlock)
 	return pthread_mutex_trylock(&commlock->mutex) == 0;
 }
 
-
 inline bool commlock_unlock(struct comm_lock *commlock)
 {
 	assert(commlock && commlock->init);
 	return pthread_mutex_unlock(&commlock->mutex) == 0;
 }
 
-void  commlock_destroy(struct comm_lock *commlock)
+void commlock_destroy(struct comm_lock *commlock)
 {
 	if (commlock && commlock->init) {
 		pthread_mutex_destroy(&commlock->mutex);
 		pthread_cond_destroy(&commlock->cond);
 		commlock->init = false;
 	}
-	return ;
 }
 
 /* @返回值:true 等到的条件成立，即@addr地址的上已经被改变为@value, false：等待条件未成立*/
-bool commlock_wait(struct comm_lock *commlock, int *addr,  int value, int timeout, bool locked)
+bool commlock_wait(struct comm_lock *commlock, int *addr, int value, int timeout, bool locked)
 {
 	assert(commlock && commlock->init && addr);
 
-	bool	flag = true;
+	bool flag = true;
 
 	if (!locked) {
 		/* 调用此函数之前此锁未被调用该函数的函数锁住 */
@@ -64,6 +63,7 @@ bool commlock_wait(struct comm_lock *commlock, int *addr,  int value, int timeou
 			return false;
 		}
 	}
+
 	if (*addr != value) {
 		if (timeout > 0) {
 			struct timespec tm = {};
@@ -73,12 +73,14 @@ bool commlock_wait(struct comm_lock *commlock, int *addr,  int value, int timeou
 		} else {
 			pthread_cond_wait(&commlock->cond, &commlock->mutex);
 		}
+
 		if (*addr == value) {
 			flag = true;
 		} else {
 			flag = false;
 		}
 	}
+
 	if (!locked) {
 		pthread_mutex_unlock(&commlock->mutex);
 	}
@@ -86,12 +88,12 @@ bool commlock_wait(struct comm_lock *commlock, int *addr,  int value, int timeou
 	return flag;
 }
 
-bool commlock_wake(struct comm_lock *commlock, int *addr,  int value, bool locked)
+bool commlock_wake(struct comm_lock *commlock, int *addr, int value, bool locked)
 {
 	assert(commlock && commlock->init && addr);
 
-	int  old =  -1;
-	bool flag = false;
+	int     old = -1;
+	bool    flag = false;
 
 	if (!locked) {
 		/* 调用此函数之前此锁未被调用该函数的函数锁住 */
@@ -102,17 +104,19 @@ bool commlock_wake(struct comm_lock *commlock, int *addr,  int value, bool locke
 
 	/* 原子设置@addr地址上的值为@value*/
 	old = ATOMIC_SWAP(addr, value);
+
 	if (likely(old != value)) {
 		/* 返回的值为@addr地址上的旧值，说明设置成功,唤醒等待线程 */
 		pthread_cond_broadcast(&commlock->cond);
 		flag = true;
 	}
+
 	if (!locked) {
 		pthread_mutex_unlock(&commlock->mutex);
-	} 
+	}
+
 	return flag;
 }
-
 
 /* 填充绝对时间，精度为毫秒 */
 static void _fill_absolute_time(struct timespec *tmspec, long value)
@@ -123,8 +127,10 @@ static void _fill_absolute_time(struct timespec *tmspec, long value)
 
 	tmspec->tv_sec += value / 1000;
 	tmspec->tv_nsec = (long)((value % 1000) * 1000000);
+
 	if (tmspec->tv_nsec > 1000000000) {
 		tmspec->tv_sec += 1;
 		tmspec->tv_nsec -= 1000000000;
 	}
 }
+

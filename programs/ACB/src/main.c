@@ -28,9 +28,9 @@ struct child_cfg_list   g_child_cfg_list = {};
 
 void msmq_share_cb(struct ev_loop *loop, ev_io *w, int revents)
 {
-	        int n = msmq_call();
+	int n = msmq_call();
 
-		        x_printf(D, "done shell cntl %d", n);
+	x_printf(D, "done shell cntl %d", n);
 }
 
 static void child_init(void)

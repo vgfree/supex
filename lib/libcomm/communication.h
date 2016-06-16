@@ -12,10 +12,8 @@
 extern "C" {
 #endif
 
-
-
 /* 创建一个通信上下文的结构体 */
-struct comm_context* comm_ctx_create(int epollsize);
+struct comm_context     *comm_ctx_create(int epollsize);
 
 /* 销毁一个通信上下文的结构体 */
 void comm_ctx_destroy(struct comm_context *commctx);
@@ -36,7 +34,7 @@ void comm_close(struct comm_context *commctx, int fd);
 void comm_settimeout(struct comm_context *commctx, int timeout, CommCB callback, void *usr);
 
 #ifdef __cplusplus
-	}
+}
 #endif
+#endif	/* ifndef __COMMUNICATION_H__ */
 
-#endif /* ifndef __COMMUNICATION_H__ */

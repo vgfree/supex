@@ -57,19 +57,19 @@ void *work_task(void *args)
 {
 	int             error = 0;
 	void            *data = NULL;
-	void    	*g_subscriber = NULL;
+	void            *g_subscriber = NULL;
 	lua_State       *L = lua_vm_init();
-	
+
 	struct skt_device devc = {};
 
 	while (1) {
 		zmq_srv_fetch(&devc);
-		
+
 		lua_getglobal(L, "app_call");
 		lua_newtable(L);
 		int i = 0;
 		printf("cnt %d\n", devc.idx);
-		
+
 		for (i = 0; i < devc.idx; i++) {
 			data = devc.ibuffer[i].iov_base;
 			lua_pushnumber(L, i + 1);
@@ -80,6 +80,7 @@ void *work_task(void *args)
 		}
 
 		error = lua_pcall(L, 1, 0, 0);
+
 		if (error) {
 			printf("%s\n", lua_tostring(L, -1));
 			lua_pop(L, 1);
@@ -92,9 +93,9 @@ int main(int argc, char *argv[])
 	skt_register(argv [1]);
 	zmq_srv_init("127.0.0.1", 8102);
 #ifdef SELECT_MULTITHREAD
-	zmq_threadstart((zmq_thread_fn*)work_task, (void *)1);
+	zmq_threadstart((zmq_thread_fn *)work_task, (void *)1);
 #else
-	zmq_process_start((zmq_thread_fn*)work_task, (void *)1);
+	zmq_process_start((zmq_thread_fn *)work_task, (void *)1);
 #endif
 
 	zmq_srv_start();

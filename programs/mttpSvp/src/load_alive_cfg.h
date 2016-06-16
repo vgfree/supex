@@ -4,4 +4,3 @@
 
 bool load_alive_cfg_file(struct alive_cfg_file *p_cfg, char *name);
 
-

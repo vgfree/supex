@@ -14,15 +14,13 @@
 #include "ev.h"
 // #include "zmq.h"
 #include "cJSON.h"
-//#include "redis_parser.h"
+// #include "redis_parser.h"
 #include "pool_api/conn_xpool_api.h"
 #include "async_tasks/async_api.h"
 #include "except_info.h"
 
 #include "cache/cache.h"
 #include "libmini.h"
-
-
 
 enum proto
 {
@@ -39,7 +37,7 @@ struct hostentry
 	char            *hostaddr;	// 127.0.0.1:1000
 	char            *ip;		// 127.0.0.1
 	int             port;		// 1000
-	int				errconn;	// counter about invalid connection
+	int             errconn;	// counter about invalid connection
 	enum proto_type proto;		// protocol
 };
 
@@ -107,9 +105,9 @@ struct allcfg
 	char                    *cfgfile;	/**<配置文件名称*/
 	int                     queuesize;	/**< 接收队列大小*/
 	int                     pkgsize;	/**< 数据包大小*/
-	bool					calculate; /**< 是否进行业务计算*/
-	int						idlesleep; /**< 空闲休眠时间*/
-	bool					ischeckfd; /**< 在读写前是否检查描述符有效*/
+	bool                    calculate;	/**< 是否进行业务计算*/
+	int                     idlesleep;	/**< 空闲休眠时间*/
+	bool                    ischeckfd;	/**< 在读写前是否检查描述符有效*/
 };
 
 /* -----------                          */
@@ -125,7 +123,7 @@ struct netdata
 	intptr_t                fd;
 	struct taskdata         *task;	/*所属任务*/
 	struct hostentry        *host;	/*如果不为空，则为该缓存用于通信的对端主机信息*/
-	struct cache			cache;
+	struct cache            cache;
 };
 
 struct procentry
@@ -197,7 +195,7 @@ struct taskdata
 	struct netdata          *rtdata;	/*根据主机和协议拼接后的需要路由的数据*/
 	int                     caldatas;
 	int                     rtdatas;
-	int						needcts;	// 需要计数的数量
+	int                     needcts;	// 需要计数的数量
 	int                     acounter;	// 单线程，当前操作的以上数据数组计数器
 };
 

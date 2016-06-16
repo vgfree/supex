@@ -3,12 +3,12 @@
 
 #include "tsdb_api.h"
 
-#define DEFINE_SMART_LDB_FUNC(name)						      \
+#define DEFINE_SMART_LDB_FUNC(name)								   \
 	int smart_ldb_##name(void *user, union virtual_system **VMS, struct adopt_task_node *task) \
-	{									      \
-		struct data_node        *p_node = get_pool_data(task->sfd);     \
-										      \
-		return tsdb_cmd_##name(p_node);					      \
+	{											   \
+		struct data_node *p_node = get_pool_data(task->sfd);				   \
+												   \
+		return tsdb_cmd_##name(p_node);							   \
 	}
 
 DEFINE_SMART_LDB_FUNC(set)

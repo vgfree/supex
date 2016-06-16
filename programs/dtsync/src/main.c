@@ -37,18 +37,17 @@ static void swift_pthrd_init(void *user)
 	p_swift_worker->mount = sniff_start(p_swift_worker->index);
 }
 
-
 /**
  * 根据条件编译初始化文件队列和内存队列
  */
 static void swift_entry_init(void)
 {
-
 	app_queue_init();
+
 	/*
 	 * 初始化支持的命令
 	 */
-	//init_session_cmd();
+	// init_session_cmd();
 
 	conn_xpool_init(g_rr_cfg_file.map_server_host, g_rr_cfg_file.map_server_port, 1000, false);
 }
@@ -160,7 +159,6 @@ int main(int argc, char **argv)
 
 	g_swift_cfg_list.pthrd_init = swift_pthrd_init;
 
-
 	g_swift_cfg_list.reload_cfg = swift_reload_cfg;
 
 	g_swift_cfg_list.shut_down = swift_shut_down;
@@ -204,7 +202,6 @@ int main(int argc, char **argv)
 
 	g_sniff_cfg_list.task_lookup = sniff_task_lookup;
 	g_sniff_cfg_list.task_report = sniff_task_report;
-
 
 	sniff_mount(&g_sniff_cfg_list);
 

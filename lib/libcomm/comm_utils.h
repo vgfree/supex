@@ -18,14 +18,13 @@
 extern "C" {
 #endif
 
-#define	GOOGLE_LOG	0
+#define GOOGLE_LOG 0
 
 #if GOOGLE_LOG
-#include "loger.h"
+  #include "loger.h"
 #else
-#define log(fmt, ...) fprintf(stdout, "FILENAME:%s | LINE:%d | FUNCTION:%s | MASSAGE: "  fmt , __FILE__, __LINE__, __FUNCTION__, ##__VA_ARGS__)
+  #define log(fmt, ...) fprintf(stdout, "FILENAME:%s | LINE:%d | FUNCTION:%s | MASSAGE: "  fmt, __FILE__, __LINE__, __FUNCTION__, ##__VA_ARGS__)
 #endif
-
 
 /* 编译器版本 */
 #define GCC_VERSION (__GNUC__ * 10000 + __GNUC_MINOR__ * 100 + __GNUC_PATCHLEVEL__)
@@ -42,24 +41,24 @@ extern "C" {
   #define unlikely(x)   (!!(x))
 #endif
 
-#undef	New
-#define New(ptr)						\
-	((ptr) = (__typeof__(ptr))calloc(1, sizeof(*(ptr))),	\
-	(likely((ptr)) ? (ptr) :(errno = ENOMEM, NULL)))
-	
-#undef	NewArray
-#define NewArray(ptr, size)						\
-	((ptr) = (__typeof__(ptr))calloc(size, sizeof(*(ptr))),	\
-	(likely((ptr)) ? (ptr) :(errno = ENOMEM, NULL)))
+#undef  New
+#define New(ptr)					     \
+	((ptr) = (__typeof__(ptr))calloc(1, sizeof(*(ptr))), \
+	(likely((ptr)) ? (ptr) : (errno = ENOMEM, NULL)))
 
-#undef	Free
-#define Free(ptr)						\
-	 do{							\
-		if( likely((ptr))){				\
-			free((void*)(ptr));			\
-			(ptr) = (__typeof__(ptr)) 0;		\
-		}						\
-	 }while(0)
+#undef  NewArray
+#define NewArray(ptr, size)					\
+	((ptr) = (__typeof__(ptr))calloc(size, sizeof(*(ptr))),	\
+	(likely((ptr)) ? (ptr) : (errno = ENOMEM, NULL)))
+
+#undef  Free
+#define Free(ptr)				     \
+	do {					     \
+		if (likely((ptr))) {		     \
+			free((void *)(ptr));	     \
+			(ptr) = (__typeof__(ptr)) 0; \
+		}				     \
+	} while (0)
 
 #if (GCC_VERSION >= 40100)
 
@@ -99,37 +98,39 @@ extern "C" {
   #define ATOMIC_F_XOR(ptr, value)      ((__typeof__(*(ptr)))__sync_fetch_and_xor((ptr), (value)))
 
 #else
-	printf("%d", GCC_VERSION);
+printf("%d", GCC_VERSION);
 
   #error "can not supported atomic operate by gcc(v4.0.1+) buildin function."
 #endif	/* if (GCC_VERSION >= 40100) */
 
-#define ATOMIC_INC(ptr)                 ((void)ATOMIC_ADD_F((ptr), 1))
-#define ATOMIC_DEC(ptr)                 ((void)ATOMIC_SUB_F((ptr), 1))
-#define ATOMIC_ADD(ptr, val)            ((void)ATOMIC_ADD_F((ptr), (val)))
-#define ATOMIC_SUB(ptr, val)            ((void)ATOMIC_SUB_F((ptr), (val)))
-	
+#define ATOMIC_INC(ptr)         ((void)ATOMIC_ADD_F((ptr), 1))
+#define ATOMIC_DEC(ptr)         ((void)ATOMIC_SUB_F((ptr), 1))
+#define ATOMIC_ADD(ptr, val)    ((void)ATOMIC_ADD_F((ptr), (val)))
+#define ATOMIC_SUB(ptr, val)    ((void)ATOMIC_SUB_F((ptr), (val)))
+
 /* 设置指定描述符的标志 */
 static inline bool fd_setopt(int fd, int flag)
 {
 	int retval = -1;
+
 	retval = fcntl(fd, F_GETFL, NULL);
-	if( unlikely(retval == -1) ){
+
+	if (unlikely(retval == -1)) {
 		return false;
 	}
+
 	retval |= flag;
 	retval = fcntl(fd, F_SETFL, retval);
-	if( unlikely(retval == -1) ){
+
+	if (unlikely(retval == -1)) {
 		return false;
 	}
+
 	return true;
 }
 
-
-
 #ifdef __cplusplus
-	}
-#endif 
-
-#endif /* ifndef __COMM_UTILS_H__ */
+}
+#endif
+#endif	/* ifndef __COMM_UTILS_H__ */
 

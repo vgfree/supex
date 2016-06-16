@@ -54,7 +54,7 @@ typedef struct _data_set
 {
 	char            path[NAME_MAX];		/* dataset name: DS1 */
 	uint32_t        id;
-	tmode_t          mode;
+	tmode_t         mode;
 	uint64_t        s_time;			/* start time: 20120101000000 */
 	uint64_t        e_time;			/* end time: 20120101000000 */
 	uint8_t         dn_cnt;			/* data node count. */
@@ -78,7 +78,7 @@ typedef struct _expansion_set
 {
 	char            path[NAME_MAX];
 	uint8_t         is_synced;
-	tmode_t          mode;
+	tmode_t         mode;
 	uint64_t        s_time;
 	uint64_t        e_time;
 	uint8_t         key_cnt;

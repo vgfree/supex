@@ -12,15 +12,14 @@ extern "C" {
 #include "comm_utils.h"
 #include <sys/epoll.h>
 
-
-
-struct comm_epoll {
-	bool			init;			/* 结构体是否已经初始化 */
-	int			epfd;			/* epoll的句柄 */
-	int			epollsize;		/* epoll能够监听事件的最大值 */
-	int			watchcnt;		/* 正在监听的fd的个数 */
-	int			eventcnt;		/* 被触发的事件的个数 */
-	struct epoll_event*	events;			/* 保存epoll监听到的事件 */
+struct comm_epoll
+{
+	bool                    init;			/* 结构体是否已经初始化 */
+	int                     epfd;			/* epoll的句柄 */
+	int                     epollsize;		/* epoll能够监听事件的最大值 */
+	int                     watchcnt;		/* 正在监听的fd的个数 */
+	int                     eventcnt;		/* 被触发的事件的个数 */
+	struct epoll_event      *events;		/* 保存epoll监听到的事件 */
 };
 
 /* 初始化epoll结构体 */
@@ -41,10 +40,8 @@ bool commepoll_del(struct comm_epoll *commepoll, int fd, int flag);
 /* epoll等待事件的发生 */
 bool commepoll_wait(struct comm_epoll *commepoll, int timeout);
 
-
-     
 #ifdef __cplusplus
-	}
-#endif 
+}
+#endif
+#endif	/* ifndef _COMM_EPOLL_H_*/
 
-#endif /* ifndef _COMM_EPOLL_H_*/

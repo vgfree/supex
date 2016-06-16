@@ -2,3 +2,4 @@
 #define HAVE_SETJMP_H
 #define HAVE_SIGALTSTACK
 #define HAVE_SIGSETJMP
+

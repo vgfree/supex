@@ -142,10 +142,10 @@ static void fetch_node_cb(MYSQL_ROW data, unsigned long *lens, void *args)
 static void fetch_line_cb(MYSQL_ROW data, unsigned long *lens, void *args)
 {
 	TP_LINE_OBJ line = {
-		.id             = strtoull(data[0],                                            NULL,             10),
+		.id             = strtoull(data[0],                                              NULL,             10),
 		.ban            = 0,								// TODO
 		.direction      = 0,
-                .limit_speed    = atof(data[3]),
+		.limit_speed    = atof(data[3]),
 
 		.from_node      = (struct tp_node_obj *)membt_gain(topo_fetch_list(TYPE_TOPO_NODE),strtoull(data[1], NULL, 10)),
 		.goto_node      = (struct tp_node_obj *)membt_gain(topo_fetch_list(TYPE_TOPO_NODE),strtoull(data[2], NULL, 10)),
@@ -171,10 +171,10 @@ static void fetch_line_cb(MYSQL_ROW data, unsigned long *lens, void *args)
 }
 
 #define SQL_REQUIRE_STEP        100
-#define NODEID_S 1
-#define NODEID_E 100
-#define ROADID_S 1
-#define ROADID_E 100
+#define NODEID_S                1
+#define NODEID_E                100
+#define ROADID_S                1
+#define ROADID_E                100
 #define SQL_NODE_QUERY          "SELECT nodeID, longitude, latitude FROM nodeInfo where nodeID between %d and %d"
 #define SQL_LINE_QUERY          "SELECT roadID, fNodeID, eNodeID limitspeed FROM arcInfo where roadID between %d and %d"
 

@@ -84,81 +84,80 @@ typedef graphlab::types <graph_t> gl_types;
 
 /**
  * [ disk graph file format]
- * edge_id <tab> source_id <tab> target_id <tab> speed <tab> limit_speed <tab> time <tab> level <tab> length <tab> 
- * edge_id <tab> source_id <tab> target_id <tab> speed <tab> limit_speed <tab> time <tab> level <tab> length <tab> 
+ * edge_id <tab> source_id <tab> target_id <tab> speed <tab> limit_speed <tab> time <tab> level <tab> length <tab>
+ * edge_id <tab> source_id <tab> target_id <tab> speed <tab> limit_speed <tab> time <tab> level <tab> length <tab>
  *
  **/
-bool construct_graph(const std::string& filename, gl_types::memory_graph& distributed_graph)
+bool construct_graph(const std::string &filename, gl_types::memory_graph &distributed_graph)
 {
-        std::cout<< "Contructing roadRank demo graph from file." <<std::endl;
-        gl_types::disk_graph dg("RR", 64);
-//        gl_types::memory_graph g;
-        std::ifstream fin(filename.c_str());
-        if(!fin.good())
-        {
-                logger(LOG_INFO, "read file failed !");
-                return false;
-        }
-        while(fin.good() && !fin.eof())
-        {
-                uint_t e_id;
-                unit_t source = 0;
-                uint_t target = 0;
-                int speed;
-                int limit_speed;
-                int time;
-                int level;
-                int len;
+	std::cout << "Contructing roadRank demo graph from file." << std::endl;
+	gl_types::disk_graph dg("RR", 64);
+	//        gl_types::memory_graph g;
+	std::ifstream fin(filename.c_str());
 
-                fin >> e_id;
-                if(!fin.good())
-                {
-                        logger(LOG_ERROR, "read edge id from file failed .\n");
-                        break;
-                }
-                fin >> source;
-                assert(fin.good());
-                
-                fin >> target;
-                assert(fin.good());
-                
-                fin >> speed;
-                assert(fin.good());
-                
-                fin >> limit_speed;
-                assert(fin.good());
-                
-                fin >> time;
-                assert(fin.good());
-                
-                fin >> level;
-                assert(fin.good());
-                
-                fin >> len;
-                assert(fin.good());
+	if (!fin.good()) {
+		logger(LOG_INFO, "read file failed !");
+		return false;
+	}
 
-                if(source >= distributed_graph.num_vertices() || target >= distributed_graph.num_vertices())
-                {
-                        distributed_graph.resize(std::max(source, target) + 1);
-                        logger(LOG_INFO, "resized graph size to : %u\n", std::max(source, target) + 1);
-                }
+	while (fin.good() && !fin.eof()) {
+		uint_t  e_id;
+		unit_t  source = 0;
+		uint_t  target = 0;
+		int     speed;
+		int     limit_speed;
+		int     time;
+		int     level;
+		int     len;
 
-                if(source != target)
-                {
-                        edge_attr_t e_attr;
-                        e_attr.speed = speed;
-                        e_attr.limit_speed = limit_speed;
-                        e_attr.time = time;
-                        e_attr.level = level;
-                        e_attr.len = len;
-                        edge_t edata(source, target, e_attr);
-                        distributed_graph.add_edge(source, target, e_attr);
-                }
-        }
+		fin >> e_id;
 
-        std::cout << "Finished loading graph with: " << std::endl;
-        << "\t vertices: " << distributed_graph.num_vertices() << std::endl
-        << "\t deges: " << graph.num_edges() << std::endl;
+		if (!fin.good()) {
+			logger(LOG_ERROR, "read edge id from file failed .\n");
+			break;
+		}
+
+		fin >> source;
+		assert(fin.good());
+
+		fin >> target;
+		assert(fin.good());
+
+		fin >> speed;
+		assert(fin.good());
+
+		fin >> limit_speed;
+		assert(fin.good());
+
+		fin >> time;
+		assert(fin.good());
+
+		fin >> level;
+		assert(fin.good());
+
+		fin >> len;
+		assert(fin.good());
+
+		if ((source >= distributed_graph.num_vertices()) || (target >= distributed_graph.num_vertices())) {
+			distributed_graph.resize(std::max(source, target) + 1);
+			logger(LOG_INFO, "resized graph size to : %u\n", std::max(source, target) + 1);
+		}
+
+		if (source != target) {
+			edge_attr_t e_attr;
+			e_attr.speed = speed;
+			e_attr.limit_speed = limit_speed;
+			e_attr.time = time;
+			e_attr.level = level;
+			e_attr.len = len;
+			edge_t edata(source, target, e_attr);
+			distributed_graph.add_edge(source, target, e_attr);
+		}
+	}
+
+	std::cout << "Finished loading graph with: " << std::endl;
+		<< "\t vertices: " << distributed_graph.num_vertices() << std::endl
+		<< "\t deges: " << graph.num_edges() << std::endl;
 }
 
 void create_graph(graph_t &graph)

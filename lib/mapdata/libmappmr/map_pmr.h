@@ -15,14 +15,14 @@
 #define MAX_DIR_SUB     20
 typedef struct match_line
 {
-        int             match_size;
-        map_line_info   *lines[MAX_MATCH_LINE];
-        int             dist[MAX_MATCH_LINE];	/*当前点到该line距离*/
-        double          pt_lon;			/*定位点经度*/
-        double          pt_lat;			/*定位点纬度*/
-        short           pt_dir;			/*定位点方向角*/
-        short           pt_alt;			/*定位点海拔*/
-        short       pl_spd;
+	int             match_size;
+	map_line_info   *lines[MAX_MATCH_LINE];
+	int             dist[MAX_MATCH_LINE];	/*当前点到该line距离*/
+	double          pt_lon;			/*定位点经度*/
+	double          pt_lat;			/*定位点纬度*/
+	short           pt_dir;			/*定位点方向角*/
+	short           pt_alt;			/*定位点海拔*/
+	short           pl_spd;
 } match_line;
 
 /*
@@ -66,5 +66,6 @@ int pmr_load_data_all();
  * 返回值：
  */
 int pmr_locate(map_line_info **, short direction, double longitude, double latitude);
+
 void pmr_desory();
 

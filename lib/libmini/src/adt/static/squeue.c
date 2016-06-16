@@ -166,10 +166,13 @@ bool SQueuePush(SQueueT queue, char *data, int size, int *effectsize)
 	while (1) {
 		unsigned head = queue->headidx;
 		barrier();
-//		unsigned next = (head + 1) % queue->totalnodes;
+		//		unsigned next = (head + 1) % queue->totalnodes;
 		unsigned next = head + 1;
-		if (unlikely(next == queue->totalnodes)) next = 0;
-		
+
+		if (unlikely(next == queue->totalnodes)) {
+			next = 0;
+		}
+
 		/*判断容量*/
 		if (unlikely((queue->capacity <= queue->nodes) || (next == queue->tailidx))) {
 			x_pwarn("no more space.");
@@ -238,10 +241,13 @@ bool SQueuePriorityPush(SQueueT queue, char *data, int size, int *effectsize)
 	while (1) {
 		unsigned tail = queue->tailidx;
 		barrier();
-//		unsigned next = (tail + queue->totalnodes - 1) % queue->totalnodes;
+		//		unsigned next = (tail + queue->totalnodes - 1) % queue->totalnodes;
 		unsigned next = tail + queue->totalnodes - 1;
-		if (unlikely(next >= queue->totalnodes)) next -= queue->totalnodes;
-		
+
+		if (unlikely(next >= queue->totalnodes)) {
+			next -= queue->totalnodes;
+		}
+
 		if (unlikely((queue->capacity <= queue->nodes) || (queue->headidx == next))) {
 			x_pwarn("no more space.");
 #ifdef SQUEUE_USE_RWLOCK
@@ -309,10 +315,13 @@ bool SQueuePull(SQueueT queue, char *data, int size, int *effectsize)
 	while (1) {
 		unsigned tail = queue->tailidx;
 		barrier();
-//		unsigned next = (tail + 1) % queue->totalnodes;
+		//		unsigned next = (tail + 1) % queue->totalnodes;
 		unsigned next = tail + 1;
-		if (unlikely(next == queue->totalnodes)) next = 0;
-		
+
+		if (unlikely(next == queue->totalnodes)) {
+			next = 0;
+		}
+
 		if (unlikely((queue->nodes <= 0) || (tail == queue->headidx))) {
 #ifdef SQUEUE_USE_RWLOCK
 			AO_SpinUnlock(&queue->rlck);

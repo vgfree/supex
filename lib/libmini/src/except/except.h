@@ -102,11 +102,11 @@ extern __thread ExceptFrameT *_g_ef_;
 /* ------------------------                   */
 
 /* 主动抛出一个异常 */
-#define _RAISE(skip, e) \
+#define _RAISE(skip, e)	\
 	ExceptRaise(skip, __FUNCTION__, __FILE__, __LINE__, &(e))
 
-#define RAISE(e) 		_RAISE(false, e)
-#define SKIP_RAISE(e) 		_RAISE(true, e)
+#define RAISE(e)        _RAISE(false, e)
+#define SKIP_RAISE(e)   _RAISE(true, e)
 
 /*
  * 再次抛出捕捉到的异常
@@ -200,19 +200,19 @@ extern __thread ExceptFrameT *_g_ef_;
  * 弹出异常栈
  * 内部使用
  */
-#define _EXCEPT_POP(skip)			   \
-	STMT_BEGIN			   \
-	if (likely(_et_ == _ET_ENTERED)) { \
-		assert(skip == _g_ef_->skipable);	\
-		PopExceptFrame();	   \
-	}				   \
+#define _EXCEPT_POP(skip)			  \
+	STMT_BEGIN				  \
+	if (likely(_et_ == _ET_ENTERED)) {	  \
+		assert(skip == _g_ef_->skipable); \
+		PopExceptFrame();		  \
+	}					  \
 	STMT_END
 
 /*
  * 安装
  * 在内联函数中不能使用TRY-CATCH-FINALLY模块
  */
-#define _TRY( skip )				    \
+#define _TRY(skip)				    \
 	STMT_BEGIN				    \
 	ExceptFrameT _ef_ = {};			    \
 	volatile int            _error_ = 0;	    \
@@ -221,16 +221,16 @@ extern __thread ExceptFrameT *_g_ef_;
 	_ef_.skipable = skip;			    \
 	_et_ = sigsetjmp(_ef_.env, 1);		    \
 	if (likely(_et_ == _ET_ENTERED)) {
+#define TRY             _TRY(false)
+#define SKIP_TRY        _TRY(true)
 
-#define TRY			_TRY( false )
-#define SKIP_TRY		_TRY( true )
 /*
  * 捕捉指定异常
  * 在异常处理模块抛出异常，则不会执行finally模块
  * 可以通过再次抛出异常，继续finally模块的执行
  */
 #define EXCEPT(e)				    \
-	_EXCEPT_POP(false);				    \
+	_EXCEPT_POP(false);			    \
 	} else if (unlikely(_ef_.except == &(e))) { \
 		CleanExceptFrame();		    \
 		_et_ = _ET_HANDLED;
@@ -240,32 +240,33 @@ extern __thread ExceptFrameT *_g_ef_;
  * 在异常处理模块抛出异常，则不会执行finally模块
  */
 #define _CATCH(skip)		    \
-	_EXCEPT_POP(skip);		    \
+	_EXCEPT_POP(skip);	    \
 	} else {		    \
 		CleanExceptFrame(); \
 		_et_ = _ET_HANDLED;
 
-#define CATCH			_CATCH(false)
-#define SKIP_CATCH		_CATCH(true)
+#define CATCH           _CATCH(false)
+#define SKIP_CATCH      _CATCH(true)
+
 /*
  * 清理
  */
-#define _FINALLY(skip)					   \
-	_EXCEPT_POP(skip);				   \
+#define _FINALLY(skip)				   \
+	_EXCEPT_POP(skip);			   \
 	}					   \
 	{					   \
 		if (likely(_et_ == _ET_ENTERED)) { \
 			_et_ = _ET_FINAILIZED;	   \
 		}
 
-#define FINALLY			 _FINALLY(false)
-#define SKIP_FINALLY		 _FINALLY(true)
+#define FINALLY         _FINALLY(false)
+#define SKIP_FINALLY    _FINALLY(true)
 
 /*
  * 结束
  */
-#define _END(skip)						  \
-	_EXCEPT_POP(skip);					  \
+#define _END(skip)					  \
+	_EXCEPT_POP(skip);				  \
 	}						  \
 	if (unlikely(_et_ == _ET_RAISED)) {		  \
 		ExceptRaise(skip, __FUNCTION__,		  \
@@ -273,10 +274,9 @@ extern __thread ExceptFrameT *_g_ef_;
 	}						  \
 	STMT_END
 
-#define END			_END(false)
-#define SKIP_END		_END(true)
+#define END             _END(false)
+#define SKIP_END        _END(true)
 
-
-	__END_DECLS
+__END_DECLS
 #endif	/* defined(__minilib__except__) */
 

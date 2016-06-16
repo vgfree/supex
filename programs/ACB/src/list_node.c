@@ -181,9 +181,9 @@ void creat_time_node(struct t_node *t_head, struct d_node *d_new)
 
 int import_to_redis(char command[], void *loop, char host[], unsigned short port)
 {
+	struct xpool            *cpool = conn_xpool_find(host, port);
+	struct async_api        *api = async_api_initial(loop, 1, true, QUEUE_TYPE_FIFO, NEXUS_TYPE_TEAM, NULL, NULL, NULL);
 
-	struct xpool    *cpool = conn_xpool_find(host, port);
-	struct async_api *api = async_api_initial(loop, 1, true, QUEUE_TYPE_FIFO, NEXUS_TYPE_TEAM, NULL, NULL, NULL);
 	// x_printf(D,"import_to_redis: %s\n",command);
 
 	if (api && cpool) {
@@ -199,11 +199,11 @@ int import_to_redis(char command[], void *loop, char host[], unsigned short port
 		/*send*/
 		struct command_node *cmd = async_api_command(api, PROTO_TYPE_REDIS, cpool, proto, strlen(proto), NULL, NULL);
 		free(proto);
+
 		if (cmd == NULL) {
 			async_api_distory(api);
 			return -1;
 		}
-
 
 		async_api_startup(api);
 		return 0;

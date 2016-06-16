@@ -145,8 +145,9 @@ bool load_json2allcfg(cJSON *json, struct allcfg *cfg)
 			for (x = 0; x < datasrc->taghashs; x++) {
 				int                     y = 0;
 				struct hostcluster      *cluster = &cfg->host.routehost;
-				
+
 				x_printf(D, "match %s route host group", datasrc->taghash[x].name);
+
 				for (y = 0; y < cluster->hostgrps; y++) {
 					if (strcasecmp(cluster->hostgrp[y].name,
 						datasrc->taghash[x].name) == 0) {
@@ -159,6 +160,7 @@ bool load_json2allcfg(cJSON *json, struct allcfg *cfg)
 				assert(datasrc->taghash[x].hostgrp);
 			}
 		}
+
 		ret = true;
 	}
 	CATCH
@@ -181,7 +183,7 @@ void load_reload(struct allcfg *newcfg, struct allcfg *oldcfg)
 	oldcfg->calculate = newcfg->calculate;
 	oldcfg->idlesleep = newcfg->idlesleep;
 	oldcfg->ischeckfd = newcfg->ischeckfd;
-	
+
 	hostcluster_destroy(&oldcfg->host.srchost);
 	memcpy(&oldcfg->host.srchost, &newcfg->host.srchost,
 		sizeof(newcfg->host.srchost));
@@ -197,7 +199,7 @@ void load_reload(struct allcfg *newcfg, struct allcfg *oldcfg)
 	routerule_destroy(&oldcfg->routerule);
 	memcpy(&oldcfg->routerule, &newcfg->routerule,
 		sizeof(newcfg->routerule));
-	
+
 	Free(newcfg->cfgfile);
 }
 
@@ -256,33 +258,37 @@ static bool _load_baseinfo_from_json(cJSON *json, struct allcfg *cfg)
 	cfg->queuesize = INRANGE(ptr->valueint,
 			PPP_QUEUE_MINSIZE,
 			PPP_QUEUE_MAXSIZE);
-	
-	
+
 	/* ------------- Do or not do calculate				*/
 	obj = cJSON_GetObjectItem(json, "calculate");
+
 	if (obj) {
 		assert(obj->type == cJSON_True || obj->type == cJSON_False);
 		cfg->calculate = obj->valueint;
 	} else {
 		cfg->calculate = true;
 	}
-	
-	/* ------------- idle sleep 						*/
+
+	/* ------------- idle sleep                                             */
 	obj = cJSON_GetObjectItem(json, "idlesleep");
+
 	if (obj) {
 		assert(obj->type == cJSON_Number);
 		cfg->idlesleep = obj->valueint;
 	} else {
 		cfg->idlesleep = 10;
 	}
-	/* ------------- check fd 						*/
+
+	/* ------------- check fd                                               */
 	obj = cJSON_GetObjectItem(json, "checksocket");
+
 	if (obj) {
 		assert(obj->type == cJSON_True || obj->type == cJSON_False);
 		cfg->ischeckfd = obj->valueint;
 	} else {
 		cfg->ischeckfd = true;
 	}
+
 	return true;
 }
 
@@ -584,9 +590,10 @@ static bool _load_taghash_from_json(cJSON *json, struct taghash *tag)
 		tag->tag = ptr->valueint;
 
 		ptr = cJSON_GetObjectItem(json, "hash");
+
 		if (ptr) {
 			assert(ptr->type == cJSON_String);
-			
+
 			/*parse hash function*/
 			if (strcasecmp(ptr->valuestring, "HashTime33") == 0) {
 				tag->hash = HashTime33;

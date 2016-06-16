@@ -9,15 +9,13 @@
 #include <opencv2/opencv.hpp>
 
 namespace easypr {
+	namespace preprocess {
+		// EasyPR的图像预处理函数，进行模糊化与裁剪化处理
 
-namespace preprocess {
+		cv::Mat imageProcess(cv::Mat src);
 
-// EasyPR的图像预处理函数，进行模糊化与裁剪化处理
-
-cv::Mat imageProcess(cv::Mat src);
-
-int generate_gdts();
+		int generate_gdts();
+	}
 }
-}
+#endif	// EASYPR_CORE_GDTS_H_
 
-#endif  // EASYPR_CORE_GDTS_H_

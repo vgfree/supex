@@ -5,7 +5,7 @@ void free_queue_init(struct free_queue_list *list, unsigned int dsz, unsigned in
 	assert(max >= 1);
 	memset(list, 0, sizeof(struct free_queue_list));
 	list->max = max;
-	list->all = max / 256 + 1 > 1 ?  max / 256 + 1 : 2; //must > 1
+	list->all = max / 256 + 1 > 1 ?  max / 256 + 1 : 2;	// must > 1
 	list->dsz = dsz;
 	list->isz = 0;
 	list->osz = 0;
@@ -20,26 +20,28 @@ void free_queue_init(struct free_queue_list *list, unsigned int dsz, unsigned in
 
 static void _expand_queue(struct free_queue_list *list)
 {
-	assert(list); 
+	assert(list);
 	unsigned int swap_all =
 		(list->all - 1) * 2 < list->max ? (list->all - 1) * 2 + 1 : list->max + 1;
 	void *swap_slots = calloc(swap_all, list->dsz);
 	assert(swap_slots);
+
 	if (list->tail >= list->head) {
 		memcpy(swap_slots, &((char *)list->slots)[list->head * list->dsz], (list->tail - list->head) * list->dsz);
 		list->tail = list->tail - list->head;
-	}
-	else {
-		memcpy(swap_slots, &((char *)list->slots)[list->head *list->dsz], (list->all - list->head) * list->dsz);
-		memcpy(swap_slots + (list->all - list->head) *list->dsz,
-				&((char *)list->slots)[0], list->tail * list->dsz);
+	} else {
+		memcpy(swap_slots, &((char *)list->slots)[list->head * list->dsz], (list->all - list->head) * list->dsz);
+		memcpy(swap_slots + (list->all - list->head) * list->dsz,
+			&((char *)list->slots)[0], list->tail * list->dsz);
 		list->tail = list->all - list->head + list->tail;
 	}
+
 	list->head = 0;
 	free(list->slots);
 	list->slots = swap_slots;
 	list->all = swap_all;
 }
+
 /*free lock is just read and write don't need lock*/
 bool free_queue_push(struct free_queue_list *list, void *data)
 {
@@ -57,8 +59,7 @@ bool free_queue_push(struct free_queue_list *list, void *data)
 		list->isz++;
 		ok = true;
 		ATOMIC_INC(&list->tasks);
-	}
-	else {
+	} else {
 		if (list->all <= list->max) {
 			AO_SpinLock(&list->r_lock);
 			_expand_queue(list);
@@ -70,6 +71,7 @@ bool free_queue_push(struct free_queue_list *list, void *data)
 			AO_SpinUnlock(&list->r_lock);
 		}
 	}
+
 	AO_SpinUnlock(&list->w_lock);
 	return ok;
 }
@@ -77,8 +79,10 @@ bool free_queue_push(struct free_queue_list *list, void *data)
 bool free_queue_pull(struct free_queue_list *list, void *data)
 {
 	bool ok = false;
+
 	assert(list && data);
 	AO_SpinLock(&list->r_lock);
+
 	if (list->head != list->tail) {
 		memcpy(data, &((char *)list->slots)[list->head * list->dsz], list->dsz);
 		list->head = (list->head + 1) % list->all;
@@ -86,6 +90,8 @@ bool free_queue_pull(struct free_queue_list *list, void *data)
 		ok = true;
 		ATOMIC_DEC(&list->tasks);
 	}
+
 	AO_SpinUnlock(&list->r_lock);
 	return ok;
 }
+

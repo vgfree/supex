@@ -47,9 +47,9 @@ void *zmq_process_start(void *(*fcb)(void *args), void *args)
 }
 
 /*===============================================================================*/
-void    *g_collecter = NULL;
-void    *g_forwarder = NULL;
-extern void    *g_subscriber = NULL;
+void            *g_collecter = NULL;
+void            *g_forwarder = NULL;
+extern void     *g_subscriber = NULL;
 
 void zmq_srv_init(char *host, int port)
 {
@@ -70,17 +70,19 @@ void zmq_srv_init(char *host, int port)
 	assert(rc == 0);
 }
 
-void zmq_Javasrv_init(void** g_subscriber)
-{	
+void zmq_Javasrv_init(void **g_subscriber)
+{
 	int rc;
+
 	*g_subscriber = zmq_socket(g_ctx, ZMQ_PUSH);
-        rc = zmq_bind(*g_subscriber, "tcp://*:1020");
-        assert(rc == 0);
+	rc = zmq_bind(*g_subscriber, "tcp://*:1020");
+	assert(rc == 0);
 }
 
 void zmq_srv_fetch(struct skt_device *devc)
 {
 	assert(devc);
+
 	if (!devc->skt) {
 		devc->skt = zmq_socket(g_ctx, ZMQ_PULL);
 #ifdef SELECT_MULTITHREAD
@@ -98,10 +100,9 @@ void zmq_srv_fetch(struct skt_device *devc)
 
 	memset(devc->ibuffer, 0, sizeof(devc->ibuffer));
 	size_t  count = MAX_SPILL_DEPTH;
-	int rc = zmq_recviov(devc->skt, devc->ibuffer, &count, 0);
+	int     rc = zmq_recviov(devc->skt, devc->ibuffer, &count, 0);
 	devc->idx = count;
 }
-
 
 void zmq_srv_start(void)
 {

@@ -30,3 +30,4 @@ int smart_vms_call(void *user, union virtual_system **VMS, struct adopt_task_nod
 int smart_vms_exec(void *user, union virtual_system **VMS, struct adopt_task_node *task);
 
 int smart_vms_monitor(void *user, union virtual_system **VMS, struct adopt_task_node *task);
+

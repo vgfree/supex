@@ -61,9 +61,9 @@ void *work_task(void *args)
 {
 	int             error = 0;
 	void            *data = NULL;
-	void    	*g_subscriber = NULL;
+	void            *g_subscriber = NULL;
 	lua_State       *L = lua_vm_init();
-	
+
 	struct skt_device devc = {};
 
 	zmq_Javasrv_init(&g_subscriber);
@@ -71,15 +71,15 @@ void *work_task(void *args)
 
 	while (1) {
 		zmq_srv_fetch(&devc);
-		//TODO add
+		// TODO add
 		int ok = zmq_sendiov(g_subscriber, devc.ibuffer, devc.idx, ZMQ_SNDMORE);
 		printf("ok = %d\n", ok);
-		
+
 		lua_getglobal(L, "app_call");
 		lua_newtable(L);
 		int i = 0;
 		printf("cnt %d\n", devc.idx);
-		
+
 		for (i = 0; i < devc.idx; i++) {
 			data = devc.ibuffer[i].iov_base;
 			lua_pushnumber(L, i + 1);
@@ -90,6 +90,7 @@ void *work_task(void *args)
 		}
 
 		error = lua_pcall(L, 1, 0, 0);
+
 		if (error) {
 			printf("%s\n", lua_tostring(L, -1));
 			lua_pop(L, 1);

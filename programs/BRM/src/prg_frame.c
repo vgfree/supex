@@ -118,17 +118,19 @@ bool cntpool_init(struct allcfg *cfg)
 
 	poolsize = cfg->paralleltasks / cfg->threads;
 	poolsize = MAX(poolsize, 32);
-//	poolsize = INRANGE(poolsize, 32, 1024);
+
+	//	poolsize = INRANGE(poolsize, 32, 1024);
 	// calculate host
 	if (cfg->calculate) {
 		flag = hostgroup_connect(&cfg->host.calhost, poolsize);
 		return_val_if_fail(flag, false);
 	}
+
 	// route table host
 	flag = hostcluster_connect(&cfg->host.routehost, poolsize);
 	// 路由主机初始化失败是否返回错误
-//	return_val_if_fail(flag, false);
-	
+	//	return_val_if_fail(flag, false);
+
 	return true;
 }
 
@@ -166,7 +168,7 @@ static void _finally_framentry()
 
 	SignalIntr(SIGINT, SIG_DFL);
 	SignalIntr(SIGQUIT, SIG_DFL);
-	
+
 	if (g_framentry.routeproc) {
 		int i = 0;
 

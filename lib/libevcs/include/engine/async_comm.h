@@ -20,8 +20,6 @@ int http_proto_resp(struct http_parse_info *info);
 
 int http_proto_reqt(struct http_parse_info *info);
 
-
-
 int redis_proto_init(struct redis_parse_info *info, char *const *data, unsigned const *size);
 
 int redis_proto_free(struct redis_parse_info *info);
@@ -29,8 +27,6 @@ int redis_proto_free(struct redis_parse_info *info);
 int redis_proto_resp(struct redis_parse_info *info);
 
 int redis_proto_reqt(struct redis_parse_info *info);
-
-
 
 int mttp_proto_init(struct mttp_parse_info *info, char *const *data, unsigned const *size);
 

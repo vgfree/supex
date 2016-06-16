@@ -11,7 +11,6 @@ static void init_alive_cfg(struct alive_cfg_file *p_cfg)
 	memset(p_cfg, 0, sizeof(*p_cfg));
 }
 
-
 bool load_alive_cfg_file(struct alive_cfg_file *p_cfg, char *name)
 {
 	const char              *str_val = NULL;
@@ -33,7 +32,7 @@ bool load_alive_cfg_file(struct alive_cfg_file *p_cfg, char *name)
 	if (json_object_object_get_ex(cfg, "alive_worker_counts", &obj)) {
 		p_cfg->worker_counts = (short)json_object_get_int(obj);
 	} else { goto fail; }
-	
+
 	if (json_object_object_get_ex(cfg, "alive_tasker_counts", &obj)) {
 		p_cfg->tasker_counts = (short)json_object_get_int(obj);
 	} else { goto fail; }

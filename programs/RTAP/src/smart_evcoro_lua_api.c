@@ -68,11 +68,11 @@ static lua_State *_vms_new(void)
 	return L;
 }
 
-
 int smart_vms_init(void *user, union virtual_system **VMS, struct adopt_task_node *task)
 {
 	int             error = 0;
 	lua_State       **L = VMS;
+
 	if (*L != NULL) {
 		x_printf(S, "No need to init LUA VM!\n");
 		return 0;
@@ -85,12 +85,13 @@ int smart_vms_init(void *user, union virtual_system **VMS, struct adopt_task_nod
 	lua_pushinteger(*L, supex_get_default()->scheduler);
 	lua_pushinteger(*L, task->index);
 	error = lua_pcall(*L, 2, 0, 0);
+
 	if (error) {
 		x_printf(E, "%s", lua_tostring(*L, -1));
 		lua_pop(*L, 1);
 		exit(EXIT_FAILURE);
 	}
+
 	return error;
 }
-
 

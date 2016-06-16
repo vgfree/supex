@@ -14,7 +14,7 @@ struct supex_evcoro
 
 	union virtual_system    *VMS;
 	bool                    (*task_lookup)(void *data, void *addr);
-	void                    (*task_handle)(struct supex_evcoro     *evcoro, int step);
+	void                    (*task_handle)(struct supex_evcoro *evcoro, int step);
 
 	struct evcoro_scheduler *scheduler;	/** 协程集群句柄 */
 };

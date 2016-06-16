@@ -18,10 +18,14 @@ __BEGIN_DECLS
 /* 描述符的相关操作 */
 static inline int Close(int fd)
 {
-	if (fd > -1) { return close(fd); }
-//	errno = EBADF;
+	if (fd > -1) {
+		return close(fd);
+	}
+
+	//	errno = EBADF;
 	return -1;
 }
+
 /**
  * 写测试
  * @return -1，出错；0，就绪

@@ -28,7 +28,9 @@ static void _kill_procentry(struct procentry *proc);
 
 #ifndef USE_EV_TIMER
 static ev_tstamp _timer_scheduler(ev_periodic *interval, ev_tstamp now);
+
 static void _ctrl_interval(struct ev_loop *loop, ev_periodic *interval, int event);
+
 #else
 static void _ctrl_timeout(struct ev_loop *loop, ev_timer *timer, int event);
 #endif
@@ -71,7 +73,7 @@ void main_loop(struct framentry *frame)
 		ev_periodic_init(&interval, _ctrl_interval, 0., 0., _timer_scheduler);
 		ev_periodic_start(loop, &interval);
 #else
-		ev_timer timer = { };
+		ev_timer timer = {};
 		ev_timer_init(&timer, _ctrl_timeout, 1.0, .0);
 		ev_timer_start(loop, &timer);
 #endif
@@ -182,11 +184,10 @@ static void _ctrl_reload_cfg(struct ev_loop *loop, ev_stat *stat, int event)
 	END;
 }
 
-
 static void _setsktopt(int fd, void *usr)
 {
 	int *timeout = usr;
-	
+
 	SO_SetSndTimeout(fd, *timeout);
 }
 
@@ -194,7 +195,7 @@ static int _connect_noblock(const char *host, int port, int to)
 {
 	int     fd = -1;
 	char    ports[7] = {};
-	
+
 	snprintf(ports, sizeof(ports), "%d", port);
 	fd = TcpConnect(host, ports, _setsktopt, &to);
 	return fd;
@@ -225,39 +226,58 @@ static void _ctrl_timeout(struct ev_loop *loop, ev_timer *timer, int event)
 		ev_feed_signal_event(loop, SIGINT);
 		ev_break(loop, EVBREAK_ALL);
 	}
-	
+
 	TRY
 	{
 		/*检查失效的主机*/
-		int i = 0;
-		int max = 0;
-		struct allcfg *cfg = frame->cfg;
-		struct hostentry *hent = cfg->host.calhost.host;
+		int                     i = 0;
+		int                     max = 0;
+		struct allcfg           *cfg = frame->cfg;
+		struct hostentry        *hent = cfg->host.calhost.host;
 		max = cfg->host.calhost.hosts;
+
 		for (i = 0; cfg->calculate && hent && i < max; i++) {
-			int fd = 0;
-			int errconn = hent[i].errconn;
-			if (likely(errconn == 0)) continue;
-//			fd = _connect_noblock(hent[i].ip, hent[i].port, cfg->idlesleep);
+			int     fd = 0;
+			int     errconn = hent[i].errconn;
+
+			if (likely(errconn == 0)) {
+				continue;
+			}
+
+			//			fd = _connect_noblock(hent[i].ip, hent[i].port, cfg->idlesleep);
 			fd = x_connect(hent[i].ip, hent[i].port, cfg->idlesleep);
-			if (unlikely(fd < 0)) continue;
+
+			if (unlikely(fd < 0)) {
+				continue;
+			}
+
 			AO_CAS(&hent[i].errconn, errconn, 0);
 			close(fd);
 		}
-		
+
 		struct hostgroup *hgrp = cfg->host.routehost.hostgrp;
 		max = cfg->host.routehost.hostgrps;
+
 		for (i = 0; hgrp && i < max; i++) {
-			int j = 0;
-			int max2 = hgrp[i].hosts;
-			struct hostentry *hent = hgrp[i].host;
+			int                     j = 0;
+			int                     max2 = hgrp[i].hosts;
+			struct hostentry        *hent = hgrp[i].host;
+
 			for (j = 0; hent && j < max2; j++) {
-				int fd = 0;
-				int errconn = hent[j].errconn;
-				if (likely(errconn == 0)) continue;
-//				fd = _connect_noblock(hent[j].ip, hent[j].port, cfg->idlesleep);
+				int     fd = 0;
+				int     errconn = hent[j].errconn;
+
+				if (likely(errconn == 0)) {
+					continue;
+				}
+
+				//				fd = _connect_noblock(hent[j].ip, hent[j].port, cfg->idlesleep);
 				fd = x_connect(hent[j].ip, hent[j].port, cfg->idlesleep);
-				if (unlikely(fd < 0)) continue;
+
+				if (unlikely(fd < 0)) {
+					continue;
+				}
+
 				AO_CAS(&hent[j].errconn, errconn, 0);
 				close(fd);
 			}
@@ -266,7 +286,7 @@ static void _ctrl_timeout(struct ev_loop *loop, ev_timer *timer, int event)
 	CATCH
 	{}
 	END;
-	
+
 #ifdef USE_EV_TIMER
 	ev_timer_stop(loop, timer);
 	ev_timer_init(timer, _ctrl_timeout, 1.0, .0);

@@ -14,11 +14,11 @@
 
 struct client
 {
-	char            *host;
-	char            *server;
-	bool            end;	// 文件是否已经读到结尾
-	int             fd;	// 读取的文件描述符
-	struct conn_ypool *pool;
+	char                    *host;
+	char                    *server;
+	bool                    end;	// 文件是否已经读到结尾
+	int                     fd;	// 读取的文件描述符
+	struct conn_ypool       *pool;
 };
 
 void send_data(struct evcoro_scheduler *scheduler, void *usr);

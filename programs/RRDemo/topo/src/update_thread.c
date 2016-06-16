@@ -64,8 +64,8 @@ void start_update_pthread(void *func, int num, void *addr, void *data)
 
 static void *start_update(void *arg)
 {
-	UPDATE_WORKER_THREAD        *update_worker = NULL;
-	struct safe_init_step           *info = arg;
+	UPDATE_WORKER_THREAD    *update_worker = NULL;
+	struct safe_init_step   *info = arg;
 
 	SAFE_PTHREAD_INIT_COME(info);
 
@@ -97,10 +97,9 @@ static void init_staworker(UPDATE_WORKER_THREAD *update_worker)
 void update_cb(struct ev_loop *loop, ev_timer *w, int revents)
 {
 	printf("update ..\n");
-	UPDATE_WORKER_THREAD        *p_worker = w->data;
-        update_call();
-        p_worker->index++;
-
+	UPDATE_WORKER_THREAD *p_worker = w->data;
+	update_call();
+	p_worker->index++;
 }
 
 int update_start(int COUNTS)

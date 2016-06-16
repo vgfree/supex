@@ -26,7 +26,7 @@
 struct swift_cfg_list   g_swift_cfg_list = {};
 struct sniff_cfg_list   g_sniff_cfg_list = {};
 struct rr_cfg_file      g_rr_cfg_file = {};
-TRAFFIC_MODEL    g_traffic_model_cfg  = {};
+TRAFFIC_MODEL           g_traffic_model_cfg = {};
 kv_cache                *g_kv_cache = NULL;
 
 static void swift_pthrd_init(void *user)
@@ -36,14 +36,13 @@ static void swift_pthrd_init(void *user)
 	p_swift_worker->mount = sniff_start(p_swift_worker->index);
 }
 
-
 /**
  * 根据条件编译初始化文件队列和内存队列
  */
 static void swift_entry_init(void)
 {
-
 	app_queue_init();
+
 	/*
 	 * 初始化支持的命令
 	 */
@@ -54,7 +53,7 @@ static void swift_entry_init(void)
 
 	conn_xpool_init(g_rr_cfg_file.pmr_server.host, g_rr_cfg_file.pmr_server.port, g_rr_cfg_file.redis_conn, false);
 	conn_xpool_init(g_rr_cfg_file.trafficapi_server.host, g_rr_cfg_file.trafficapi_server.port, g_rr_cfg_file.redis_conn, false);
-	conn_xpool_init(g_rr_cfg_file.forward_server.host, g_rr_cfg_file.forward_server.port, g_rr_cfg_file.redis_conn/10, false);
+	conn_xpool_init(g_rr_cfg_file.forward_server.host, g_rr_cfg_file.forward_server.port, g_rr_cfg_file.redis_conn / 10, false);
 
 	conn_xpool_init(g_rr_cfg_file.road_traffic_server.host, g_rr_cfg_file.road_traffic_server.port, g_rr_cfg_file.redis_conn, false);
 	conn_xpool_init(g_rr_cfg_file.city_traffic_server.host, g_rr_cfg_file.city_traffic_server.port, g_rr_cfg_file.redis_conn, false);
@@ -198,21 +197,21 @@ int main(int argc, char **argv)
 		exit(EXIT_FAILURE);
 	}
 
-	load_traffic_model_cfgfile( &g_traffic_model_cfg, g_rr_cfg_file.model_cfg_name);
-	mount_model( &g_traffic_model_cfg );
+	load_traffic_model_cfgfile(&g_traffic_model_cfg, g_rr_cfg_file.model_cfg_name);
+	mount_model(&g_traffic_model_cfg);
 	// ---> init sniff
 
 	snprintf(g_sniff_cfg_list.argv_info.conf_name,
-			sizeof(g_sniff_cfg_list.argv_info.conf_name),
-			"%s", g_swift_cfg_list.argv_info.conf_name);
+		sizeof(g_sniff_cfg_list.argv_info.conf_name),
+		"%s", g_swift_cfg_list.argv_info.conf_name);
 
 	snprintf(g_sniff_cfg_list.argv_info.serv_name,
-			sizeof(g_sniff_cfg_list.argv_info.serv_name),
-			"%s", g_swift_cfg_list.argv_info.serv_name);
+		sizeof(g_sniff_cfg_list.argv_info.serv_name),
+		"%s", g_swift_cfg_list.argv_info.serv_name);
 
 	snprintf(g_sniff_cfg_list.argv_info.msmq_name,
-			sizeof(g_sniff_cfg_list.argv_info.msmq_name),
-			"%s", g_swift_cfg_list.argv_info.msmq_name);
+		sizeof(g_sniff_cfg_list.argv_info.msmq_name),
+		"%s", g_swift_cfg_list.argv_info.msmq_name);
 
 	load_sniff_cfg_file(&g_sniff_cfg_list.file_info, g_swift_cfg_list.argv_info.conf_name);
 

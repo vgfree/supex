@@ -301,7 +301,7 @@ int (SLogWrite)(SLogCfgT *cfg, const SLogLevelT *level,
 
 		/*添加长度字段*/
 #ifdef SLOG_ADD_LENGTH_FIELD
-		char t[2] = { };
+		char t[2] = {};
 		va_start(ap, formate);
 		int logbytes = vsnprintf(t, sizeof(t), _g_LogFmt + LENGTH_FIELD_FMTSIZE, ap);
 		va_end(ap);

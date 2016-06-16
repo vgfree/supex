@@ -52,19 +52,20 @@ static bool tasks(void *user, void *data)
 	p_swift_worker = (SWIFT_WORKER_PTHREAD *)user;
 	service = (struct session_task *)task->data;
 
-	//swift_task_come(&taskid, task->id);
+	// swift_task_come(&taskid, task->id);
 
 	if (!service) {
 		goto over;
 	}
+
 #if 0
-#if defined(STORE_USE_SHMQ)
+  #if defined(STORE_USE_SHMQ)
 	session_response_clnt(service->fd, SESSION_IO_TIMEOUT,
 		"tasks(0x%20x) : %ld\n",
 		g_tasks_shmqueue->shmkey,
 		AO_GET(&g_tasks_shmqueue->list->nodes));
 
-#else
+  #else
 	flag = session_response_clnt(service->fd, SESSION_IO_TIMEOUT,
 			"thread(%20ld) : %ld\n",
 			ptr->tid,
@@ -73,14 +74,13 @@ static bool tasks(void *user, void *data)
 	if (!flag) {
 		goto over;
 	}
-
-#endif	/* if defined(STORE_USE_SHMQ) */
+  #endif/* if defined(STORE_USE_SHMQ) */
 #endif
 over:
 
-	//if (swift_task_last(&taskid, task->id)) {
-		close(service->fd);
-	//}
+	// if (swift_task_last(&taskid, task->id)) {
+	close(service->fd);
+	// }
 
 	return flag;
 }

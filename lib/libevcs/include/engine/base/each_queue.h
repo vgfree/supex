@@ -22,9 +22,8 @@ struct each_queue_list
 
 	AO_SpinLockT    w_lock;	/**< 压入锁*/
 	AO_SpinLockT    r_lock;	/**< 弹出锁*/
-	
-	
-	unsigned int	use;	/**< 消费者数*/
+
+	unsigned int    use;	/**< 消费者数*/
 	unsigned int    *shift;	/**< 用户消费记录*/
 };
 
@@ -52,8 +51,8 @@ bool each_queue_push(struct each_queue_list *list, void *data);
  */
 bool each_queue_pull(struct each_queue_list *list, void *data, unsigned int index);
 
-
 /**
  * 释放队列
  */
 void each_queue_free(struct each_queue_list *list);
+

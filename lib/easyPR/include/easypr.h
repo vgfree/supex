@@ -11,5 +11,5 @@
 #include "easypr/util/program_options.h"
 #include "easypr/api.hpp"
 #include "easypr/config.h"
+#endif	// EASYPR_EASYPR_H
 
-#endif //EASYPR_EASYPR_H

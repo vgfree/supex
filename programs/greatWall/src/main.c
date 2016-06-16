@@ -34,7 +34,6 @@ static void swift_pthrd_init(void *user)
 	p_swift_worker->mount = sniff_start(p_swift_worker->index);
 }
 
-
 void init_service_cnt(void)
 {
 	int i = 0;
@@ -55,8 +54,8 @@ void init_service_cnt(void)
  */
 static void swift_entry_init(void)
 {
-
 	app_queue_init();
+
 	/*
 	 * 初始化网络包统计
 	 */
@@ -71,7 +70,7 @@ static void swift_entry_init(void)
 	/*
 	 * 初始化支持的命令
 	 */
-	//init_session_cmd();
+	// init_session_cmd();
 	init_service_cnt();
 }
 
@@ -189,9 +188,9 @@ int main(int argc, char **argv)
 
 	g_swift_cfg_list.pthrd_init = swift_pthrd_init;
 
-	//g_swift_cfg_list.reload_cfg = swift_reload_cfg;
+	// g_swift_cfg_list.reload_cfg = swift_reload_cfg;
 
-	//g_swift_cfg_list.shut_down = swift_shut_down;
+	// g_swift_cfg_list.shut_down = swift_shut_down;
 
 	/*have bug when tasks pile up if use idle task*/
 

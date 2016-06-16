@@ -27,7 +27,7 @@ void PMR_callback(struct async_ctx *ac, void *reply, void *data)
 			road_info.new_roadID = road_info.road_rootID * 1000 + road_info.segmentID;
 
 			x_printf(D,
-                "road_info road_rootID %ld segmentID %d countycode %d rt %d citycode %d new_roadID %ld\n",
+				"road_info road_rootID %ld segmentID %d countycode %d rt %d citycode %d new_roadID %ld\n",
 				road_info.road_rootID, road_info.segmentID, road_info.countycode, road_info.rt,
 				road_info.citycode, road_info.new_roadID);
 			struct ev_loop *loop = ac->obj.settings.loop;
@@ -77,8 +77,8 @@ static int forward_to_server(char *host, int port, const char *data, size_t size
 
 int match_road(struct ev_loop *loop, CAL_INFO *cal_info)
 {
-    char    *host = g_rr_cfg_file.pmr_server.host;
-    int     port = g_rr_cfg_file.pmr_server.port;
+	char    *host = g_rr_cfg_file.pmr_server.host;
+	int     port = g_rr_cfg_file.pmr_server.port;
 	int     ok = -1;
 	char    buff[128] = { 0 };
 

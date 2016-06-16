@@ -128,7 +128,7 @@ static int32_t grid_count_load_file(char *grid_count_file, map_grid_manager *p_m
 		}
 
 		count += ret;
-                //x_printf(D, "load map gird count, num:%d\n", count);
+		// x_printf(D, "load map gird count, num:%d\n", count);
 	}
 
 	fclose(p_file);
@@ -183,19 +183,19 @@ static int32_t grid_line_load_file(char *grid_count_file, map_grid_manager *p_ma
 			file_grid_info  *p_info = p_buf + i;
 			int32_t         grid_index = (p_info->grid_lat - p_manage->lat_begin) / 5 * p_manage->lon_size + (p_info->grid_lon - p_manage->lon_begin) / 5;
 			map_grid_info   *p_grid_info = find_map_grid_index(&p_manage->index_list, grid_index);
-                        //x_printf(D, "load line grid:%d&%d, index:%d,ptr:%p\n", p_info->grid_lon, p_info->grid_lat, grid_index, p_grid_info);
+			// x_printf(D, "load line grid:%d&%d, index:%d,ptr:%p\n", p_info->grid_lon, p_info->grid_lat, grid_index, p_grid_info);
 
 			if (!p_grid_info) {
 				continue;
 			}
 
 			if (p_info->num > header.max_id) {
-                                //x_printf(I, "out of range, lineID:%d, max:%d\n", p_info->num, header.max_id);
+				// x_printf(I, "out of range, lineID:%d, max:%d\n", p_info->num, header.max_id);
 				continue;
 			}
 
 			if (p_grid_info->max_size < (p_grid_info->line_size + 1)) {
-                                //x_printf(I, "out of range linecont, lineID:%d, max:%d\n", p_grid_info->line_size, p_grid_info->max_size);
+				// x_printf(I, "out of range linecont, lineID:%d, max:%d\n", p_grid_info->line_size, p_grid_info->max_size);
 				continue;
 			}
 
@@ -204,7 +204,7 @@ static int32_t grid_line_load_file(char *grid_count_file, map_grid_manager *p_ma
 		}
 
 		count += ret;
-                //x_printf(D, "load map gird count, num:%d\n", count);
+		// x_printf(D, "load map gird count, num:%d\n", count);
 	}
 
 	fclose(p_file);

@@ -11,3 +11,4 @@
 #include "lj_smart_util.h"
 
 int smart_vms_init(void *user, void *task);
+

@@ -21,13 +21,13 @@ static void _calculate_make_data(struct netdata *src, struct hostentry *host, st
 void start_calculate_data(struct taskdata *data)
 {
 	assert(data && cache_data_address(&data->src.cache) &&
-		   cache_data_length(&data->src.cache));
+		cache_data_length(&data->src.cache));
 
 	/* protocal parse*/
 	struct async_ctx *volatile ac = NULL;
 	/*calculate hosts*/
-	struct allcfg			*cfg = data->cfg;
-	bool					ischeckfd = cfg->ischeckfd;
+	struct allcfg           *cfg = data->cfg;
+	bool                    ischeckfd = cfg->ischeckfd;
 	struct hostgroup        *calgrp = &cfg->host.calhost;
 	volatile int            i = 0;
 
@@ -95,14 +95,14 @@ void start_calculate_data(struct taskdata *data)
 	CATCH
 	{
 		const ExceptT *e = GetExcept();
-		
-		if (e == &EXCEPT_SYS && errno == ECONNREFUSED) {
+
+		if ((e == &EXCEPT_SYS) && (errno == ECONNREFUSED)) {
 			/*连接失败计数*/
 			calgrp->host[i].errconn++;
 			x_printf(E, "can't connect to (%s:%d) or its pool of connection is full",
-					 calgrp->host[i].ip, calgrp->host[i].port);
+				calgrp->host[i].ip, calgrp->host[i].port);
 		}
-		
+
 		x_printf(W, "calculate data fail by `%p`!!!", data);
 
 		if (unlikely(ac)) {
@@ -127,33 +127,31 @@ static const char       CALDATA_TEMPLATE[] =
 static void _calculate_make_data(struct netdata *src, struct hostentry *host, struct netdata *calreq)
 {
 	ssize_t size = 0;
-	bool 	flag = false;
-	
+	bool    flag = false;
+
 	flag = cache_initial(&calreq->cache);
 	AssertRaise(flag, EXCEPT_SYS);
-	
+
 	/*根据协议组装数据*/
 	if (likely(calreq->proto == PROTO_TYPE_HTTP)) {
 		size = cache_appendf(&calreq->cache, CALDATA_TEMPLATE,
-							 host->url ? host->url : CALDATA_URL,
-							 host->ip, host->port,
-							 cache_data_length(&src->cache));
+				host->url ? host->url : CALDATA_URL,
+				host->ip, host->port,
+				cache_data_length(&src->cache));
 		RAISE_SYS_ERROR(size);
-		
+
 		size = cache_append(&calreq->cache,
-							cache_data_address(&src->cache),
-							cache_data_length(&src->cache));
+				cache_data_address(&src->cache),
+				cache_data_length(&src->cache));
 		RAISE_SYS_ERROR(size);
-		
-		
 	} else {
 		RAISE_SYS_ERROR_ERRNO(ENOPROTOOPT);
 	}
-	
+
 	calreq->host = host;
 	x_printf(I, "calculate data : %.*s",
-			 cache_data_length(&calreq->cache),
-			 cache_data_address(&calreq->cache));
+		cache_data_length(&calreq->cache),
+		cache_data_address(&calreq->cache));
 }
 
 static void _calculate_fail(const struct async_obj *obj, void *usr)
@@ -195,6 +193,7 @@ static void _calculate_all_finish(const struct async_obj *obj, void *usr)
 static void _calculate_one_finish(struct async_obj *obj, void *reply, void *usr)
 {
 	struct netdata *data = usr;
+
 	assert(data);
 	struct taskdata *task = data->task;
 	assert(task);

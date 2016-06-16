@@ -166,7 +166,7 @@ int send_result(const event_ctx_t *ev_ctx, const event_t *ev, int res, char *err
 				strcpy(ev_err->id, ev->id);
 				ev_err->ev_type = NET_EV_DUMP_REP;
 				ev_err->ev_state = res;	// res == NET_EV_FAIL|NET_EV_FATAL.
-				ev_err->ev_size = strlen(ev->ev_data)+1;
+				ev_err->ev_size = strlen(ev->ev_data) + 1;
 				strcpy(ev_err->ev_data, ev->ev_data);
 
 				res = send_event(ev_ctx, ev_err);

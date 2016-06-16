@@ -21,8 +21,8 @@ struct zmqhandle
 	void                    *rcvskt;	// socket for receive
 	int                     reqfd;
 	int                     rcvfd;
-	char					reqname[32];
-	char					rcvname[32];
+	char                    reqname[32];
+	char                    rcvname[32];
 	struct procentry        *proc;
 	enum proto_type         proto;
 	struct reqconn          reqdata;
@@ -57,9 +57,9 @@ static struct hostentry **_get_route_host(struct allcfg *cfg, const char *tag, i
 
 void *recv_data(void *usr)
 {
-	struct procentry                *proc = usr;
-	void *volatile                  zmqctx = NULL;
-	
+	struct procentry        *proc = usr;
+	void *volatile          zmqctx = NULL;
+
 	assert(proc && proc->type == PROC_TYPE_CORO);
 
 	pthread_cleanup_push((void (*)(void *))procentry_stop, proc);
@@ -68,7 +68,7 @@ void *recv_data(void *usr)
 	{
 		int                     i = 0;
 		bool                    flag = false;
-		struct  hostcluster     *hc = NULL; /**<source host pointer*/
+		struct  hostcluster     *hc = NULL;	/**<source host pointer*/
 
 		/* initialize */
 		proc->tid = GetThreadID();
@@ -76,7 +76,10 @@ void *recv_data(void *usr)
 		/* wakeup and wait main thread*/
 		futex_set_signal((int *)&proc->stat, PROC_STAT_RUN, 1);
 		flag = futex_cond_wait((int *)&proc->frame->stat, FRAME_STAT_RUN, 10);
-		if (unlikely(!flag)) ReturnValue(NULL);
+
+		if (unlikely(!flag)) {
+			ReturnValue(NULL);
+		}
 
 		x_printf(D, "receive data thread `%ld` start.", proc->tid);
 
@@ -88,7 +91,7 @@ void *recv_data(void *usr)
 		assert(zmqctx);
 		/*add receive task to loop*/
 		hc = &proc->cfg->host.srchost;
-		
+
 		for (i = 0; i < hc->hostgrps; i++) {
 			struct zmqhandle *hdl = NULL;
 			hdl = _zmq_handle_new(&hc->hostgrp[i], zmqctx);
@@ -109,9 +112,11 @@ void *recv_data(void *usr)
 	FINALLY
 	{
 		evcoro_destroy(proc->corloop, (evcoro_destroycb)_zmq_handle_free);
+
 		while (zmqctx && (zmq_ctx_term(zmqctx) != 0)) {
 			AssertRaise(errno == EINTR, EXCEPT_SYS);
 		}
+
 		x_printf(E, "receive data thread `%ld` end.", proc->tid);
 	}
 	END;
@@ -125,12 +130,12 @@ static void _recv_data(struct evcoro_scheduler *scheduler, void *user)
 {
 	assert(user);
 	struct zmqhandle        *hdl = user;
-	int						rswitch = 0; /**< read number frame at least when it need to switch*/
+	int                     rswitch = 0;				/**< read number frame at least when it need to switch*/
 	int                     pframes = 0;
 	bool                    flag = false;
-	int						*itm = &hdl->proc->cfg->idlesleep;
-	int	volatile			counter = 0;
-	struct zmqframe         *rcvframe = NULL; /**< receive multi-frame data from of zmq*/
+	int                     *itm = &hdl->proc->cfg->idlesleep;
+	int volatile            counter = 0;
+	struct zmqframe         *rcvframe = NULL;	/**< receive multi-frame data from of zmq*/
 
 	x_printf(D, "receive data start `%p`.", hdl);
 	rswitch = MAX(hdl->proc->cfg->host.srchost.hostgrps, 1);
@@ -148,11 +153,12 @@ req_again:
 		x_perror("write_zmqdata() from %s error : %s", hdl->reqname, x_strerror(errno));
 		return;
 	} else {
-		union evcoro_event      event = {};
+		union evcoro_event event = {};
 		// sleep .5s , switch to another task
 		evcoro_timer_init(&event, ((float)*itm) / 1000);
 		evcoro_idleswitch(scheduler, &event, EVCORO_TIMER);
 	}
+
 	// receive data
 	do {
 		UNREFOBJ(rcvframe);
@@ -161,17 +167,21 @@ req_again:
 		if (likely(pframes == 2)) {
 			// store data
 			_store_data(hdl, rcvframe);
-			if (unlikely(! (counter++ % rswitch))) {
+
+			if (unlikely(!(counter++ % rswitch))) {
 				// fast switch to another coroutine
 				evcoro_fastswitch(scheduler);
 			}
 		} else if (likely(pframes == 0)) {
-			union evcoro_event      revent = {};
+			union evcoro_event revent = {};
 			evcoro_io_init(&revent, hdl->rcvfd, ((float)*itm) / 100);
 			flag = evcoro_idleswitch(scheduler, &revent, EVCORO_READ);
+
 			// try again
-			if (likely(flag)) continue; /*already read and continue*/
-			else goto req_again; /*time out and send request again*/
+			if (likely(flag)) {
+				continue;		/*already read and continue*/
+			} else { goto req_again;	/*time out and send request again*/
+			}
 		} else if (likely(pframes < 0)) {
 			// a error occured on zmq
 			x_perror("read_zmqdata() from %s error : %s", hdl->rcvname, x_strerror(errno));
@@ -213,12 +223,13 @@ static bool _send_request_cntme(struct evcoro_scheduler *scheduler, struct zmqha
 again:
 	pframes = write_zmqdata(hdl->reqskt, reqframe);
 
-	if (likely(pframes > 0)) ret = true;
-	else if (likely(pframes == 0)) {
+	if (likely(pframes > 0)) {
+		ret = true;
+	} else if (likely(pframes == 0)) {
 		evcoro_timer_init(&event, ((float)hdl->proc->cfg->idlesleep) / 1000);
 		evcoro_idleswitch(scheduler, &event, EVCORO_TIMER);
 		goto again;
-	} else  ret = false;
+	} else { ret = false; }
 
 	evcoro_cleanup_pop(scheduler, true);
 	return ret;
@@ -282,7 +293,7 @@ static struct taskdata *_parse_data(struct allcfg *cfg, struct zmqframe *frame)
 		data->src.fd = -1;
 		data->src.task = data;
 		/*store route data*/
-		bool flag = false;
+		bool    flag = false;
 		ssize_t size = 0;
 		flag = cache_initial(&data->src.cache);
 		AssertRaise(flag, EXCEPT_SYS);
@@ -290,7 +301,7 @@ static struct taskdata *_parse_data(struct allcfg *cfg, struct zmqframe *frame)
 		size = cache_append(&data->src.cache, &buff[frame->frame[0]], frame->frame[1]);
 		RAISE_SYS_ERROR(size);
 		x_printf(I, "source data : %.*s", cache_data_length(&data->src.cache),
-				 cache_data_address(&data->src.cache));
+			cache_data_address(&data->src.cache));
 	}
 	CATCH
 	{
@@ -333,11 +344,12 @@ static struct hostentry **_get_route_host(struct allcfg *cfg, const char *tag, i
 		AssertRaise(src && src->string && src->string[0] && src->type == cJSON_Array, EXCEPT_RCVDATA_FAIL);
 
 		/* 在配置中查找数据源标签*/
-		for (i = 0; i < rule->datasrcs; i++)
+		for (i = 0; i < rule->datasrcs; i++) {
 			if (strcasecmp(rule->datasrc[i].name, src->string) == 0) {
 				datasrc = &rule->datasrc[i];
 				break;
 			}
+		}
 
 		/*配置中没有匹配的数据源，或标签中没有主机组信息，不需要路由*/
 
@@ -350,8 +362,11 @@ static struct hostentry **_get_route_host(struct allcfg *cfg, const char *tag, i
 		int     fields = 0;
 		/* 将路由字段组成数组*/
 		fields = cJSON_GetArraySize(src);
+
 		/* 不需要路由该数据*/
-		if (unlikely(fields < 1)) RAISE(EXCEPT_NOTNEED_ROTDATA);
+		if (unlikely(fields < 1)) {
+			RAISE(EXCEPT_NOTNEED_ROTDATA);
+		}
 
 		rhosts = datasrc->taghashs;
 		NewArray0(rhosts, rhost);
@@ -368,7 +383,10 @@ static struct hostentry **_get_route_host(struct allcfg *cfg, const char *tag, i
 			 */
 #if 0
 			/*目标主机的路由字段超出范围，不路由该条消息到该主机*/
-			if (unlikely((tagh->tag < 0) || (tagh->tag > fields - 1))) continue;
+			if (unlikely((tagh->tag < 0) || (tagh->tag > fields - 1))) {
+				continue;
+			}
+
 			pos = tagh->tag;
 #else
 			pos = INRANGE(tagh->tag, 0, fields - 1);
@@ -403,7 +421,7 @@ static struct zmqhandle *_zmq_handle_new(struct hostgroup *grp, void *ctx)
 
 	TRY
 	{
-		int     flag = 0;
+		int flag = 0;
 
 		New(hdl);
 		hdl->ctx = ctx;
@@ -439,7 +457,6 @@ static struct zmqhandle *_zmq_handle_new(struct hostgroup *grp, void *ctx)
 
 		hdl->reqfd = get_zmqopt(hdl->reqskt, ZMQ_FD);
 		hdl->rcvfd = get_zmqopt(hdl->rcvskt, ZMQ_FD);
-		
 	}
 	CATCH
 	{
@@ -471,18 +488,20 @@ static void _loop_idle(struct evcoro_scheduler *coro, struct procentry *proc)
 {
 	assert(proc);
 
-	if (unlikely(proc->frame->stat != FRAME_STAT_RUN) || (evcoro_actives(proc->corloop) < 1))
+	if (unlikely(proc->frame->stat != FRAME_STAT_RUN) || (evcoro_actives(proc->corloop) < 1)) {
 		evcoro_stop(proc->corloop);
-	else {
+	} else {
 		SQueueT q = proc->frame->queue->data;
 
 		if (q->nodes == q->capacity) {
 			int f = futex_wait(&q->nodes, q->capacity, proc->cfg->idlesleep * 100);
 
-			if (likely(f == 0))
+			if (likely(f == 0)) {
 				/*忽略不可用状态，快速开始下一轮切换*/
 				// evcoro_fastswitch(coro);
 				x_printf(W, "the space of queue is too small.");
+			}
 		}
 	}
 }
+

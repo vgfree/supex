@@ -6,7 +6,6 @@
 #include <ctype.h>
 #include "base/utils.h"
 
-
 /* Calculate the number of bytes needed to represent an integer as string. */
 static int intlen(int i)
 {
@@ -328,7 +327,6 @@ err:
 
 	return -1;
 }
-
 
 /**
  * @param  proto out parameter holds protocol string, it's your responsibility to free it.

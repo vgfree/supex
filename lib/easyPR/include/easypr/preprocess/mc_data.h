@@ -20,15 +20,13 @@
 #include <string>
 
 namespace easypr {
+	namespace preprocess {
+		void create_learn_data(const char *raw_data_folder, const char *out_data_folder,
+			const int how_many = 5000);
 
-namespace preprocess {
-
-void create_learn_data(const char* raw_data_folder, const char* out_data_folder,
-                       const int how_many = 5000);
-
-void tag_data(const char* source_folder, const char* has_plate_folder,
-              const char* no_plate_folder, const char* svm_model);
+		void tag_data(const char *source_folder, const char *has_plate_folder,
+			const char *no_plate_folder, const char *svm_model);
+	}
 }
-}
+#endif	// EASYPR_CORE_MCDATA_H_
 
-#endif  // EASYPR_CORE_MCDATA_H_

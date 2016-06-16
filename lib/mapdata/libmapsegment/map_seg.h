@@ -24,7 +24,7 @@ typedef struct map_seg_info
 	uint8_t         sgid_id;		// 路段奇偶编号
 	uint8_t         sgid;			// SG编号
 	uint8_t         next_sgid;		//下一路SGID
-        uint32_t        countyCode;          // TODO
+	uint32_t        countyCode;		// TODO
 	uint64_t        next_rrid;		//下一路段编号
 	uint64_t        rrid;			// 路段编号
 	uint64_t        name_id;		// 道路名称编号
@@ -34,7 +34,7 @@ typedef struct map_seg_info
 	double          start_lon;		// 起始路口经度
 	double          start_lat;		// 起始路口纬度
 	double          end_lon;		// 终止路口经度
-        double          end_lat;		// 终止路口纬度
+	double          end_lat;		// 终止路口纬度
 } map_seg_info;
 
 typedef struct rrid_buf

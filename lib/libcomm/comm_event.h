@@ -12,7 +12,6 @@
 extern "C" {
 #endif
 
-
 /* 初始化事件结构体 */
 bool commevent_init(struct comm_event **commevent, struct comm_context *commctx);
 
@@ -25,12 +24,8 @@ void commevent_accept(struct comm_event *commevent, int fdidx);
 /* 处理残留的fd,epoll_wait超时和主循环里面调用 @timeout:是否是超时的时候调用该函数 */
 void commevent_remainfd(struct comm_event *commevent, bool timeout);
 
-
-
-
-
 #ifdef __cplusplus
-	}
-#endif 
+}
+#endif
+#endif	/* ifndef __COMM_EVENT_H__ */
 
-#endif /* ifndef __COMM_EVENT_H__ */

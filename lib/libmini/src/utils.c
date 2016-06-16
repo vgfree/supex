@@ -23,8 +23,6 @@
 
 /* -------------------------------------------                */
 
-
-
 /* -------------------------------------------                */
 /**字节序*/
 const union _byteorder g_ByteOrder = { 0x01020304 };
@@ -35,7 +33,7 @@ const union _byteorder g_ByteOrder = { 0x01020304 };
  * 错误消息最大长度
  */
 #ifndef ERROR_MESSAGE_MAX_SIZE
-#define       ERROR_MESSAGE_MAX_SIZE (512)
+  #define       ERROR_MESSAGE_MAX_SIZE (512)
 #endif
 static __thread char _g_errMsg[ERROR_MESSAGE_MAX_SIZE] = { 0 };
 

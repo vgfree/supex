@@ -32,7 +32,7 @@ __BEGIN_DECLS
 		LOG_##level##_COLOR "|" fmt PALETTE_NULL "\n",					  \
 		(file), (line), (int)GetThreadID(), (function), ##__VA_ARGS__)
 
-  #define x_printf(level, fmt, ...)		       \
+  #define x_printf(level, fmt, ...)			   \
 	SLogWriteByInfo(level, __FUNCTION__, LOG_FILENAME, \
 		__LINE__, fmt, ##__VA_ARGS__)
 
@@ -80,7 +80,7 @@ __BEGIN_DECLS
 		n;							  \
 	})
 
-  #define x_printf(level, fmt, ...)		       \
+  #define x_printf(level, fmt, ...)			   \
 	SLogWriteByInfo(level, __FUNCTION__, __FILENAME__, \
 		__LINE__, fmt, ##__VA_ARGS__)
 #endif	/* ifdef DEBUG */

@@ -139,7 +139,7 @@ again:
 					if (timeout == 0) {
 						break;
 					}
-					
+
 					struct timeval  end = {};
 					long            diffms = 0;
 					/*粒度不能太大，系统调用也需要时间*/
@@ -151,7 +151,7 @@ again:
 					if (likely(remain >= 0)) {
 						flag = FD_CheckWrite(fd, remain);
 						code = errno;
-						
+
 						/*中断或已经可写，即可能发生错误，也可能已连接，再次调用连接，以测试*/
 						if (likely((flag == 0) || (code == EINTR))) {
 							goto again;
@@ -192,3 +192,4 @@ again:
 
 	return fd;
 }
+

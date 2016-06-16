@@ -17,7 +17,6 @@
 
 #include "sniff_evcoro_lua_api.h"
 
-
 struct swift_cfg_list   g_swift_cfg_list = {};
 struct sniff_cfg_list   g_sniff_cfg_list = {};
 
@@ -27,7 +26,6 @@ static void swift_pthrd_init(void *user)
 
 	p_swift_worker->mount = sniff_start(p_swift_worker->index);
 }
-
 
 void swift_entry_init(void)
 {
@@ -60,7 +58,6 @@ int main(int argc, char **argv)
 
 	g_swift_cfg_list.entry_init = swift_entry_init;
 	g_swift_cfg_list.pthrd_init = swift_pthrd_init;
-
 
 	swift_mount(&g_swift_cfg_list);
 

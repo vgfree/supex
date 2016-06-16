@@ -9,7 +9,7 @@
 
 int api_hmget(void *user, union virtual_system **VMS, struct adopt_task_node *task)
 {
-	struct data_node        *p_node = get_pool_data(task->sfd);
+	struct data_node *p_node = get_pool_data(task->sfd);
 
 	char                    *p_buf = cache_data_address(&p_node->mdl_recv.cache);
 	struct redis_status     *p_rst = &p_node->mdl_recv.parse.redis_info.rs;
@@ -51,7 +51,7 @@ int api_hmget(void *user, union virtual_system **VMS, struct adopt_task_node *ta
 
 int api_hgetall(void *user, union virtual_system **VMS, struct adopt_task_node *task)
 {
-	struct data_node        *p_node = get_pool_data(task->sfd);
+	struct data_node *p_node = get_pool_data(task->sfd);
 
 	char                    *p_buf = cache_data_address(&p_node->mdl_recv.cache);
 	struct redis_status     *p_rst = &p_node->mdl_recv.parse.redis_info.rs;

@@ -78,7 +78,7 @@ void load_cfg_file(struct smart_cfg_file *p_cfg, char *name)
 		if (json_object_object_get_ex(cfg, "api_merge", &obj)) {
 			p_cfg->api_counts++;
 			str_val = json_object_get_string(obj);
-                        p_cfg->api_merge = x_strdup(str_val);
+			p_cfg->api_merge = x_strdup(str_val);
 		}
 
 		if (json_object_object_get_ex(cfg, "api_custom", &obj)) {
@@ -94,19 +94,19 @@ void load_cfg_file(struct smart_cfg_file *p_cfg, char *name)
 				itr_obj = json_object_array_get_idx(obj, i);
 				str_val = json_object_get_string(itr_obj);
 				assert(strlen(str_val) <= MAX_API_NAME_LEN);
-                                strncpy(&p_cfg->api_names[i][0], str_val, MIN(strlen(str_val), MAX_API_NAME_LEN));
+				strncpy(&p_cfg->api_names[i][0], str_val, MIN(strlen(str_val), MAX_API_NAME_LEN));
 			}
 		}
 	}
 
-        /*PMR cfg init*/
+	/*PMR cfg init*/
 	assert(0 == pmr_load_cfg(name));
 
-        assert(0 == map_topo_init(name));
+	assert(0 == map_topo_init(name));
 
-        /*segment cfg init*/
-        g_locate_cfg = locate_cfg_init(name);
-        assert(g_locate_cfg != NULL);
+	/*segment cfg init*/
+	g_locate_cfg = locate_cfg_init(name);
+	assert(g_locate_cfg != NULL);
 
 	return;
 

@@ -27,7 +27,7 @@ unsigned int dist_p2l(double pt_lon, double pt_lat, double line_st_lon, double l
 unsigned short direction_sub(unsigned short dir1, unsigned short dir2);
 
 /* 两直线的夹角，返回角度值，非弧度值 */
-double IncludedAngle(long line1_x, long line1_y,long line2_x, long line2_y);
+double IncludedAngle(long line1_x, long line1_y, long line2_x, long line2_y);
 
 /*判断gps点是否在之前范围内*/
 int is_in_line_range(double pt_lon, double pt_lat, double sl, double sb, double el, double eb);

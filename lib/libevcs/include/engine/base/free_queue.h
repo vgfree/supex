@@ -47,7 +47,6 @@ bool free_queue_push(struct free_queue_list *list, void *data);
  */
 bool free_queue_pull(struct free_queue_list *list, void *data);
 
-
 /**
  * 查看队列头数据
  */
@@ -58,5 +57,5 @@ bool free_queue_top(struct free_queue_list *list, void *data);
  */
 void free_queue_travel(struct free_queue_list *list, bool (*travel)(void *, size_t size, void *), void *data);
 
-
 void free_queue_free(struct free_queue_list *list);
+

@@ -28,18 +28,17 @@ static void swift_pthrd_init(void *user)
 	p_swift_worker->mount = sniff_start(p_swift_worker->index);
 }
 
-
 /**
  * 根据条件编译初始化文件队列和内存队列
  */
 static void swift_entry_init(void)
 {
-
 	app_queue_init();
+
 	/*
 	 * 初始化支持的命令
 	 */
-	//init_session_cmd();
+	// init_session_cmd();
 
 	if (!kvpool_init()) {
 		exit(EXIT_FAILURE);
@@ -146,7 +145,6 @@ int main(int argc, char **argv)
 	g_swift_cfg_list.entry_init = swift_entry_init;
 
 	g_swift_cfg_list.pthrd_init = swift_pthrd_init;
-
 
 	g_swift_cfg_list.reload_cfg = swift_reload_cfg;
 

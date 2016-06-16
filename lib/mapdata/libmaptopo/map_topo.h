@@ -11,3 +11,4 @@ int map_topo_load();
 int map_topo_isconnect(uint32_t rrid1, uint8_t sgid1, uint32_t rrid2, uint8_t sgid2, uint8_t deep, topo_node_t *p_node);
 
 void map_topo_destory();
+

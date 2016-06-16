@@ -40,32 +40,35 @@ struct task1
 
 struct task2
 {
-	int id;
-	char name[24];
+	int     id;
+	char    name[24];
 };
 
 struct task3
 {
-	int id;
-	char ip[24];
+	int     id;
+	char    ip[24];
 };
-
 
 void work1(struct evcoro_scheduler *scheduler, void *usr)
 {
 	struct task1 *arg = usr;
+
 	printf("working task 1. id=%d.\n", arg->id);
 	evcoro_fastswitch(scheduler);
 	printf("working task 1. id=%d End.\n", arg->id);
 }
+
 void work2(struct evcoro_scheduler *scheduler, void *usr)
 {
 	struct task2 *arg = usr;
+
 	evcoro_fastswitch(scheduler);
 	printf("working task 2. id=%d.\n", arg->id);
 	sleep(1);
 	printf("working task 2. id=%d End..\n", arg->id);
 }
+
 void work3(struct evcoro_scheduler *scheduler, void *usr)
 {
 	printf("working task 3. id=3.\n");
@@ -74,8 +77,8 @@ void work3(struct evcoro_scheduler *scheduler, void *usr)
 	printf("working task 3. id=%d End...\n", arg->id);
 }
 
-//void work(struct evcoro_scheduler *scheduler, void *usr)
-//{
+// void work(struct evcoro_scheduler *scheduler, void *usr)
+// {
 //	struct task     *arg = usr;
 //	int             i = 0;
 //
@@ -94,7 +97,7 @@ void work3(struct evcoro_scheduler *scheduler, void *usr)
 //	printf("\x1B[1;33m" "ID %d end ..." "\x1B[m" "\n", arg->id);
 //
 //	free(usr);
-//}
+// }
 
 void idle(struct evcoro_scheduler *scheduler, void *usr)
 {
@@ -143,14 +146,14 @@ int main(int argc, char **argv)
 }
 
 // The execute result like down.
-// 
-//[lba@node8 libevcoro_test]$ ./bin/multiworks_test
-//working task 1. id=1.
-//working task 3. id=3.
-//<<< 1456124961.931415 : IDLE, tasks [3] >>>
-//working task 1. id=1 End.
-//working task 2. id=2.
-//working task 2. id=2 End..
-//working task 3. id=3 End...
-//<<< 1456124962.931629 : IDLE, tasks [0] >>>
+//
+// [lba@node8 libevcoro_test]$ ./bin/multiworks_test
+// working task 1. id=1.
+// working task 3. id=3.
+// <<< 1456124961.931415 : IDLE, tasks [3] >>>
+// working task 1. id=1 End.
+// working task 2. id=2.
+// working task 2. id=2 End..
+// working task 3. id=3 End...
+// <<< 1456124962.931629 : IDLE, tasks [0] >>>
 

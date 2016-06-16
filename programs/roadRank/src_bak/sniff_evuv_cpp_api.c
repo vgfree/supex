@@ -73,7 +73,7 @@ int import_to_redis(char command[], void *loop, char host[], unsigned short port
 		int     ok = cmd_to_proto(&proto, command);
 
 		if (ok == REDIS_ERR) {
-            conn_xpool_push(cpool, &sfd);
+			conn_xpool_push(cpool, &sfd);
 			async_distory(ac);
 			return -1;
 		}
@@ -109,7 +109,7 @@ int sniff_vms_call(void *user, void *task)
 	CAL_INFO *cal_info = (CAL_INFO *)calloc(1, sizeof(CAL_INFO));
 	assert(cal_info);
 	memset(cal_info, 0, sizeof(CAL_INFO));
-    int ok = decode_gps(loop, p_task->data, &(cal_info->gps_info));
+	int ok = decode_gps(loop, p_task->data, &(cal_info->gps_info));
 
 	if (ok == -1) {
 		free(cal_info); cal_info = NULL;

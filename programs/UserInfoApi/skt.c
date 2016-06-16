@@ -29,7 +29,6 @@ void skt_register(char *name)
 	g_ctx = zmq_ctx_new();
 }
 
-
 void *zmq_process_start(void *(*fcb)(void *args), void *args)
 {
 	pid_t pid = 0;
@@ -58,7 +57,7 @@ void zmq_srv_init(char *host, int port)
 	char addr[64] = {};
 	sprintf(addr, "tcp://%s:%d", host, port);
 	int rc = zmq_bind(g_collecter, addr);
-  	assert(rc == 0);
+	assert(rc == 0);
 
 	g_forwarder = zmq_socket(g_ctx, ZMQ_PUSH);
 #ifdef SELECT_MULTITHREAD
@@ -71,10 +70,10 @@ void zmq_srv_init(char *host, int port)
 	assert(rc == 0);
 }
 
-
 void zmq_srv_fetch(struct skt_device *devc)
 {
 	assert(devc);
+
 	if (!devc->skt) {
 		devc->skt = zmq_socket(g_ctx, ZMQ_PULL);
 #ifdef SELECT_MULTITHREAD
@@ -92,10 +91,9 @@ void zmq_srv_fetch(struct skt_device *devc)
 
 	memset(devc->ibuffer, 0, sizeof(devc->ibuffer));
 	size_t  count = MAX_SPILL_DEPTH;
-	int rc = zmq_recviov(devc->skt, devc->ibuffer, &count, 0);
+	int     rc = zmq_recviov(devc->skt, devc->ibuffer, &count, 0);
 	devc->idx = count;
 }
-
 
 void zmq_srv_start(void)
 {

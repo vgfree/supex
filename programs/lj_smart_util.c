@@ -40,19 +40,21 @@ int smart_vms_cntl(void *user, union virtual_system **VMS, struct adopt_task_nod
 			return 0;
 	}
 	error = lua_pcall(*L, 3, 0, 0);
+
 	if (error) {
 		assert(*L);
 		x_printf(E, "%s", lua_tostring(*L, -1));
 		lua_pop(*L, 1);
 	}
+
 	return error;
 }
 
-
 int smart_vms_exit(void *user, union virtual_system **VMS, struct adopt_task_node *task)
 {
-	int error = 0;
+	int             error = 0;
 	lua_State       **L = VMS;
+
 	x_printf(S, "exit one batch LUA!\n");
 
 	lua_getglobal(*L, "app_exit");
@@ -68,88 +70,99 @@ int smart_vms_exit(void *user, union virtual_system **VMS, struct adopt_task_nod
 	return 0;	/*must return 0*/
 }
 
-
 int smart_vms_rfsh(void *user, union virtual_system **VMS, struct adopt_task_node *task)
 {
-	int error = 0;
+	int             error = 0;
 	lua_State       **L = VMS;
+
 	lua_getglobal(*L, "app_rfsh");
 	lua_pushboolean(*L, task->last);
 	lua_pushinteger(*L, task->sfd);
 	error = lua_pcall(*L, 2, 0, 0);
+
 	if (error) {
 		assert(*L);
 		x_printf(E, "%s", lua_tostring(*L, -1));
 		lua_pop(*L, 1);
 	}
+
 	return error;
 }
 
-
 int smart_vms_sync(void *user, union virtual_system **VMS, struct adopt_task_node *task)
 {
-	int error = 0;
+	int             error = 0;
 	lua_State       **L = VMS;
+
 	lua_getglobal(*L, "app_push");
 	lua_pushboolean(*L, task->last);
 	lua_pushinteger(*L, task->sfd);
 	error = lua_pcall(*L, 2, 0, 0);
+
 	if (error) {
 		assert(*L);
 		x_printf(E, "%s", lua_tostring(*L, -1));
 		lua_pop(*L, 1);
 	}
+
 	return error;
 }
 
 /*=============================================================*/
 int smart_vms_gain(void *user, union virtual_system **VMS, struct adopt_task_node *task)
 {
-	int error = 0;
+	int             error = 0;
 	lua_State       **L = VMS;
+
 	lua_getglobal(*L, "app_pull");
 	lua_pushboolean(*L, task->last);
 	lua_pushinteger(*L, task->sfd);
 	error = lua_pcall(*L, 2, 0, 0);
+
 	if (error) {
 		assert(*L);
 		x_printf(E, "%s", lua_tostring(*L, -1));
 		lua_pop(*L, 1);
 	}
+
 	return error;
 }
 
-
 int smart_vms_call(void *user, union virtual_system **VMS, struct adopt_task_node *task)
 {
-	int error = 0;
+	int             error = 0;
 	lua_State       **L = VMS;
+
 	lua_getglobal(*L, "app_call_all");
 	lua_pushboolean(*L, task->last);
 	lua_pushinteger(*L, task->sfd);
 	error = lua_pcall(*L, 2, 0, 0);
+
 	if (error) {
 		assert(*L);
 		x_printf(E, "%s", lua_tostring(*L, -1));
 		lua_pop(*L, 1);
 	}
+
 	return error;
 }
 
-
 int smart_vms_exec(void *user, union virtual_system **VMS, struct adopt_task_node *task)
 {
-	int error = 0;
+	int             error = 0;
 	lua_State       **L = VMS;
+
 	lua_getglobal(*L, "app_call_one");
 	lua_pushboolean(*L, task->last);
 	lua_pushinteger(*L, task->sfd);
 	error = lua_pcall(*L, 2, 0, 0);
+
 	if (error) {
 		assert(*L);
 		x_printf(E, "%s", lua_tostring(*L, -1));
 		lua_pop(*L, 1);
 	}
+
 	return error;
 }
 
@@ -162,16 +175,20 @@ int smart_vms_exec(void *user, union virtual_system **VMS, struct adopt_task_nod
  */
 int smart_vms_monitor(void *user, union virtual_system **VMS, struct adopt_task_node *task)
 {
-	int error = 0;
+	int             error = 0;
 	lua_State       **L = VMS;
+
 	lua_getglobal(*L, "app_monitor");
 	lua_pushboolean(*L, task->last);
 	lua_pushinteger(*L, tlpool_get_thread_index(user));
 	error = lua_pcall(*L, 2, 0, 0);
+
 	if (error) {
 		assert(*L);
 		x_printf(E, "%s", lua_tostring(*L, -1));
 		lua_pop(*L, 1);
 	}
+
 	return error;
 }
+
