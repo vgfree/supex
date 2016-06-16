@@ -51,7 +51,6 @@ endif
 OBJS=$(addprefix $(BIN)/, \
 	$(DEP_OBJS) \
 	ldb_cb.o \
-	log.o \
 	conf.o \
 	load_swift_cfg.o \
 	swift_cpp_api.o \

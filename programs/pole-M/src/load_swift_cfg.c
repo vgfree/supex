@@ -77,6 +77,7 @@ void load_cfg_file(struct swift_cfg_file *p_cfg, char *name)
 
 	if (json_object_object_get_ex(cfg, "log_level", &obj)) {
 		p_cfg->log_level = json_object_get_int(obj);
+		x_printf(I, "log_level: %s:%d", "????", p_cfg->log_level);
 	} else { goto fail; }
 
 	if (p_cfg->ptype == USE_HTTP_PROTO) {
