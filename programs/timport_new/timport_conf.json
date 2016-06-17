@@ -2,7 +2,8 @@
     "delay_time": 7200,
     "zk_servers": "192.168.1.14:2181",
     "backup_path": "./var/backup",
-    "start_time": 1466078832,
+    "start_time": 1466166000,
+    "time_interval": 10,
     "redis": [
         {
             "host": "192.168.1.12",

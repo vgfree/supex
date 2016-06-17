@@ -11,6 +11,7 @@
 #include "async_tasks/async_obj.h"
 #include "base/free_queue.h"
 #include "timport_cfg.h"
+#include "get_user_key.h"
 
 EVCS_MODULE_SETUP(kernel, kernel_init, kernel_exit, &g_kernel_evts);
 EVCS_MODULE_SETUP(evcs, evcs_init, evcs_exit, &g_evcs_evts);
@@ -30,7 +31,7 @@ struct timport_cfg_list g_timport_cfg_list = {};
 tlpool_t *tlpool = NULL;
 
 struct free_queue_list  glist;
-char                    TASK[64] = { 0 };
+char TASK[64] = { 0 };
 
 struct user_task
 {
@@ -42,8 +43,16 @@ struct user_data
 	char                    *p_buf;
 	struct redis_status     *status;
 };
-
+ 
 struct user_data UserData;
+/*
+struct user_key
+{
+	char	*key;
+	int 	keyLen;
+};
+*/
+extern struct user_key UserKey;
 
 static bool task_lookup(void *user, void *task)
 {
@@ -101,11 +110,14 @@ void GetData_task()
 
 	UserData.p_buf = NULL;
 	UserData.status = NULL;
-
 	struct supex_evcoro     *p_evcoro = supex_get_default();
 	struct evcoro_scheduler *p_scheduler = p_evcoro->scheduler;
 	struct xpool            *cpool = conn_xpool_find("192.168.1.12", 9001);
-	len = cmd_to_proto(&proto, "SMEMBERS %s", "ACTIVEUSER:20160616104");
+
+	getUserKey(g_timport_cfg_list.file_info.start_time, g_timport_cfg_list.file_info.time_interval);
+
+	printf("UserKey.key = %s\n", UserKey.key, UserKey.keyLen);
+	len = cmd_to_proto(&proto, "SMEMBERS %s", UserKey.key);
 	struct async_evtasker   *tasker = evtask_initial(p_scheduler, 1, QUEUE_TYPE_FIFO, NEXUS_TYPE_SOLO);
 	struct command_node     *command = evtask_command(tasker, PROTO_TYPE_REDIS, cpool, proto, len);
 
@@ -126,7 +138,6 @@ void *SetData_task_handle(struct supex_evcoro *evcoro, void *step)
 {
 	int     len = 0;
 	char    *proto = NULL;
-	char    *time = "20160616104";
 
 	int                     idx_task = (int)(uintptr_t)step;
 	struct user_task        *p_task = &((struct user_task *)evcoro->task)[idx_task];
@@ -139,7 +150,7 @@ void *SetData_task_handle(struct supex_evcoro *evcoro, void *step)
 	printf("Lawrence hamster said task_id = %d\n", p_task->TASK);
 	printf("Lawrence hamster said data = %s\n", userName);
 
-	dispatchToUser(userName, UserData.status->field[p_task->TASK - 1].len, time, strlen(time));
+	//dispatchToUser(userName, UserData.status->field[p_task->TASK - 1].len, UserKey.key, strlen(UserKey.key));
 
 	free(userName);
 }
@@ -192,17 +203,17 @@ void TimeProcessFunction(startTime)
 	printf("enter TimeProcessFunction\n");
 	time_t  t;
 	int     currentTime;
-
+/*
 	if (time(&t) > startTime) {
 		printf("startTime is incorrent !\n");
 		exit(0);
 	}
-
+*/
 	while ((currentTime = time(&t)) < startTime) {
 		sleep(0.2);
 	}
 
-	g_timport_cfg_list.file_info.start_time += 60;
+	//g_timport_cfg_list.file_info.start_time += 60 * g_timport_cfg_list.file_info.time_interval;
 	printf("exit TimeProcessFunction\n");
 }
 
@@ -219,10 +230,11 @@ static bool task_report_main(void *user, void *task)
 void *getData_task_handle()
 {
 	while(1) {
-		printf("start_time = %d\n", g_timport_cfg_list.file_info.start_time);
+		//printf("start_time = %d, delay_time = %d\n", g_timport_cfg_list.file_info.start_time, g_timport_cfg_list.file_info.delay_time);
 		TimeProcessFunction(g_timport_cfg_list.file_info.start_time);
 		GetData_task();
 		sleep(1);
+		g_timport_cfg_list.file_info.start_time += 60 * g_timport_cfg_list.file_info.time_interval;
 	}
 }
 
