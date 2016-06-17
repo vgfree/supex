@@ -46,8 +46,15 @@ struct link_redis_hash_cfg      *link_get_redis_hash_cfg(struct json_object *red
 
 void link_free_redis_hash_cfg(struct link_redis_hash_cfg *cfg);
 
+#define link_http_cfg link_redis_cfg
+#define link_http_hash_cfg link_redis_hash_cfg
+#define link_get_http_cfg link_get_redis_cfg
+#define link_free_http_cfg link_free_redis_cfg
+#define link_get_http_hash_cfg link_get_redis_hash_cfg
+#define link_free_http_hash_cfg link_free_redis_hash_cfg
+
 struct link_mysql_cfg   *link_get_mysql_cfg(struct json_object *mysql_cfg, const char *name);
 
 void link_free_mysql_cfg(struct link_mysql_cfg *cfg);
-#endif	/* LINK_CFG_PARSER_H */
 
+#endif	/* LINK_CFG_PARSER_H */
