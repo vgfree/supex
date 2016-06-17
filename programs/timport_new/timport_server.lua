@@ -20,6 +20,7 @@ local cjson     = require('cjson')
 local redis_api = require('redis_pool_api')
 local http_api  = require('http_short_api')
 local libhttps  = require("libhttps")
+local CFG_LIST	= require('cfg')
 
 redis_api.init()
 
@@ -83,7 +84,9 @@ local function getDataWithUser(user, targetTime)
 	if targetTime == nil then
 		return nil
 	end
-	
+	targetTime = string.gsub(targetTime, CFG_LIST['USER_PART_KEY'] .. ':', '')
+	print(targetTime)
+
 	local userData = nil
 	dataKey = key2 .. user .. ':' .. targetTime
 	userData = getData(dataKey, 'SMEMBERS')
