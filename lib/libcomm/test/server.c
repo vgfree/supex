@@ -10,13 +10,17 @@ int main(int argc, char *argv[])
 	int     i = 0, k = 0, fd = 0;
 	int     pckidx = 0, frmidx = 0;
 	int     retval = -1, port = 0;
-	char    content[1024] = {};
+	int	datasize = 1024*1024*2;
 	char    str_port[64] = { 0 };
+	char*	content = NULL;
+	char*	buff = NULL;
 
 	struct cbinfo           finishedcb = { 0 };
 	struct comm_context     *commctx = NULL;
 	struct comm_message     message = { 0 };
 
+	NewArray(content, datasize);
+	NewArray(buff, datasize);
 	if (unlikely(argc < 4)) {
 		/* 最后一个参数为绑定几个端口，输入端口为起始，后续端口都直接加1 */
 		printf("usage:%s <ipaddr> <port> <bind_times>\n", argv[0]);
@@ -59,10 +63,9 @@ int main(int argc, char *argv[])
 		}
 
 		if (comm_recv(commctx, &message, true, -1) > -1) {
+#if 0
 			for (pckidx = 0, k = 0; pckidx < message.package.packages; pckidx++) {
 				int     size = 0;
-				char    buff[1024] = {};
-
 				for (frmidx = 0; frmidx < message.package.frames_of_package[pckidx]; frmidx++, k++) {
 					memcpy(&buff[size], &message.content[message.package.frame_offset[k]], message.package.frame_size[k]);
 					size += message.package.frame_size[k];
@@ -71,6 +74,8 @@ int main(int argc, char *argv[])
 
 				log("messag fd: %d message body: %s\n", message.fd, buff);
 			}
+#endif
+			log("message fd: %d message body:%.*s\n", message.fd, message.package.dsize, message.content);
 
 			/* 接收成功之后将此消息体再返回给用户 */
 			if (message.fd > 0) {

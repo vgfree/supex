@@ -8,13 +8,14 @@
 #define NODESIZE        sizeof(intptr_t)	/* 队列里面保存的一个节点的大小 */
 #define QUEUENODES      1024			/* 队列里面保存的节点总个数 */
 #define MAXDISPOSEDATA  5			/* 最多联系解析打包的数据次数 */
-#define COMM_READ_MIOU  1024
+#define COMM_READ_MIOU  1024*1024		/* 一次性最多读取数据的字节数 */
 
 /* 删除一个fd的相关信息以及关闭一个fd */
-#define DELETEFD(commevent, fd, flag)			      \
-	({      commdata_del(commevent, fd);		      \
-		del_remainfd(&commevent->remainfd, fd, flag); \
-		close(fd); })
+#define DELETEFD(commevent, fd, flag)				\
+	({      commdata_del(commevent, fd);			\
+		del_remainfd(&commevent->remainfd, fd, flag);	\
+		close(fd);					\
+	 })
 
 static void _fill_message_package(struct comm_message *message, const struct mfptp_parser *packager);
 
