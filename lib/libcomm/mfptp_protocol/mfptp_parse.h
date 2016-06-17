@@ -19,17 +19,17 @@ typedef int (*Decryption_CallBack)(char *dest, const char *src, int d_len, int s
 /* MFPTP协议的状态码[当前解析或打包正在处理协议的哪部分] */
 enum mfptp_status
 {
-	MFPTP_PARSE_INIT = 0x00,	/* MFPTP协议解析初始化的状态 */
-	MFPTP_HEAD,			/* MFPTP协议的前6个字节"#MFPTP" */
-	MFPTP_VERSION,			/* MFPTP协议的版本号 */
-	MFPTP_CONFIG,			/* MFPTP协议的压缩解密格式 */
-	MFPTP_SOCKET_TYPE,		/* MFPTP协议socket的类型 */
-	MFPTP_PACKAGES,			/* MFPTP协议携带的包数 */
-	MFPTP_FP_CONTROL,		/* MFPTP协议的FP_control字段 */
-	MFPTP_F_SIZE,			/* MFPTP协议F_size字段 */
-	MFPTP_FRAME_START,		/* MFPTP协议的帧 */
-	MFPTP_FRAME_OVER,		/* MFPTP协议解析完一包的数据 */
-	MFPTP_PARSE_OVER		/* MFPTP协议解析完*/
+	MFPTP_PARSE_INIT = 0x00,	/* 0 MFPTP协议解析初始化的状态 */
+	MFPTP_HEAD,			/* 1 MFPTP协议的前6个字节"#MFPTP" */
+	MFPTP_VERSION,			/* 2 MFPTP协议的版本号 */
+	MFPTP_CONFIG,			/* 3 MFPTP协议的压缩解密格式 */
+	MFPTP_SOCKET_TYPE,		/* 4 MFPTP协议socket的类型 */
+	MFPTP_PACKAGES,			/* 5 MFPTP协议携带的包数 */
+	MFPTP_FP_CONTROL,		/* 6 MFPTP协议的FP_control字段 */
+	MFPTP_F_SIZE,			/* 7 MFPTP协议F_size字段 */
+	MFPTP_FRAME_START,		/* 8 MFPTP协议的帧 */
+	MFPTP_FRAME_OVER,		/* 9 MFPTP协议解析完一包的数据 */
+	MFPTP_PARSE_OVER		/* 10 MFPTP协议解析完*/
 };
 
 /* MFPTP解析器的状态 */
@@ -38,6 +38,7 @@ struct mfptp_parser_stat
 	bool                    over;		/* 是否完成解析*/
 	bool                    resume;		/* 是否断点续传 */
 	int                     dosize;		/* 当前已解析的长度 */
+	int			frame_offset;	/* 记录目前最后解析的帧偏移[已解析数据在cache里面的偏移]*/
 	char *const             *data;		/* 待解析数据起始地址指针*/
 	int const               *dsize;		/* 待解析数据的总长度地址*/
 	struct comm_cache       cache;		/* 保存解压解密之后的数据 */

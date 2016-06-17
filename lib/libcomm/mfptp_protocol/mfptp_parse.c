@@ -47,7 +47,6 @@ int mfptp_parse(struct mfptp_parser *parser)
 
 	int                             size_f_size = 0;		/* f_size字段所占字节数 */
 	int                             frame_size = 0;			/* 解压解密之后的帧数据大小 */
-	static int                      frame_offset = 0;		/* 帧的偏移 */
 	int                             dsize = *(parser->ms.dsize);	/* 待解析数据的大小 */
 	const char                      *data = *parser->ms.data;	/* 待解析的数据缓冲区 */
 	struct mfptp_package_info       *package = NULL;		/* 包的相关信息 */
@@ -60,7 +59,7 @@ int mfptp_parse(struct mfptp_parser *parser)
 		/* 从头开始解析的时候就要恢复一下变量的初始化值 */
 		parser->ms.error = MFPTP_OK;
 		parser->ms.dosize = 0;
-		frame_offset = 0;
+		parser->ms.frame_offset = 0;
 		/* 只要解析完成一次就需要立即去提取解析完的数据，然后将bodyer和cache清零 */
 		parser->ms.cache.start += parser->bodyer.dsize;
 		parser->ms.cache.size -= parser->bodyer.dsize;
@@ -205,10 +204,10 @@ int mfptp_parse(struct mfptp_parser *parser)
 					commcache_append(&parser->ms.cache, parser->decryptbuff, frame_size);
 					package = &parser->bodyer.package[parser->bodyer.packages];
 					package->frame[package->frames].frame_size = frame_size;
-					package->frame[package->frames].frame_offset = frame_offset;
+					package->frame[package->frames].frame_offset = parser->ms.frame_offset;
 					package->frames++;
 
-					frame_offset += frame_size;
+					parser->ms.frame_offset += frame_size;
 					parser->bodyer.dsize += frame_size;
 					parser->ms.dosize += parser->header.f_size;
 

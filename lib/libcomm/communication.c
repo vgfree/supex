@@ -8,7 +8,7 @@
 
 #define QUEUE_NODES     1024		/* 队列里面可以存放多少个节点的数据 */
 #define EPOLLTIMEOUTED  5000		/* epoll_wait的超时事件 以毫秒(ms)为单位 1s = 1000ms*/
-#define CONNECTTIMEOUT  1000000 *30	/* 连接服务器时的标志位设置了CONNECT_ANYWAY时，一直尝试连接服务器,超时时间到还没连接上就返回[单位:ms] */
+#define CONNECTTIMEOUT  1000*60*30	/* 连接服务器时的标志位设置了CONNECT_ANYWAY时，一直尝试连接服务器,超时时间到还没连接上就返回[单位:ms] */
 
 static void *_start_new_pthread(void *usr);
 
@@ -177,8 +177,6 @@ int comm_send(struct comm_context *commctx, const struct comm_message *message, 
 
 			/* 发送给对发以触发写事件 如果数据写满则一直堵塞到对方读取数据 */
 			commpipe_write(&commctx->commpipe, (void *)&message->fd, sizeof(message->fd));
-
-			// log("comm_send data in comm_send\n");
 			return message->package.dsize;
 		}
 	}

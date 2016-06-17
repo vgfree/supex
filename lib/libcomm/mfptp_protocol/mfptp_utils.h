@@ -69,30 +69,30 @@ enum mfptp_config
 /* MFPTP协议的socket的type值 */
 enum mfptp_socket_type
 {
-	PAIR_METHOD = 0x00,
-	PUB_METHOD,
-	SUB_METHOD,
-	REQ_METHOD,
-	REP_METHOD,
-	DEALER_METHOD,
-	ROUTER_METHOD,
-	PULL_METHOD,
-	PUSH_METHOD,
-	HEARTBEAT_METHOD,
-	INVALID_METHOD
+	PAIR_METHOD		= 0x00,
+	PUB_METHOD		= 0x01,
+	SUB_METHOD		= 0x02,
+	REQ_METHOD		= 0x03,
+	REP_METHOD		= 0x04,
+	DEALER_METHOD		= 0x05,
+	ROUTER_METHOD		= 0x06,
+	PULL_METHOD		= 0x07,
+	PUSH_METHOD		= 0x08,
+	HEARTBEAT_METHOD	= 0x09,
+	INVALID_METHOD		= 0x10
 };
 
 /* MFPTP协议错误码 */
 enum mfptp_error
 {
-	MFPTP_OK = 0x00,		/* MFPTP打包解析的时候没发生错误，继续下一步 */
-	MFPTP_HEAD_INVAILD,		/* MFPTP协议解析前6个字节“#MFPTP”出错 */
-	MFPTP_VERSION_INVAILD,		/* MFPTP协议版本无效 */
-	MFPTP_CONFIG_INVAILD,		/* MFPTP压缩解密格式设置错误 */
-	MFPTP_SOCKTYPE_INVAILD,		/* MFPTP协议socket_type设置错误 */
-	MFPTP_PACKAGES_INVAILD,		/* MFPTP协议包数不合法[小于零或大于允许携带的最大包数] */
-	MFPTP_DATA_TOOFEW,		/* MFPTP协议帧携带的数据太少[数据未接收完毕] */
-	MFPTP_DATASIZE_INVAILD		/* MFPTP协议帧携带的数据长度无效[携带的数据小于零或者大于允许帧携带最大数] */
+	MFPTP_OK = 0x00,		/* 0 MFPTP打包解析的时候没发生错误，继续下一步 */
+	MFPTP_HEAD_INVAILD,		/* 1 MFPTP协议解析前6个字节“#MFPTP”出错 */
+	MFPTP_VERSION_INVAILD,		/* 2 MFPTP协议版本无效 */
+	MFPTP_CONFIG_INVAILD,		/* 3 MFPTP压缩解密格式设置错误 */
+	MFPTP_SOCKTYPE_INVAILD,		/* 4 MFPTP协议socket_type设置错误 */
+	MFPTP_PACKAGES_INVAILD,		/* 5 MFPTP协议包数不合法[小于零或大于允许携带的最大包数] */
+	MFPTP_DATA_TOOFEW,		/* 6 MFPTP协议帧携带的数据太少[数据未接收完毕] */
+	MFPTP_DATASIZE_INVAILD		/* 7 MFPTP协议帧携带的数据长度无效[携带的数据小于零或者大于允许帧携带最大数] */
 };
 
 /* MFPTP协议帧的相关信息 */

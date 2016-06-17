@@ -95,7 +95,6 @@ bool socket_listen(struct comm_tcp *commtcp, const char *host, const char *servi
 ***********************************************************************************/
 bool socket_connect(struct comm_tcp *commtcp, const char *host, const char *service, int timeout, int connattr);
 
-/* 接收一个新的连接 @lsncommtcp:监听描述符相关信息 @acptcommtcp:接收新的描述符的相关信息 */
 
 /***********************************************************************************
 * 功能:接收一个新的连接
@@ -104,6 +103,7 @@ bool socket_connect(struct comm_tcp *commtcp, const char *host, const char *serv
 * @返回值:< 0 接收失败 >0 新描述符的fd
 ***********************************************************************************/
 int socket_accept(const struct comm_tcp *lsncommtcp, struct comm_tcp *acptcommtcp);
+
 
 #ifdef __cplusplus
 }
