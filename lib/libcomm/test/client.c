@@ -12,8 +12,13 @@ int main(int argc, char *argv[])
 	int     n = 0, k = 0, fd[10] = {};
 	int     pckidx = 0, frmidx = 0;
 	int     retval = -1, port = 0;
-	char    content[1024] = {};
 	char    str_port[64] = { 0 };
+	int	datasize = 1024*1024*2;
+	char*	content = NULL;
+	char*	buff = NULL;
+
+	NewArray(content, datasize);
+	NewArray(buff, datasize);
 
 	struct cbinfo           finishedcb = { 0 };
 	struct comm_context     *commctx = NULL;
@@ -60,11 +65,10 @@ int main(int argc, char *argv[])
 			if (send_data(commctx, &sendmsg, fd[i]) > -1) {
 				log("comm_send successed\n");
 
-				if (comm_recv(commctx, &recvmsg, false, -1) > -1) {
+				if (comm_recv(commctx, &recvmsg, true, -1) > -1) {
+#if 0
 					for (pckidx = 0, k = 0; pckidx < recvmsg.package.packages; pckidx++) {
 						int     size = 0;
-						char    buff[1024] = {};
-
 						for (frmidx = 0; frmidx < recvmsg.package.frames_of_package[pckidx]; frmidx++, k++) {
 							memcpy(&buff[size], &recvmsg.content[recvmsg.package.frame_offset[k]], recvmsg.package.frame_size[k]);
 							size += recvmsg.package.frame_size[k];
@@ -72,6 +76,8 @@ int main(int argc, char *argv[])
 
 						log("messag fd: %d message body: %s\n", recvmsg.fd, buff);
 					}
+#endif
+						log("message fd:%d message body:%.*s\n",recvmsg.fd, recvmsg.package.dsize, recvmsg.content);
 				} else {
 					log("comm_recv failed\n");
 				}
@@ -151,6 +157,7 @@ static void event_fun(struct comm_context *commctx, struct comm_tcp *commtcp, vo
 
 static int send_data(struct comm_context *commctx, struct comm_message *message, int fd)
 {
+#if 0
 	int     i = 0, j = 0, k = 0;
 	int     pckidx = 0, frmidx = 0;
 	int     retval = -1;
@@ -216,5 +223,26 @@ static int send_data(struct comm_context *commctx, struct comm_message *message,
 
 	memcpy(message->package.frames_of_package, frames_of_package1, (sizeof(int)) * message->package.packages);
 	return comm_send(commctx, message, false, -1);
+#else 
+	char* buff = NULL;
+	int i = 0;
+	int datasize = 1024*1024*2;
+	NewArray(buff, datasize);
+	for (i = 0; i < datasize; i++) {
+		buff[i] = 'w';
+	}
+	message->fd = fd;
+	message->content = buff;
+	message->config = ZIP_COMPRESSION | AES_ENCRYPTION;
+	message->socket_type = REQ_METHOD;
+	message->package.dsize = datasize;
+	message->package.frames = 1;
+	message->package.packages = 1;
+	message->package.frame_offset[0] = 0;
+	message->package.frame_size[0] = datasize;
+	message->package.frames_of_package[0] = 1;
+	return comm_send(commctx, message, false, -1);
+
+#endif 
 }
 
