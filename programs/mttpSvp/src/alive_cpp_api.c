@@ -244,7 +244,6 @@ int alive_vms_call(void *user, union virtual_system **VMS, struct adopt_task_nod
         x_printf(D, "Handshake data: %s", data);
         goto ERROR;
       }
-      x_printf(D, "%d", n);
 
       mirrtalk_id = copy_query_string_value(bufs, n, "M", 1);
       if (mirrtalk_id == NULL) {
@@ -289,8 +288,6 @@ int alive_vms_call(void *user, union virtual_system **VMS, struct adopt_task_nod
         x_printf(D, "Should handshake first before transfer data");
         goto ERROR;
       }
-
-      x_printf(D, "Transfer data, mirrtalkID: %s, ip: %s, port: %d", mirrtalk_id, pnode->szAddr, pnode->port);
       break;
     default:
       x_printf(D, "Unknow connection type");
