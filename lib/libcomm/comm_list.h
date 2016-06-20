@@ -27,13 +27,13 @@ extern "C" {
 	})
 #endif
 
-/* 获取一个结构体里面成员变量的偏移 @ptr：结构体的地址 @member：成员变量的地址 */
+/* 获取一个结构体里面成员变量的偏移 @ptr:结构体的地址 @member:成员变量的地址 */
 #define get_member_offset(ptr, member)          ((intptr_t)member - (intptr_t)ptr)
 
-/* 获取一个结构体的地址：@member：结构体里面的成员， @offset：成员变量在结构体里面的偏移 */
+/* 根据结构体某个成员变量获取结构体的地址:@member：结构体里面的成员, @offset:成员变量在结构体里面的偏移 */
 #define get_container_addr(member, offset)      ((intptr_t)member - (intptr_t)offset)
 
-/* 包含链表结构体的数据销毁回调函数 */
+/* 链表节点所保存的数据销毁回调函数 */
 typedef void (*DestroyCB)(void *data);
 
 /* 链表结构体 */
@@ -55,38 +55,58 @@ static inline void commlist_init(struct comm_list *list, DestroyCB destroy)
 	list->destroy = destroy;
 }
 
-/* @head:头节点 @list:要插入的节点 */
+/* 从尾部插入一个新节点 @head:头节点 @list:要插入的节点 */
 static inline bool commlist_push(struct comm_list *head, struct comm_list *list)
 {
 	head->tail->next = list;
 	head->tail = list;
-	head->tail->tail = head->tail;
 	head->tail->next = head;
 	head->nodes += 1;
-	log("push data into list\n");
+	log("push data into list nodes:%d\n", head->nodes);
 	return true;
 }
 
-/* 取出一个节点的数据 @head:头节点 @返回值：取出节点 */
-static inline bool commlist_pull(struct comm_list *head, struct comm_list **data)
+/* 取出链表第一个节点的数据 @head:头节点 @list:存放取到的节点地址 */
+static inline bool commlist_pull(struct comm_list *head, struct comm_list **list)
 {
-	struct comm_list *list = head->next;
+	struct comm_list *temp = head->next;
 
 	head->next = head->next->next;
 
-	if (list != head) {
-		if (list == head->tail) {
+	if (temp != head) {
+		if (temp == head->tail) {
+			printf("pull the last one\n");
 			head->tail = head;
 		}
 
-		*data = list;
+		*list = temp;
 		head->nodes -= 1;
 		return true;
 	} else {
 		return false;
 	}
+}
 
-	log("pull data from list\n");
+/* 删除链表中指定的节点 @head:链表头节点 @list:需要删除的节点地址 */
+static inline bool commlist_delete(struct comm_list *head, struct comm_list *list)
+{
+	assert(head && list);
+	struct comm_list *cur = head->next;
+	struct comm_list *pre = head;
+	while (cur != head) {
+		if (cur == list) {
+			if (cur == head->tail) {
+				printf("delete the last one\n");
+				head->tail = pre;
+			}
+			pre->next = cur->next;
+			head->nodes -= 1;
+			return true;
+		}
+		pre = cur;
+		cur = cur->next;
+	}
+	return false;
 }
 
 /* 销毁嵌套链表的结构体数据： @head：链表的头节点 @offset：链表在嵌套其结构体中的偏移 */
