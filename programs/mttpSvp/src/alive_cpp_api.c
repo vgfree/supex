@@ -13,6 +13,8 @@
 
 #define MTTPSVP_HEADER_SIZE     7
 #define MAX_QUERY_STRING_PAIRES 64
+#define ERROR_STRING_LEN        256
+#define ERROR_STRING_SIZE       sizeof("&TYPE=0&ERROR=0") - 1
 
 extern struct sniff_cfg_list g_sniff_cfg_list;
 
@@ -205,8 +207,11 @@ int alive_vms_call(void *user, union virtual_system **VMS, struct adopt_task_nod
 	char            *mirrtalk_id;
 	char            *gps_token;
 	qs_buf_t        bufs[MAX_QUERY_STRING_PAIRES * 2];
+  char            err[ERROR_STRING_LEN];
+	struct sniff_task_node sniff_task = {};
 
 	int size = task->size;
+  int plus_size = 0;
 
 	if (size == 0) {
     x_printf(D, "Error: data size is zero");
@@ -215,7 +220,9 @@ int alive_vms_call(void *user, union virtual_system **VMS, struct adopt_task_nod
 
 	size -= MTTPSVP_HEADER_SIZE;
 
-	if (size > MAX_SNIFF_DATA_SIZE) {
+  /*for test*/
+	if (size > MAX_SNIFF_DATA_SIZE - 64) {
+    size = 0;
     x_printf(D, "Error: data size(%d) is greater than MAX_SNIFF_DATA_SIZE(%d)", size, MAX_SNIFF_DATA_SIZE);
 		goto ERROR;
 	}
@@ -275,26 +282,30 @@ int alive_vms_call(void *user, union virtual_system **VMS, struct adopt_task_nod
 
       x_printf(D, "Handshake ok, mirrtalkID: %s, ip: %s, port: %d", mirrtalk_id, pnode->szAddr, pnode->port);
       x_printf(D, "Handshake data: %s", data);
+      plus_size = sprintf(err, "&TYPE=%d&IP=%s&PORT=%d", 0, pnode->szAddr, pnode->port);
 
       free(mirrtalk_id);
       free(gps_token);
-      return 0;
+      /*return 0;*/
+      break;
     case 0x01:  // 心跳
       x_printf(D, "Heartbeat");
-      return 0;
+      plus_size = sprintf(err, "TYPE=%d&IP=%s&PORT=%d", 1, pnode->szAddr, pnode->port);
+      /*return 0;*/
+      break;
     case 0x02:  // 传输
       // 未握手，直接传数据，非正常数据，断开连接
       if (mttpsvp_libkv_check_handshake(task->cid, task->sfd, "1", 1) < 0) {
         x_printf(D, "Should handshake first before transfer data");
         goto ERROR;
       }
+
+      plus_size = sprintf(err, "&TYPE=%d&IP=%s&PORT=%d", 2, pnode->szAddr, pnode->port);
       break;
     default:
       x_printf(D, "Unknow connection type");
       goto ERROR;
   }
-
-	struct sniff_task_node sniff_task = {};
 
 	sniff_task.sfd = task->sfd;
 	sniff_task.type = task->type;
@@ -302,8 +313,9 @@ int alive_vms_call(void *user, union virtual_system **VMS, struct adopt_task_nod
 	sniff_task.func = (SNIFF_VMS_FCB)sniff_vms_call;
 	sniff_task.last = false;
 	sniff_task.stamp = time(NULL);
-	sniff_task.size = size;
+	sniff_task.size = size + plus_size;
 	memcpy(sniff_task.data, data, size);
+	memcpy((char*)sniff_task.data + size, err, plus_size);
 
 	g_sniff_cfg_list.task_report(p_alive_worker->mount, &sniff_task);
 	return 0;
@@ -311,7 +323,7 @@ int alive_vms_call(void *user, union virtual_system **VMS, struct adopt_task_nod
 ERROR:
   mttpsvp_libkv_del(task->cid, task->sfd);
   alive_close_conn(1, task->cid, task->sfd);
-  return -1;
+  return 0;
 }
 
 int alive_vms_online(void *user, union virtual_system **VMS, struct adopt_task_node *task) {
