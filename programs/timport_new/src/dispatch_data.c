@@ -22,7 +22,7 @@ int dispatch_data(char *user, int user_len, char *time, int time_len, int redis_
 	L = luaL_newstate();
 	luaL_openlibs(L);
 	luaL_dofile(L, "./timport_server.lua");
-	lua_getglobal(L, "GetTable");
+	lua_getglobal(L, "get_table");
 	lua_newtable(L);
 
 	lua_pushnumber(L, 1);
@@ -47,6 +47,8 @@ int dispatch_data(char *user, int user_len, char *time, int time_len, int redis_
 
 	lua_pop(L, 1);
 	lua_close(L);
+	
+	return 0;
 }
 
 /*

@@ -24,31 +24,24 @@ local http_api  = require('http_short_api')
 local libhttps  = require("libhttps")
 local math	= require("math")
 
-local Key = '0'
-
-local function assembleKey(timestamp, timeInterval)
+local function assemble_key(timestamp, interval)
 	local time = os.date("%Y%m%d%H", timestamp)
-	if timeInterval >= 10 then
+	if interval >= 10 then
 		time = time .. os.date("%M", timestamp)/10
 	end
 	
-	if timeInterval < 10 then
-		time = time .. math.floor(os.date("%M", timestamp)/10) .. timeInterval
+	if interval < 10 then
+		time = time .. math.floor(os.date("%M", timestamp)/10) .. interval
 		print(time)
 	end
 	
-	local userKey = CFG_LIST['USER_PART_KEY'] .. ":" ..time
+	local user_key = CFG_LIST['USER_PART_KEY'] .. ":" ..time
  
-	return userKey
+	return user_key
 end
 
 
-function GetKey(tab)
-	--local userPart = CFG_LIST['USER_PART_KEY']
-	--print(tab[1])
-	--print(tab[2])
-	Key = assembleKey(tab[1], tab[2])
-	--print(Key)
-	return Key
+function get_key(tab)
+	return assemble_key(tab[1], tab[2])
 end
 

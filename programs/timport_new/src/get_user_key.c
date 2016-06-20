@@ -28,7 +28,7 @@ void get_user_key(int timestamp, int interval)
 	L = luaL_newstate();
 	luaL_openlibs(L);
 	luaL_dofile(L, "./timport_utils.lua");
-	lua_getglobal(L, "GetKey");
+	lua_getglobal(L, "get_key");
 	lua_newtable(L);
 
 	lua_pushnumber(L, 1);
@@ -46,7 +46,7 @@ void get_user_key(int timestamp, int interval)
 		exit(0);
 	}
 
-	printLuaStack(L);
+	lua_stack(L);
 	
 	memset(&g_user_key, 0, 100);
 	g_user_key.len = strlen(lua_tostring(L, -1));

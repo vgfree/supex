@@ -24,7 +24,7 @@ local CFG_LIST	= require('cfg')
 
 redis_api.init()
 
-local function getData(key, cmd, redis_num)
+local function get_data(key, cmd, redis_num)
 	if key == nil or cmd == nil then
 		return nil
 	end
@@ -36,7 +36,7 @@ local function getData(key, cmd, redis_num)
 	return ok_ret
 end
 
-local function setData(key, data)
+local function set_data(key, data)
 	if key == nil or data == nil then
 		return nil
 	end
@@ -49,22 +49,22 @@ local function setData(key, data)
 	return ok_ret
 end
 
-local function assembleData(userData)
-	if userData == nil then
+local function assemble_data(user_data)
+	if user_data == nil then
 		only.log('E', "The userData is nil.")
 		return nil
 	end
-	table.sort(userData)
-	only.log('E', scan.dump(userData))
+	table.sort(user_data)
+	only.log('E', scan.dump(user_data))
 
 	--拿到每一行|出现的次数
-	local str = userData[1]
+	local str = user_data[1]
 	local xxx, count = string.gsub(str, '|', '|')
-	local data = #userData .. '*' .. count + 1 .. '@'
+	local data = #user_data .. '*' .. count + 1 .. '@'
 	only.log('E', scan.dump(data))
 	
-	for i = 1, #userData do
-		data = data .. userData[i] .. '|'	
+	for i = 1, #user_data do
+		data = data .. user_data[i] .. '|'	
 	end
 
 	only.log('E', scan.dump(data))
@@ -72,13 +72,13 @@ local function assembleData(userData)
 	return data
 end
 
-local function getDataWithUser(user, targetTime, redis_num)
-	local dataKey = nil
+local function get_data_with_user(user, target_time, redis_num)
+	local data_key = nil
 	if user == nil then
 		return nil
         end
 
-	if targetTime == nil then
+	if target_time == nil then
 		return nil
 	end
 	
@@ -86,21 +86,21 @@ local function getDataWithUser(user, targetTime, redis_num)
 		return nil
 	end
 
-	targetTime = string.gsub(targetTime, CFG_LIST['USER_PART_KEY'] .. ':', '')
-	print(targetTime)
+	target_time = string.gsub(target_time, CFG_LIST['USER_PART_KEY'] .. ':', '')
+	print(target_time)
 
-	local userData = nil
-	dataKey = CFG_LIST['gps_key'] .. user .. ':' .. targetTime
-	userData = getData(dataKey, 'SMEMBERS', redis_num)
-	only.log('E', scan.dump(userData))
-	local data = assembleData(userData)
-	setData(dataKey, data)
+	local user_data = nil
+	data_key = CFG_LIST['gps_key'] .. user .. ':' .. target_time
+	user_data = get_data(data_key, 'SMEMBERS', redis_num)
+	only.log('E', scan.dump(user_data))
+	local data = assemble_data(user_data)
+	set_data(data_key, data)
 end
 
-function GetTable(tab)
+function get_table(tab)
 	print(tab[1])
 	print(tab[2])
 	print(tab[3])
-	getDataWithUser(tab[1], tab[2], tab[3])
+	get_data_with_user(tab[1], tab[2], tab[3])
 end
 

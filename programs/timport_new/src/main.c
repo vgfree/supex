@@ -141,7 +141,7 @@ void *set_data_task_handle(struct supex_evcoro *evcoro, void *step)
 	int                     idx_task = (int)(uintptr_t)step;
 	struct user_task        *p_task = &((struct user_task *)evcoro->task)[idx_task];
 
-	printf("taskid = %d, task->user = %s, length = %d\n", p_task->TASK, p_task->user, strlen(p_task->user));
+	//printf("taskid = %d, task->user = %s, length = %d\n", p_task->TASK, p_task->user, strlen(p_task->user));
 
 	dispatch_data(p_task->user, strlen(p_task->user), g_user_key.key, strlen(g_user_key.key), p_task->redis_cnt);
 

@@ -4,4 +4,4 @@
 #include "lualib.h"
 #include "lauxlib.h"
 
-void printLuaStack(lua_State *L);
+void lua_stack(lua_State *L);

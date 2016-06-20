@@ -1,18 +1,20 @@
 #include <stdio.h>
 #include "common.h"
 
-void printLuaStack(lua_State *L)
+void lua_stack(lua_State *L)
 {
-	int stackTop=lua_gettop(L);//获取栈顶的索引值
-	int index;
+	int stack_top = lua_gettop(L);//获取栈顶的索引值
+	int idx;
 	int t;
-	printf("--栈顶(v)(%d)--\n",stackTop);
+
+	printf("--栈顶(v)(%d)--\n",stack_top);
 	//显示栈中的元素
-	for(index=stackTop;index>0;--index)
+	for(idx = stack_top; idx > 0; --idx)
 	{
-		t=lua_type(L,index);
-		printf("(i:%d) %s(%s)\n",index,lua_typename(L,t),lua_tostring(L,index));
+		t=lua_type(L, idx);
+		printf("(i:%d) %s(%s)\n", idx, lua_typename(L,t),lua_tostring(L, idx));
         }
+
 	printf("--栈底--\n");
 }
 
