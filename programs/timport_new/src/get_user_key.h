@@ -3,7 +3,7 @@
 struct user_key
 {
          char    key[100];
-         int     keyLen;
+         int     len;
 };
 
-void getUserKey(int timestamp, int timeInterval);
+void get_user_key(int timestamp, int interval);

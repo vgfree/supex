@@ -15,11 +15,11 @@
 #include "common.h"
 #include "get_user_key.h"
 
-struct user_key UserKey;
+struct user_key g_user_key;
 
-void getUserKey(int timestamp, int timeInterval)
+void get_user_key(int timestamp, int interval)
 {
-	if (time <= 0 || timeInterval < 0) {
+	if (time <= 0 || interval < 0) {
 		printf("The time is invalid.\n");
 		return;
 	} 
@@ -36,7 +36,7 @@ void getUserKey(int timestamp, int timeInterval)
         lua_settable(L, -3);
 
         lua_pushnumber(L, 2);
-        lua_pushnumber(L, timeInterval);
+        lua_pushnumber(L, interval);
         lua_settable(L, -3);	
 
 	int iError = lua_pcall(L, 1, 1, 0);
@@ -48,22 +48,22 @@ void getUserKey(int timestamp, int timeInterval)
 
 	printLuaStack(L);
 	
-	memset(&UserKey, 0, 100);
-	UserKey.keyLen = strlen(lua_tostring(L, -1));
-	memcpy(UserKey.key, (char*)lua_tostring(L, -1), UserKey.keyLen);
+	memset(&g_user_key, 0, 100);
+	g_user_key.len = strlen(lua_tostring(L, -1));
+	memcpy(g_user_key.key, (char*)lua_tostring(L, -1), g_user_key.len);
 
 	lua_pop(L, 1);
 	lua_close(L);
 }
 
 /*
-    int main() {
-    	char * key = NULL;
-	int keyLen = 0; 
-    	int timestamp = 1466161800;
-	int timeInterval = 10;
-    	getUserKey(timestamp, timeInterval);
-	printf("key = %s, len = %d\n", UserKey.key, UserKey.keyLen);
-    	return 0;
-    }
+ *int main() {
+ *	char * key = NULL;
+ *	int len = 0; 
+ *	int timestamp = 1466161800;
+ *	int interval = 10;
+ *	get_user_key(timestamp, interval);
+ *	printf("key = %s, len = %d\n", g_user_key.key, g_user_key.len);
+ *	return 0;
+ }
 */

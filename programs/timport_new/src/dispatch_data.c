@@ -14,9 +14,9 @@
 
 #include "dispatch_data.h"
 
-int dispatchToUser(char *user, int userLen, char *time, int timeLen)
+int dispatch_data(char *user, int user_len, char *time, int time_len, int redis_num)
 {
-	printf("dispatchToUser, user = %s\n", user);
+	//printf("user = %s\n", user);
 	lua_State *L;
 
 	L = luaL_newstate();
@@ -26,12 +26,16 @@ int dispatchToUser(char *user, int userLen, char *time, int timeLen)
 	lua_newtable(L);
 
 	lua_pushnumber(L, 1);
-	lua_pushlstring(L, user, userLen);
+	lua_pushlstring(L, user, user_len);
 	lua_settable(L, -3);
 
 	lua_pushnumber(L, 2);
-	lua_pushlstring(L, time, timeLen);
+	lua_pushlstring(L, time, time_len);
 	lua_settable(L, -3);
+	
+	lua_pushnumber(L, 3);
+        lua_pushnumber(L, redis_num);
+        lua_settable(L, -3);	
 
 	int iError = lua_pcall(L, 1, 0, 0);
 
@@ -46,11 +50,11 @@ int dispatchToUser(char *user, int userLen, char *time, int timeLen)
 }
 
 /*
-    int main() {
-         char * name = "508542171690587";
-         char * time = "ACTIVEUSER:20160617193";
-         dispatchToUser(name, strlen(name), time, strlen(time));
-         return 0;
-    }
- 
+*    int main() {
+*         char * name = "508542171690587";
+*         char * time = "ACTIVEUSER:20160617193";
+*         dispatch_data(name, strlen(name), time, strlen(time));
+*         return 0;
+*    }
+* 
 */

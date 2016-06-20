@@ -24,14 +24,11 @@ local CFG_LIST	= require('cfg')
 
 redis_api.init()
 
-local key1 = link["OWN_DIED"]["key"]["KEY1"]
-local key2 = link["OWN_DIED"]["key"]["KEY2"] 
-
-local function getData(key, cmd)
+local function getData(key, cmd, redis_num)
 	if key == nil or cmd == nil then
 		return nil
 	end
-	local ok_status, ok_ret = redis_api.cmd('IdKey', '', cmd, key)
+	local ok_status, ok_ret = redis_api.cmd('redis' .. tostring(redis_num), '', cmd, key)
         if not (ok_status and ok_ret) then
         	only.log('E', 'Get data failed or no suitable data')
 		return nil        
@@ -75,7 +72,7 @@ local function assembleData(userData)
 	return data
 end
 
-local function getDataWithUser(user, targetTime)
+local function getDataWithUser(user, targetTime, redis_num)
 	local dataKey = nil
 	if user == nil then
 		return nil
@@ -84,12 +81,17 @@ local function getDataWithUser(user, targetTime)
 	if targetTime == nil then
 		return nil
 	end
+	
+	if redis_num == nil then
+		return nil
+	end
+
 	targetTime = string.gsub(targetTime, CFG_LIST['USER_PART_KEY'] .. ':', '')
 	print(targetTime)
 
 	local userData = nil
-	dataKey = key2 .. user .. ':' .. targetTime
-	userData = getData(dataKey, 'SMEMBERS')
+	dataKey = CFG_LIST['gps_key'] .. user .. ':' .. targetTime
+	userData = getData(dataKey, 'SMEMBERS', redis_num)
 	only.log('E', scan.dump(userData))
 	local data = assembleData(userData)
 	setData(dataKey, data)
@@ -98,6 +100,7 @@ end
 function GetTable(tab)
 	print(tab[1])
 	print(tab[2])
-	getDataWithUser(tab[1], tab[2])
+	print(tab[3])
+	getDataWithUser(tab[1], tab[2], tab[3])
 end
 

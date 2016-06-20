@@ -4,7 +4,8 @@
 void printLuaStack(lua_State *L)
 {
 	int stackTop=lua_gettop(L);//获取栈顶的索引值
-	int index,t;
+	int index;
+	int t;
 	printf("--栈顶(v)(%d)--\n",stackTop);
 	//显示栈中的元素
 	for(index=stackTop;index>0;--index)
