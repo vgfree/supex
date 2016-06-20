@@ -96,6 +96,7 @@ int remove_first_nframe(int nframe, struct comm_message *msg)
 	}
 
 	msg->package.frames -= nframe;
+	msg->package.frames_of_package[0] -= nframe;
 	return rmsz;
 }
 
