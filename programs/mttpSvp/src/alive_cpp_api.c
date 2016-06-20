@@ -209,17 +209,22 @@ int alive_vms_call(void *user, union virtual_system **VMS, struct adopt_task_nod
 	int size = task->size;
 
 	if (size == 0) {
-    x_printf(D, "Handshake error: data size is zero");
+    x_printf(D, "Error: data size is zero");
     goto ERROR;
 	}
 
 	size -= MTTPSVP_HEADER_SIZE;
 
 	if (size > MAX_SNIFF_DATA_SIZE) {
-    x_printf(D, "Handshake error: data size is greater than MAX_SNIFF_DATA_SIZE(%d)", MAX_SNIFF_DATA_SIZE);
-    x_printf(D, "Handshake data size: %d", size);
+    x_printf(D, "Error: data size(%d) is greater than MAX_SNIFF_DATA_SIZE(%d)", size, MAX_SNIFF_DATA_SIZE);
 		goto ERROR;
 	}
+
+  struct pool_node *pnode = mapping_pool_addr(task->sfd);
+  if (pnode->cid != task->cid) {
+    x_printf(D, "Error: pool_node->cid(%d) and task->cid(%d) not equal", pnode->cid, task->cid);
+    goto ERROR;
+  }
 
   uint8_t op_type = *((uint8_t*)task->data + 2);
   const char* data = (const char*)task->data + MTTPSVP_HEADER_SIZE;
@@ -268,11 +273,12 @@ int alive_vms_call(void *user, union virtual_system **VMS, struct adopt_task_nod
       mttpsvp_redis_del_gpstoken(mirrtalk_id);
 
       mttpsvp_libkv_set(task->cid, task->sfd, "1");
+
+      x_printf(D, "Handshake ok, mirrtalkID: %s, ip: %s, port: %d", mirrtalk_id, pnode->szAddr, pnode->port);
+      x_printf(D, "Handshake data: %s", data);
+
       free(mirrtalk_id);
       free(gps_token);
-
-      x_printf(D, "Handshake ok");
-      x_printf(D, "Handshake data: %s", data);
       return 0;
     case 0x01:  // 心跳
       x_printf(D, "Heartbeat");
@@ -284,7 +290,7 @@ int alive_vms_call(void *user, union virtual_system **VMS, struct adopt_task_nod
         goto ERROR;
       }
 
-      x_printf(D, "Transfer data");
+      x_printf(D, "Transfer data, mirrtalkID: %s, ip: %s, port: %d", mirrtalk_id, pnode->szAddr, pnode->port);
       break;
     default:
       x_printf(D, "Unknow connection type");
