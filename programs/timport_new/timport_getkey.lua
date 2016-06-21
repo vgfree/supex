@@ -24,10 +24,11 @@ local http_api  = require('http_short_api')
 local libhttps  = require("libhttps")
 local math	= require("math")
 
-local function assemble_key(timestamp, interval)
+local function assemble_key(timestamp)
 	local time = os.date("%Y%m%d%H", timestamp)
+	local interval = tonumber(CFG_LIST['time_interval'])
 	if interval >= 10 then
-		time = time .. os.date("%M", timestamp)/10
+		time = time .. math.floor(os.date("%M", timestamp)/10)
 	end
 	
 	if interval < 10 then
@@ -41,7 +42,8 @@ local function assemble_key(timestamp, interval)
 end
 
 
-function get_key(tab)
-	return assemble_key(tab[1], tab[2])
+function get_key(timestamp)
+	timestamp = timestamp - CFG_LIST['delay_time']
+	return assemble_key(timestamp)
 end
 

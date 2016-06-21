@@ -15,29 +15,15 @@
 #include "common.h"
 #include "get_user_key.h"
 
-struct user_key g_user_key;
-
-void get_user_key(int timestamp, int interval)
+void get_user_key(int timestamp, char *user_key, int max_key_len)
 {
-	if (time <= 0 || interval < 0) {
-		printf("The time is invalid.\n");
-		return;
-	} 
-
 	lua_State *L;
 	L = luaL_newstate();
 	luaL_openlibs(L);
-	luaL_dofile(L, "./timport_utils.lua");
+	luaL_dofile(L, "./timport_getkey.lua");
 	lua_getglobal(L, "get_key");
-	lua_newtable(L);
 
-	lua_pushnumber(L, 1);
         lua_pushnumber(L, timestamp);
-        lua_settable(L, -3);
-
-        lua_pushnumber(L, 2);
-        lua_pushnumber(L, interval);
-        lua_settable(L, -3);	
 
 	int iError = lua_pcall(L, 1, 1, 0);
 	if (iError) {
@@ -47,10 +33,13 @@ void get_user_key(int timestamp, int interval)
 	}
 
 	lua_stack(L);
-	
-	memset(&g_user_key, 0, 100);
-	g_user_key.len = strlen(lua_tostring(L, -1));
-	memcpy(g_user_key.key, (char*)lua_tostring(L, -1), g_user_key.len);
+
+	int len = strlen(lua_tostring(L, -1));
+	if (max_key_len < len) {
+		printf("Key length is too long!\n");
+		return;
+	}
+	memcpy(user_key, (char*)lua_tostring(L, -1), len);
 
 	lua_pop(L, 1);
 	lua_close(L);

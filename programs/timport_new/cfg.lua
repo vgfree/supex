@@ -1,6 +1,8 @@
 module("cfg")
 
 USER_PART_KEY = "ACTIVEUSER"
+time_interval = 10
+delay_time = 100
 
 zk_servers = "192.168.1.14:2181"
 
