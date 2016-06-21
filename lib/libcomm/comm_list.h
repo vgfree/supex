@@ -40,15 +40,17 @@ typedef void (*DestroyCB)(void *data);
 struct comm_list
 {
 	DestroyCB               destroy;	/* 销毁数据的回调函数 */
-	int                     nodes;		/* 链表中有效数据的节点数 */
+	int                     nodes;		/* 链表中有效数据的节点数[只有头节点会被设置] */
 	struct comm_list        *next;		/* 指向链表中的下一个节点 */
-	struct comm_list        *tail;		/* 指向链表的尾节点 */
+	struct comm_list        *tail;		/* 指向链表的尾节点[只有头节点会被设置] */
+	struct comm_list	*cur;		/* 指向当前的节点数[用于依次获取链表节点而不删除节点数据只有头节点会被设置]*/
 };
 
 /* 初始化链表，设置链表的头节点 */
 static inline void commlist_init(struct comm_list *list, DestroyCB destroy)
 {
 	assert(list);
+	list->cur = list;
 	list->tail = list;
 	list->next = list;
 	list->nodes = 0;
@@ -58,24 +60,24 @@ static inline void commlist_init(struct comm_list *list, DestroyCB destroy)
 /* 从尾部插入一个新节点 @head:头节点 @list:要插入的节点 */
 static inline bool commlist_push(struct comm_list *head, struct comm_list *list)
 {
+	assert(head && list);
 	head->tail->next = list;
 	head->tail = list;
 	head->tail->next = head;
 	head->nodes += 1;
-	log("push data into list nodes:%d\n", head->nodes);
 	return true;
 }
 
 /* 取出链表第一个节点的数据 @head:头节点 @list:存放取到的节点地址 */
 static inline bool commlist_pull(struct comm_list *head, struct comm_list **list)
 {
+	assert(head && list);
 	struct comm_list *temp = head->next;
 
 	head->next = head->next->next;
 
 	if (temp != head) {
 		if (temp == head->tail) {
-			printf("pull the last one\n");
 			head->tail = head;
 		}
 
@@ -83,6 +85,21 @@ static inline bool commlist_pull(struct comm_list *head, struct comm_list **list
 		head->nodes -= 1;
 		return true;
 	} else {
+		*list = NULL;
+		return false;
+	}
+}
+
+/* 依次获得链表的数据 但并不将节点从链表删除 */
+static inline bool commlist_get(struct comm_list *head, struct comm_list **list)
+{
+	assert(head && list);
+	head->cur = head->cur->next;
+	if (head->cur != head) {
+		*list = head->cur;
+		return true;
+	} else {
+		*list = NULL;
 		return false;
 	}
 }
@@ -96,7 +113,6 @@ static inline bool commlist_delete(struct comm_list *head, struct comm_list *lis
 	while (cur != head) {
 		if (cur == list) {
 			if (cur == head->tail) {
-				printf("delete the last one\n");
 				head->tail = pre;
 			}
 			pre->next = cur->next;
@@ -116,7 +132,6 @@ static inline void commlist_destroy(struct comm_list *head, int offset)
 
 	if (head->destroy && head && (offset > 0)) {
 		while (commlist_pull(head, &list)) {
-			log("list destroy data");
 			head->destroy((void *)get_container_addr(list, offset));
 		}
 	}
