@@ -1,0 +1,17 @@
+{
+	"service_port": 7777,
+	"smart_hander_counts": 2,
+	"smart_worker_counts": 2,
+	"smart_tasker_counts": 64,
+	"smart_protocol": "redis",
+	"max_req_size": 32768,
+
+
+	"log_path": "./logs/",
+	"log_file": "msg_recv",
+	"log_level": 3,
+	
+	"api_fetch": "/ptopFetch.json",
+	"api_merge": "/ptopMerge.json",
+	"api_custom": ["/x_test", "/recv_group_message"]
+}

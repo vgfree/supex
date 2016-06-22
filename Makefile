@@ -64,7 +64,7 @@ openPMS := dtsync pole-M pole-S
 SRV := $(openIMX) $(openHLS) $(openPMS) \
 	drisamp drimode goby rtmiles rta \
 	drisampapi drimodeapi gobyapi rtmilesapi rtaapi \
-	msgsearchapi spxapi dfsapi ptop robais tsearchapi driviewapi \
+	msgsearchapi spxapi dfsapi appserver ptop robais tsearchapi driviewapi \
 	loghub topology crzptX crzptY ACB damS roadRank \
 	gdgive bdgive gopath gomile ashman adcube_v2\
 	spark releaseServer dfsdb tsdb \
@@ -103,6 +103,9 @@ spxapi:
 	@echo -e $(GREEN)"【"$(YELLOW) $@ $(GREEN)"】"$(RED)"\n-->OK!\n"$(NONE)
 dfsapi:
 	$(MAKE) -C ./programs/RTAP MAIN_APP_SERV=dfsapi
+	@echo -e $(GREEN)"【"$(YELLOW) $@ $(GREEN)"】"$(RED)"\n-->OK!\n"$(NONE)
+appserver:
+	$(MAKE) -C ./programs/appserver MAIN_APP_SERV=appserver
 	@echo -e $(GREEN)"【"$(YELLOW) $@ $(GREEN)"】"$(RED)"\n-->OK!\n"$(NONE)
 rmsapi:
 	$(MAKE) -C ./programs/RTAP MAIN_APP_SERV=rmsapi
