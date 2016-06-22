@@ -5,14 +5,15 @@
 
 #include "json.h"
 
-struct link_redis_cfg
+/*http redis*/
+struct link_cfg
 {
 	char            *host;
 	unsigned short  port;
 	unsigned short  size;
 };
 
-struct link_redis_hash_node
+struct link_hash_node
 {
 	char            *mode;
 	char            *mark;
@@ -21,11 +22,11 @@ struct link_redis_hash_node
 	unsigned short  vnode;
 };
 
-struct link_redis_hash_cfg
+struct link_hash_cfg
 {
-	char                            *hash;
-	int                             count;
-	struct link_redis_hash_node     *nodes;
+	char                    *hash;
+	int                     count;
+	struct link_hash_node   *nodes;
 };
 
 struct link_mysql_cfg
@@ -38,23 +39,27 @@ struct link_mysql_cfg
 	unsigned short  size;
 };
 
-struct link_redis_cfg   *link_get_redis_cfg(struct json_object *redis_cfg, const char *name);
+struct link_cfg *link_get_cfg(struct json_object *type_cfg, const char *name);
 
-void link_free_redis_cfg(struct link_redis_cfg *cfg);
+void link_free_cfg(struct link_cfg *cfg);
 
-struct link_redis_hash_cfg      *link_get_redis_hash_cfg(struct json_object *redis_cfg, const char *name);
+struct link_hash_cfg *link_get_hash_cfg(struct json_object *type_cfg, const char *name);
 
-void link_free_redis_hash_cfg(struct link_redis_hash_cfg *cfg);
+void link_free_hash_cfg(struct link_hash_cfg *cfg);
 
-#define link_http_cfg link_redis_cfg
-#define link_http_hash_cfg link_redis_hash_cfg
-#define link_get_http_cfg link_get_redis_cfg
-#define link_free_http_cfg link_free_redis_cfg
-#define link_get_http_hash_cfg link_get_redis_hash_cfg
-#define link_free_http_hash_cfg link_free_redis_hash_cfg
-
-struct link_mysql_cfg   *link_get_mysql_cfg(struct json_object *mysql_cfg, const char *name);
+struct link_mysql_cfg *link_get_mysql_cfg(struct json_object *mysql_cfg, const char *name);
 
 void link_free_mysql_cfg(struct link_mysql_cfg *cfg);
+
+static char *link_strdup(const char *str) {
+	if (str == NULL) return NULL;
+
+	size_t len = strlen(str) + 1;
+	char *copy = malloc(len);
+	if (copy == NULL) return NULL;
+
+	memcpy(copy, str, len);
+	return copy;
+}
 
 #endif	/* LINK_CFG_PARSER_H */

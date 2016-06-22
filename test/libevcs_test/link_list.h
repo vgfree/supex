@@ -11,11 +11,13 @@
 #include "stddef.h"
 
 #ifndef offset_of
-#define offset_of(type, member) ((intptr_t)((char*)(&(((type*)(0))->member))))
+#define offset_of(type, member) (size_t)&(((type*)0)->member)
 #endif
 
 #ifndef container_of
-#define container_of(ptr, type, member) ((type*)((char*)(ptr) - offset_of(type, member)))
+#define container_of(ptr, type, member) ({ \
+  const typeof( ((type *)0)->member ) *__mptr = (ptr); \
+  (type *)( (char *)__mptr - offset_of(type,member) );})
 #endif
 
 /**
