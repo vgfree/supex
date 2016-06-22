@@ -8,6 +8,8 @@
 #define LINK_HASHMAP_H
 
 #include <string.h>
+#include <stdlib.h>
+#include <stdint.h>
 
 #include "link_list.h"
 
@@ -33,11 +35,16 @@
 #define LINK_1M_SHIFT            20
 
 #define link_malloc     malloc
+#define link_palloc     malloc
 #define link_free       free
 #define link_pfree      free
 
+#define link_lower(c)     (unsigned char) (c | 0x20)
+#define link_upper(c)     (unsigned char) (c & ~0x20)
+
 #define link_hash         link_hash_DJB
 #define link_hash_lower   link_hash_DJB_lower
+#define link_hash_slot    link_hash_slot64
 
 static inline size_t link_hash_DJB(const char *str, size_t n) {
   size_t hash = 5381;
@@ -77,7 +84,7 @@ typedef struct {
   size_t                max_items;
   size_t                items;
   size_t                bits;
-  link_hash_strcmp_fn   str_cmp;
+  link_hash_strcmp_fn   strcmp;
   link_hash_fn          hash;
 } link_hashmap_t;
 
@@ -85,31 +92,20 @@ typedef struct {
   link_hlist_node_t   node;
   void                *pointer;
   size_t              hash;
-  size_t              key_length;
   char                *key;
+  size_t              keylen;
+  intptr_t            value;
 } link_hashmap_item_t;
 
-link_hashmap_t *link_hashmap__create(size_t bits, 
-                                     link_hash_strcmp_fn strcmp_fn, 
-                                     link_hash_fn hash_fn);
-
-#define link_hashmap_create_int_pointer(bits) \
-  link_hashmap__create(bits, NULL, NULL)
-
-#define link_hashmap_create_str_pointer(bits) \
-  link_hashmap__create(bits, strncmp, link_hash)
-
-#define link_hashmap_create_strcase_pointer(bits) \
-  link_hashmap__create(bits, strncasecmp, link_hash_lower)
-
+link_hashmap_t *link_hashmap_create(size_t bits, link_hash_strcmp_fn strcmp_fn, link_hash_fn hash_fn);
 void link_hashmap_destroy(link_hashmap_t *hash);
 
-void link_hashmap_str_set(link_hashmap_t *hash, char *key, size_t n, void *pointer);
-void *link_hashmap_str_get(link_hashmap_t *hash, const char *key, size_t n);
-void link_hashmap_str_remove(link_hashmap_t *hash, const char *key, size_t n);
+void link_hashmap_set_pointer(link_hashmap_t *hash, char *key, size_t n, void *pointer);
+void *link_hashmap_get_pointer(link_hashmap_t *hash, const char *key, size_t n);
+void link_hashmap_remove_pointer(link_hashmap_t *hash, const char *key, size_t n);
 
-void link_hashmap_int_set(link_hashmap_t *hash, size_t key, void *pointer);
-void *link_hashmap_int_get(link_hashmap_t *hash, size_t key);
-void link_hashmap_int_remove(link_hashmap_t *hash, size_t key);
+void link_hashmap_set_value(link_hashmap_t *hash, char *key, size_t n, intptr_t value);
+int link_hashmap_get_value(link_hashmap_t *hash, const char *key, size_t n, intptr_t *value);
+void link_hashmap_remove_value(link_hashmap_t *hash, const char *key, size_t n);
 
 #endif /* LINK_HASHMAP_H */

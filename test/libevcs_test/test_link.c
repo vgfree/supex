@@ -17,35 +17,35 @@ void main(void)
 	struct json_object *redis_cfg = NULL;
 
 	if (json_object_object_get_ex(cfg, "redis", &redis_cfg)) {
-		struct link_redis_cfg *public = link_get_redis_cfg(redis_cfg, "public");
+		struct link_cfg *public = link_get_cfg(redis_cfg, "public");
 
 		printf("public->host: %s\n", public->host);
 		printf("public->port: %d\n", public->port);
 		printf("public->size: %d\n", public->size);
 		printf("=============================================\n");
 
-		link_free_redis_cfg(public);
+		link_free_cfg(public);
 
-		struct link_redis_cfg *private = link_get_redis_cfg(redis_cfg, "private");
+		struct link_cfg *private = link_get_cfg(redis_cfg, "private");
 
 		printf("private->host: %s\n", private->host);
 		printf("private->port: %d\n", private->port);
 		printf("private->size: %d\n", private->size);
 		printf("=============================================\n");
 
-		link_free_redis_cfg(private);
+		link_free_cfg(private);
 
-		struct link_redis_cfg *weibo = link_get_redis_cfg(redis_cfg, "weibo");
+		struct link_cfg *weibo = link_get_cfg(redis_cfg, "weibo");
 
 		printf("weibo->host: %s\n", weibo->host);
 		printf("weibo->port: %d\n", weibo->port);
 		printf("weibo->size: %d\n", weibo->size);
 		printf("=============================================\n");
 
-		link_free_redis_cfg(weibo);
+		link_free_cfg(weibo);
 
 		int                             i;
-		struct link_redis_hash_cfg      *tsdb_hash = link_get_redis_hash_cfg(redis_cfg, "tsdb_hash");
+		struct link_hash_cfg      *tsdb_hash = link_get_hash_cfg(redis_cfg, "tsdb_hash");
 		printf("tsdb_hash->hash: %s\n", tsdb_hash->hash);
 		printf("tsdb_hash->count: %d\n", tsdb_hash->count);
 
@@ -61,9 +61,9 @@ void main(void)
 
 		printf("=============================================\n");
 
-		link_free_redis_hash_cfg(tsdb_hash);
+		link_free_hash_cfg(tsdb_hash);
 
-		struct link_redis_hash_cfg *url_hash = link_get_redis_hash_cfg(redis_cfg, "url_hash");
+		struct link_hash_cfg *url_hash = link_get_hash_cfg(redis_cfg, "url_hash");
 		printf("url_hash->hash: %s\n", url_hash->hash);
 		printf("url_hash->count: %d\n", url_hash->count);
 
@@ -79,7 +79,7 @@ void main(void)
 
 		printf("=============================================\n");
 
-		link_free_redis_hash_cfg(url_hash);
+		link_free_hash_cfg(url_hash);
 	} else {
 		printf("no redis\n");
 	}

@@ -6,28 +6,7 @@
 #include "link_cfg_parser.h"
 #include "json.h"
 
-static char *link_strdup(const char *str)
-{
-	if (str == NULL) {
-		return NULL;
-	}
-
-	size_t  len = strlen(str) + 1;
-	char    *copy = malloc(len);
-
-	if (copy == NULL) {
-		return NULL;
-	}
-
-	memcpy(copy, str, len);
-	return copy;
-}
-
-/*struct json_object *cfg = json_object_from_file(name);*/
-/*json_object_put(cfg);*/
-
-struct link_redis_cfg *link_get_redis_cfg(struct json_object *redis_cfg, const char *name)
-{
+struct link_cfg *link_get_cfg(struct json_object *type_cfg, const char *name) {
 	struct json_object      *obj = NULL;
 	struct json_object      *host_obj = NULL;
 	struct json_object      *port_obj = NULL;
@@ -37,10 +16,9 @@ struct link_redis_cfg *link_get_redis_cfg(struct json_object *redis_cfg, const c
 	unsigned short  port = 0;
 	unsigned short  size = 1;
 
-	if (json_object_object_get_ex(redis_cfg, name, &obj)) {
+	if (json_object_object_get_ex(type_cfg, name, &obj)) {
 		if (json_object_object_get_ex(obj, "host", &host_obj)) {
 			host = link_strdup(json_object_get_string(host_obj));
-			printf("host: %s\n", host);
 		}
 
 		if (json_object_object_get_ex(obj, "port", &port_obj)) {
@@ -51,8 +29,7 @@ struct link_redis_cfg *link_get_redis_cfg(struct json_object *redis_cfg, const c
 			size = (unsigned short)json_object_get_int(size_obj);
 		}
 
-		struct link_redis_cfg *cfg = malloc(sizeof(*cfg));
-
+		struct link_cfg *cfg = malloc(sizeof(*cfg));
 		if (cfg == NULL) {
 			return NULL;
 		}
@@ -62,13 +39,11 @@ struct link_redis_cfg *link_get_redis_cfg(struct json_object *redis_cfg, const c
 		cfg->size = size;
 		return cfg;
 	} else {
-		printf("no public");
 		return NULL;
 	}
 }
 
-void link_free_redis_cfg(struct link_redis_cfg *cfg)
-{
+void link_free_cfg(struct link_cfg *cfg) {
 	if (cfg) {
 		if (cfg->host) {
 			free(cfg->host);
@@ -78,17 +53,16 @@ void link_free_redis_cfg(struct link_redis_cfg *cfg)
 	}
 }
 
-struct link_redis_hash_cfg *link_get_redis_hash_cfg(struct json_object *redis_cfg, const char *name)
-{
+struct link_hash_cfg *link_get_hash_cfg(struct json_object *type_cfg, const char *name) {
 	struct json_object      *obj = NULL;
 	struct json_object      *hash_obj = NULL;
 	struct json_object      *nodes_obj = NULL;
 
-	char                            *hash = NULL;
-	struct link_redis_hash_node     *nodes = NULL;
-	struct link_redis_hash_node     *node;
+	char                      *hash = NULL;
+	struct link_hash_node     *nodes = NULL;
+	struct link_hash_node     *node;
 
-	if (json_object_object_get_ex(redis_cfg, name, &obj)) {
+	if (json_object_object_get_ex(type_cfg, name, &obj)) {
 		if (json_object_object_get_ex(obj, "hash", &hash_obj)) {
 			hash = link_strdup(json_object_get_string(hash_obj));
 		}
@@ -128,7 +102,7 @@ struct link_redis_hash_cfg *link_get_redis_hash_cfg(struct json_object *redis_cf
 			}
 		}
 
-		struct link_redis_hash_cfg *cfg = malloc(sizeof(*cfg));
+		struct link_hash_cfg *cfg = malloc(sizeof(*cfg));
 
 		if (cfg == NULL) {
 			return NULL;
@@ -143,8 +117,7 @@ struct link_redis_hash_cfg *link_get_redis_hash_cfg(struct json_object *redis_cf
 	}
 }
 
-void link_free_redis_hash_cfg(struct link_redis_hash_cfg *cfg)
-{
+void link_free_hash_cfg(struct link_hash_cfg *cfg) {
 	if (cfg) {
 		if (cfg->hash) {
 			free(cfg->hash);
@@ -154,8 +127,7 @@ void link_free_redis_hash_cfg(struct link_redis_hash_cfg *cfg)
 	}
 }
 
-struct link_mysql_cfg *link_get_mysql_cfg(struct json_object *mysql_cfg, const char *name)
-{
+struct link_mysql_cfg *link_get_mysql_cfg(struct json_object *mysql_cfg, const char *name) {
 	struct json_object      *obj = NULL;
 	struct json_object      *host_obj = NULL;
 	struct json_object      *port_obj = NULL;
@@ -214,8 +186,7 @@ struct link_mysql_cfg *link_get_mysql_cfg(struct json_object *mysql_cfg, const c
 	}
 }
 
-void link_free_mysql_cfg(struct link_mysql_cfg *cfg)
-{
+void link_free_mysql_cfg(struct link_mysql_cfg *cfg) {
 	if (cfg) {
 		if (cfg->host) {
 			free(cfg->host);
@@ -236,4 +207,3 @@ void link_free_mysql_cfg(struct link_mysql_cfg *cfg)
 		free(cfg);
 	}
 }
-
