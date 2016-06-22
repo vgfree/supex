@@ -10,6 +10,9 @@ INC_DIR=-I/usr/local/include/luajit-2.0 \
 	-I../../lib/libcoro/include \
 	-I../../lib/libevcoro/include \
 	-I../../lib/libevcs/include/engine \
+	-I../../lib/utils \
+	-I../../lib/libappsrv \
+	-I../../lib/zeromq-4.1.4/include \
 	-I../../lib/libevcs/include/frame \
 	-I./src -I../
 
@@ -17,7 +20,7 @@ INC_DIR=-I/usr/local/include/luajit-2.0 \
 
 LIB_DIR=-L/usr/local/lib -L../../lib
 LIBS=-lluajit-5.1 -lpthread -lrt -lm -lstdc++
-LIBA=-ljson-c -lkv
+LIBA=-ljson-c -lkv -lzmq -lappsrv -lutils
 
 #[=========>MARK<=========]#
 MAIN_APP_SERV ?= ptop
