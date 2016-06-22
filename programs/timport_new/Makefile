@@ -66,6 +66,7 @@ BASE_OBJ = $(addprefix $(BIN)/, \
 	   timport_cfg.o \
 	   get_user_key.o \
 	   get_start_time.o \
+	   set_expire_time.o \
 	   common.o \
 	   )
 

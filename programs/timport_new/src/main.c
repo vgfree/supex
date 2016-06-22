@@ -13,6 +13,8 @@
 #include "timport_cfg.h"
 #include "get_user_key.h"
 #include "dispatch_data.h"
+#include "set_expire_time.h"
+
 
 EVCS_MODULE_SETUP(kernel, kernel_init, kernel_exit, &g_kernel_evts);
 EVCS_MODULE_SETUP(evcs, evcs_init, evcs_exit, &g_evcs_evts);
@@ -214,6 +216,8 @@ void *get_data_task_handle(struct supex_evcoro *evcoro, void *step)
 		__timer_start(g_timport_cfg_list.file_info.start_time);//TODO
 		for (r_idx = 0; r_idx < g_timport_cfg_list.file_info.redis_cnt; r_idx ++) {	
 			get_data_task(r_idx);
+			// set expire time,  need g_user_key and r_idx.
+			set_expire_time(g_user_key, strlen(g_user_key), r_idx);
 			sleep(2);  // 2秒处理1个redis
 		}
 		

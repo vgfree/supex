@@ -36,21 +36,23 @@ local function get_data(key, cmd, redis_num)
 	return ok_ret
 end
 
-local function set_data(key, data)
-	if key == nil or data == nil then
+local function set_data(key, data, cmd)
+	if key == nil or cmd == nil or data == nil then
 		return nil
 	end
-	local ok_status, ok_ret = redis_api.cmd('tsdb01', '', 'SET', key, data)
+	
+	local ok_status, ok_ret = redis_api.cmd('tsdb01', '', cmd, key, data)
 	if not (ok_status and ok_ret) then
         	only.log('E', 'Set data failed or no suitable data')
 		return nil        
 	end
+	
 	print(ok_ret)
 	return ok_ret
 end
 
 local function assemble_data(user_data)
-	if user_data == nil then
+	if user_data == nil or #user_data == 0 then
 		only.log('E', "The userData is nil.")
 		return nil
 	end
@@ -90,11 +92,22 @@ local function get_data_with_user(user, target_time, redis_num)
 	print(target_time)
 
 	local user_data = nil
-	data_key = CFG_LIST['gps_key'] .. user .. ':' .. target_time
-	user_data = get_data(data_key, 'SMEMBERS', redis_num)
-	only.log('E', scan.dump(user_data))
-	local data = assemble_data(user_data)
-	set_data(data_key, data)
+	local data = nil
+	if CFG_LIST['gps_key'] ~= nil then
+		data_key = CFG_LIST['gps_key'] .. user .. ':' .. target_time
+		user_data = get_data(data_key, 'SMEMBERS', redis_num)
+		only.log('E', scan.dump(user_data))
+		data = assemble_data(user_data)
+		set_data(data_key, data, 'SET')
+	end
+
+	if CFG_LIST['url_key'] ~= nil then
+		data_key = CFG_LIST['url_key'] .. user .. ':' .. target_time
+                user_data = get_data(data_key, 'SMEMBERS', redis_num)
+                only.log('E', scan.dump(user_data))
+                data = assemble_data(user_data)
+                set_data(data_key, data, 'SET')
+	end
 end
 
 function get_table(tab)
