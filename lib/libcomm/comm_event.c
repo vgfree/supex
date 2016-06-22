@@ -99,41 +99,20 @@ void commevent_accept(struct comm_event *commevent, int fdidx)
 	}
 }
 
-static void _set_remainfd(struct remainfd *remainfd, int *array, int cnt)
-{
-	int i = 0;
-
-	for (i = 0; i < cnt; i++) {
-		add_remainfd(remainfd, array[i], REMAINFD_PACKAGE);
-	}
-}
-
 void commevent_remainfd(struct comm_event *commevent, bool timeout)
 {
 	assert(commevent && commevent->init);
+
 	int     fd = -1;
 	int     counter = 0;	/* 处理fd个数的计数 */
-	int     fda[EPOLL_SIZE] = {};
 
 	/* 先处理需要读取数据的fd */
 	while (counter < MAX_DISPOSE_FDS && (commevent->remainfd.cnt[0] || commevent->remainfd.cnt[1] || commevent->remainfd.cnt[2] || commevent->remainfd.cnt[3] || commevent->remainfd.cnt[4])) {
-		int     cnt = 0, i = 0;
-		int     fda[EPOLL_SIZE] = {};
-		cnt = commpipe_read(&commevent->commctx->commpipe, fda, sizeof(int));
-		_set_remainfd(&commevent->remainfd, fda, cnt);
-#if 0
-		if ((cnt = commpipe_read(&commctx->commpipe, fda, sizeof(int))) > 0) {
-			for (i = 0; i < cnt; i++) {
-				add_remainfd(&commevent->remainfd, fda[i], REMAINFD_PACKAGE);
-			}
-		}
-#endif
 
 		if (commevent->remainfd.cnt[0]) {
-			/* 处理Accept事件 */
-			/* 类型为REMAINFD_LISTEN类型的fd里面保存的是fd的索引 */
+			/* 处理Accept事件 类型为REMAINFD_LISTEN类型的fd里面保存的是fd的索引 */
 			int fdidx = commevent->remainfd.fda[0][commevent->remainfd.circle[0]];
-			// log("commevent_remainfd accept fd:%d, index:%d,cnt:%d\n", fd, commevent->remainfd.circle[0], commevent->remainfd.cnt[0]);
+			log("commevent_remainfd accept fd:%d, index:%d,cnt:%d\n", commevent->bindfd[fdidx].commtcp.fd, commevent->remainfd.circle[0], commevent->remainfd.cnt[0]);
 			commevent_accept(commevent, fdidx);
 			del_remainfd(&commevent->remainfd, fdidx, REMAINFD_LISTEN);
 #if 0
@@ -149,7 +128,7 @@ void commevent_remainfd(struct comm_event *commevent, bool timeout)
 			/* 处理读事件 */
 			fd = commevent->remainfd.fda[1][commevent->remainfd.circle[1]];
 
-			// log("commevent_remainfd read fd:%d, index:%d,cnt:%d\n", fd, commevent->remainfd.circle[1], commevent->remainfd.cnt[1]);
+			 log("commevent_remainfd read fd:%d, index:%d,cnt:%d\n", fd, commevent->remainfd.circle[1], commevent->remainfd.cnt[1]);
 			if (unlikely(!commdata_recv(commevent->connfd[fd], commevent, fd))) {
 				/* 事件未处理完，则将下标增加1,下次轮询的时候执行下一个fd */
 				commevent->remainfd.circle[1] = (commevent->remainfd.circle[1] + 1) % commevent->remainfd.cnt[1];
@@ -160,7 +139,7 @@ void commevent_remainfd(struct comm_event *commevent, bool timeout)
 			/* 处理解析事件 */
 			fd = commevent->remainfd.fda[2][commevent->remainfd.circle[2]];
 
-			// log("commevent_remainfd parse fd:%d, index:%d,cnt:%d\n", fd, commevent->remainfd.circle[2], commevent->remainfd.cnt[2]);
+			 log("commevent_remainfd parse fd:%d, index:%d,cnt:%d\n", fd, commevent->remainfd.circle[2], commevent->remainfd.cnt[2]);
 			if (unlikely(!commdata_parse(commevent->connfd[fd], commevent, fd))) {
 				commevent->remainfd.circle[2] = (commevent->remainfd.circle[2] + 1) % commevent->remainfd.cnt[2];
 			}
@@ -170,7 +149,7 @@ void commevent_remainfd(struct comm_event *commevent, bool timeout)
 			/* 处理打包事件 */
 			fd = commevent->remainfd.fda[3][commevent->remainfd.circle[3]];
 
-			// log("commevent_remainfd package fd:%d, index:%d,cnt:%d\n", fd, commevent->remainfd.circle[3], commevent->remainfd.cnt[3]);
+			 log("commevent_remainfd package fd:%d, index:%d,cnt:%d\n", fd, commevent->remainfd.circle[3], commevent->remainfd.cnt[3]);
 			if (unlikely(!commdata_package(commevent->connfd[fd], commevent, fd))) {
 				commevent->remainfd.circle[3] = (commevent->remainfd.circle[3] + 1) % commevent->remainfd.cnt[3];
 			}
@@ -180,7 +159,7 @@ void commevent_remainfd(struct comm_event *commevent, bool timeout)
 			/* 处理写事件 */
 			fd = commevent->remainfd.fda[4][commevent->remainfd.circle[4]];
 
-			// log("commevent_remainfd write fd:%d, index:%d,cnt:%d\n", fd, commevent->remainfd.circle[4], commevent->remainfd.cnt[4]);
+			log("commevent_remainfd write fd:%d, index:%d,cnt:%d\n", fd, commevent->remainfd.circle[4], commevent->remainfd.cnt[4]);
 			if (unlikely(!commdata_send(commevent->connfd[fd], commevent, fd))) {
 				commevent->remainfd.circle[4] = (commevent->remainfd.circle[4] + 1) % commevent->remainfd.cnt[4];
 			}

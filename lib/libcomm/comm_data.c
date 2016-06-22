@@ -9,6 +9,8 @@
 #define QUEUENODES      1024			/* 队列里面保存的节点总个数 */
 #define MAXDISPOSEDATA  5			/* 最多联系解析打包的数据次数 */
 #define COMM_READ_MIOU  1024*1024		/* 一次性最多读取数据的字节数 */
+#define	CONNECTVALUE	1000*20			/* 当服务器端断开之后,过多长时间尝试第一次连接服务器[单位 ms]*/
+#define	CONNECTINTERVAL 1000*60			/* 当服务器断开之后，每间隔多长时间去尝试连接直到连接上服务器[单位 ms]*/
 
 /* 删除一个fd的相关信息以及关闭一个fd */
 #define DELETEFD(commevent, fd, flag)				\
@@ -19,7 +21,9 @@
 
 static void _fill_message_package(struct comm_message *message, const struct mfptp_parser *packager);
 
-bool commdata_init(struct connfd_info **connfd, struct comm_tcp *commtcp, struct cbinfo *finishedcb)
+static void  _timer_event(struct comm_timer *commtimer, struct comm_list *timerhead, void *usr);
+
+bool commdata_init(struct connfd_info **connfd, struct comm_event *commevent, struct comm_tcp *commtcp, struct cbinfo *finishedcb)
 {
 	assert(commtcp && commtcp && commtcp->fd > 0);
 
@@ -44,7 +48,16 @@ bool commdata_init(struct connfd_info **connfd, struct comm_tcp *commtcp, struct
 	if (unlikely(!mfptp_package_init(&(*connfd)->packager, &(*connfd)->send_cache.buffer, &(*connfd)->send_cache.size))) {
 		goto error;
 	}
+	
+	if (commtcp->connattr == CONNECT_ANYWAY) {
 
+		(*connfd)->commtimer = commtimer_create(CONNECTVALUE, CONNECTINTERVAL, _timer_event, (void*)*connfd);
+		if (unlikely((*connfd)->commtimer == NULL)) {
+			goto error;
+		}
+	}
+
+	(*connfd)->commevent = commevent;
 	commlist_init(&(*connfd)->send_list, free_commmsg);
 	commcache_init(&(*connfd)->send_cache);
 	commcache_init(&(*connfd)->recv_cache);
@@ -76,6 +89,7 @@ void commdata_destroy(struct connfd_info *connfd)
 		commcache_free(&connfd->recv_cache);
 		commcache_free(&connfd->send_cache);
 		commlist_destroy(&connfd->send_list, COMMMSG_OFFSET);
+		commtimer_destroy(connfd->commtimer);
 		mfptp_parse_destroy(&connfd->parser);
 		mfptp_package_destroy(&connfd->packager);
 		close(connfd->commtcp.fd);
@@ -120,8 +134,20 @@ bool commdata_recv(struct connfd_info *connfd, struct comm_event *commevent, int
 			}
 
 			if (connfd->commtcp.stat == FD_CLOSE) {
-				DELETEFD(commevent, connfd->commtcp.fd, REMAINFD_READ);
-				log("%d closed\n", connfd->commtcp.fd);
+				del_remainfd(&commevent->remainfd, connfd->commtcp.fd, REMAINFD_READ);
+				del_remainfd(&commevent->remainfd, connfd->commtcp.fd, REMAINFD_WRITE);
+				del_remainfd(&commevent->remainfd, connfd->commtcp.fd, REMAINFD_PARSE);
+				del_remainfd(&commevent->remainfd, connfd->commtcp.fd, REMAINFD_PACKAGE);
+				commepoll_del(&commevent->commctx->commepoll, connfd->commtcp.fd, 0);
+				commevent->connfd[connfd->commtcp.fd] = 0;
+				commevent->connfdcnt--;
+				close(connfd->commtcp.fd);
+				if (connfd->commtcp.connattr == CONNECT_ANYWAY) {
+					commtimer_start(connfd->commtimer, &commevent->commctx->timerhead);
+					log("%d closed and start commtimer\n", connfd->commtcp.fd);
+				}
+				//DELETEFD(commevent, connfd->commtcp.fd, REMAINFD_READ);
+				//log("%d closed\n", connfd->commtcp.fd);
 			} else {
 				/* 读事件成功处理完毕，则添加解析事件并将此fd从读事件数组里移除 */
 				add_remainfd(&commevent->remainfd, connfd->commtcp.fd, REMAINFD_PARSE);
@@ -346,7 +372,7 @@ bool commdata_add(struct comm_event *commevent, struct comm_tcp *commtcp, struct
 		struct connfd_info *connfd = NULL;
 
 		if (commepoll_add(&commevent->commctx->commepoll, commtcp->fd, EPOLLIN | EPOLLOUT | EPOLLET)) {
-			if (commdata_init(&connfd, commtcp, finishedcb)) {
+			if (commdata_init(&connfd, commevent, commtcp, finishedcb)) {
 				commevent->connfd[commtcp->fd] = connfd;
 				commevent->connfdcnt++;
 				return true;
@@ -420,3 +446,29 @@ static void _fill_message_package(struct comm_message *message, const struct mfp
 	message->socket_type = header->socket_type;
 }
 
+static void  _timer_event(struct comm_timer *commtimer, struct comm_list *timerhead, void *usr)
+{
+	assert(usr);
+
+	char service[64] = {};
+	char host[MAXIPADDRLEN] = {};
+	struct connfd_info *connfd = (struct connfd_info*)usr;
+
+	sprintf(service, "%d", connfd->commtcp.peerport);
+	memcpy(host, connfd->commtcp.peeraddr, strlen(connfd->commtcp.peeraddr));
+
+	if (socket_connect(&connfd->commtcp, host, service, 0, CONNECT_ANYWAY)) {
+		/* 连接成功， 则停止计时器 */
+		commtimer_stop(commtimer, timerhead);
+		if (commepoll_add(&connfd->commevent->commctx->commepoll, connfd->commtcp.fd, EPOLLIN | EPOLLOUT | EPOLLET)) {
+			connfd->commevent->connfd[connfd->commtcp.fd] = connfd;
+			connfd->commevent->connfdcnt ++;
+			log("timer event connect fd :%d, stop timer\n", connfd->commtcp.fd);
+		} else {
+			close(connfd->commtcp.fd);
+			commdata_destroy(connfd);
+			commepoll_del(&connfd->commevent->commctx->commepoll, connfd->commtcp.fd, 0);
+		}
+	}
+	return ;
+}

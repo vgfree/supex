@@ -9,8 +9,8 @@
 extern "C" {
 #endif
 
+#include "comm_utils.h"
 #include <stdint.h>
-#include        "comm_utils.h"
 
 #ifndef container_of
 
@@ -140,5 +140,6 @@ static inline void commlist_destroy(struct comm_list *head, int offset)
 #ifdef __cplusplus
 }
 #endif
+
 #endif	/* ifndef __COMM_LIST_H__ */
 

@@ -9,12 +9,13 @@
 #define QUEUE_NODES     1024		/* 队列里面可以存放多少个节点的数据 */
 #define EPOLLTIMEOUTED  5000		/* epoll_wait的超时事件 以毫秒(ms)为单位 1s = 1000ms*/
 #define CONNECTTIMEOUT  1000*60*30	/* 连接服务器时的标志位设置了CONNECT_ANYWAY时，一直尝试连接服务器,超时时间到还没连接上就返回[单位:ms] */
+#define	PIPEVALUE	1000*10		/* 从开始管道读取数据计时器开始到下一次读取管道的时间长度 [单位:ms] */
+#define PIPEINTERVAL	1000*5		/* 没间隔5s去读取管道里面的信息 [单位:ms] */
 
 static void *_start_new_pthread(void *usr);
 
-static bool _set_remainfd(struct remainfd *remainfd, int array[], int n);
+static void  _set_remainfd(struct comm_timer *commtimer, struct comm_list *timerhead, void *usr);
 
-static bool _quick_sort(int array[], int n);
 
 struct comm_context *comm_ctx_create(int epollsize)
 {
@@ -58,7 +59,13 @@ struct comm_context *comm_ctx_create(int epollsize)
 		goto error;
 	}
 
+	commctx->pipetimer = commtimer_create(PIPEVALUE, PIPEINTERVAL, _set_remainfd, (void*)commctx);
+	if (commctx->pipetimer == NULL) {
+		goto error;
+	}
+
 	commlist_init(&commctx->recvlist, free_commmsg);
+	commlist_init(&commctx->timerhead, NULL);
 	commctx->stat = COMM_STAT_INIT;
 
 	return commctx;
@@ -109,6 +116,7 @@ void comm_ctx_destroy(struct comm_context *commctx)
 		commpipe_destroy(&commctx->commpipe);
 		commlist_destroy(&commctx->recvlist, COMMMSG_OFFSET);
 		commepoll_destroy(&commctx->commepoll);
+		commtimer_destroy(commctx->pipetimer);
 		Free(commctx);
 	}
 }
@@ -161,9 +169,11 @@ int comm_send(struct comm_context *commctx, const struct comm_message *message, 
 	struct connfd_info      *connfd = NULL;
 	struct comm_message     *commmsg = NULL;
 
+	log("message fd:%d\n", message->fd);
 	if ((connfd = commctx->commevent->connfd[message->fd])) {
 		if (new_commmsg(&commmsg, message->package.dsize)) {
 			copy_commmsg(commmsg, message);
+			log("commmsg fd:%d\n", commmsg->fd);
 
 			commlock_lock(&connfd->sendlock);
 
@@ -177,6 +187,7 @@ int comm_send(struct comm_context *commctx, const struct comm_message *message, 
 
 			/* 发送给对发以触发写事件 如果数据写满则一直堵塞到对方读取数据 */
 			commpipe_write(&commctx->commpipe, (void *)&message->fd, sizeof(message->fd));
+			log("write pipe fd:%d\n", message->fd);
 			return message->package.dsize;
 		}
 	}
@@ -267,6 +278,10 @@ static void *_start_new_pthread(void *usr)
 	/* 等待主线程将状态设置为COMM_STAT_RUN，才被唤醒继续执行以下代码 */
 	commlock_wait(&commctx->statlock, (int *)&commctx->stat, COMM_STAT_RUN, -1, false);
 
+	/* 启动管道读取信息计时器 */
+	log("start pipe timer\n");
+	commtimer_start(commctx->pipetimer, &commctx->timerhead);
+
 	while (1) {
 		/* 线程状态为STOP的时候则将状态设置为NONE，返回真，则代表设置成功，退出循环 */
 		if (unlikely(commctx->stat == COMM_STAT_STOP)) {
@@ -288,17 +303,7 @@ static void *_start_new_pthread(void *usr)
 						add_remainfd(&commctx->commevent->remainfd, fdidx, REMAINFD_LISTEN);
 					} else if (commctx->commepoll.events[n].events & EPOLLIN) {			/* 有数据可读，触发读数据事件 */
 						if (commctx->commepoll.events[n].data.fd == commctx->commpipe.rfd) {	/* 管道事件被触发，则触发打包事件 */
-							int     cnt = 0, i = 0;
-							int     fda[EPOLL_SIZE] = {};
-							cnt = commpipe_read(&commctx->commpipe, fda, sizeof(int));
-							_set_remainfd(&commctx->commevent->remainfd, fda, cnt);
-#if 0
-							if ((cnt = commpipe_read(&commctx->commpipe, fda, sizeof(int))) > 0) {
-								for (i = 0; i < cnt; i++) {
-									add_remainfd(&commctx->commevent->remainfd, fda[i], REMAINFD_PACKAGE);
-								}
-							}
-#endif
+							_set_remainfd(NULL, NULL, (void*)commctx);
 						} else {	/* 非pipe的fd读事件被触发，则代表是socket的fd触发了读事件 */
 							add_remainfd(&commctx->commevent->remainfd, commctx->commepoll.events[n].data.fd, REMAINFD_READ);
 						}
@@ -316,104 +321,27 @@ static void *_start_new_pthread(void *usr)
 			/* epoll_wait每次循环完一次就去处理一次残留的fd */
 			commevent_remainfd(commctx->commevent, false);
 		}
+		commtimer_scheduler(&commctx->timerhead);
 	}
+	/* 停止管道读取信息计时器 */
+	commtimer_stop(commctx->pipetimer, &commctx->timerhead);
+	log("stop pipe timer\n");
 
 	return NULL;
 }
 
-static bool _set_remainfd(struct remainfd *remainfd, int array[], int n)
+static void  _set_remainfd(struct comm_timer *commtimer, struct comm_list *timerhead, void *usr)
 {
-	int i = 0;
+	assert(usr);
+	int cnt = 0, i = 0;
+	int fda[EPOLL_SIZE] = {};
+	struct comm_context *commctx = (struct comm_context*)usr;
 
-	for (i = 0; i < n; i++) {
-		add_remainfd(remainfd, array[i], REMAINFD_PACKAGE);
-	}
-
-#if 0
-	if (_quick_sort(array, n)) {
-		for (i = 0; i < n; i++) {
-			if (array[i] != array[i + 1]) {
-				remainfd->wfda[remainfd->wcnt++] = array[i];
-			}
+	log("deal with pipe timer\n");
+	if ((cnt = commpipe_read(&commctx->commpipe, fda, sizeof(int))) > 0) {
+		for (i = 0; i < cnt; i++) {
+			add_remainfd(&commctx->commevent->remainfd, fda[i], REMAINFD_PACKAGE);
+			log("read pipe fd:%d\n", fda[i]);
 		}
-
-		return true;
 	}
-#endif
-	return false;
 }
-
-static bool _quick_sort(int array[], int n)
-{
-	struct stack
-	{
-		int     start;	/* 数组中第一个元素下标 */
-		int     end;	/* 数组中最后一个元素下标*/
-	};
-
-	int             index = 0;			/* 栈的下标 */
-	int             size = sizeof(struct stack);	/* struct stack结构体大小 */
-	int             i = 0, j = 0, key = 0;
-	int             left = 0, right = 0;
-	struct stack    *stack = NULL;
-	char            *memory = calloc(n, size);
-
-	if (memory) {
-		stack = (struct stack *)&(memory[index * size]);
-		stack->start = 0;
-		stack->end = n - 1;
-
-		while (index > -1) {
-			i = left = stack->start;	/* 数组从左开始数据的下标 */
-			j = right = stack->end;		/* 数组从右开始数据的下标 */
-			key = array[left];
-			index--;
-
-			while (i < j) {
-				while ((i < j) && (key <= array[j])) {
-					j--;
-				}
-
-				if (i < j) {
-					array[i] = array[i] ^ array[j];
-					array[j] = array[i] ^ array[j];
-					array[i] = array[i] ^ array[j];
-					i++;
-				}
-
-				while ((i < j) && (key >= array[i])) {
-					i++;
-				}
-
-				if (i < j) {
-					array[i] = array[i] ^ array[j];
-					array[j] = array[i] ^ array[j];
-					array[i] = array[i] ^ array[j];
-					j--;
-				}
-			}
-
-			if (left < i - 1) {
-				index++;
-				stack = (struct stack *)&memory[index * size];
-				stack->start = left;
-				stack->end = i - 1;
-			}
-
-			if (right > i + 1) {
-				index++;
-				stack = (struct stack *)&memory[index * size];
-				stack->start = i + 1;
-				stack->end = right;
-			}
-
-			stack = (struct stack *)&memory[index * size];
-		}
-
-		free(memory);
-		return true;
-	}
-
-	return false;
-}
-

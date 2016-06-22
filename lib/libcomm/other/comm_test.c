@@ -1,62 +1,3 @@
-static bool _write_event(struct comm_data *commdata, int fd)
-{
-	assert(commctx && fda);
-	int                     bytes = 0;
-	int                     flag = false;
-	int                     size = commdata->send_buff.size;
-	int                     n = 0;
-	struct comm_data        *commdata = NULL;
-	log("_write_event fd:%d\n", fd);
-
-	while (1) {
-		// bytes = write(fd, &commdata->send_buff.cache[commdata->send_buff.start], commdata->send_buff.size);
-		bytes = write(fd, &commdata->send_buff.cache[commdata->send_buff.start], COMM_WRITE_MIOU);
-
-		if (unlikely(bytes < 0)) {
-			log("write failed\n");
-
-			if (likely((errno == EAGAIN) || (errno == EWOULDBLOCK))) {
-				/* 写缓冲区列队已满 */
-				flag = false;
-				_package_data(commdata);
-				break;
-			} else if (likely(errno == EINTR)) {
-				/* 写操作被信号中断 可继续写 */
-				continue;
-			} else {
-				/* 其他错误，退出 */
-				flag = false;
-				break;
-			}
-		} else {
-			log("write successed\n");
-			/* 数据成功发送完成 */
-			flag = true;
-			commdata->send_buff.start += bytes;
-			commdata->send_buff.size -= bytes;
-			size -= bytes;
-
-			if (size == bytes) {
-				/* 发送完毕，退出循环 */
-				log("write successed and ready to break ");
-				commcache_clean(&commdata->send_buff);	/* 待定中 */
-				/* 接收完数据就打包 */
-				_package_data(commdata);
-				log("write successed and break ");
-				break;
-			}
-
-			log("write successed but can't break while(1)");
-		}
-	}
-
-	if (commdata->finishedcb.callback) {
-		commdata->finishedcb.callback(commdata->commctx, fd, FD_WRITE, commdata->finishedcb.usr);
-	}
-
-	return flag;
-}
-
 /*关闭父进程所有打开的文件描述符， pfd:此描述符不关闭*/
 static bool _close_all_fd(int pfd)
 {
@@ -104,5 +45,80 @@ static bool _close_all_fd(int pfd)
 
 	closedir(dir);
 	return true;
+}
+
+/* 非递归的快速排序 */
+static bool _quick_sort(int array[], int n)
+{
+	struct stack
+	{
+		int     start;	/* 数组中第一个元素下标 */
+		int     end;	/* 数组中最后一个元素下标*/
+	};
+
+	int             index = 0;			/* 栈的下标 */
+	int             size = sizeof(struct stack);	/* struct stack结构体大小 */
+	int             i = 0, j = 0, key = 0;
+	int             left = 0, right = 0;
+	struct stack    *stack = NULL;
+	char            *memory = calloc(n, size);
+
+	if (memory) {
+		stack = (struct stack *)&(memory[index * size]);
+		stack->start = 0;
+		stack->end = n - 1;
+
+		while (index > -1) {
+			i = left = stack->start;	/* 数组从左开始数据的下标 */
+			j = right = stack->end;		/* 数组从右开始数据的下标 */
+			key = array[left];
+			index--;
+
+			while (i < j) {
+				while ((i < j) && (key <= array[j])) {
+					j--;
+				}
+
+				if (i < j) {
+					array[i] = array[i] ^ array[j];
+					array[j] = array[i] ^ array[j];
+					array[i] = array[i] ^ array[j];
+					i++;
+				}
+
+				while ((i < j) && (key >= array[i])) {
+					i++;
+				}
+
+				if (i < j) {
+					array[i] = array[i] ^ array[j];
+					array[j] = array[i] ^ array[j];
+					array[i] = array[i] ^ array[j];
+					j--;
+				}
+			}
+
+			if (left < i - 1) {
+				index++;
+				stack = (struct stack *)&memory[index * size];
+				stack->start = left;
+				stack->end = i - 1;
+			}
+
+			if (right > i + 1) {
+				index++;
+				stack = (struct stack *)&memory[index * size];
+				stack->start = i + 1;
+				stack->end = right;
+			}
+
+			stack = (struct stack *)&memory[index * size];
+		}
+
+		free(memory);
+		return true;
+	}
+
+	return false;
 }
 

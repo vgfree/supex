@@ -27,7 +27,7 @@ static inline int gain_bindfd_fdidx(struct comm_event *commevent, int fd)
 }
 
 /* 初始化一个fd的数据结构体struct comm_data */
-bool commdata_init(struct connfd_info **connfd, struct comm_tcp *commtcp, struct cbinfo *finishedcb);
+bool commdata_init(struct connfd_info **connfd, struct comm_event *commevent, struct comm_tcp *commtcp, struct cbinfo *finishedcb);
 
 /* 销毁一个fd的数据结构体struct comm_data*/
 void commdata_destroy(struct connfd_info *connfd);

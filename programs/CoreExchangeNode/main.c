@@ -77,7 +77,7 @@ static int init()
 
 	if (MGcliIP) {
 		int fd =
-			comm_socket(commctx, MGcliIP, MGcliPort, &MGCB, COMM_CONNECT);
+			comm_socket(commctx, MGcliIP, MGcliPort, &MGCB, COMM_CONNECT | CONNECT_ANYWAY);
 
 		if (fd > 0) {
 			struct fd_descriptor des = {};
@@ -104,7 +104,7 @@ static int init()
 		settingServerCB.callback = setting_server_event_notify;
 		int fd =
 			comm_socket(commctx, settingServerIp, settingServerPort,
-				&settingServerCB, COMM_CONNECT);
+				&settingServerCB, COMM_CONNECT | CONNECT_ANYWAY);
 		log("setting server fd:%d.", fd);
 
 		if (fd > 0) {
@@ -132,7 +132,7 @@ static int init()
 		loginServerCB.callback = login_server_event_notify;
 		int fd =
 			comm_socket(commctx, loginServerIp, loginServerPort,
-				&loginServerCB, COMM_CONNECT);
+				&loginServerCB, COMM_CONNECT | CONNECT_ANYWAY);
 		log("login server fd:%d.", fd);
 
 		if (fd > 0) {

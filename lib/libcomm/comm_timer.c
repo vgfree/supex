@@ -52,7 +52,7 @@ void commtimer_stop(struct comm_timer *commtimer, struct comm_list *timerhead)
 	commlist_delete(timerhead, &commtimer->ntimer);
 }
 
-void commtimer_schedule(struct comm_list *timerhead)
+void commtimer_scheduler(struct comm_list *timerhead)
 {
 	assert(timerhead);
 
@@ -67,7 +67,7 @@ void commtimer_schedule(struct comm_list *timerhead)
 		diff.tv_sec = end.tv_sec - commtimer->start.tv_sec;
 		diff.tv_usec = end.tv_usec - commtimer->start.tv_usec;
 		if (diff.tv_sec > commtimer->value.tv_sec || (diff.tv_sec == commtimer->value.tv_sec && diff.tv_usec > commtimer->value.tv_usec)) {
-			commtimer->callback(commtimer->usr);
+			commtimer->callback(commtimer, timerhead, commtimer->usr);
 			if (commtimer->interval.tv_sec > 0 || commtimer->interval.tv_usec > 0) {
 				/* 间隔触发事件 */
 				gettimeofday(&commtimer->start, NULL);

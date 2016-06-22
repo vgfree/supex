@@ -5,7 +5,7 @@
 #ifndef __COMM_STRUCTURE_H__
 #define __COMM_STRUCTURE_H__
 
-#include "comm_list.h"
+#include "comm_timer.h"
 #include "comm_tcp.h"
 #include "comm_cache.h"
 #include "comm_queue.h"
@@ -71,6 +71,8 @@ struct comm_context
 {
 	pthread_t               ptid;			/* 新线程的pid */
 	struct comm_event       *commevent;		/* 事件驱动的相关信息 */
+	struct comm_list	timerhead;		/* 计时器事件链表 */
+	struct comm_timer*	pipetimer;		/* 定时读取管道信息的计时器 */
 	struct comm_queue       recvqueue;		/* 存放接收并解析好的数据 */
 	struct comm_list        recvlist;		/* 当recvqueue已满时放入此链表中 */
 	struct comm_pipe        commpipe;		/* 关于管道的相关信息 */
@@ -123,6 +125,8 @@ struct connfd_info
 	struct comm_cache       recv_cache;	/* 存放read函数接收但并未解析的数据 */
 	struct comm_cache       send_cache;	/* 存放已打包好待发送的数据 */
 	struct comm_lock        sendlock;	/* send_queue的锁 */
+	struct comm_timer*	commtimer;	/* 计时器,当fd标志位设置为CONNECNT_ANYWAY，若服务器突然断开,此计时器就会定时的去连接服务器 */
+	struct comm_event*	commevent;	
 	struct cbinfo           finishedcb;	/* 此描述符监听事件发生时相应的回调函数信息 */
 	struct comm_tcp         commtcp;	/* 套接字相关信息 */
 	struct mfptp_parser     parser;		/* 解析器 */

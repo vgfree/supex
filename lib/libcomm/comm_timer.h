@@ -5,16 +5,18 @@
 #ifndef __COMM_TIMER_H__
 #define __COMM_TIMER_H__
 
-#include "comm_utils.h"
 #include "comm_list.h"
+#include "comm_utils.h"
+#include <sys/time.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
+struct comm_timer;
 
-
-typedef void (*EventCB)(void *arg);
+/* 时间事件回调函数模型 */
+typedef void (*EventCB)(struct comm_timer *commtimer, struct comm_list *timerhead, void *arg);
 
 struct comm_timer {
 	bool	init;			/* 此结构体是否被正确的初始化 */
@@ -58,7 +60,7 @@ void commtimer_stop(struct comm_timer *commtimer, struct comm_list *timerhead);
 * 功能: timer事件的调度器
 * @timerhead: timer链表的头节点
 ***********************************************************************************/
-void commtimer_schedule(struct comm_list *timerhead);
+void commtimer_scheduler(struct comm_list *timerhead);
 
 
 

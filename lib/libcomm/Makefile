@@ -18,14 +18,14 @@ BUILD_PWD = 		$(shell pwd)
 BUILD_HOST =		$(shell uname | tr '[A-Z]' '[a-z]')
 
 BUILD_CFLAGS =		-fPIC -Wall -Wno-unused-function -Wno-unused-variable -g
-BUILD_LIBS =		-lpthread -lm
+BUILD_LIBS =		-lpthread -lm -lcomm
 BUILD_INC_DIR = 	-I/usr/include -I/usr/local/include -I../liblog
-BUILD_LIB_DIR =		-L/usr/local/lib -L/usr/lib -L/usr/libexec
+BUILD_LIB_DIR =		-L/usr/local/lib -L/usr/lib -L/usr/libexec -L$(BUILD_PWD)/lib
 
 #######
-CC_COMPILER ?=		@gcc
-CC =			$(CC_COMPILER) $(BUILD_CFLAGS) $(CFLAGS) $(BUILD_INC_DIR) $(BUILD_OPTIMIZE)
-LN = 			$(CC_COMPILER) $(BUILD_CFLAGS) $(CFLAGS) $(DYLIB_CFLAGS) $(BUILD_LIB_DIR)
+CC_COMPILER ?=		gcc
+LN = 			@$(CC_COMPILER) $(BUILD_CFLAGS) $(CFLAGS) $(DYLIB_CFLAGS)
+CC =			$(CC_COMPILER) $(BUILD_CFLAGS) $(CFLAGS) $(BUILD_OPTIMIZE) $(BUILD_INC_DIR) $(BUILD_LIB_DIR) $(BUILD_LIBS)
 AR = 			@ar -rcs
 
 #######
@@ -39,8 +39,7 @@ OBJ =			$(patsubst %.c, $(OBJ_DIR)/%.o, $(notdir $(SRC)))
 OBJ_DIR	=		objs
 TARGET_DIR =		lib
 
-#vpath %.c $(BUILD_PWD)/mfptp_protocol
-vpath %.c ./mfptp_protocol
+vpath %.c ./mfptp_protocol	#指定编译需要查找.c文件的目录
 
 #######
 ifeq ($(BUILD_HOST), darwin)
@@ -74,15 +73,15 @@ endif
 #######
 define compile_obj
 	$(ECHO) $(COLOR_TXT)"\t\t- COMPILE\t===>\t"$(COLOR_OBJ)"$(1:.c=.o)"$(COLOR_NONE)
-	$(CC) -c $(1) -o $(2)
+	@$(CC) -c $(1) -o $(2)
 endef
 
 #######
 ALL:
-	gcc $(BUILD_CFLAGS) -L$(BUILD_PWD)/lib $(BUILD_LIBS) -lcomm $(BUILD_PWD)/test/mfptp_test.c -o mfptp_test
-	#gcc $(BUILD_CFLAGS) -L$(BUILD_PWD)/lib $(BUILD_LIBS) -lcomm $(BUILD_PWD)/test/pipe_test.c -o pipe_test
-	gcc $(BUILD_CFLAGS) -L$(BUILD_PWD)/lib $(BUILD_LIBS) -lcomm $(BUILD_PWD)/test/server.c -o server
-	gcc $(BUILD_CFLAGS) -L$(BUILD_PWD)/lib $(BUILD_LIBS) -lcomm $(BUILD_PWD)/test/client.c -o client
+	$(CC) $(BUILD_PWD)/test/timer_test.c -o $(BUILD_PWD)/test/timer_test
+	$(CC) $(BUILD_PWD)/test/list_test.c -o $(BUILD_PWD)/test/list_test
+	$(CC) $(BUILD_PWD)/test/server.c -o $(BUILD_PWD)/test/server
+	$(CC) $(BUILD_PWD)/test/client.c -o $(BUILD_PWD)/test/client
 
 lib: prepare  $(TARGET)
 
@@ -110,9 +109,10 @@ clean :
 distclean : clean
 	@-rm -rf $(TARGET_DIR)
 	@-rm -rf $(INSTALL_HEAD_DIR)
-	@-rm -rf client
-	@-rm -rf server
-	@-rm -rf mfptp_test
+	@-rm -rf $(BUILD_PWD)/test/client
+	@-rm -rf $(BUILD_PWD)/test/server
+	@-rm -rf $(BUILD_PWD)/test/list_test
+	@-rm -rf $(BUILD_PWD)/test/timer_test
 	@-rm -rf core*
 	$(ECHO) $(COLOR_TXT)"\n\tCLEAN\t >>> "$(COLOR_RED)"$@"$(COLOR_TXT)" <<< COMPLETE"$(COLOR_NONE)
 
