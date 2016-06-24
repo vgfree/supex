@@ -107,6 +107,7 @@ void commevent_remainfd(struct comm_event *commevent, bool timeout)
 	int     counter = 0;	/* 处理fd个数的计数 */
 
 	/* 先处理需要读取数据的fd */
+	log("commevent_remainfd start\n\n");
 	while (counter < MAX_DISPOSE_FDS && (commevent->remainfd.cnt[0] || commevent->remainfd.cnt[1] || commevent->remainfd.cnt[2] || commevent->remainfd.cnt[3] || commevent->remainfd.cnt[4])) {
 
 		if (commevent->remainfd.cnt[0]) {
@@ -128,45 +129,61 @@ void commevent_remainfd(struct comm_event *commevent, bool timeout)
 			/* 处理读事件 */
 			fd = commevent->remainfd.fda[1][commevent->remainfd.circle[1]];
 
-			 log("commevent_remainfd read fd:%d, index:%d,cnt:%d\n", fd, commevent->remainfd.circle[1], commevent->remainfd.cnt[1]);
+			 log("commevent_remainfd before read fd:%d, index:%d,cnt:%d\n", fd, commevent->remainfd.circle[1], commevent->remainfd.cnt[1]);
 			if (unlikely(!commdata_recv(commevent->connfd[fd], commevent, fd))) {
 				/* 事件未处理完，则将下标增加1,下次轮询的时候执行下一个fd */
 				commevent->remainfd.circle[1] = (commevent->remainfd.circle[1] + 1) % commevent->remainfd.cnt[1];
+			} else if (commevent->remainfd.cnt[1] > 0 && commevent->remainfd.cnt[1] == commevent->remainfd.circle[1]){
+				//commevent->remainfd.circle[1] = commevent->remainfd.circle[1] % commevent->remainfd.cnt[1];
+				commevent->remainfd.circle[1] = 0;
 			}
+			//	log("commevent_remainfd after read fd:%d, index:%d,cnt:%d\n\n", commevent->remainfd.fda[1][commevent->remainfd.circle[1]], commevent->remainfd.circle[1], commevent->remainfd.cnt[1]);
 		}
 
 		if (commevent->remainfd.cnt[2] > 0) {
 			/* 处理解析事件 */
 			fd = commevent->remainfd.fda[2][commevent->remainfd.circle[2]];
 
-			 log("commevent_remainfd parse fd:%d, index:%d,cnt:%d\n", fd, commevent->remainfd.circle[2], commevent->remainfd.cnt[2]);
+			 log("commevent_remainfd before parse fd:%d, index:%d,cnt:%d\n", fd, commevent->remainfd.circle[2], commevent->remainfd.cnt[2]);
 			if (unlikely(!commdata_parse(commevent->connfd[fd], commevent, fd))) {
 				commevent->remainfd.circle[2] = (commevent->remainfd.circle[2] + 1) % commevent->remainfd.cnt[2];
+			} else if (commevent->remainfd.cnt[2] > 0 && commevent->remainfd.cnt[2] == commevent->remainfd.circle[2]){
+				//commevent->remainfd.circle[2] = commevent->remainfd.circle[2] % commevent->remainfd.cnt[2];
+				commevent->remainfd.circle[2] = 0;
 			}
+			//	log("commevent_remainfd after parse fd:%d, index:%d,cnt:%d\n\n", commevent->remainfd.fda[2][commevent->remainfd.circle[2]], commevent->remainfd.circle[2], commevent->remainfd.cnt[2]);
 		}
 
 		if (commevent->remainfd.cnt[3] > 0) {
 			/* 处理打包事件 */
 			fd = commevent->remainfd.fda[3][commevent->remainfd.circle[3]];
 
-			 log("commevent_remainfd package fd:%d, index:%d,cnt:%d\n", fd, commevent->remainfd.circle[3], commevent->remainfd.cnt[3]);
+			 log("commevent_remainfd before package fd:%d, index:%d,cnt:%d\n", fd, commevent->remainfd.circle[3], commevent->remainfd.cnt[3]);
 			if (unlikely(!commdata_package(commevent->connfd[fd], commevent, fd))) {
 				commevent->remainfd.circle[3] = (commevent->remainfd.circle[3] + 1) % commevent->remainfd.cnt[3];
+			} else if (commevent->remainfd.cnt[3] > 0 && commevent->remainfd.cnt[3] == commevent->remainfd.circle[3]){
+				//commevent->remainfd.circle[3] = commevent->remainfd.circle[3] % commevent->remainfd.cnt[3];
+				commevent->remainfd.circle[3] = 0;
 			}
+		//	log("commevent_remainfd after package fd:%d, index:%d,cnt:%d\n\n", commevent->remainfd.fda[3][commevent->remainfd.circle[3]], commevent->remainfd.circle[3], commevent->remainfd.cnt[3]);
 		}
 
 		if (commevent->remainfd.cnt[4] > 0) {
 			/* 处理写事件 */
 			fd = commevent->remainfd.fda[4][commevent->remainfd.circle[4]];
 
-			log("commevent_remainfd write fd:%d, index:%d,cnt:%d\n", fd, commevent->remainfd.circle[4], commevent->remainfd.cnt[4]);
+			log("commevent_remainfd before write fd:%d, index:%d,cnt:%d\n", fd, commevent->remainfd.circle[4], commevent->remainfd.cnt[4]);
 			if (unlikely(!commdata_send(commevent->connfd[fd], commevent, fd))) {
 				commevent->remainfd.circle[4] = (commevent->remainfd.circle[4] + 1) % commevent->remainfd.cnt[4];
+			} else if (commevent->remainfd.cnt[4] > 0 && commevent->remainfd.cnt[4] == commevent->remainfd.circle[4]){ 
+				//commevent->remainfd.circle[4] = commevent->remainfd.circle[4] % commevent->remainfd.cnt[4]; 
+				commevent->remainfd.circle[4] = 0;
 			}
-		}
-
+		//	log("commevent_remainfd after write fd:%d, index:%d,cnt:%d\n\n", commevent->remainfd.fda[4][commevent->remainfd.circle[4]], commevent->remainfd.circle[4], commevent->remainfd.cnt[4]); 
+		} 
 		counter++;
 	}
+	log("commevent_remainfd over\n\n");
 
 	/* 超时调用该函数则调用用户层的回调函数 */
 	if (timeout && commevent->timeoutcb.callback) {

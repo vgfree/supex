@@ -10,7 +10,7 @@
 #define EPOLLTIMEOUTED  5000		/* epoll_wait的超时事件 以毫秒(ms)为单位 1s = 1000ms*/
 #define CONNECTTIMEOUT  1000*60*30	/* 连接服务器时的标志位设置了CONNECT_ANYWAY时，一直尝试连接服务器,超时时间到还没连接上就返回[单位:ms] */
 #define	PIPEVALUE	1000*10		/* 从开始管道读取数据计时器开始到下一次读取管道的时间长度 [单位:ms] */
-#define PIPEINTERVAL	1000*5		/* 没间隔5s去读取管道里面的信息 [单位:ms] */
+#define PIPEINTERVAL	1000*20		/* 没间隔5s去读取管道里面的信息 [单位:ms] */
 
 static void *_start_new_pthread(void *usr);
 
@@ -169,11 +169,11 @@ int comm_send(struct comm_context *commctx, const struct comm_message *message, 
 	struct connfd_info      *connfd = NULL;
 	struct comm_message     *commmsg = NULL;
 
-	log("message fd:%d\n", message->fd);
+	//log("message fd:%d\n", message->fd);
 	if ((connfd = commctx->commevent->connfd[message->fd])) {
 		if (new_commmsg(&commmsg, message->package.dsize)) {
 			copy_commmsg(commmsg, message);
-			log("commmsg fd:%d\n", commmsg->fd);
+			//log("commmsg fd:%d\n", commmsg->fd);
 
 			commlock_lock(&connfd->sendlock);
 
@@ -187,7 +187,7 @@ int comm_send(struct comm_context *commctx, const struct comm_message *message, 
 
 			/* 发送给对发以触发写事件 如果数据写满则一直堵塞到对方读取数据 */
 			commpipe_write(&commctx->commpipe, (void *)&message->fd, sizeof(message->fd));
-			log("write pipe fd:%d\n", message->fd);
+			//log("write pipe fd:%d\n", message->fd);
 			return message->package.dsize;
 		}
 	}
@@ -294,6 +294,7 @@ static void *_start_new_pthread(void *usr)
 			commctx->commevent->timeoutcb.timeout = EPOLLTIMEOUTED;
 		}
 
+		log("commepoll_wait start\n");
 		/* 开始epoll_wait等待描述符就绪 */
 		if ((retval = commepoll_wait(&commctx->commepoll, commctx->commevent->timeoutcb.timeout))) {
 			for (n = 0; n < commctx->commepoll.eventcnt; n++) {
@@ -303,6 +304,7 @@ static void *_start_new_pthread(void *usr)
 						add_remainfd(&commctx->commevent->remainfd, fdidx, REMAINFD_LISTEN);
 					} else if (commctx->commepoll.events[n].events & EPOLLIN) {			/* 有数据可读，触发读数据事件 */
 						if (commctx->commepoll.events[n].data.fd == commctx->commpipe.rfd) {	/* 管道事件被触发，则触发打包事件 */
+							log("pipe event start\n");
 							_set_remainfd(NULL, NULL, (void*)commctx);
 						} else {	/* 非pipe的fd读事件被触发，则代表是socket的fd触发了读事件 */
 							add_remainfd(&commctx->commevent->remainfd, commctx->commepoll.events[n].data.fd, REMAINFD_READ);
@@ -313,6 +315,7 @@ static void *_start_new_pthread(void *usr)
 				}
 			}
 		}
+		log("commepoll_wait over\n");
 
 		if ((retval == false) && (errno == EINTR)) {
 			/* epoll_wait超时调用处理残留fd函数 @true会调用用户的超时回调函数 */
@@ -341,7 +344,7 @@ static void  _set_remainfd(struct comm_timer *commtimer, struct comm_list *timer
 	if ((cnt = commpipe_read(&commctx->commpipe, fda, sizeof(int))) > 0) {
 		for (i = 0; i < cnt; i++) {
 			add_remainfd(&commctx->commevent->remainfd, fda[i], REMAINFD_PACKAGE);
-			log("read pipe fd:%d\n", fda[i]);
+	//		log("read pipe fd:%d\n", fda[i]);
 		}
 	}
 }

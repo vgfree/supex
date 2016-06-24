@@ -47,7 +47,18 @@ void message_gateway_event_notify(struct comm_context *commctx,
 	switch (portinfo->stat)
 	{
 		case FD_INIT:	// connected.
-		{}
+		{
+			struct fd_descriptor des = {};
+			des.status = 1;
+			des.obj = MESSAGE_GATEWAY;
+			array_fill_fd(portinfo->fd, &des);
+
+			struct fd_node node = {};
+			node.fd = portinfo->fd;
+			g_serv_info.message_gateway_fd = portinfo->fd;
+			node.status = 1;
+			list_push_back(MESSAGE_GATEWAY, &node);
+		}
 		 break;
 
 		case FD_CLOSE:	// closed.
@@ -90,7 +101,18 @@ void setting_server_event_notify(struct comm_context *commctx,
 	switch (portinfo->stat)
 	{
 		case FD_INIT:	// connected.
-		{}
+		{
+			struct fd_descriptor des = {};
+			des.status = 1;
+			des.obj = SETTING_SERVER;
+			array_fill_fd(portinfo->fd, &des);
+
+			struct fd_node node = {};
+			node.fd = portinfo->fd;
+			g_serv_info.setting_server_fd = portinfo->fd;
+			node.status = 1;
+			list_push_back(SETTING_SERVER, &node);
+		}
 		 break;
 
 		case FD_CLOSE:	// closed.
@@ -134,7 +156,18 @@ void login_server_event_notify(struct comm_context *commctx,
 	switch (portinfo->stat)
 	{
 		case FD_INIT:	// connected.
-		{}
+		{
+			struct fd_descriptor des = {};
+			des.status = 1;
+			des.obj = LOGIN_SERVER;
+			array_fill_fd(portinfo->fd, &des);
+
+			struct fd_node node = {};
+			node.fd = portinfo->fd;
+			g_serv_info.login_server_fd = portinfo->fd;
+			node.status = 1;
+			list_push_back(LOGIN_SERVER, &node);
+		}
 		 break;
 
 		case FD_CLOSE:	// closed.

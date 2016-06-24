@@ -23,6 +23,7 @@ void find_best_gateway(int *fd)
 
 		if (list_front(MESSAGE_GATEWAY, &node) == FAILED) {
 			error("no gateway server.");
+			return;
 		}
 
 		*fd = node.fd;
@@ -283,8 +284,10 @@ void message_dispatch()
 	if (des.obj == CLIENT) {
 		int fd = 0;
 		find_best_gateway(&fd);
-		set_msg_fd(&msg, fd);
-		comm_send(g_serv_info.commctx, &msg, true, -1);
+		if (fd > 0) {
+			set_msg_fd(&msg, fd);
+			comm_send(g_serv_info.commctx, &msg, true, -1);
+		}
 	} else if (des.obj == MESSAGE_GATEWAY) {
 		_classified_message(&msg);
 	} else if (des.obj == SETTING_SERVER) {

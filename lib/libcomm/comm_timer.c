@@ -67,6 +67,7 @@ void commtimer_scheduler(struct comm_list *timerhead)
 		diff.tv_sec = end.tv_sec - commtimer->start.tv_sec;
 		diff.tv_usec = end.tv_usec - commtimer->start.tv_usec;
 		if (diff.tv_sec > commtimer->value.tv_sec || (diff.tv_sec == commtimer->value.tv_sec && diff.tv_usec > commtimer->value.tv_usec)) {
+			log("commtimer scheduler callback\n");
 			commtimer->callback(commtimer, timerhead, commtimer->usr);
 			if (commtimer->interval.tv_sec > 0 || commtimer->interval.tv_usec > 0) {
 				/* 间隔触发事件 */

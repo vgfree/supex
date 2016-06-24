@@ -158,7 +158,6 @@ bool commdata_recv(struct connfd_info *connfd, struct comm_event *commevent, int
 			return true;
 		}
 	}
-
 	del_remainfd(&commevent->remainfd, fd, REMAINFD_READ);
 	return true;
 }
@@ -188,32 +187,31 @@ bool commdata_send(struct connfd_info *connfd, struct comm_event *commevent, int
 					commcache_clean(&connfd->send_cache);
 				} else {
 					if (errno == EINTR) {
+						log("write EINTR\n");
 						flag = false;	/* 被打断，则下次继续处理 */
 					} else if ((errno == EAGAIN) || (errno == EWOULDBLOCK)) {
+						log("write cache full\n");
 						flag = true;	/* 缓冲区已满，则从remainfd里面删除此fd，等待此fd的epoll写事件被触发再继续发送数据 */
 					} else {
 						/* 出现其他的致命错误，返回true，将此fd的相关信息删除 */
+						log("write dead wrong\n");
 						DELETEFD(commevent, connfd->commtcp.fd, REMAINFD_WRITE);
 						return true;
 					}
 				}
-
-				if (flag) {		/* 写事件正常执行成功 */
-					if (connfd->finishedcb.callback) {
-						connfd->finishedcb.callback(commevent->commctx, &connfd->commtcp, connfd->finishedcb.usr);
-					}
-
-					del_remainfd(&commevent->remainfd, connfd->commtcp.fd, REMAINFD_WRITE);
+				if (flag && connfd->finishedcb.callback) {		/* 写事件正常执行成功 */
+					connfd->finishedcb.callback(commevent->commctx, &connfd->commtcp, connfd->finishedcb.usr);
 				}
-			} else {
-				/* 无数据可发送，则将其从remainfd中删除 */
-				del_remainfd(&commevent->remainfd, connfd->commtcp.fd, REMAINFD_WRITE);
 			}
-
+			if (flag) {
+				log("write deal over\n");
+				del_remainfd(&commevent->remainfd, connfd->commtcp.fd, REMAINFD_WRITE);
+			} else {
+				log("write not over\n");
+			}
 			return flag;
 		}
 	}
-
 	del_remainfd(&commevent->remainfd, fd, REMAINFD_WRITE);	/* 此描述符已被删除或不可写，则移除此描述符 */
 	return flag;
 }
@@ -278,6 +276,7 @@ bool commdata_package(struct connfd_info *connfd, struct comm_event *commevent, 
 		if ((size > 0) && (connfd->packager.ms.error == MFPTP_OK)) {
 			connfd->send_cache.end += size;
 			add_remainfd(&commevent->remainfd, connfd->commtcp.fd, REMAINFD_WRITE);
+			log("package successed\n");
 		} else {
 			log("package failed\n");
 			connfd->packager.ms.error = MFPTP_OK;
@@ -457,12 +456,16 @@ static void  _timer_event(struct comm_timer *commtimer, struct comm_list *timerh
 	sprintf(service, "%d", connfd->commtcp.peerport);
 	memcpy(host, connfd->commtcp.peeraddr, strlen(connfd->commtcp.peeraddr));
 
+	log("deal with connect timer\n");
 	if (socket_connect(&connfd->commtcp, host, service, 0, CONNECT_ANYWAY)) {
 		/* 连接成功， 则停止计时器 */
 		commtimer_stop(commtimer, timerhead);
 		if (commepoll_add(&connfd->commevent->commctx->commepoll, connfd->commtcp.fd, EPOLLIN | EPOLLOUT | EPOLLET)) {
 			connfd->commevent->connfd[connfd->commtcp.fd] = connfd;
 			connfd->commevent->connfdcnt ++;
+			if (connfd->finishedcb.callback) {
+				connfd->finishedcb.callback(connfd->commevent->commctx, &connfd->commtcp, connfd->finishedcb.usr);
+			}
 			log("timer event connect fd :%d, stop timer\n", connfd->commtcp.fd);
 		} else {
 			close(connfd->commtcp.fd);
