@@ -62,13 +62,11 @@ local function set_expire_time(key, expire_time, redis_cnt)
 	local time = string.gsub(key, CFG_LIST['USER_PART_KEY'] .. ':', '') 
 	local user_key
 	for idx = 1, #user do
-		if CFG_LIST['gps_key'] ~= nil then
-			user_key = CFG_LIST['gps_key'] .. user[idx] .. ':' .. time
-			set_data(user_key, 'EXPIRE', redis_cnt, expire_time)
-		end
-		if CFG_LIST['url_key'] ~= nil then
-			user_key = CFG_LIST['url_key'] .. user[idx] .. ':' .. time
-                        set_data(user_key, 'EXPIRE', redis_cnt, expire_time)
+		for dk_idx = 1, #CFG_LIST['timport'] do
+			if CFG_LIST['timport'][dk_idx]['key'] ~= nil then
+				user_key = CFG_LIST['timport'][dk_idx]['key'] .. user[idx] .. ':' .. time
+                        	set_data(user_key, 'EXPIRE', redis_cnt, expire_time)
+			end
 		end
 	end
 
@@ -80,15 +78,18 @@ function set_time(tab)
 	print(tab[1])
 	print(tab[2])
 	local expire_time = CFG_LIST['expire_time']
-	set_expire_time(tab[1], expire_time, tab[2])
+	if #CFG_LIST['timport'] > 0 then
+		set_expire_time(tab[1], expire_time, tab[2])
+	end
 end
 
+--[[
+function handle()
+	local tab = {}
+	tab[1] = 'ACTIVEUSER:20160622140'
+	tab[2] = 1
+	set_time(tab)
+end
 
---function handle()
---	local tab = {}
---	tab[1] = 'ACTIVEUSER:20160622140'
---	tab[2] = 1
---	set_time(tab)
---end
-
---handle = handle()
+handle = handle()
+]]--

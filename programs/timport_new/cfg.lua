@@ -2,19 +2,96 @@ module("cfg")
 
 USER_PART_KEY = "ACTIVEUSER"
 time_interval = 10
+migration_interval = 10
 delay_time = 600
 expire_time = 60
 
 zk_servers = "192.168.1.14:2181"
 
-zk_gps_disabled = 0
-zk_gps_rnode = "/gps"
-gps_key = "GPS:"
-gps_type = "SET"
-gps_hash_filter = "xxx"
-
-zk_url_disabled = 0
-zk_url_rnode = "/url"
-url_key = "URL:"
-url_type = "SET"
-url_hash_filter = "xxx"
+timport =
+{
+	{
+		zk_disabled = 0,
+		zk_rnode = "/gps",
+		key = "GPS:",
+		data_type = "SET",
+		hash_filter = "imei",
+		tsdb = 
+		{
+			{
+				key_set = 
+				{
+					0,
+					2048,
+				},
+				name = "tsdb0",
+			},
+			{
+				key_set = 
+                                {
+                                        2048,
+                                        4096,
+                                },
+                                name = "tsdb1",
+			},
+			{
+                                key_set =
+                                {
+                                        4096,
+					6144,
+                                },
+                                name = "tsdb2",
+                        },
+			{
+                                key_set =
+                                {
+                                        6144,
+					8192,
+                                },
+                                name = "tsdb3",
+                        },
+		},
+	},
+	{
+		zk_disabled = 0,
+		zk_rnode = "/url",
+		key = "URL:",
+		data_type = "SET",
+		hash_filter = "time",
+		tsdb =
+                {
+                        {
+                                key_set = 
+                                {
+                                        0,
+                                        2048,
+                                },
+                                name = "tsdb0",
+                        },
+                        {
+                                key_set =
+                                {
+                                        2048,
+                                        4096,
+                                },
+                                name = "tsdb1",
+                        },
+                        {
+                                key_set =
+                                {
+                                        4096,
+                                        6144,
+                                },
+                                name = "tsdb2",
+                        },
+                        {
+                                key_set =
+                                {
+                                        6144,
+                                        8192,
+                                },
+                                name = "tsdb3",
+                        },
+                },
+	},
+}

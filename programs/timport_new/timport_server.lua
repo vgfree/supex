@@ -36,12 +36,12 @@ local function get_data(key, cmd, redis_num)
 	return ok_ret
 end
 
-local function set_data(key, data, cmd)
-	if key == nil or cmd == nil or data == nil then
+local function set_data(key, data, cmd, tsdb_name)
+	if key == nil or cmd == nil or data == nil or tsdb_name == nil then
 		return nil
 	end
 	
-	local ok_status, ok_ret = redis_api.cmd('tsdb01', '', cmd, key, data)
+	local ok_status, ok_ret = redis_api.cmd(tsdb_name, '', cmd, key, data)
 	if not (ok_status and ok_ret) then
         	only.log('E', 'Set data failed or no suitable data')
 		return nil        
@@ -93,20 +93,12 @@ local function get_data_with_user(user, target_time, redis_num)
 
 	local user_data = nil
 	local data = nil
-	if CFG_LIST['gps_key'] ~= nil then
-		data_key = CFG_LIST['gps_key'] .. user .. ':' .. target_time
+	for idx = 1, #CFG_LIST['timport'] do
+		data_key = CFG_LIST['timport'][idx]['key'] .. user .. ':' .. target_time
 		user_data = get_data(data_key, 'SMEMBERS', redis_num)
 		only.log('E', scan.dump(user_data))
 		data = assemble_data(user_data)
-		set_data(data_key, data, 'SET')
-	end
-
-	if CFG_LIST['url_key'] ~= nil then
-		data_key = CFG_LIST['url_key'] .. user .. ':' .. target_time
-                user_data = get_data(data_key, 'SMEMBERS', redis_num)
-                only.log('E', scan.dump(user_data))
-                data = assemble_data(user_data)
-                set_data(data_key, data, 'SET')
+		set_data(data_key, data, 'SET', tsdb_name)
 	end
 end
 
@@ -114,6 +106,8 @@ function get_table(tab)
 	print(tab[1])
 	print(tab[2])
 	print(tab[3])
-	get_data_with_user(tab[1], tab[2], tab[3])
+	if #CFG_LIST['timport'] > 0 then
+		get_data_with_user(tab[1], tab[2], tab[3])
+	end
 end
 

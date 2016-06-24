@@ -24,18 +24,8 @@ local http_api  = require('http_short_api')
 local libhttps  = require("libhttps")
 local math	= require("math")
 
-local function get_next_starttime(timestamp)
-	if timestamp == nil then
-		only.log('E', 'timestamp is nil')
-		return nil
-	end
-	
-	local start_time = timestamp + 60 * CFG_LIST['migration_interval']
-	return start_time
+function handle()
+	only.log("E", "timport conf = %s", scan.dump(CFG_LIST['timport']))
 end
 
-
-function get_time(timestamp)
-	return get_next_starttime(timestamp)
-end
-
+handle = handle()

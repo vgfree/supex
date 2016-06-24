@@ -62,7 +62,7 @@ local function creat_user(id)
         local time = id .. os.date("%Y%m%d%H", current_time)
 	return time
 end
- 
+--[[ 
 local function creat_key()
 	local current_time = os.time()
         local time = os.date("%Y%m%d%H", current_time)
@@ -76,6 +76,29 @@ local function creat_key()
                 print(time)
         end
 
+        local user_key = "ACTIVEUSER:" ..time
+
+        return user_key, time
+end
+]]--
+
+local function creat_key()
+        local current_time = os.time()
+        local time = os.date("%Y%m%d%H", current_time)
+	local minute = os.date("%M", current_time)
+        if minute < '30' then
+                time = time .. tostring(0)--math.floor(os.date("%M", current_time)/10)
+        end
+
+	if minute >= '30' then
+		time = time .. tostring(3)
+	end
+--[[
+        if interval < 10 then
+                time = time .. math.floor(os.date("%M", current_time)/10) .. interval
+                print(time)
+        end
+]]--
         local user_key = "ACTIVEUSER:" ..time
 
         return user_key, time
@@ -119,7 +142,7 @@ function handle()
 	local t = os.time()
 	while true do
     		local time = os.time()
-    		if time - t >= 300 then
+    		if time - t >= 60 then
         		t = time
 			work()
     		end
