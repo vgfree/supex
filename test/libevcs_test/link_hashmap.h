@@ -78,6 +78,7 @@ static inline size_t link_hash_slot64(size_t value, size_t bits) {
 
 typedef int (*link_hash_strcmp_fn)(const char *s1, const char *s2, size_t n);
 typedef size_t (*link_hash_fn)(const char *s, size_t n);
+typedef void (*link_hash_free_fn)(void *p);
 
 typedef struct {
   link_hlist_head_t     *slots;
@@ -86,6 +87,8 @@ typedef struct {
   size_t                bits;
   link_hash_strcmp_fn   strcmp;
   link_hash_fn          hash;
+  link_hash_free_fn     free_key;
+  link_hash_free_fn     free_value;
 } link_hashmap_t;
 
 typedef struct {
@@ -94,18 +97,23 @@ typedef struct {
   size_t              hash;
   char                *key;
   size_t              keylen;
-  intptr_t            value;
+  size_t              value;
 } link_hashmap_item_t;
 
-link_hashmap_t *link_hashmap_create(size_t bits, link_hash_strcmp_fn strcmp_fn, link_hash_fn hash_fn);
-void link_hashmap_destroy(link_hashmap_t *hash);
+link_hashmap_t *link_hashmap_create(size_t bits, 
+                                    link_hash_strcmp_fn strcmp_fn, 
+                                    link_hash_fn hash_fn,
+                                    link_hash_free_fn free_key_fn,
+                                    link_hash_free_fn free_value_fn);
+
+void link_hashmap_destory(link_hashmap_t *hash);
 
 void link_hashmap_set_pointer(link_hashmap_t *hash, char *key, size_t n, void *pointer);
 void *link_hashmap_get_pointer(link_hashmap_t *hash, const char *key, size_t n);
 void link_hashmap_remove_pointer(link_hashmap_t *hash, const char *key, size_t n);
 
-void link_hashmap_set_value(link_hashmap_t *hash, char *key, size_t n, intptr_t value);
-int link_hashmap_get_value(link_hashmap_t *hash, const char *key, size_t n, intptr_t *value);
+void link_hashmap_set_value(link_hashmap_t *hash, char *key, size_t n, size_t value);
+int link_hashmap_get_value(link_hashmap_t *hash, const char *key, size_t n, size_t *value);
 void link_hashmap_remove_value(link_hashmap_t *hash, const char *key, size_t n);
 
 #endif /* LINK_HASHMAP_H */

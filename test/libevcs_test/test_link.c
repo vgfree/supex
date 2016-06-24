@@ -46,7 +46,7 @@ void main(void)
 
 		int                             i;
 		struct link_hash_cfg      *tsdb_hash = link_get_hash_cfg(redis_cfg, "tsdb_hash");
-		printf("tsdb_hash->hash: %s\n", tsdb_hash->hash);
+		printf("tsdb_hash->hash: %d\n", tsdb_hash->type);
 		printf("tsdb_hash->count: %d\n", tsdb_hash->count);
 
 		int count = tsdb_hash->count;
@@ -64,7 +64,7 @@ void main(void)
 		link_free_hash_cfg(tsdb_hash);
 
 		struct link_hash_cfg *url_hash = link_get_hash_cfg(redis_cfg, "url_hash");
-		printf("url_hash->hash: %s\n", url_hash->hash);
+		printf("url_hash->hash: %d\n", url_hash->type);
 		printf("url_hash->count: %d\n", url_hash->count);
 
 		count = url_hash->count;

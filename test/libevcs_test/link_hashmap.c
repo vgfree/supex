@@ -37,7 +37,11 @@ static void link_hashmap_rehash(link_hashmap_t *hash) {
   link_free(old_slots);
 }
 
-link_hashmap_t *link_hashmap_create(size_t bits, link_hash_strcmp_fn strcmp_fn, link_hash_fn hash_fn) {
+link_hashmap_t *link_hashmap_create(size_t bits, 
+                                    link_hash_strcmp_fn strcmp_fn, 
+                                    link_hash_fn hash_fn,
+                                    link_hash_free_fn free_key_fn,
+                                    link_hash_free_fn free_value_fn) {
   link_hashmap_t *hash = link_malloc(sizeof(link_hashmap_t));
   if (hash == NULL) return NULL;
 
@@ -46,6 +50,8 @@ link_hashmap_t *link_hashmap_create(size_t bits, link_hash_strcmp_fn strcmp_fn, 
   hash->max_items = size;
   hash->strcmp = strcmp_fn;
   hash->hash = hash_fn;
+  hash->free_key = free_key_fn;
+  hash->free_value = free_value_fn;
   hash->items = 0;
   link_hlist_head_t *slots = link_malloc(sizeof(link_hlist_head_t) * size);
   if (slots == NULL) {
@@ -60,7 +66,7 @@ link_hashmap_t *link_hashmap_create(size_t bits, link_hash_strcmp_fn strcmp_fn, 
   return hash;
 }
 
-void link_hashmap_destroy(link_hashmap_t *hash) {
+void link_hashmap_destory(link_hashmap_t *hash) {
   if (hash == NULL) return;
 
   size_t size = 1 << hash->bits;
@@ -75,8 +81,13 @@ void link_hashmap_destroy(link_hashmap_t *hash) {
       pos = current_slot->first;
       link_hlist_remove(pos);
       item = link_hlist_entry(pos, link_hashmap_item_t, node);
-      if(item->pointer) link_pfree(item->pointer); 
-      if(item->key) link_pfree(item->key);
+      if (hash->free_key) {
+        hash->free_key(item->key);
+      }
+
+      if (hash->free_value) {
+        hash->free_value(item->pointer); 
+      }
       link_pfree(item);
     }
   }
@@ -101,7 +112,9 @@ void link_hashmap_set_pointer(link_hashmap_t *hash, char *key, size_t n, void *p
       item = link_hlist_entry(pos, link_hashmap_item_t, node);
       if (item->keylen == n) {
         if (hash->strcmp(item->key, key, n) == 0) {
-          link_pfree(item->pointer);
+          if (hash->free_value) {
+            hash->free_value(item->pointer);
+          }
           item->pointer = pointer;
           return;
         }
@@ -153,8 +166,14 @@ void link_hashmap_remove_pointer(link_hashmap_t *hash, const char *key, size_t n
       if (item->keylen == n) {
         if (hash->strcmp(item->key, key, n) == 0) {
           link_hlist_remove(&item->node);
-          link_pfree(item->pointer);
-          link_pfree(item->key);
+          if (hash->free_value) {
+            hash->free_value(item->pointer);
+          }
+
+          if (hash->free_key) {
+            hash->free_key(item->key);
+          }
+
           link_pfree(item);
           hash->items--;
           return;
@@ -164,7 +183,7 @@ void link_hashmap_remove_pointer(link_hashmap_t *hash, const char *key, size_t n
   }
 }
 
-void link_hashmap_set_value(link_hashmap_t *hash, char *key, size_t n, intptr_t value) {
+void link_hashmap_set_value(link_hashmap_t *hash, char *key, size_t n, size_t value) {
   if (hash->items >= hash->max_items) {
     link_hashmap_rehash(hash);
   }
@@ -197,7 +216,7 @@ void link_hashmap_set_value(link_hashmap_t *hash, char *key, size_t n, intptr_t 
   hash->items++;
 }
 
-int link_hashmap_get_value(link_hashmap_t *hash, const char *key, size_t n, intptr_t *value) {
+int link_hashmap_get_value(link_hashmap_t *hash, const char *key, size_t n, size_t *value) {
   size_t hash_key = hash->hash(key, n);
   size_t index = link_hash_slot(hash_key, hash->bits);
   link_hlist_head_t *slot = &hash->slots[index];
@@ -232,7 +251,10 @@ void link_hashmap_remove_value(link_hashmap_t *hash, const char *key, size_t n) 
       if (item->keylen == n) {
         if (hash->strcmp(item->key, key, n) == 0) {
           link_hlist_remove(&item->node);
-          link_pfree(item->key);
+          if (hash->free_key) {
+            hash->free_key(item->key);
+          }
+
           link_pfree(item);
           hash->items--;
           return;

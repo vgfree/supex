@@ -6,15 +6,13 @@
 #include "json.h"
 
 /*http redis*/
-struct link_cfg
-{
+struct link_cfg {
 	char            *host;
 	unsigned short  port;
 	unsigned short  size;
 };
 
-struct link_hash_node
-{
+struct link_hash_node {
 	char            *mode;
 	char            *mark;
 	char            *host;
@@ -22,15 +20,18 @@ struct link_hash_node
 	unsigned short  vnode;
 };
 
-struct link_hash_cfg
-{
-	char                    *hash;
+enum link_hash_type {
+  LINK_CUSTOMER_HASH = 0,
+  LINK_CONSISTENT_HASH
+};
+
+struct link_hash_cfg {
+	enum link_hash_type     type;
 	int                     count;
 	struct link_hash_node   *nodes;
 };
 
-struct link_mysql_cfg
-{
+struct link_mysql_cfg {
 	char            *host;
 	char            *database;
 	char            *user;
