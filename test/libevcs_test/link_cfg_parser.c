@@ -3,6 +3,7 @@
 #include <assert.h>
 #include <stdio.h>
 
+#include "async_tasks/async_obj.h"
 #include "link_cfg_parser.h"
 #include "json.h"
 
@@ -45,10 +46,7 @@ struct link_cfg *link_get_cfg(struct json_object *type_cfg, const char *name) {
 
 void link_free_cfg(struct link_cfg *cfg) {
 	if (cfg) {
-		if (cfg->host) {
-			free(cfg->host);
-		}
-
+		if (cfg->host) free(cfg->host);
 		free(cfg);
 	}
 }
@@ -58,13 +56,22 @@ struct link_hash_cfg *link_get_hash_cfg(struct json_object *type_cfg, const char
 	struct json_object      *hash_obj = NULL;
 	struct json_object      *nodes_obj = NULL;
 
-	char                      *hash = NULL;
+	const char                *hash = NULL;
 	struct link_hash_node     *nodes = NULL;
 	struct link_hash_node     *node;
+  enum link_hash_type       type;
 
 	if (json_object_object_get_ex(type_cfg, name, &obj)) {
 		if (json_object_object_get_ex(obj, "hash", &hash_obj)) {
-			hash = link_strdup(json_object_get_string(hash_obj));
+			hash = json_object_get_string(hash_obj);
+      if (strncasecmp("customer", hash, strlen(hash)) == 0) {
+        type = LINK_CUSTOMER_HASH;
+      } else if (strncasecmp("", hash, strlen(hash)) == 0) {
+        type = LINK_CONSISTENT_HASH;
+      } else {
+	      x_printf(E, "Invalid hash type :%s", hash);
+        return NULL;
+      }
 		}
 
 		int count = 0;
@@ -103,12 +110,8 @@ struct link_hash_cfg *link_get_hash_cfg(struct json_object *type_cfg, const char
 		}
 
 		struct link_hash_cfg *cfg = malloc(sizeof(*cfg));
-
-		if (cfg == NULL) {
-			return NULL;
-		}
-
-		cfg->hash = hash;
+		if (cfg == NULL) return NULL;
+    cfg->type = type;
 		cfg->count = count;
 		cfg->nodes = nodes;
 		return cfg;
@@ -119,10 +122,7 @@ struct link_hash_cfg *link_get_hash_cfg(struct json_object *type_cfg, const char
 
 void link_free_hash_cfg(struct link_hash_cfg *cfg) {
 	if (cfg) {
-		if (cfg->hash) {
-			free(cfg->hash);
-		}
-
+		if (cfg->nodes) free(cfg->nodes);
 		free(cfg);
 	}
 }
@@ -188,22 +188,10 @@ struct link_mysql_cfg *link_get_mysql_cfg(struct json_object *mysql_cfg, const c
 
 void link_free_mysql_cfg(struct link_mysql_cfg *cfg) {
 	if (cfg) {
-		if (cfg->host) {
-			free(cfg->host);
-		}
-
-		if (cfg->database) {
-			free(cfg->database);
-		}
-
-		if (cfg->user) {
-			free(cfg->user);
-		}
-
-		if (cfg->password) {
-			free(cfg->password);
-		}
-
+		if (cfg->host) free(cfg->host);
+		if (cfg->database) free(cfg->database);
+		if (cfg->user) free(cfg->user);
+		if (cfg->password) free(cfg->password);
 		free(cfg);
 	}
 }
