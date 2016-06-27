@@ -13,7 +13,7 @@ $(OBJ): $(SRC)
 	$(CC) $(CFLAG) $(INCLUDE_PATH) -c $(SRC)
 
 $(TARGET) : $(OBJ)
-	$(CC) $(OBJ) -lm -ldl -lpthread ../lib/libappsrv.a ../../libzmq.a ../../utils/lib/libutils.a -lstdc++ -o $(TARGET)
+	$(CC) $(OBJ) -lm -ldl -lpthread ../lib/libappsrv.a ../../libzmq.a ../../utils/lib/libutils.a ../../libmini.a -lstdc++ -o $(TARGET)
 
 clean:
 	rm -f *.o $(TARGET)
