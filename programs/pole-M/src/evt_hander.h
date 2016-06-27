@@ -22,10 +22,11 @@
 #ifndef _EVENT_DISPENSER_H_
 #define _EVENT_DISPENSER_H_
 
+#include "thread_pool_loop/tlpool.h"
+#include "base/hashmap.h"
 #include "netmod.h"
+#include "xmq.h"
 
-int get_thread_id_by(int threads, const char *id);
-
-int event_dispenser_startup(event_ctx_t *ev_ctx, int threads);
+void event_dispenser_startup(xmq_ctx_t *xmq_ctx, evt_ctx_t *evt_ctx, tlpool_t *tlpool, hashmap_t *hmap, int threads);
 #endif
 

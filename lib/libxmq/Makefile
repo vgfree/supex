@@ -1,31 +1,24 @@
-
-# [args] Running mode, DEBUG: debug mode. RELEASE: release mode.
-ifeq ($(COMPILE), RELEASE)
-  CFLAGS=-O2 -DNDEBUG -Wall
-else
-  CFLAGS=-g -O0 -DDEBUG 
-endif
-
-
 SRV=libxmq.a
 TEST=mixmq
 
 BIN=./bin
 INC=./include
 BASE_SRC=./src
-BASE_INC=-I$(INC) -I../libmini/include -I../../engine
+BASE_INC=-I$(INC) -I../libmini/include \
+	-I../libevcs/include/engine \
+	-I../libevcs/include/frame \
+	-I/usr/local/include/luajit-2.0 \
+	-I/usr/local/include/
 
 BIN_TEST=./bin_test
 TEST_SRC=./test
-TEST_INC=-I$(INC) \
-	-I../libmini/include \
+TEST_INC=$(BASE_INC) \
 	-I../leveldb-1.18/include/ \
-	-I../zeromq-4.1.4/include \
-	-I../../engine
+	-I../zeromq-4.1.4/include
 
 LIB_INC=-L. -L../
 LIBS=-lpthread -lrt -lstdc++
-LIBA=-lmini -lxmq -lleveldb -lsnappy -lzmq -ldl
+LIBA=-lmini -lxmq -lleveldb -lsnappy -lzmq -levcs -ldl
 
 BASE_OBJ=$(addprefix $(BIN)/,\
     xmq_csv.o \
@@ -41,7 +34,7 @@ TEST_OBJ=$(addprefix $(BIN_TEST)/, \
 OBJ ?= $(BASE_OBJ)
 OBJ_TEST ?= $(TEST_OBJ)
 
-JOB ?= $(SRV) $(TEST)
+JOB ?= $(SRV) #$(TEST)
 
 
 all:$(JOB)

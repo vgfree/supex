@@ -19,153 +19,143 @@
 		}						       \
 	} while (0)
 
-static void *thrd_netCenter(void *args);
+static int _get_monitor_event(void *zmq_monitor, uint32_t *value, char *info, size_t size);
 
-static int get_monitor_event(void *skt_moniter, int *value, char *address);
+static void _print_monitor_event(void *zmq_monitor);
 
-static void print_monitor_event(void *zmq_monitor);
+static void _set_net_property(void *zmq_skt);
 
-static void set_net_property(void *zmq_skt);
-
-static char g_systime[64];
-
-static queue_ctx_t *queue_ctx_init();
-
-static void queue_push(queue_ctx_t *qctx, event_t *ev);
-
-static event_t *queue_pull(queue_ctx_t *qctx, int timeout);
-
-static size_t queue_size(queue_ctx_t *qctx);
-
-static void queue_delete_all_events(queue_ctx_t *qctx);
-
-static void queue_ctx_destroy(queue_ctx_t *qctx);
-
-event_ctx_t *event_ctx_init(int *error, int node_type, const char *uri_addr, const char *identity)
+evt_ctx_t *evt_ctx_init(enum node_type type, const char *uri_addr, const char *identity)
 {
-	assert(error != NULL);
 	assert(uri_addr != NULL);
-	assert(node_type == SOCK_CLIENT || node_type == SOCK_SERVER);
+	assert((type == SOCK_SERVER) ||
+		((type == SOCK_CLIENT) && identity));
 
-	if ((node_type == SOCK_CLIENT) && (identity == NULL)) {
-		*error = EINVAL;
-		return NULL;
+	evt_ctx_t *ectx = (evt_ctx_t *)malloc(sizeof(evt_ctx_t));
+
+	if (!ectx) {
+		goto INIT_FAIL;
 	}
 
-	void            *sockfd;
-	queue_ctx_t     *qrecv, *qsend;
+	ectx->type = type;
 
-	// 全局ZeroMQ类型的Context.
+	/* 全局ZeroMQ类型的Context. */
 	void *zctx = zmq_ctx_new();
-	return_if_false(zctx != NULL, NULL);
+	ectx->zmq_ctx = zctx;
 
-	// 创建事件监听SOCKET
+	if (!zctx) {
+		goto INIT_FAIL;
+	}
+
+	/* 创建事件镜像SOCKET */
 	void *monitor = zmq_socket(zctx, ZMQ_PAIR);
-	return_if_false(monitor != NULL, NULL);
+	ectx->zmq_monitor = monitor;
 
-	int res = zmq_connect(monitor, "inproc://monitor");
-	return_if_false(res != -1, NULL);
+	if (!monitor) {
+		goto INIT_FAIL;
+	}
 
-	event_ctx_t *ectx = (event_ctx_t *)malloc(sizeof(event_ctx_t));
-	return_if_false(ectx != NULL, NULL);
+	if (zmq_connect(monitor, "inproc://monitor")) {
+		goto INIT_FAIL;
+	}
 
-	if (node_type == SOCK_SERVER) {
-		sockfd = zmq_socket(zctx, ZMQ_ROUTER);
+	/* 创建事件监听SOCKET */
+	void *sockfd = zmq_socket(zctx, (type == SOCK_SERVER) ? ZMQ_ROUTER : ZMQ_DEALER);
+	ectx->zmq_socket = sockfd;
 
-		if (!sockfd) {
-			goto INIT_FAIL;
-		}
+	if (!sockfd) {
+		goto INIT_FAIL;
+	}
 
-		// 注册一个 ROUTER 类型的事件监听回调机制
-		if (zmq_socket_monitor(sockfd, "inproc://monitor", ZMQ_EVENT_ALL)) {
-			goto ZMQ_FAIL;
-		}
+	/* 注册一个事件监听回调机制 */
+	if (zmq_socket_monitor(sockfd, "inproc://monitor", ZMQ_EVENT_ALL)) {
+		goto INIT_FAIL;
+	}
 
-		// SET 0MQ network property.
-		set_net_property(sockfd);
+	/* SET 0MQ network property. */
+	_set_net_property(sockfd);
 
+	if (type == SOCK_SERVER) {
 		if (zmq_bind(sockfd, uri_addr) != 0) {
-			print_monitor_event(monitor);
-			goto ZMQ_FAIL;
-		}
-
-		ectx->node_type = SOCK_SERVER;
-	} else {
-		sockfd = zmq_socket(zctx, ZMQ_DEALER);
-
-		if (!sockfd) {
+			_print_monitor_event(monitor);
+			x_printf(E, "evt_ctx_init fail. Error-%s.", zmq_strerror(errno));
 			goto INIT_FAIL;
 		}
-
-		// 注册一个 DEALER 类型的事件监听回调机制
-		if (zmq_socket_monitor(sockfd, "inproc://monitor", ZMQ_EVENT_ALL)) {
-			goto ZMQ_FAIL;
-		}
-
-		// SET 0MQ network property.
-		set_net_property(sockfd);
-
-		// SET client's identity.
+	} else {
+		/* SET client's identity. */
 		zmq_setsockopt(sockfd, ZMQ_IDENTITY, identity, strlen(identity) + 1);
 
-		// Only when connect to server okay, we send data to it.
-		// ZMQ_IMMEDIATE used only for (REQ|PUSH|DEALER).
+		/*
+		 * Only when connect to server okay, we send data to it.
+		 * ZMQ_IMMEDIATE used only for (REQ|PUSH|DEALER).
+		 */
 		int optval = 1;
 		zmq_setsockopt(sockfd, ZMQ_IMMEDIATE, (void *)&optval, sizeof(optval));
 
-		// SET reconnect time interval.
+		/* SET reconnect time interval. */
 		optval = 200;	// 0.2s.
 		zmq_setsockopt(sockfd, ZMQ_RECONNECT_IVL, (void *)&optval, sizeof(optval));
 
-		// SET the maxminum reconnect time interval.
+		/* SET the maxminum reconnect time interval. */
 		optval = 10 * 1000;	// 10s.
 		zmq_setsockopt(sockfd, ZMQ_RECONNECT_IVL_MAX, (void *)&optval, sizeof(optval));
 
 		if (zmq_connect(sockfd, uri_addr) != 0) {
-			print_monitor_event(monitor);
-			goto ZMQ_FAIL;
+			_print_monitor_event(monitor);
+			x_printf(E, "evt_ctx_init fail. Error-%s.", zmq_strerror(errno));
+			goto INIT_FAIL;
 		}
-
-		ectx->node_type = SOCK_CLIENT;
 	}
 
-	qrecv = queue_ctx_init();
-	qsend = queue_ctx_init();
-
-	assert(qrecv && qsend);
-
-	ectx->zmq_ctx = zctx;
-	ectx->zmq_socket = sockfd;
-	ectx->zmq_monitor = monitor;
-	ectx->recv_queue = qrecv;
-	ectx->send_queue = qsend;
-
-	/* Startup the thread of Network Center to Recv & Send data. */
-	pthread_t       thrd;
-	pthread_attr_t  attr;
-	pthread_attr_init(&attr);
-	pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
-	res = pthread_create(&thrd, &attr, thrd_netCenter, ectx);
-	usleep(10 * 1000);
-	return_if_false(res == 0, NULL);
-
-	memcpy(&ectx->thrd_kill, &thrd, sizeof(pthread_t));
+	qlist_init(&ectx->qrecv);
+	qlist_init(&ectx->qsend);
 
 	return ectx;
 
-ZMQ_FAIL:
-	x_printf(E, "event_ctx_init fail. Error-%s.", zmq_strerror(errno));
-	zmq_close(sockfd);
 INIT_FAIL:
-	free(ectx);
-	zmq_ctx_destroy(zctx);
-	*error = errno;
+
+	if (ectx) {
+		if (ectx->zmq_socket) {
+			zmq_close(ectx->zmq_socket);
+		}
+
+		if (ectx->zmq_ctx) {
+			zmq_ctx_destroy(ectx->zmq_ctx);
+		}
+
+		free(ectx);
+	}
+
 	return NULL;
 }
 
-event_t *event_new_size(size_t size)
+int evt_ctx_destroy(evt_ctx_t *evt_ctx)
 {
-	event_t *ev = (event_t *)calloc(1, event_head_size() + size);
+	assert(evt_ctx != NULL);
+
+	if (zmq_close(evt_ctx->zmq_socket)) {
+		return errno;
+	}
+
+	if (zmq_close(evt_ctx->zmq_monitor)) {
+		return errno;
+	}
+
+	if (zmq_ctx_destroy(evt_ctx->zmq_ctx)) {
+		return errno;
+	}
+
+	qlist_free(&evt_ctx->qrecv);
+	qlist_free(&evt_ctx->qsend);
+
+	free(evt_ctx);
+
+	return 0;
+}
+
+evt_t *evt_new_by_size(size_t size)
+{
+	evt_t *ev = (evt_t *)calloc(1, evt_head_size() + size);
 
 	if (ev) {
 		ev->ev_size = size;
@@ -174,200 +164,200 @@ event_t *event_new_size(size_t size)
 	return ev;
 }
 
-event_t *event_dup(const event_t *ev)
+evt_t *copy_evt(const evt_t *evt)
 {
-	assert(ev != NULL);
+	assert(evt != NULL);
 
-	event_t *ev_des = event_new_size(event_body_size(ev));
+	evt_t *ev_des = evt_new_by_size(evt_body_size(evt));
 
 	if (ev_des) {
-		memcpy(ev_des, ev, event_total_size(ev));
+		memcpy(ev_des, evt, evt_total_size(evt));
 	}
 
 	return ev_des;
 }
 
-void delete_event(event_t *ev)
+void free_evt(evt_t *evt)
 {
-	if (ev) {
-		free(ev); ev = NULL;
+	if (evt) {
+		free(evt); evt = NULL;
 	}
 }
 
-event_t *recv_event(const event_ctx_t *ev_ctx, long timeout)
+evt_t *recv_evt(evt_ctx_t *evt_ctx)
 {
-	return_if_false((ev_ctx && ev_ctx->recv_queue && timeout >= -1), NULL);
-
-	return queue_pull(ev_ctx->recv_queue, timeout);
+	evt_t *evt = NULL;
+	QITEM *item = qlist_pull(&evt_ctx->qrecv);
+	if (item) {
+		evt = item->data;
+		qitem_free(item);
+	}
+	return evt;
 }
 
-int send_event(const event_ctx_t *ev_ctx, const event_t *ev)
+int send_evt(evt_ctx_t *evt_ctx, evt_t *evt)
 {
-	return_if_false((ev_ctx && ev_ctx->send_queue && ev), -1);
+	return_if_false((evt_ctx && evt), -1);
 
-	event_t *ev_des = event_dup(ev);
-	return_if_false(ev_des, -1);
+	QITEM *item = qitem_init(NULL);
+	assert(item);
+	item->data = evt;
 
-	queue_push(ev_ctx->send_queue, ev_des);
+	qlist_push(&evt_ctx->qsend, item);
 
 	return 0;
 }
 
-void *thrd_netCenter(void *args)
+void *work_evt(evt_ctx_t *evt_ctx)
 {
-	event_ctx_t *ev_ctx = (event_ctx_t *)args;
+	int     ok = 0;
+	char    id[IDENTITY_SIZE];
+	evt_t ev_head, *evt;
+	char    *ev_body;
+	int     len, res = 0;
 
-	int             res, len, tasks = 0;
-	char            id[IDENTITY_SIZE];
-	event_t         ev, *ev_des;
-	zmq_pollitem_t  items = { ev_ctx->zmq_socket, 0, ZMQ_POLLIN, 0 };
+	zmq_pollitem_t items [2];
+
+	items[0].socket = evt_ctx->zmq_socket;
+	items[0].fd = 0;
+	items[0].events = ZMQ_POLLIN;
+	items[0].revents = 0;
+	items[1].socket = evt_ctx->zmq_socket;
+	items[1].fd = 0;
+	items[1].events = ZMQ_POLLOUT;
+	items[1].revents = 0;
 
 	while (1) {
-		/* ================= 接收所有请求 ================== */
-		res = zmq_poll(&items, 1, 0);
+		ok = zmq_poll(items, 2, 0);
 
-		if ((res > 0) && (items.revents & ZMQ_POLLIN)) {
-			++tasks;/* Flag, to show how many tasks to handle. */
+		if (ok == -1) {
+			x_printf(E, "WARN: thrd_netCenter:-> zmq_poll: fail. Error:%s\n", zmq_strerror(errno));
+			_print_monitor_event(evt_ctx->zmq_monitor);
+			return NULL;
+		} else if (ok == 0) {
+			/* Now, The poll I/O have no task to handle.*/
+			continue;
+		}
 
-			// printf("ZMQ_POLL RECV F_NETWORK: %s.\n", _systime());
-			/* Receive Client Identity. If current socket is Server. */
-			if (ev_ctx->node_type == SOCK_SERVER) {
-RECV_ID:
-				res = zmq_recv(ev_ctx->zmq_socket, id, sizeof(id), 0);
+		if (ok > 0) {
+			if (items[0].revents & ZMQ_POLLIN) {
+				/* ================= 接收所有请求 ================== */
+				void *skt = items[0].socket;
 
-				if ((res == -1) && (errno == EINTR)) {
-					goto RECV_ID;
-				}
-			}
-
-			/* 1. Getting Event-Package Head. */
-			len = event_head_size();
-RECV_HEAD:
-			res = zmq_recv(ev_ctx->zmq_socket, &ev, len, 0);
-
-			if (res != len) {
-				if ((res == -1) && (errno == EINTR)) {
-					goto RECV_HEAD;
+				/* Receive Client Identity. If current socket is Server. */
+				if (evt_ctx->type == SOCK_SERVER) {
+					res = zmq_recv(skt, id, sizeof(id), 0);
+					assert(res != -1);
 				}
 
-				x_printf(E, "thrd_netCenter:->_zmq_recv(ev_head:%d) bytes fail. Error:%s\n", len, zmq_strerror(errno));
-				print_monitor_event(ev_ctx->zmq_monitor);
-				goto SEND_PKG;
-			}
-
-			len = event_body_size(&ev);
-			ev_des = event_new_size(len);
-
-			if (!ev_des) {
-				x_printf(E, "thrd_netCenter:->_alloc(event_t:%d) bytes fail. Error:%s\n", len, strerror(errno));
-				goto SEND_PKG;
-			}
-
-			/* Copy the package head to ev_des. */
-			memcpy(ev_des, &ev, event_head_size());
-
-			/* 2. Receiving Event-Package Body, If there is. */
-			if (len > 0) {
-RECV_BODY:
-				res = zmq_recv(ev_ctx->zmq_socket, ev_des->ev_data, len, 0);
+				/* 1. Getting Event-Package Head. */
+				len = evt_head_size();
+				res = zmq_recv(skt, &ev_head, len, 0);
 
 				if (res != len) {
-					if ((res == -1) && (errno == EINTR)) {
-						goto RECV_BODY;
+					x_printf(E, "_zmq_recv(ev_head:%d) bytes fail. Error:%s\n",
+						len, zmq_strerror(errno));
+					_print_monitor_event(evt_ctx->zmq_monitor);
+				}
+
+				assert(res != -1);
+
+				/* Copy the package head to evt. */
+				len = evt_body_size(&ev_head);
+				evt = evt_new_by_size(len);
+				assert(evt);
+				memcpy(evt, &ev_head, evt_head_size());
+
+				/* 2. Receiving Event-Package Body, If there is. */
+				char *ev_body = evt->ev_data;
+
+				if (len > 0) {
+					res = zmq_recv(skt, ev_body, len, 0);
+
+					if (res != len) {
+						x_printf(E, "_zmq_recv(ev_body:%d) bytes fail. Error:%s\n",
+							len, zmq_strerror(errno));
+						_print_monitor_event(evt_ctx->zmq_monitor);
 					}
 
-					delete_event(ev_des);
-					x_printf(E, "thrd_netCenter:->_zmq_recv(ev_body:%d) bytes fail. Error:%s\n", len, zmq_strerror(errno));
-					print_monitor_event(ev_ctx->zmq_monitor);
-					goto SEND_PKG;
-				}
-			}
-
-			/* 3. Add received Event-Package to Receive-Queue. */
-			queue_push(ev_ctx->recv_queue, ev_des);
-		} else if (res == -1) {
-			x_printf(E, "WARN: thrd_netCenter:-> zmq_poll: fail. Error:%s\n", zmq_strerror(errno));
-			print_monitor_event(ev_ctx->zmq_monitor);
-		} else if (res == 0) {
-			tasks = -1;	/* Now, The poll I/O have no task to handle.*/
-		}
-
-		/* =======================SEND EVENT=======================*/
-SEND_PKG:
-		ev_des = queue_pull(ev_ctx->send_queue, 0);	// TODO:
-
-		if (!ev_des) {
-			if (tasks == -1) {
-				/* When the receive and send module has no task to handle, sleep(0.01s).*/
-				usleep(10000);
-			}
-
-			continue;
-		} else {
-			++tasks;
-		}
-
-		/* 1. Send Client Identity, If current socket is Server. */
-		if (ev_ctx->node_type == SOCK_SERVER) {
-			len = strlen(ev_des->id) + 1;
-SEND_ID:
-			res = zmq_send(ev_ctx->zmq_socket, ev_des->id, len, ZMQ_SNDMORE);
-
-			if (res != len) {
-				if ((res == -1) && (errno == EINTR)) {
-					goto SEND_ID;
+					assert(res != -1);
 				}
 
-				x_printf(E, "thrd_netCenter:->zmq_send(id:%d) bytes fail. Error:%s\n", len, zmq_strerror(errno));
-				print_monitor_event(ev_ctx->zmq_monitor);
-				goto SEND_FAIL;
-			}
-		}
-
-		/* Send Event-Package Head. */
-		len = event_head_size();
-		res = (event_body_size(ev_des) > 0) ? ZMQ_SNDMORE : 0;
-SEND_HEAD:
-		res = zmq_send(ev_ctx->zmq_socket, ev_des, len, res);
-
-		if (res != len) {
-			if ((res == -1) && (errno == EINTR)) {
-				goto SEND_HEAD;
+				/* 3. Add received Event-Package to Receive-Queue. */
+				QITEM *item = qitem_init(NULL);
+				item->data = evt;
+				qlist_push(&evt_ctx->qrecv, item);
 			}
 
-			x_printf(E, "thrd_netCenter:->zmq_send(ev_head:%d) bytes fail. Error:%s\n", len, zmq_strerror(errno));
-			print_monitor_event(ev_ctx->zmq_monitor);
-			goto SEND_FAIL;
-		}
+			if (items[1].revents & ZMQ_POLLOUT) {
+				void *skt = items[1].socket;
+				/* =======================SEND EVENT=======================*/
+				QITEM *item = qlist_pull(&evt_ctx->qsend);
 
-		/* If event body isn't null, Such as: "DUMP CMD-> The body is destination node ID."*/
-		len = event_body_size(ev_des);
-
-		if (len > 0) {
-SEND_BODY:
-			res = zmq_send(ev_ctx->zmq_socket, ev_des->ev_data, len, 0);
-
-			if (res != len) {
-				if ((res == -1) && (errno == EINTR)) {
-					goto SEND_BODY;
+				if (!item) {
+					/* When the send module has no task to handle, sleep(0.01s).*/
+					usleep(10000);
+					continue;
 				}
 
-				x_printf(E, "thrd_netCenter:->zmq_send(ev_body:%d) bytes fail. Error:%s\n", len, zmq_strerror(errno));
-				print_monitor_event(ev_ctx->zmq_monitor);
-				goto SEND_FAIL;
+				evt_t *evt = item->data;
+				qitem_free(item);
+
+				/* 1. Send Client Identity, If current socket is Server. */
+				if (evt_ctx->type == SOCK_SERVER) {
+					len = strlen(evt->id) + 1;
+					res = zmq_send(skt, evt->id, len, ZMQ_SNDMORE);
+
+					if (res != len) {
+						x_printf(E, "zmq_send(id:%d) bytes fail. Error:%s\n",
+							len, zmq_strerror(errno));
+						_print_monitor_event(evt_ctx->zmq_monitor);
+					}
+
+					assert(res != -1);
+				}
+
+				/* 2. Send Event-Package Head. */
+				len = evt_head_size();
+				res = (evt_body_size(evt) > 0) ? ZMQ_SNDMORE : 0;
+				res = zmq_send(skt, evt, len, res);
+
+				if (res != len) {
+					x_printf(E, "zmq_send(ev_head:%d) bytes fail. Error:%s\n",
+						len, zmq_strerror(errno));
+					_print_monitor_event(evt_ctx->zmq_monitor);
+				}
+
+				assert(res != -1);
+
+				/*
+				 * 3. If event body isn't null,
+				 * Such as: "DUMP CMD-> The body is destination node ID."
+				 */
+				len = evt_body_size(evt);
+
+				if (len > 0) {
+					res = zmq_send(skt, evt->ev_data, len, 0);
+
+					if (res != len) {
+						x_printf(E, "zmq_send(ev_body:%d) bytes fail. Error:%s\n",
+							len, zmq_strerror(errno));
+						_print_monitor_event(evt_ctx->zmq_monitor);
+					}
+
+					assert(res != -1);
+				}
+
+				/* 4. Destroy and free the memory leak. */
+				free_evt(evt);
 			}
 		}
-
-		/* Destroy and free the memory leak. */
-SEND_FAIL:
-		// printf("AFTER ZMQ_SEND: %s.\n", _systime());
-		delete_event(ev_des);
-	}	/* end while. */
+	}
 
 	return NULL;
 }
 
-static void set_net_property(void *sockfd)
+static void _set_net_property(void *sockfd)
 {
 	int optval = 0;
 
@@ -388,9 +378,9 @@ static void set_net_property(void *sockfd)
 	zmq_setsockopt(sockfd, ZMQ_SNDTIMEO, (void *)&optval, sizeof(optval));
 }
 
-static int get_monitor_event(void *zmq_monitor, int *value, char *address)
+static int _get_monitor_event(void *zmq_monitor, uint32_t *value, char *info, size_t size)
 {
-	return_if_false((zmq_monitor && value && address), -1);
+	return_if_false((zmq_monitor && value && info), -1);
 
 	zmq_msg_t msg;
 
@@ -420,22 +410,24 @@ static int get_monitor_event(void *zmq_monitor, int *value, char *address)
 
 	assert(!zmq_msg_more(&msg));
 
-	memcpy(address, zmq_msg_data(&msg), zmq_msg_size(&msg));
-	address[zmq_msg_size(&msg)] = '\0';
+	memset(info, 0, size);
+	int     get = zmq_msg_size(&msg);
+	int     len = MIN(get, size);
+	memcpy(info, zmq_msg_data(&msg), len);
 
 	zmq_msg_close(&msg);
 
 	return event;
 }
 
-static void print_monitor_event(void *zmq_monitor)
+static void _print_monitor_event(void *zmq_monitor)
 {
 	assert(zmq_monitor);
 
-	int             ev_val = -1;
-	static char     addr[128] = { 0 };
+	uint32_t        ev_val = -1;
+	char            addr[128] = { 0 };
 
-	switch (get_monitor_event(zmq_monitor, &ev_val, addr))
+	switch (_get_monitor_event(zmq_monitor, &ev_val, addr, sizeof(addr) - 1))
 	{
 		case ZMQ_EVENT_CONNECTED:
 			x_printf(I, "New connect was create succeed, address-%s socket fd-%u", addr, ev_val);
@@ -483,7 +475,7 @@ static void print_monitor_event(void *zmq_monitor)
 	}
 }
 
-void print_event(const event_t *ev)
+void print_evt(const evt_t *ev)
 {
 	assert(ev != NULL);
 
@@ -501,194 +493,8 @@ void print_event(const event_t *ev)
 		);
 }
 
-const char *event_error(int error)
+const char *evt_error(int error)
 {
 	return zmq_strerror(error);
-}
-
-int event_ctx_destroy(event_ctx_t *ev_ctx)
-{
-	assert(ev_ctx != NULL);
-
-	// Send SIGQUIT signal to thrd_netCenter.
-	pthread_kill(ev_ctx->thrd_kill, SIGQUIT);
-	sleep(1);
-
-	if (zmq_close(ev_ctx->zmq_socket)) {
-		return errno;
-	}
-
-	if (zmq_close(ev_ctx->zmq_monitor)) {
-		return errno;
-	}
-
-	if (zmq_ctx_destroy(ev_ctx->zmq_ctx)) {
-		return errno;
-	}
-
-	queue_ctx_destroy(ev_ctx->recv_queue);
-	queue_ctx_destroy(ev_ctx->send_queue);
-
-	free(ev_ctx);
-
-	return 0;
-}
-
-static queue_ctx_t *queue_ctx_init()
-{
-	queue_ctx_t *qctx = (queue_ctx_t *)malloc(sizeof(queue_ctx_t));
-
-	if (qctx) {
-		list_init(&qctx->head);
-		qctx->size = 0;
-
-		if (pthread_cond_init(&qctx->cond, NULL)) {
-			goto QINIT_FAIL;
-		}
-
-		if (pthread_mutex_init(&qctx->lock, NULL)) {
-			goto QINIT_FAIL;
-		}
-	}
-
-	return qctx;
-
-QINIT_FAIL:
-	free(qctx);
-	return NULL;
-}
-
-static void queue_push(queue_ctx_t *qctx, event_t *ev)
-{
-	pthread_mutex_lock(&qctx->lock);
-
-	list_add_tail(&ev->list, &qctx->head);
-	++(qctx->size);
-
-	if (qctx->size == 1) {
-		// 唤醒其他所有读取此队列数据的线程,开始读取数据;
-		pthread_cond_broadcast(&qctx->cond);
-	}
-
-	pthread_mutex_unlock(&qctx->lock);
-}
-
-static event_t *queue_pull(queue_ctx_t *qctx, int timeout)
-{
-	pthread_mutex_lock(&qctx->lock);
-
-	if (qctx->size == 0) {
-		int res = -1;
-		switch (timeout)
-		{
-			case  0:
-				pthread_mutex_unlock(&qctx->lock);
-				return NULL;
-
-			case -1:
-
-				while (qctx->size == 0) {
-					res = pthread_cond_wait(&qctx->cond, &qctx->lock);
-
-					if (res != 0) {
-						pthread_mutex_unlock(&qctx->lock);
-						x_printf(E, "pthread_cond_wait Execute fail. Error-%s.", strerror(res));
-						return NULL;
-					}
-				}
-
-				break;
-
-			default:
-
-				while (qctx->size == 0) {
-					struct timespec ts;
-					clock_gettime(CLOCK_REALTIME, &ts);
-					ts.tv_nsec += (timeout * 1000000);
-					res = ts.tv_nsec / 1000000000;
-
-					if (res > 0) {
-						ts.tv_nsec %= 1000000000;
-						ts.tv_sec += res;
-					}
-
-					res = pthread_cond_timedwait(&qctx->cond, &qctx->lock, &ts);
-
-					if (res != 0) {
-						pthread_mutex_unlock(&qctx->lock);
-
-						if (res != ETIMEDOUT) {
-							x_printf(E, "pthread_cond_timedwait Execute fail. Error-%s.", strerror(res));
-						}
-
-						return NULL;
-					}
-				}
-		}
-	}
-
-	assert(qctx->size > 0);
-
-	// Detach the last node from the event_t's list.
-	xlist_t *last = NULL;
-	list_del_tail(&last, &qctx->head);
-	assert(last != NULL);
-
-	--(qctx->size);
-
-	pthread_mutex_unlock(&qctx->lock);
-
-	return (event_t *)container_of(last, event_t, list);
-}
-
-static size_t queue_size(queue_ctx_t *qctx)
-{
-	size_t qsize = 0;
-
-	pthread_mutex_lock(&qctx->lock);
-	qsize = qctx->size;
-	pthread_mutex_unlock(&qctx->lock);
-
-	return qsize;
-}
-
-static void queue_delete_all_events(queue_ctx_t *qctx)
-{
-	pthread_mutex_lock(&qctx->lock);
-
-	list_del_all_entrys(&qctx->head, event_t, list);
-
-	pthread_mutex_unlock(&qctx->lock);
-}
-
-static void queue_ctx_destroy(queue_ctx_t *qctx)
-{
-	if (qctx->size > 0) {
-		queue_delete_all_events(qctx);
-	}
-
-	pthread_cond_destroy(&qctx->cond);
-	pthread_mutex_destroy(&qctx->lock);
-
-	free(qctx);
-}
-
-const char *_systime()
-{
-	struct timeval t;
-
-	gettimeofday(&t, NULL);
-	struct tm *stm = localtime(&t.tv_sec);
-	memset(g_systime, 0, sizeof(g_systime));
-	sprintf(g_systime, /*"%04d."*/ "%02d/%02d %02d:%02d:%02d.%06u",	\
-		/*stm->tm_year+1900,*/					\
-		stm->tm_mon + 1,					\
-		stm->tm_mday,						\
-		stm->tm_hour,						\
-		stm->tm_min,						\
-		stm->tm_sec,						\
-		(size_t)(t.tv_usec)
-		);
-	return g_systime;
 }
 

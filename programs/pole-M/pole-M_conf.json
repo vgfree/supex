@@ -19,12 +19,6 @@
 	"api_custom": ["/w_xxx"],
 
 	/*------------------------------------------------*/
-
-	// 在执行swift相关协议的同时,是否并行执行ZeroMQ的协议入口数据;
-	// 值: yes | ye | no -> no: 代表不启用!
-	"open_zeromq_protocol": "yes",
-
-
 	// Input ZeroMQ Server URI for Input Client connect and communication.
         "input_uri": "tcp://*:8585",
 
@@ -33,9 +27,10 @@
 
 
 	// The Maxminum of XMQ's records.
-	"max_records": 2000000,
+	// "max_records": 2000000,
+	"max_records": 100,
 
-	// 如果宏编译选择(TC_COROUTINE)服务器为协程版本时,thread_number参数生效.
-	"thread_number": 3
+	"event_worker_counts": 8,
+	"event_tasker_counts": 16
 
 }

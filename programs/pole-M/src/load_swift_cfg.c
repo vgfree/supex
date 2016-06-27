@@ -3,10 +3,7 @@
 #include <assert.h>
 
 #include "load_swift_cfg.h"
-#include "swift_cpp_api.h"
 #include "json.h"
-
-extern enum pole_protype g_iProType;
 
 void load_cfg_file(struct swift_cfg_file *p_cfg, char *name)
 {
@@ -35,30 +32,18 @@ void load_cfg_file(struct swift_cfg_file *p_cfg, char *name)
 
 		if (strncmp(str_val, "http", 4) == 0) {
 			p_cfg->ptype = USE_HTTP_PROTO;
-			g_iProType = POLE_PROTYPE_HTTP;
 		} else if (strncmp(str_val, "redis", 5) == 0) {
 			p_cfg->ptype = USE_REDIS_PROTO;
-			g_iProType = POLE_PROTYPE_REDIS;
 		}
 
 #ifdef _mttptest
 		else if (strncmp(str_val, "mttp", 4) == 0) {
 			p_cfg->ptype = USE_MTTP_PROTO;
-			g_iProType = POLE_PROTYPE_MTTP;
 		}
 #endif
 		// else if (strncmp(str_val, "mfpt", 4) == 0){
 		//	p_cfg->ptype = USE_MFPTP_PROTO;
-		//	g_iProType = POLE_PROTYPE_MFPTP;
 		// }
-	} else { goto fail; }
-
-	if (json_object_object_get_ex(cfg, "open_zeromq_protocol", &obj)) {
-		str_val = json_object_get_string(obj);
-
-		if (strncmp(str_val, "ye", 2) == 0) {
-			g_iProType |= POLE_PROTYPE_ZEROMQ;
-		}
 	} else { goto fail; }
 
 	if (json_object_object_get_ex(cfg, "max_req_size", &obj)) {

@@ -10,7 +10,7 @@
  * Description:
  *     1. Current netmod.h API support N:1 mode. <N Client and 1 server>.
  *     2. Client's identity must be unique and different.
- *     3. recv_event(),send_event() support multi-threads.
+ *     3. recv_evt(),send_evt() support multi-threads.
  *
  *      Others:
  *        (null)
@@ -25,7 +25,8 @@
 
 #include <stdint.h>
 #include <pthread.h>
-#include "xlist.h"
+#include "base/xlist.h"
+#include "base/qlist.h"
 
 #define IDENTITY_SIZE 32
 
@@ -37,7 +38,7 @@ enum node_type
 };
 
 /* Event type. */
-enum event_type
+enum evt_type
 {
 	NET_EV_DUMP_REQ = 1,	/* Execute Dump MySQL command request. */
 	NET_EV_DUMP_REP,	/* Execute Dump MySQL command response. */
@@ -46,7 +47,7 @@ enum event_type
 };
 
 /* Event execute state. */
-enum event_state
+enum evt_state
 {
 	NET_EV_NONE = -1,	/* If event is initialize state, then ev_state -1. */
 	NET_EV_SUCC,		/* The client execute(Dump MySQL or Execute SQL) succeed. */
@@ -64,12 +65,11 @@ struct incr_data
 					 *    or actual rows of data that client received. */
 };
 
-typedef struct _event_t
+typedef struct _evt
 {
 	char    id[IDENTITY_SIZE];	/* Client unique identity. */
-	int     ev_type;		/* Event type, EV_XXX_(REQ|REP) */
-	int     ev_state;		/* Last event excute state. */
-	xlist_t list;			/* List node for recv and send queue. */
+	enum evt_type     ev_type;		/* Event type, EV_XXX_(REQ|REP) */
+	enum evt_state     ev_state;		/* Last event excute state. */
 	union
 	{
 		/* Increment SQL request. */
@@ -79,54 +79,45 @@ typedef struct _event_t
 				 *   then ev_size must be 0; if ev_data store char* type,
 				 *   then ev_size should be strlen(ev_data)+1 for '\0', by yourself. */
 	char    ev_data[0];	/* Data to be send to client. */
-} event_t;
-
-/* Event Queue Defines. */
-typedef struct _queue_ctx_t
-{
-	xlist_t         head;	// The head node of queue.
-	size_t          size;	// Queue's size.
-	pthread_cond_t  cond;	// Queue's condition for mutex lock.
-	pthread_mutex_t lock;	// Queue's mutex lock.
-} queue_ctx_t;
+} evt_t;
 
 /* Event context define & APIS. */
 typedef struct
 {
-	void            *zmq_ctx;	/* ZeroMQ type's Context. */
-	void            *zmq_socket;	/* ZeroMQ type's Socket. */
-	void            *zmq_monitor;	/* ZeroMQ event monitor. */
-	int             node_type;	/* End point type, Server or Client. */
+	void                    *zmq_ctx;	/* ZeroMQ type's Context. */
+	void                    *zmq_socket;	/* ZeroMQ type's Socket. */
+	void                    *zmq_monitor;	/* ZeroMQ event monitor. */
+	enum node_type                     type;	/* End point type, Server or Client. */
 
-	queue_ctx_t     *recv_queue;	// receiving-queue of events.
-	queue_ctx_t     *send_queue;	// sending-queue of events.
+	QLIST       qrecv;		// receiving-queue of events.
+	QLIST       qsend;		// sending-queue of events.
 
-	pthread_t       thrd_kill;	// When call the event_ctx_destroy(), it will execute pthread_kill(thrd, SIGQUIT).
-} event_ctx_t;
+	pthread_t               thrd_kill;	// When call the evt_ctx_destroy(), it will execute pthread_kill(thrd, SIGQUIT).
+} evt_ctx_t;
 
-/* The event_t package head size. */
-#define event_head_size()       (sizeof(event_t))
+/* The evt_t package head size. */
+#define evt_head_size()       (sizeof(evt_t))
 
-/* The event_t package body size. ev is (event_t *) type. */
-#define event_body_size(ptr)    ((size_t)(ptr)->ev_size)
+/* The evt_t package body size. ev is (evt_t *) type. */
+#define evt_body_size(ptr)    ((size_t)(ptr)->ev_size)
 
-/* The event_t package all size. ev is (event_t *) type. */
-#define event_total_size(ptr)   ((size_t)(event_head_size() + event_body_size(ptr)))
+/* The evt_t package all size. ev is (evt_t *) type. */
+#define evt_total_size(ptr)   ((size_t)(evt_head_size() + evt_body_size(ptr)))
 
-/* The event_t package's data. */
-#define event_data(ptr)         ((void *)(ptr)->ev_data)
+/* The evt_t package's data. */
+#define evt_body_data(ptr)         ((void *)(ptr)->ev_data)
 
 /*************************************************************************
  * FUNCTION:
- *   event_ctx_init().
+ *   evt_ctx_init().
  * DESCRIPTION:
  *   1. Initialize the network connection and communication;
  *   2. It's ZeroMQ type's socket, at the moment.
  * INPUT:
  *   error:
  *      Input/Output variable, if error occurred, *error will be set.
- *      You can call event_error(error) to get error message.
- *   node_type:
+ *      You can call evt_error(error) to get error message.
+ *   type:
  *      The node type, Client or Server.
  *   uri_addr:
  *      e.g. Client: "tcp://192.168.11.27:8686" Server: "tcp:// *:8686"
@@ -134,99 +125,70 @@ typedef struct
  *      The client identity, It's unique.
  *
  * OUTPUT:
- *   error:  *error will be set with errno.
+ *   error will be set with errno.
  *
  * RETURN:
- *   SUCC: event_ctx_t*, a pointer of event_ctx_t type.
- *   FAIL: NULL. You can call event_error() to get error information.
+ *   SUCC: evt_ctx_t*, a pointer of evt_ctx_t type.
+ *   FAIL: NULL. You can call evt_error() to get error information.
  * OTHERS:
  *   (null)
  ************************************************************************/
-event_ctx_t *event_ctx_init(int *error, int node_type, const char *uri_addr, const char *identity);
+evt_ctx_t *evt_ctx_init(enum node_type type, const char *uri_addr, const char *identity);
 
 /*************************************************************************
  * FUNCTION:
- *   event_ctx_destroy().
+ *   evt_ctx_destroy().
  * DESCRIPTION:
  *   Destroy the event context resources.
  * INPUT:
- *   ev_ctx:
+ *   evt_ctx:
  *     The event context.
  *
  * RETURN:
  *   SUCC: 0
- *   FAIL: -1, You could call event_error() to get error information.
+ *   FAIL: -1, You could call evt_error() to get error information.
  * OTHERS:
  *   (null)
  ************************************************************************/
-int event_ctx_destroy(event_ctx_t *ev_ctx);
+int evt_ctx_destroy(evt_ctx_t *evt_ctx);
 
 /*************************************************************************
  * FUNCTION:
- *   recv_event().
+ *   evt_new_by_size().
  * DESCRIPTION:
- *   Server receive the Client's request or Client receive Server's response.
- *
- *   If none of the requested events have occurred on, recv_event() shall
- *   wait timeout milliseconds for an event to occur on.
- *
- *   If timeout is 0, recv_event() shall return immediately.
- *
- *   If timeout is -1, recv_event() shall block indefinitely until a
- *   requested event has occurred on.
- *
- * INPUT:
- *   ev_ctx:
- *     The event context type.
- *   timeout:
- *     Unit(ms).
- *
- * OUTPUT:
- *
- * RETURN:
- *   SUCC: A malloc type of event_t, when used you can call delete_event() to free it.
- *   FAIL: NULL.
- * OTHERS:
- ************************************************************************/
-event_t *recv_event(const event_ctx_t *ev_ctx, long timeout);
-
-/*************************************************************************
- * FUNCTION:
- *   event_new_size().
- * DESCRIPTION:
- *   Create a (size)bytes large of event_t to store the ev_data.
+ *   Create a (size)bytes large of evt_t to store the ev_data.
  * INPUT:
  *   size: (bytes).
  *
  * RETURN:
- *   SUCC: A malloc type of event_t, when used you can call delete_event() to free it.
+ *   SUCC: A malloc type of evt_t, when used you can call free_evt() to free it.
  *   FAIL: NULL.
  * OTHERS:
  *   (null)
  ************************************************************************/
-event_t *event_new_size(size_t size);
+evt_t *evt_new_by_size(size_t size);
 
 /*************************************************************************
  * FUNCTION:
- *   event_dup().
+ *   copy_evt().
  * DESCRIPTION:
- *   Duplicate (complete) a new one, from the input entry (event_t *).
+ *   Duplicate (complete) a new one, from the input entry (evt_t *).
  * INPUT:
  *   event: The entry to be duplicated.
  *
  * RETURN:
- *   SUCC: A malloc type of event_t, when used you can call delete_event() to free it.
+ *   SUCC: A malloc type of evt_t, when used you can call free_evt() to free it.
  *   FAIL: NULL.
  * OTHERS:
  *   (null)
  ************************************************************************/
-event_t *event_dup(const event_t *event);
+evt_t *copy_evt(const evt_t *event);
 
 /*************************************************************************
  * FUNCTION:
- *   delete_event().
+ *   free_evt().
  * DESCRIPTION:
- *   delete the event_t entry.
+ *   delete the evt_t entry.
  * INPUT:
  *   event:
  *     The event will be delete and destroy.
@@ -236,15 +198,15 @@ event_t *event_dup(const event_t *event);
  * OTHERS:
  *   (null)
  ************************************************************************/
-void delete_event(event_t *event);
+void free_evt(evt_t *event);
 
 /*************************************************************************
  * FUNCTION:
- *   send_event().
+ *   send_evt().
  * DESCRIPTION:
  *   Send the Client's request or Server's response.
  * INPUT:
- *   ev_ctx
+ *   evt_ctx
  *     The event context type.
  *   event:
  *     The event will be send.
@@ -255,14 +217,43 @@ void delete_event(event_t *event);
  * OTHERS:
  *   (null)
  ************************************************************************/
-int send_event(const event_ctx_t *ev_ctx, const event_t *event);
+int send_evt(evt_ctx_t *evt_ctx, evt_t *event);
 
 /*************************************************************************
  * FUNCTION:
- *   event_error().
+ *   recv_evt().
+ * DESCRIPTION:
+ *   Server receive the Client's request or Client receive Server's response.
+ *
+ *   If none of the requested events have occurred on, recv_evt() shall
+ *   wait timeout milliseconds for an event to occur on.
+ *
+ *   If timeout is 0, recv_evt() shall return immediately.
+ *
+ *   If timeout is -1, recv_evt() shall block indefinitely until a
+ *   requested event has occurred on.
+ *
+ * INPUT:
+ *   evt_ctx:
+ *     The event context type.
+ *   timeout:
+ *     Unit(ms).
+ *
+ * OUTPUT:
+ *
+ * RETURN:
+ *   SUCC: A malloc type of evt_t, when used you can call free_evt() to free it.
+ *   FAIL: NULL.
+ * OTHERS:
+ ************************************************************************/
+evt_t *recv_evt(evt_ctx_t *evt_ctx);
+
+/*************************************************************************
+ * FUNCTION:
+ *   evt_error().
  * DESCRIPTION:
  *     Return the error message. when netmod.h API's function execute
- *   fail, you can call event_error() to print the error message.
+ *   fail, you can call evt_error() to print the error message.
  * INPUT:
  *   error:
  *     The error number, returned by event's API functions.
@@ -272,11 +263,12 @@ int send_event(const event_ctx_t *ev_ctx, const event_t *event);
  * OTHERS:
  *   (null)
  ************************************************************************/
-const char *event_error(int error);
+const char *evt_error(int error);
 
-/* print_event & _system, Just for Test */
-void print_event(const event_t *event);
+/* print_evt & _system, Just for Test */
+void print_evt(const evt_t *event);
 
-const char *_systime();
+void *work_evt(evt_ctx_t *evt_ctx);
+
 #endif	/* _NETMOD_H_ */
 

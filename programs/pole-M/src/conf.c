@@ -13,9 +13,14 @@ void config_init(struct pole_conf *p_cfg, char *name)
 		goto fail;
 	}
 
-	if (json_object_object_get_ex(cfg, "thread_number", &obj)) {
-		p_cfg->thread_number = json_object_get_int(obj);
-		x_printf(I, "thread_number: %d", p_cfg->thread_number);
+	if (json_object_object_get_ex(cfg, "event_worker_counts", &obj)) {
+		p_cfg->event_worker_counts = json_object_get_int(obj);
+		x_printf(I, "event_worker_counts: %d", p_cfg->event_worker_counts);
+	} else { goto fail; }
+
+	if (json_object_object_get_ex(cfg, "event_tasker_counts", &obj)) {
+		p_cfg->event_tasker_counts = json_object_get_int(obj);
+		x_printf(I, "event_tasker_counts: %d", p_cfg->event_tasker_counts);
 	} else { goto fail; }
 
 	if (json_object_object_get_ex(cfg, "max_records", &obj)) {

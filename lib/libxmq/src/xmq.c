@@ -1,10 +1,12 @@
 #include "xmq.h"
 #include "xmq_csv.h"
-#include "slog/slog.h"
+#include "libmini.h"
+#include "base/utils.h"
 
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <limits.h>
 
 ///////////////////////////////////////////////////////////////////////
 
@@ -21,14 +23,19 @@
  * #  define SIZE_MAX      (4294967295U)
  * # endif
  *
- * XMQ_KEY_LEN 21  "18446744073709551615"  __u64toa()/__atou64() to change.
  * */
-#define XMQ_KEY_LEN             21	// "18446744073709551615" len=20, 1 for '\0'
-#define XMQ_U64_MAX             (18446744073709551615UL)
-
-#define XMQ_TYPE_DATABASE       1
-#define XMQ_TYPE_PRODUCER       2
-#define XMQ_TYPE_CONSUMER       3
+#define XMQ_KEY_LEN     21		// "18446744073709551615" len=20, 1 for '\0'
+#ifndef ULLONG_MAX
+  #define XMQ_U64_MAX   (18446744073709551615UL)
+#else
+  #define XMQ_U64_MAX   (ULLONG_MAX)
+#endif
+enum xmq_type
+{
+	XMQ_TYPE_DATABASE = 1,
+	XMQ_TYPE_PRODUCER = 2,
+	XMQ_TYPE_CONSUMER = 3,
+};
 
 #define XMQ_DATABASES           "XMQ_DATABASES"
 #define XMQ_PRODUCERS           "XMQ_PRODUCERS"
@@ -57,52 +64,44 @@
 	} while (0)
 ///////////////////////////////////////////////////////////////////////
 
-/* __atou64, string type with "00000000000002378923" convert to uint64_t,
- * len = strlen(src) or the length you want to convert, from src. */
-static uint64_t __atou64(const char *str, size_t len);
-
-/* __u64toa, uint64_t type change to string "00000000000002378923" */
-static char *__u64toa(uint64_t u64, char *des, int len);
-
 /* __get_KV_dbname() get K/V database name, [1,5000],[5001,10000] -> offset = 4999 */
-static char *__get_KV_dbname(uint64_t start, size_t offset);
+static void __get_KV_dbname(char dest[XMQ_DBNAME_LEN], uint64_t start, size_t offset);
 
 /* string append with [first,second,third] by split. */
 static char *__string_append_3rd(const char *prefix, const char *split, const char *first, const char *second, const char *third);
 
 /* Delete the substr, and return the left string. */
-static char *__string_delete_by_substr(char *src, const char *substr);
+static char *__string_delete_by_substr(char *src, const char *substr, const char *split);
 
 /* Append string 'append' and rewrite to database. */
 static int __write_back_append(xmq_ctx_t *ctx, const char *key, const char *append, const char *split);
 
-/* Delete string 'del' and rewrite to database. */
-static int __write_back_delete(xmq_ctx_t *ctx, const char *key, const char *del);
+/* Delete string 'delete' and rewrite to database. */
+static int __write_back_delete(xmq_ctx_t *ctx, const char *key, const char *delete, const char *split);
 
-static int __load_int(xmq_ctx_t *ctx, void *kv_ctx, const char *key, int *value);
 
-static int __write_int(xmq_ctx_t *ctx, void *kv_ctx, const char *key, int value);
+/* The base function to operator the K/V database. */
+static int __load_int(xmq_ops_t *ops, void *kv_ctx, const char *key, int *value);
 
-static int __load_uint64(xmq_ctx_t *ctx, void *kv_ctx, const char *key, uint64_t *value);
+static int __write_int(xmq_ops_t *ops, void *kv_ctx, const char *key, int value);
 
-static int __write_uint64(xmq_ctx_t *ctx, void *kv_ctx, const char *key, uint64_t value);
+static int __load_uint64(xmq_ops_t *ops, void *kv_ctx, const char *key, uint64_t *value);
+
+static int __write_uint64(xmq_ops_t *ops, void *kv_ctx, const char *key, uint64_t value);
+
+static int __load_string_bin(xmq_ops_t *ops, void *kv_ctx, const char *key, void **value, size_t *len);
+
+static int __write_string_bin(xmq_ops_t *ops, void *kv_ctx, const char *key, const void *value, size_t len);
 
 /* The main function to operator the K/V database. */
-static int __load_string_bin(xmq_ctx_t *ctx, void *kv_ctx, const char *key, void **value, size_t *len);
-
-static int __write_string_bin(xmq_ctx_t *ctx, void *kv_ctx, const char *key, const void *value, size_t len);
-
-/* Only used for read or write ./kvstate DB. */
-static char *__load_string_string(xmq_ctx_t *ctx, const char *key);
-
 static int __write_string_string(xmq_ctx_t *ctx, const char *key, const char *value);
 
 /* Loading such as "P1,P2,P3,..PN to list_XXX." */
-static int __load_string_list(xmq_ctx_t *ctx, const char *key, xlist_t *head, int type);
+static int __load_string_list(xmq_ctx_t *ctx, const char *key, xlist_t *head, enum xmq_type type);
 
-static int __list_to_csv(xlist_t *head, csv_parser_t *csv, int type);
+static int __list_to_csv(xlist_t *head, csv_parse_t *csv, int type);
 
-static int __csv_to_list(xmq_ctx_t *ctx, csv_parser_t *csv, xlist_t *head, int type);
+static int __csv_to_list(xmq_ctx_t *ctx, csv_parse_t *csv, xlist_t *head, int type);
 
 /* Only open the K/V database and load it to list_database or delete from it.*/
 static int __load_database(xmq_ctx_t *ctx, const char *name);
@@ -113,8 +112,6 @@ static int __open_database(xmq_ctx_t *ctx, uint64_t last_writepos);
 
 /* Loading all the resources was called by xmq_context_init. */
 static int __load_all_resouces(xmq_ctx_t *ctx);
-
-static int __mkdir_if_doesnt_exist(const char *dirpath);
 
 /* Check the key and return it with type {xmq_db_t|xmq_producer_t|xmq_consumer_t}. */
 static void *__is_obj_exist(xmq_ctx_t *ctx, const char *key, int type);
@@ -131,23 +128,27 @@ xmq_ctx_t *xmq_context_init(const char *kv_db_path, size_t kv_max_records,
 	xmq_kv_ctx_init *kv_ctx_init,
 	xmq_kv_put *kv_put,
 	xmq_kv_get *kv_get,
-	xmq_kv_ctx_destroy *kv_ctx_destroy)
+	xmq_kv_ctx_free *kv_ctx_free)
 {
-	return_if_false((kv_db_path && kv_max_records > 0 && kv_ctx_init && kv_put && kv_get && kv_ctx_destroy), NULL);
+	return_if_false((kv_db_path && kv_max_records > 0 && kv_ctx_init && kv_put && kv_get && kv_ctx_free), NULL);
 
+	assert(XMQ_KEY_LEN == 21);
+	assert(XMQ_DBNAME_LEN == 42);
 	/* You should never change calloc to malloc. calloc will clear memory with '\0'*/
 	xmq_ctx_t *ctx = (xmq_ctx_t *)calloc(1, sizeof(xmq_ctx_t));
 	return_if_false(ctx, NULL);
 
+	/* fill setting*/
 	strncpy(ctx->kv_db_path, kv_db_path, XMQ_PATH_LEN - 1);
 	ctx->kv_max_records = kv_max_records;
-	ctx->kv_ctx_init = kv_ctx_init;
-	ctx->kv_put = kv_put;
-	ctx->kv_get = kv_get;
-	ctx->kv_ctx_destroy = kv_ctx_destroy;
+	ctx->kv_ops.kv_ctx_init = kv_ctx_init;
+	ctx->kv_ops.kv_put = kv_put;
+	ctx->kv_ops.kv_get = kv_get;
+	ctx->kv_ops.kv_ctx_free = kv_ctx_free;
 
-	if (__mkdir_if_doesnt_exist(kv_db_path)) {
-		x_printf(E, "__mkdir_if_doesnt_exist: Execute fail.");
+	/* check */
+	if (mkdir_if_doesnt_exist(kv_db_path)) {
+		x_printf(E, "mkdir_if_doesnt_exist: Execute fail.");
 		free(ctx); return NULL;
 	}
 
@@ -157,10 +158,9 @@ xmq_ctx_t *xmq_context_init(const char *kv_db_path, size_t kv_max_records,
 
 	pthread_mutex_init(&ctx->lock_write, NULL);
 	pthread_cond_init(&ctx->lock_cond, NULL);
-	ctx->waiters = 0;
 
 	if (__load_all_resouces(ctx)) {
-		x_printf(W, "__load_all_resouces fail. Initialize fail.");
+		x_printf(E, "__load_all_resouces fail. Initialize fail.");
 		free(ctx); return NULL;
 	}
 
@@ -187,10 +187,10 @@ void xmq_context_destroy(xmq_ctx_t *ctx)
 		{
 			list_del(iter);
 			xmq_db_t *db = container_of(iter, xmq_db_t, node);
-			ctx->kv_ctx_destroy(db->db_handler);
+			ctx->kv_ops.kv_ctx_free(db->db_handler);
 			free(db);
 		}
-		ctx->kv_ctx_destroy(ctx->g_state_ctx);
+		ctx->kv_ops.kv_ctx_free(ctx->g_state_ctx);
 
 		pthread_mutex_destroy(&ctx->lock_write);
 		pthread_cond_destroy(&ctx->lock_cond);
@@ -216,6 +216,7 @@ int xmq_register_producer(xmq_ctx_t *ctx, const char *pid)
 		/* Update the XMQ_PRODUCERS */
 		if (__write_back_append(ctx, XMQ_PRODUCERS, producer->identity, ",")) {
 			x_printf(W, "__write_back_append(Key:%s Value:[%s]) fail", XMQ_PRODUCERS, producer->identity);
+			free(producer);
 			return -1;
 		}
 
@@ -231,6 +232,7 @@ int xmq_register_producer(xmq_ctx_t *ctx, const char *pid)
 	return 0;
 }
 
+/*先写入消费者的last_seq 再追加消费者key string list*/
 int xmq_register_consumer(xmq_ctx_t *ctx, const char *cid)
 {
 	return_if_false((ctx && cid), -1);
@@ -243,17 +245,24 @@ int xmq_register_consumer(xmq_ctx_t *ctx, const char *cid)
 		xmq_consumer_t *consumer = (xmq_consumer_t *)calloc(1, sizeof(xmq_consumer_t));
 		return_if_false(consumer, -1);
 
+		strncpy(consumer->identity, cid, sizeof(consumer->identity) - 1);
 		consumer->xmq_ctx = ctx;
 		consumer->last_fetch_seq = 1;
-		strncpy(consumer->identity, cid, sizeof(consumer->identity) - 1);
 
 		char *key_fetchpos = key_of_consumer_fetchpos(consumer->identity);
 		strcpy(consumer->fetch_key, key_fetchpos);
 		free(key_fetchpos);
 
+		if (__write_uint64(&ctx->kv_ops, ctx->g_state_ctx, consumer->fetch_key, consumer->last_fetch_seq)) {
+			x_printf(E, "__write_uint64(Key:%s Value:[%llu]) fail", consumer->fetch_key, consumer->last_fetch_seq);
+			free(consumer);
+			return -1;
+		}
+
 		// Append this consumer to XMQ_CONSUMERS in db kvstate, and set relevant macro fields. see: key_of_XXX.
 		if (__write_back_append(ctx, XMQ_CONSUMERS, consumer->identity, ",")) {
-			x_printf(W, "__write_back_append(Key:%s Value:[%s]) fail", XMQ_CONSUMERS, consumer->identity);
+			x_printf(E, "__write_back_append(Key:%s Value:[%s]) fail", XMQ_CONSUMERS, consumer->identity);
+			free(consumer);
 			return -1;
 		}
 
@@ -310,7 +319,7 @@ int xmq_unregister_producer(xmq_ctx_t *ctx, const char *pid)
 		list_del(&producer->node);
 
 		/* Reset the state of this producer in db kvstate. */
-		if (__write_back_delete(ctx, XMQ_PRODUCERS, producer->identity)) {
+		if (__write_back_delete(ctx, XMQ_PRODUCERS, producer->identity, ",")) {
 			x_printf(W, "__write_back_delete: Update the db ./kvstate with KEY:%s VAL:%s fail.", XMQ_PRODUCERS, producer->identity);
 			free(producer);
 			return -1;
@@ -333,7 +342,7 @@ int xmq_unregister_consumer(xmq_ctx_t *ctx, const char *cid)
 		list_del(&consumer->node);
 
 		/* Reset the state of this consumer in db kvstate. */
-		if (__write_back_delete(ctx, XMQ_CONSUMERS, consumer->identity)) {
+		if (__write_back_delete(ctx, XMQ_CONSUMERS, consumer->identity, ",")) {
 			x_printf(W, "__write_back_delete: Update the db ./kvstate with KEY:%s fail.", XMQ_CONSUMERS);
 			free(consumer);
 			return -1;
@@ -352,154 +361,95 @@ int xmq_push_tail(xmq_producer_t *producer, const xmq_msg_t *msg)
 
 	xmq_ctx_t *ctx = producer->xmq_ctx;
 
+	pthread_mutex_lock(&ctx->lock_write);
+
+	uint64_t seq = ctx->last_write_db_seq;
 	/* 1. Checking: uint64_t is full with sequence = XMQ_U64_MAX */
-	if (ctx->last_write_db_seq + 1 == XMQ_U64_MAX) {
+	if (seq == XMQ_U64_MAX) {
+		pthread_mutex_unlock(&ctx->lock_write);
 		x_printf(S, "The last write sequence is 18446744073709551615, will stop push any message.");
 		return -1;
 	}
 
-	pthread_mutex_lock(&ctx->lock_write);
-
 	/* 2. Checking: One DB was write full!
 	 * Create a new database to store K/V data, load it to list_database. */
-	if ((ctx->last_write_db_seq % ctx->kv_max_records) == 1) {
-		if (__open_database(ctx, ctx->last_write_db_seq)) {
+	if ((seq % ctx->kv_max_records) == 1) {
+		if (__open_database(ctx, seq)) {
 			pthread_mutex_unlock(&ctx->lock_write);
-			x_printf(W, "__open_database(last_writepos:%llu) fail.", ctx->last_write_db_seq);
+			x_printf(W, "__open_database(last_writepos:%llu) fail.", seq);
 			return -1;
 		}
 	}
 
 	/* Write new K/V data to database [0~N]. */
 	char key[XMQ_KEY_LEN];
-	__u64toa(ctx->last_write_db_seq, key, sizeof(key));
+	snprintf(key, sizeof(key), "%020llu", seq);
 
-	if (__write_string_bin(ctx, ctx->last_write_db->db_handler, key, msg, xmq_msg_total_size(msg))) {
+	if (__write_string_bin(&ctx->kv_ops, ctx->last_write_db->db_handler, key, msg, xmq_msg_total_size(msg))) {
 		pthread_mutex_unlock(&ctx->lock_write);
 		x_printf(F, "__write_string_bin(key:%s, value:%s) fail.", key, (char *)msg->data);
 		return -1;
 	}
 
 	/* Update XMQ_DATABASE_WRITEPOS */
-	if (__write_uint64(ctx, ctx->g_state_ctx, XMQ_DATABASE_WRITEPOS, ctx->last_write_db_seq)) {
+	if (__write_uint64(&ctx->kv_ops, ctx->g_state_ctx, XMQ_DATABASE_WRITEPOS, seq + 1)) {
 		pthread_mutex_unlock(&ctx->lock_write);
-		x_printf(F, "__write_uint64(key:%s, value:%lld) fail.", XMQ_DATABASE_WRITEPOS, ctx->last_write_db_seq);
+		x_printf(F, "__write_uint64(key:%s, value:%lld) fail.", XMQ_DATABASE_WRITEPOS, seq + 1);
 		return -1;
 	}
 
 	ctx->last_write_db_seq++;
 
-	// If waiters (for fetching the XMQ queue) is non-zero, we wake up them.
-	if (ctx->waiters) {
-		pthread_cond_broadcast(&ctx->lock_cond);
-	}
 
 	pthread_mutex_unlock(&ctx->lock_write);
 
 	return 0;
 }
 
-xmq_msg_t *xmq_fetch_nth(xmq_consumer_t *consumer, uint64_t seq, long timeout)
+xmq_msg_t *xmq_pull_that(xmq_consumer_t *consumer, uint64_t seq)
 {
-	return_if_false((consumer && timeout >= -1), (xmq_msg_t *)-1);
-
+	assert(consumer);
+	
 	/* 1. Checking: uint64_t is full with sequence = XMQ_U64_MAX */
 	if (seq == XMQ_U64_MAX) {
-		x_printf(W, "Sequence of you request is 18446744073709551615 or (uint64_t)-1, we'll stop fetch next message.");
+		x_printf(S, "Sequence of you request is 18446744073709551615 or (uint64_t)-1, we'll stop fetch next message.");
 		return NULL;
 	}
 
 	xmq_ctx_t *ctx = consumer->xmq_ctx;
-
-	xmq_db_t *db = (xmq_db_t *)__get_db_handler(ctx, seq);
-
+	xmq_db_t *db = __get_db_handler(ctx, seq);
 	if (db == NULL) {
-		x_printf(F, "__get_db_handler(fetchpos:%llu) fail, database doesn't exist.", consumer->last_fetch_seq + 1);
+		x_printf(W, "__get_db_handler(fetchpos:%llu) fail, database doesn't exist.", seq);
 		return NULL;
 	}
 
 	char key[XMQ_KEY_LEN];
-	__u64toa(seq, key, sizeof(key));
+	snprintf(key, sizeof(key), "%020llu", seq);
 
-	int     res = -1;
 	size_t  len = 0;
 	void    *value = NULL;
 
-	// __load_string_bin only return 1 or 0.
-	//   1(no data returned) or 0(with data returned).
-	if (__load_string_bin(ctx, db->db_handler, key, &value, &len)) {
-		pthread_mutex_lock(&ctx->lock_write);
-
-		switch (timeout)
-		{
-			case  0:
-				pthread_mutex_unlock(&ctx->lock_write);
-				return NULL;
-
-			case -1:
-
-				while (value == NULL) {
-					++(ctx->waiters);
-					res = pthread_cond_wait(&ctx->lock_cond, &ctx->lock_write);
-					--(ctx->waiters);
-
-					__load_string_bin(ctx, db->db_handler, key, &value, &len);
-
-					if (res != 0) {
-						pthread_mutex_unlock(&ctx->lock_write);
-						x_printf(E, "pthread_cond_wait Execute fail. Error-%s.", strerror(res));
-						return NULL;
-					}
-				}
-
-				break;
-
-			default:
-
-				while (value == NULL) {
-					struct timespec ts;
-					clock_gettime(CLOCK_REALTIME, &ts);
-					ts.tv_nsec += (timeout * 1000000);
-					res = ts.tv_nsec / 1000000000;
-
-					if (res > 0) {
-						ts.tv_nsec %= 1000000000;
-						ts.tv_sec += res;
-					}
-
-					++(ctx->waiters);
-					res = pthread_cond_timedwait(&ctx->lock_cond, &ctx->lock_write, &ts);
-					--(ctx->waiters);
-
-					__load_string_bin(ctx, db->db_handler, key, &value, &len);
-
-					if (res != 0) {
-						pthread_mutex_unlock(&ctx->lock_write);
-
-						if (res != ETIMEDOUT) {
-							x_printf(E, "pthread_cond_timedwait Execute fail. Error-%s.", strerror(res));
-						}
-
-						return NULL;
-					}
-				}
-		}
-
-		pthread_mutex_unlock(&ctx->lock_write);
+	int res = __load_string_bin(&ctx->kv_ops, db->db_handler, key, &value, &len);
+	assert(res != KV_LOAD_FAIL);
+	if (res == KV_LOAD_NULL) {
+		return NULL;
 	}
-
-	/* Update XMQ_CN_FETCHPOS */
-	res = __write_uint64(ctx, ctx->g_state_ctx, consumer->fetch_key, seq);
-	return_if_false((res == 0), NULL);
-
-	consumer->last_fetch_seq = seq;
-
+	
 	return (xmq_msg_t *)value;
 }
 
-xmq_msg_t *xmq_fetch_next(xmq_consumer_t *consumer)
+int xmq_update_that(xmq_consumer_t *consumer, uint64_t seq)
 {
-	return xmq_fetch_nth(consumer, consumer->last_fetch_seq + 1, -1);
+	assert(consumer);
+
+	xmq_ctx_t *ctx = consumer->xmq_ctx;
+
+	/* Update XMQ_CN_FETCHPOS */
+	int res = __write_uint64(&ctx->kv_ops, ctx->g_state_ctx, consumer->fetch_key, seq);
+	return_if_false((res == 0), -1);
+
+	consumer->last_fetch_seq = seq;
+	return 0;
 }
 
 uint64_t xmq_fetch_position(xmq_consumer_t *consumer)
@@ -514,73 +464,70 @@ int __load_all_resouces(xmq_ctx_t *ctx)
 	/* Initialize K/V state context,
 	 *   it stores all the global database/producer/consumer 's status.
 	 * */
-	if (!(ctx->g_state_ctx = ctx->kv_ctx_init("./kvstate"))) {
+	if (!(ctx->g_state_ctx = ctx->kv_ops.kv_ctx_init("./kvstate"))) {
 		x_printf(W, "Initialize the global state K/V database './kvstate' fail.");
 		return -1;
 	}
 
 	/* First loading the XMQ_DATABASE_WRITEPOS (0~18446744073709551615UL)*/
 	uint64_t        write_pos = 0;
-	int             res = __load_uint64(ctx, ctx->g_state_ctx, XMQ_DATABASE_WRITEPOS, &write_pos);	// TODO:return value to macro
+	int             res = __load_uint64(&ctx->kv_ops, ctx->g_state_ctx, XMQ_DATABASE_WRITEPOS, &write_pos);
 
-	if (res == 0) {
-		/* Loading all the used databases to list_databases.
-		 *  [like: "00000000000000000001-00000000000005000000"] to list_databases.
-		 * All the used database will be opend for consumers reading.
-		 */
-		char s_xmq_databases[14 + XMQ_KEY_LEN];	// 14 is length of "XMQ_DATABASES"
-		sprintf(s_xmq_databases, "XMQ_DATABASES%llu", write_pos);
-		x_printf(D, "__load_uint64->s_xmq_databases=[%s].", s_xmq_databases);
-
-		int dbs = __load_string_list(ctx, s_xmq_databases, &ctx->list_databases, XMQ_TYPE_DATABASE);
-
-		if (dbs > 0) {
-			x_printf(I, "Loding %d of databases to list_databases succeed.", dbs);
-		} else {
-			x_printf(F, "Loding databases to list_databases fail. process return -1.");
-			return -1;
-		}
-
-		ctx->last_write_db_seq = write_pos;
-		ctx->last_write_db = __get_db_handler(ctx, write_pos);
-
-		/* Loding all the producers to list. */
-		int producers = __load_string_list(ctx, XMQ_PRODUCERS, &ctx->list_producers, XMQ_TYPE_PRODUCER);
-
-		if (producers > 0) {
-			x_printf(I, "Loding %d of producers to list_producers succeed.", producers);
-		} else if (producers == 0) {
-			x_printf(I, "Loding producers to list_producers fail. There's no producer in database. It will be registered in time.");
-		} else {
-			x_printf(F, "Loding producers to list_producers fail. process return -1.");
-			return -1;
-		}
-
-		/* Loding all the consumers to list. */
-		int consumers = __load_string_list(ctx, XMQ_CONSUMERS, &ctx->list_consumers, XMQ_TYPE_CONSUMER);
-
-		if (consumers > 0) {
-			x_printf(I, "Loding %d of consumers to list_consumers succeed.", consumers);
-		} else if (consumers == 0) {
-			x_printf(I, "Loding consumers to list_consumers fail. There's no consumer registered or reading the K/V database.");
-		} else {
-			x_printf(F, "Loding consumers to list_consumers fail. process return -1.");
-			return -1;
-		}
-	} else if (res == 1) {
-		x_printf(I, "Loading the XMQ_DATABASE_WRITEPOS fail. we'll create it for the first time.");
-
-		int res = __write_uint64(ctx, ctx->g_state_ctx, XMQ_DATABASE_WRITEPOS, 1);
-		return_if_false((res == 0), -1);
-
-		ctx->last_write_db_seq = 1;
-
-		if (__open_database(ctx, ctx->last_write_db_seq)) {
-			x_printf(W, "__open_database(last_writepos:%llu) for the first time fail.", ctx->last_write_db_seq);
-			return -1;
-		}
-	} else {
+	if (res == KV_LOAD_FAIL) {
 		x_printf(F, "__load_uint64(XMQ_DATABASE_WRITEPOS) fail. K/V database error.");
+		return -1;
+	} else if (res == KV_LOAD_NULL) {
+		x_printf(I, "Loading the XMQ_DATABASE_WRITEPOS fail. we'll create it for the first time.");
+		write_pos = 1;
+		res = __write_uint64(&ctx->kv_ops, ctx->g_state_ctx, XMQ_DATABASE_WRITEPOS, write_pos);
+		return_if_false((res == 0), -1);
+	} else {
+		x_printf(D, "__load_uint64(XMQ_DATABASE_WRITEPOS) %llu.", write_pos);
+	}
+
+	/* Loading all the used databases to list_databases.
+	 *  [like: "00000000000000000001-00000000000005000000"] to list_databases.
+	 * All the used database will be opend for consumers reading.
+	 */
+	char name[XMQ_KEY_LEN];
+	memset(name, 0, sizeof(name));
+	snprintf(name, sizeof(name), "%llu", write_pos);
+	x_printf(D, "__load_uint64->xmq_databases=[%s].", name);
+
+	int databases = __load_string_list(ctx, name, &ctx->list_databases, XMQ_TYPE_DATABASE);
+
+	if (databases > 0) {
+		x_printf(I, "Loding %d of databases to list_databases succeed.", databases);
+	} else {
+		x_printf(F, "Loding databases to list_databases fail. process return -1.");
+		return -1;
+	}
+
+	ctx->last_write_db_seq = write_pos;
+	ctx->last_write_db = __get_db_handler(ctx, write_pos);
+	assert(ctx->last_write_db);
+
+	/* Loding all the producers to list. */
+	int producers = __load_string_list(ctx, XMQ_PRODUCERS, &ctx->list_producers, XMQ_TYPE_PRODUCER);
+
+	if (producers > 0) {
+		x_printf(I, "Loding %d of producers to list_producers succeed.", producers);
+	} else if (producers == 0) {
+		x_printf(I, "Loding producers to list_producers fail. There's no producer in database. It will be registered in time.");
+	} else {
+		x_printf(F, "Loding producers to list_producers fail. process return -1.");
+		return -1;
+	}
+
+	/* Loding all the consumers to list. */
+	int consumers = __load_string_list(ctx, XMQ_CONSUMERS, &ctx->list_consumers, XMQ_TYPE_CONSUMER);
+
+	if (consumers > 0) {
+		x_printf(I, "Loding %d of consumers to list_consumers succeed.", consumers);
+	} else if (consumers == 0) {
+		x_printf(I, "Loding consumers to list_consumers fail. There's no consumer registered or reading the K/V database.");
+	} else {
+		x_printf(F, "Loding consumers to list_consumers fail. process return -1.");
 		return -1;
 	}
 
@@ -589,7 +536,7 @@ int __load_all_resouces(xmq_ctx_t *ctx)
 
 xmq_db_t *__get_db_handler(xmq_ctx_t *ctx, uint64_t fetchpos)
 {
-	return_if_false(ctx, (xmq_db_t *)-1);
+	return_if_false(ctx, NULL);
 
 	xlist_t *iter;
 	list_foreach_reverse(iter, &ctx->list_databases)
@@ -621,7 +568,7 @@ void *__is_obj_exist(xmq_ctx_t *ctx, const char *key, int type)
 				xmq_db_t *db = container_of(iter, xmq_db_t, node);
 
 				if (!(strncmp(db->db_name, key, strlen(key) + 1))) {
-					// x_printf(D, "Database [%s] was found.", key);
+					x_printf(D, "Database [%s] was found.", key);
 					return db;
 				}
 			}
@@ -635,7 +582,7 @@ void *__is_obj_exist(xmq_ctx_t *ctx, const char *key, int type)
 				xmq_producer_t *producer = container_of(iter, xmq_producer_t, node);
 
 				if (!(strncmp(producer->identity, key, strlen(key) + 1))) {
-					// x_printf(D, "Producer [%s] was found.", key);
+					x_printf(D, "Producer [%s] was found.", key);
 					return producer;
 				}
 			}
@@ -649,7 +596,7 @@ void *__is_obj_exist(xmq_ctx_t *ctx, const char *key, int type)
 				xmq_consumer_t *consumer = container_of(iter, xmq_consumer_t, node);
 
 				if (!(strncmp(consumer->identity, key, strlen(key) + 1))) {
-					// x_printf(D, "Consumer [%s] was found.", key);
+					x_printf(D, "Consumer [%s] was found.", key);
 					return consumer;
 				}
 			}
@@ -668,14 +615,13 @@ int __open_database(xmq_ctx_t *ctx, uint64_t last_writepos)
 
 	/* last_writepos's value % ctx->kv_max_records == 1 */	// TODO:add
 	if (!__get_db_handler(ctx, last_writepos)) {
-		char *dbname = __get_KV_dbname(last_writepos, ctx->kv_max_records - 1);
+		char dbname[XMQ_DBNAME_LEN];
+		__get_KV_dbname(dbname, last_writepos, ctx->kv_max_records - 1);
 
 		if (__load_database(ctx, dbname)) {
 			x_printf(W, "__load_database('%s') new database fail.", dbname);
-			free(dbname); return -1;
+			return -1;
 		}
-
-		free(dbname);
 
 		ctx->last_write_db = __get_db_handler(ctx, last_writepos);
 		x_printf(I, "__get_db_handler() new database [%s] succeed.", ctx->last_write_db->db_name);
@@ -688,27 +634,24 @@ int __load_database(xmq_ctx_t *ctx, const char *name)
 {
 	return_if_false((ctx && name), -1);
 
-	char *dbpath = (char *)malloc(strlen(ctx->kv_db_path) + strlen(name) + 2);
-	return_if_false(dbpath, -1);
+	int     space = strlen(ctx->kv_db_path) + strlen(name) + 2;
+	char    dbpath[space];
+	snprintf(dbpath, space, "%s/%s", ctx->kv_db_path, name);
 
-	sprintf(dbpath, "%s/%s", ctx->kv_db_path, name);
-
-	void *kv_ctx = ctx->kv_ctx_init(dbpath);
+	void *kv_ctx = ctx->kv_ops.kv_ctx_init(dbpath);
 
 	if (!kv_ctx) {
 		x_printf(F, "Create/Open the database [%s] fail.", dbpath);
-		free(dbpath); return -1;
+		return -1;
 	}
-
-	free(dbpath);
 
 	xmq_db_t *db = (xmq_db_t *)calloc(1, sizeof(xmq_db_t));
 	return_if_false(db, -1);
 
 	/* name like: 00000000000000000001-00000000000000500000 */
-	strncpy(db->db_name, name, sizeof(db->db_name) - 1);	// -1 FIXME
-	db->db_start = __atou64(name, XMQ_KEY_LEN - 1);
-	db->db_end = __atou64(name + XMQ_KEY_LEN, XMQ_KEY_LEN - 1);
+	strncpy(db->db_name, name, sizeof(db->db_name));
+	db->db_start = strtoull(name, NULL, 10);
+	db->db_end = strtoull(name + XMQ_KEY_LEN, NULL, 10);
 	db->db_handler = kv_ctx;
 
 	list_init(&db->node);
@@ -730,46 +673,48 @@ int __unload_database(xmq_ctx_t *ctx, const char *name)
 	}
 
 	list_del(&db->node);
-	ctx->kv_ctx_destroy(db->db_handler);
+	ctx->kv_ops.kv_ctx_free(db->db_handler);
 	free(db);
 	x_printf(I, "__unload_database(%s) succeed.", name);
 
 	return 0;
 }
 
-int __list_to_csv(xlist_t *head, csv_parser_t *csv, int type)
+int __list_to_csv(xlist_t *head, csv_parse_t *csv, int type)
 {
 	return_if_false((head && csv), -1);
 }
 
-int __csv_to_list(xmq_ctx_t *ctx, csv_parser_t *csv, xlist_t *head, int type)
+int __csv_to_list(xmq_ctx_t *ctx, csv_parse_t *csv, xlist_t *head, int type)
 {
 	return_if_false((ctx && csv && head), -1);
 
 	csv_field_t *field;
 
-	for_each_field(field, csv)
+	switch (type)
 	{
-		switch (type)
-		{
-			case XMQ_TYPE_DATABASE:
+		case XMQ_TYPE_DATABASE:
+			for_each_field(field, csv)
 			{
-				char db[XMQ_DBNAME_LEN] = { 0 };
-				strncpy(db, field->ptr, field->len);
+				char dbname[XMQ_DBNAME_LEN] = { 0 };
 
-				if (__load_database(ctx, db)) {
-					x_printf(W, "Loding database [%s] to list_database fail, returned.", db);
+				strncpy(dbname, field->ptr, field->len);
+
+				if (__load_database(ctx, dbname)) {
+					x_printf(W, "Loding database [%s] to list_database fail, returned.", dbname);
 					return -1;
 				}
 
-				x_printf(I, "Loding database [%s] to list_database succeed.", db);
-
-				break;
+				x_printf(I, "Loding database [%s] to list_database succeed.", dbname);
 			}
 
-			case XMQ_TYPE_PRODUCER:
+			break;
+
+		case XMQ_TYPE_PRODUCER:
+			for_each_field(field, csv)
 			{
 				xmq_producer_t *producer = (xmq_producer_t *)calloc(1, sizeof(xmq_producer_t));
+
 				return_if_false(producer, -1);
 
 				strncpy(producer->identity, field->ptr, field->len);
@@ -778,102 +723,109 @@ int __csv_to_list(xmq_ctx_t *ctx, csv_parser_t *csv, xlist_t *head, int type)
 				list_init(&producer->node);
 				list_add_tail(&producer->node, &ctx->list_producers);
 				x_printf(I, "Loding producer [%s] to list_producers succeed.", producer->identity);
-
-				break;
 			}
 
-			case XMQ_TYPE_CONSUMER:
+			break;
+
+		case XMQ_TYPE_CONSUMER:
+			for_each_field(field, csv)
 			{
 				xmq_consumer_t *consumer = (xmq_consumer_t *)calloc(1, sizeof(xmq_consumer_t));
+
 				return_if_false(consumer, -1);
 
 				strncpy(consumer->identity, field->ptr, field->len);
-
-				/* Loading the last_fetchpos. */
-				uint64_t        fetchpos;
-				char            *key_fetchpos = key_of_consumer_fetchpos(consumer->identity);
-				strcpy(consumer->fetch_key, key_fetchpos);
-
-				int res = __load_uint64(ctx, ctx->g_state_ctx, key_fetchpos, &fetchpos);
-				free(key_fetchpos);
-				return_if_false((res == 0), -1);
-
-				consumer->last_fetch_seq = fetchpos;
 				consumer->xmq_ctx = ctx;
 
+				/* Loading the last_fetchpos. */
+				char *key_fetchpos = key_of_consumer_fetchpos(consumer->identity);
+				strcpy(consumer->fetch_key, key_fetchpos);
+				free(key_fetchpos);
+
+				uint64_t        fetchpos = 0;
+				int             res = __load_uint64(&ctx->kv_ops, ctx->g_state_ctx, consumer->fetch_key, &fetchpos);
+				return_if_false((res == KV_LOAD_SUCC), -1);
+				consumer->last_fetch_seq = fetchpos;
+
 				list_init(&consumer->node);
-				list_add_tail(&consumer->node, &ctx->list_consumers);	// FIXME:如何取得客户端的所有状态信息?
+				list_add_tail(&consumer->node, &ctx->list_consumers);
 				x_printf(I, "Loding consumer [%s] last_fetchpos:%llu to list_consumers succeed.", consumer->identity, consumer->last_fetch_seq);
-
-				break;
 			}
 
-			default:
-			{
-				x_printf(E, "__laod_string_list, Invalid XMQ_TYPE_XX.");
-				return -1;
-			}
-		}
+			break;
+
+		default:
+			x_printf(E, "__laod_string_list, Invalid XMQ_TYPE_XX.");
+			return -1;
 	}
 	return 0;
 }
 
-int __load_string_list(xmq_ctx_t *ctx, const char *key, xlist_t *head, int type)
+int __load_string_list(xmq_ctx_t *ctx, const char *key, xlist_t *head, enum xmq_type type)
 {
 	return_if_false((ctx && key && head), -1);
 
 	char *value = NULL;
 
-	/* e.g. key = XMQ_DATABASES2847202334 */
-	if (!strncmp(key, XMQ_DATABASES, strlen(XMQ_DATABASES))) {
-		uint64_t        i, last_write_pos = 0;
-		const char      *ptr = key + strlen(XMQ_DATABASES);
-		last_write_pos = __atou64(ptr, strlen(ptr));
+	switch (type)
+	{
+		case XMQ_TYPE_DATABASE:
+			/* e.g. key = 2847202334 */
+			{
+			uint64_t last_write_pos = strtoull(key, NULL, 10);
 
-		size_t dbs = (last_write_pos / ctx->kv_max_records) + ((last_write_pos % ctx->kv_max_records) ? 1 : 0);
-		value = (char *)calloc(1, dbs * (2 * XMQ_DBNAME_LEN) + 1);
+			size_t  dbs = GET_NEED_COUNT(last_write_pos, ctx->kv_max_records);
+			size_t  len = dbs * XMQ_DBNAME_LEN + 1;
+			value = (char *)calloc(1, len);
 
-		char *db = NULL;
+			uint64_t i = 0;
 
-		for (i = 1; i <= last_write_pos; i += ctx->kv_max_records) {
-			db = __get_KV_dbname(i, ctx->kv_max_records - 1);
-			return_if_false(db, -1);
+			for (i = 1; i <= last_write_pos; i += ctx->kv_max_records) {
+				char dbname[XMQ_DBNAME_LEN];
+				__get_KV_dbname(dbname, i, ctx->kv_max_records - 1);
 
-			/* 00000000000000000001-00000000000005000000,00000000000005000001-00000000000010000000, */
-			strcat(value, db); strcat(value, ",");
-			free(db);
-		}
+				/* 00000000000000000001-00000000000005000000,00000000000005000001-00000000000010000000, */
+				strcat(value, dbname); strcat(value, ",");
+			}
 
-		// value[strlen(value)-1] = '\0';
-		x_printf(D, "All the databases is:\n\t%s\n", value);
-	} else {// Others, such as: XMQ_[PRODUCERS|CONSUMERS]
-		value = __load_string_string(ctx, key);
-		return_if_false((value != (char *)-1), -1);
+			value[len - 2] = '\0';
+			x_printf(D, "All the databases is:\n\t%s\n", value);
+			}
+			break;
 
-		if (value == (char *)1) {	// FIXME
-			x_printf(I, "__load_string_string: (Key:%s Val:(char *)1). The Key doesn't exist.", key);
-			return 0;
-		}
+		default:
+			// Others, such as: XMQ_TYPE_PRODUCER|XMQ_TYPE_CONSUMER
+			{
+			size_t  len;
+			int     res = __load_string_bin(&ctx->kv_ops, ctx->g_state_ctx, key, (void **)&value, &len);
+			return_if_false((res != KV_LOAD_FAIL), -1);
+
+			if (res == KV_LOAD_NULL) {
+				x_printf(I, "__load_string_string: (Key:%s Val:(char *)1). The Key doesn't exist.", key);
+				return 0;
+			}
+			}
+			break;
 	}
 
 	x_printf(D, "__load_string_string: KEY:<%s> VALUE:<%s>", key, value);
 
-	csv_parser_t csv;
-	xmq_csv_parser_init(&csv);
+	csv_parse_t csv;
+	xmq_csv_parse_init(&csv);
 	int fields = xmq_csv_parse_string(&csv, value);
 	free(value);
 	return_if_false((fields != -1), -1);
 
-	if (-1 == __csv_to_list(ctx, &csv, head, type)) {	// TODO:bug database名字前缀丢失
+	if (-1 == __csv_to_list(ctx, &csv, head, type)) {
 		x_printf(E, "__csv_to_list: (type:%s) failed!",
 			(type == XMQ_TYPE_DATABASE) ? "XMQ_TYPE_DATABASE" :
 			((type == XMQ_TYPE_PRODUCER) ? "XMQ_TYPE_PRODUCER" : "XMQ_TYPE_CONSUMER"));
 
-		xmq_csv_parser_destroy(&csv);
+		xmq_csv_parse_destroy(&csv);
 		return 0;
 	}
 
-	xmq_csv_parser_destroy(&csv);
+	xmq_csv_parse_destroy(&csv);
 
 	return fields;
 }
@@ -882,43 +834,42 @@ int __write_back_append(xmq_ctx_t *ctx, const char *key, const char *append, con
 {
 	return_if_false((ctx && key && append && split), -1);
 
-	char *value_old = __load_string_string(ctx, key);
-	return_if_false((value_old != (char *)-1), -1);
-	value_old = (value_old == (char *)1) ? NULL : value_old;
+	size_t  len;
+	char    *value_old = NULL;
+	int     res = __load_string_bin(&ctx->kv_ops, ctx->g_state_ctx, key, (void **)&value_old, &len);
+	return_if_false((res != KV_LOAD_FAIL), -1);
 
 	char *value_new = __string_append_3rd(value_old, split, append, NULL, NULL);
+	freeif(value_old);
 
 	if (!value_new) {
-		x_printf(W, "__string_append_3rd: [prefix:%s,split:%s,append:%s] fail.", value_old, split, append);
-		freeif(value_old);
+		x_printf(W, "__string_append_3rd: [split:%s,append:%s] fail.", split, append);
 		return -1;
 	}
-
-	free(value_old);
 
 	int rc = __write_string_string(ctx, key, value_new);
+	free(value_new);
 
 	if (rc == -1) {
-		x_printf(W, "__write_string_string: [Key:%s, Value:%s] fail.", key, value_new);
-		freeif(value_new);
+		x_printf(W, "__write_string_string: [Key:%s] fail.", key);
 		return -1;
 	}
-
-	free(value_new);
 
 	return rc;
 }
 
-int __write_back_delete(xmq_ctx_t *ctx, const char *key, const char *del)
+int __write_back_delete(xmq_ctx_t *ctx, const char *key, const char *delete, const char *split)
 {
-	return_if_false((ctx && key && del), -1);
+	return_if_false((ctx && key && delete && split), -1);
 
-	char *value_old = __load_string_string(ctx, key);
-	return_if_false((value_old != (char *)-1 && value_old != (char *)1), -1);
+	size_t  len;
+	char    *value_old = NULL;
 
-	/* If not found the substr 'del', return NULL. */
-	if (!__string_delete_by_substr(value_old, del)) {
-		x_printf(W, "__string_delete_by_substr(src:%s, del:%s) not found the '%s'.", value_old, del, del);
+	int res = __load_string_bin(&ctx->kv_ops, ctx->g_state_ctx, key, (void **)&value_old, &len);
+	return_if_false((value_old == KV_LOAD_SUCC), -1);
+
+	if (!__string_delete_by_substr(value_old, delete, split)) {
+		x_printf(W, "__string_delete_by_substr(src:%s, del:%s) error found.", value_old, delete);
 		free(value_old);
 		return -1;
 	}
@@ -934,38 +885,38 @@ int __write_back_delete(xmq_ctx_t *ctx, const char *key, const char *del)
 	return 0;
 }
 
-int __write_int(xmq_ctx_t *ctx, void *kv_ctx, const char *key, int value)
+int __write_int(xmq_ops_t *ops, void *kv_ctx, const char *key, int value)
 {
-	return __write_string_bin(ctx, kv_ctx, key, (void *)&value, sizeof(int));
+	return __write_string_bin(ops, kv_ctx, key, (void *)&value, sizeof(int));
 }
 
-int __write_uint64(xmq_ctx_t *ctx, void *kv_ctx, const char *key, uint64_t value)
+int __write_uint64(xmq_ops_t *ops, void *kv_ctx, const char *key, uint64_t value)
 {
-	return __write_string_bin(ctx, kv_ctx, key, (void *)&value, sizeof(uint64_t));
+	return __write_string_bin(ops, kv_ctx, key, (void *)&value, sizeof(uint64_t));
 }
 
-int __write_string_bin(xmq_ctx_t *ctx, void *kv_ctx, const char *key, const void *value, size_t len)
+int __write_string_bin(xmq_ops_t *ops, void *kv_ctx, const char *key, const void *value, size_t len)
 {
-	return_if_false((ctx && kv_ctx && key && value && len), -1);
+	return_if_false((ops && kv_ctx && key && value && len), -1);
 
 	bin_entry_t bin_k, bin_v;
 	set_bin_entry(&bin_k, key, strlen(key) + 1);
 	set_bin_entry(&bin_v, value, len);
 
-	return ctx->kv_put(kv_ctx, &bin_k, &bin_v, 1);
+	return ops->kv_put(kv_ctx, &bin_k, &bin_v, 1);
 }
 
 int __write_string_string(xmq_ctx_t *ctx, const char *key, const char *value)
 {
-	return __write_string_bin(ctx, ctx->g_state_ctx, key, value, strlen(value) + 1);
+	return __write_string_bin(&ctx->kv_ops, ctx->g_state_ctx, key, value, strlen(value) + 1);
 }
 
-int __load_int(xmq_ctx_t *ctx, void *kv_ctx, const char *key, int *value)
+int __load_int(xmq_ops_t *ops, void *kv_ctx, const char *key, int *value)
 {
 	size_t  len = 0;
 	int     *val = NULL;
 
-	int res = __load_string_bin(ctx, kv_ctx, key, (void **)&val, &len);
+	int res = __load_string_bin(ops, kv_ctx, key, (void **)&val, &len);
 
 	return_if_false((res == 0), res);
 
@@ -975,95 +926,76 @@ int __load_int(xmq_ctx_t *ctx, void *kv_ctx, const char *key, int *value)
 	return 0;
 }
 
-int __load_uint64(xmq_ctx_t *ctx, void *kv_ctx, const char *key, uint64_t *value)
+int __load_uint64(xmq_ops_t *ops, void *kv_ctx, const char *key, uint64_t *value)
 {
 	size_t          len = 0;
 	uint64_t        *u64 = NULL;
 
-	int res = __load_string_bin(ctx, kv_ctx, key, (void **)&u64, &len);
+	int res = __load_string_bin(ops, kv_ctx, key, (void **)&u64, &len);
 
-	return_if_false((res == 0), res);
+	return_if_false((res == KV_LOAD_SUCC), res);
 
+	assert(len == sizeof(uint64_t));
 	*value = *u64;
-	free(u64);	// TODO:HAVE bug.
-
-	return 0;
-}
-
-/* Do not found the value by key, return 1.
- * LevelDB option error return -1.Succed return 0.*/
-int __load_string_bin(xmq_ctx_t *ctx, void *kv_ctx, const char *key, void **value, size_t *len)
-{
-	return_if_false((ctx && kv_ctx && key && value && len), -1);
-
-	bin_entry_t b_key, b_val;
-	set_bin_entry(&b_key, key, strlen(key) + 1);
-
-	int res = ctx->kv_get(kv_ctx, &b_key, &b_val, 1);
-
-	if (res != -1) {
-		if (b_val.data == NULL) {
-			// x_printf(D, "ctx->kv_get(KEY:%s, VAL: null). There isn't this key.", key);
-			return 1;
-		}
-
-		*value = b_val.data;
-		*len = b_val.len;
-	}
+	free(u64);
 
 	return res;
 }
 
-char *__load_string_string(xmq_ctx_t *ctx, const char *key)
+/* Do not found the value by key, return 1.
+ * LevelDB option error return -1.Succed return 0.*/
+int __load_string_bin(xmq_ops_t *ops, void *kv_ctx, const char *key, void **value, size_t *len)
 {
-	void *val; size_t len;
+	return_if_false((ops && kv_ctx && key && value && len), -1);
 
-	int res = __load_string_bin(ctx, ctx->g_state_ctx, key, &val, &len);
+	bin_entry_t b_key, b_val;
+	set_bin_entry(&b_key, key, strlen(key) + 1);
 
-	return (res) ? (char *)res : (char *)val;	// FIXME
+	int res = ops->kv_get(kv_ctx, &b_key, &b_val, 1);
+
+	if (res == -1) {
+		return KV_LOAD_FAIL;
+	}
+
+	if (b_val.data == NULL) {
+		x_printf(W, "ops->kv_get(KEY:%s, VAL: null). There isn't this key.", key);
+		*value = NULL;
+		*len = 0;
+		return KV_LOAD_NULL;
+	} else {
+		*value = b_val.data;
+		*len = b_val.len;
+		return KV_LOAD_SUCC;
+	}
 }
 
-char *__string_delete_by_substr(char *src, const char *substr)
+char *__string_delete_by_substr(char *src, const char *substr, const char *split)
 {
-	return_if_false(src && substr, (char *)-1);
+	return_if_false(src && substr, NULL);
 
+#if 0
 	/* Situation: src="master" substr="master" */
 	if (strlen(src) == strlen(substr)) {
-		return (strcmp(src, substr)) ? NULL : (src[0] = '\0', src);
+		return (strcmp(src, substr)) ? src : (src[0] = '\0', src);
 	}
+#endif
+	int     len = strlen(substr);
+	char    *pos = src;
+	do {
+		pos = strstr(pos, substr);
+		return_if_false(pos, src);
 
-	char *tmp_str = strdup(src);
-	return_if_false(tmp_str, (char *)-1);
-
-	char *pos = strstr(tmp_str, substr);
-	return_if_false(pos, NULL);
-
-	int offset = (pos - tmp_str);
-
-	if (offset == 0) {
-		/* Situation: src="master,node1,..." substr="master" */
-		strcpy(src, tmp_str + strlen(substr));
-	} else {
-		/* Situation: src="master,node1" substr="node1" */
-		if (*(pos + strlen(substr)) == '\0') {
-			src[offset] = '\0';
+		if (strcmp(pos + len, split) && (pos[len] != '\0')) {
+			pos += len;
 		} else {
-			/* Situation: src="master,node1,node2,..." substr="node1" */
-			size_t len = strlen(pos + strlen(substr)) + 1;	// +1 for '\0'
-			// snprintf(src+offset, len, "%s", pos+strlen(substr));
-			strncpy(src + offset, pos + strlen(substr), len);
+			strcpy(pos, pos + len);
 		}
-	}
-
-	x_printf(D, "Before [%s] After [%s].", tmp_str, src);
-	free(tmp_str);
-
-	return src;
+	} while (1);
 }
 
 char *__string_append_3rd(const char *prefix, const char *split, const char *first, const char *second, const char *third)
 {
-	return_if_false(split, (char *)-1);
+	return_if_false(split, NULL);
 
 	size_t total = 1;
 
@@ -1113,80 +1045,12 @@ char *__string_append_3rd(const char *prefix, const char *split, const char *fir
 	return merge;
 }
 
-char *__get_KV_dbname(uint64_t start, size_t offset)
+void __get_KV_dbname(char dest[XMQ_DBNAME_LEN], uint64_t start, size_t offset)
 {
-	char *des = (char *)calloc(1, 2 * XMQ_KEY_LEN);	// TODO:
+	char temp[2][XMQ_KEY_LEN];
 
-	return_if_false(des, NULL);
-
-	char s_start[2][XMQ_KEY_LEN];
-	__u64toa(start, s_start[0], sizeof(s_start[0]));
-	__u64toa(start + offset, s_start[1], sizeof(s_start[0]));
-	sprintf(des, "%s-%s", s_start[0], s_start[1]);
-
-	return des;
-}
-
-char *__u64toa(uint64_t u64, char *des, int len)
-{
-	return_if_false((des && len > 0), (char *)-1);
-
-	int i;
-
-	for (i = len - 2; i >= 0; i--) {
-		des[i] = 48 + (u64 % 10);
-		u64 /= 10;
-	}
-
-	des[len - 1] = '\0';
-
-	return des;
-}
-
-uint64_t __atou64(const char *str, size_t len)
-{
-	return_if_false((str && str[0] != '\0' && len > 0), (uint64_t)-1);
-
-	uint64_t        t = 1, des = 0;
-	const char      *p = str + len - 1;
-
-	for (; p >= str; p--) {
-		des += t * (*p - 48);
-		// printf("'%c' [%d] [%llu] des:%llu\n", *p, *p - 48, t*(*p-48), des);
-		t *= 10;
-	}
-
-	return des;
-}
-
-int __mkdir_if_doesnt_exist(const char *dirpath)
-{
-	return_if_false(dirpath, -1);
-
-	// Check whether exist.
-	if (access(dirpath, F_OK) == 0) {
-		struct stat st;
-
-		if (stat(dirpath, &st)) {
-			x_printf(E, "__mkdir_if_doesnt_exist: stat(%s) fai. Error-%s", dirpath, strerror(errno));
-			return -1;
-		}
-
-		if (S_ISDIR(st.st_mode)) {
-			x_printf(D, "Directory [%s] has already exist.", dirpath);
-			return 0;
-		}
-
-		x_printf(W, "Never should be here.");
-		return 0;
-	}
-
-	/* Create directoy. */
-	if (mkdir(dirpath, S_IRWXU)) {
-		x_printf(E, "mkdir(%s, S_IRWXU) fail. Error-%s", dirpath);
-		return -1;
-	}
-
-	return 0;
+	snprintf(temp[0], sizeof(temp[0]), "%020llu", start);
+	snprintf(temp[1], sizeof(temp[1]), "%020llu", start + offset);
+	snprintf(dest, XMQ_DBNAME_LEN, "%s-%s", temp[0], temp[1]);
 }
 

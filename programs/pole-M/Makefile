@@ -1,4 +1,3 @@
-
 SRV=pole-M
 MAIN_APP_SERV ?= $(SRV)
 
@@ -25,7 +24,7 @@ INC_PATH=\
 LIB_PATH=-L../../lib
 
 LIBS=-lpthread -lrt -lm -ldl -lluajit-5.1 -lstdc++
-LIBA=-lleveldb -ljson-c -lmini -levcoro -lxmq -lnetmod -lzmq -lsnappy
+LIBA=-lleveldb -ljson-c -lmini -levcoro -lxmq -lnetmod -lzmq -lsnappy -levcs
 
 #<------------------------>#
 HANDLE_MODEL = EVCORO
@@ -33,29 +32,17 @@ HANDLE_MODEL = EVCORO
 -include $(HOME_PATH)/share.mk
 #<------------------------>#
 
-# [args] Running mode, DEBUG: debug mode. RELEASE: release mode.
-ifeq ($(COMPILE), RELEASE)
-  CFLAGS += -O2 -DNDEBUG -Wall
-else
-  CFLAGS += -g -O0 -DDEBUG
-endif
-
-ifeq ($(TCLEVEL), THREAD)
-  DEP_OBJS= pipe.o porter.o switcher.o
-  CFLAGS += -DTC_THREAD
-else
-  DEP_OBJS= event_dispenser.o event_pipe.o event_handler.o
-  CFLAGS += -DTC_COROUTINE
-endif
 
 OBJS=$(addprefix $(BIN)/, \
-	$(DEP_OBJS) \
-	ldb_cb.o \
-	conf.o \
-	load_swift_cfg.o \
-	swift_cpp_api.o \
-	main.o \
-	)
+     pole_common.o \
+     evt_hander.o \
+     evt_worker.o \
+     storage_impl.o \
+     conf.o \
+     load_swift_cfg.o \
+     swift_cpp_api.o \
+     main.o \
+     )
 
 JOB ?= $(SRV)
 

@@ -33,12 +33,12 @@ int main(int argc, char *argv[])
 	info_t  *info;
 	double  money;
 	int     year;
-	event_t *ev, *ev_dump, ev_des;
+	evt_t *ev, *ev_dump, ev_des;
 
-	event_ctx_t *ectx = event_ctx_init(&error, SOCK_CLIENT, argv[2], argv[1]);
+	evt_ctx_t *ectx = evt_ctx_init(&error, SOCK_CLIENT, argv[2], argv[1]);
 
 	if (ectx == NULL) {
-		printf("Main: event_ctx_init() fail. Error - %s\n", event_error(error));
+		printf("Main: evt_ctx_init() fail. Error - %s\n", evt_error(error));
 		return -1;
 	}
 
@@ -51,18 +51,18 @@ int main(int argc, char *argv[])
 		ev_des.incr.rows = 1;
 		ev_des.ev_size = 0;
 
-		res = send_event(ectx, &ev_des);
+		res = send_evt(ectx, &ev_des);
 
 		if (res != 0) {
-			printf("Test[0]: send_event(task_id:%d) fail. %s\n", i, event_error(res));
+			printf("Test[0]: send_evt(task_id:%d) fail. %s\n", i, evt_error(res));
 		}
 
 RECV_AGAIN:
-		ev = recv_event(&error, ectx, 10);
+		ev = recv_evt(&error, ectx, 10);
 
 		if (!ev) {
 			if (error != 0) {
-				printf("recv_event: fail. Error - %s\n", event_error(error));
+				printf("recv_evt: fail. Error - %s\n", evt_error(error));
 			}
 
 			goto RECV_AGAIN;
@@ -72,23 +72,23 @@ RECV_AGAIN:
 		{
 			/* Test: Contain event-body type. */
 			case 0:	// char* type. SQL request.
-				printf("Test[0]: recv_event(char *): SQLText:[%s].\n", ev->ev_data);
+				printf("Test[0]: recv_evt(char *): SQLText:[%s].\n", ev->ev_data);
 				break;
 
 			case 1:	// structure type. info_t.
 				info = (info_t *)ev->ev_data;
-				printf("Test[0]: recv_event(struct): info_t: {Name:%s Sex:'%c' Age:%d Addr:%s Tel:%s Money:%lf}\n", \
+				printf("Test[0]: recv_evt(struct): info_t: {Name:%s Sex:'%c' Age:%d Addr:%s Tel:%s Money:%lf}\n", \
 					info->name, info->gender, info->age, info->addr, info->tel, info->money);
 				break;
 
 			case 2:	// double type.
 				money = *(double *)(ev->ev_data);
-				printf("Test[0]: recv_event(double): money:%lf\n", money);
+				printf("Test[0]: recv_evt(double): money:%lf\n", money);
 				break;
 
 			case 3:
 				year = *(int *)(ev->ev_data);
-				printf("Test[0]: recv_event(int): year:%d\n", year);
+				printf("Test[0]: recv_evt(int): year:%d\n", year);
 				break;
 
 			default:
@@ -97,14 +97,14 @@ RECV_AGAIN:
 				assert(ev_des.ev_state == ev->ev_state);
 				assert(ev_des.incr.task_seq == ev->incr.task_seq);
 				assert(ev_des.incr.rows == ev->incr.rows);
-				printf("Test[0]: recv_event(null-body): only the event-head.\n");
+				printf("Test[0]: recv_evt(null-body): only the event-head.\n");
 				break;
 		}
 
 		// if (i % 2 == 1) sleep(6);
 	}
 
-	event_ctx_destroy(ectx);
+	evt_ctx_destroy(ectx);
 
 	return 0;
 }
@@ -131,10 +131,10 @@ void test_exec_cmd()
 /*
  * Print Result:
  *
- * Test[0]: recv_event(char *): SQLText:[INSERT INTO tab VALUES ('sdfsdf', 23, 'sdfsdfsdf', 2012);].
- * Test[0]: recv_event(struct): info_t: {Name:Richard.Liu Sex:'M' Age:23 Addr:HongKong. Tel:021-2987653 Money:862400232342.979980}
- * Test[0]: recv_event(double): money:862400232342.979980
- * Test[0]: recv_event(int): year:2015
- * Test[0]: recv_event(null-body): only the event-head.
+ * Test[0]: recv_evt(char *): SQLText:[INSERT INTO tab VALUES ('sdfsdf', 23, 'sdfsdfsdf', 2012);].
+ * Test[0]: recv_evt(struct): info_t: {Name:Richard.Liu Sex:'M' Age:23 Addr:HongKong. Tel:021-2987653 Money:862400232342.979980}
+ * Test[0]: recv_evt(double): money:862400232342.979980
+ * Test[0]: recv_evt(int): year:2015
+ * Test[0]: recv_evt(null-body): only the event-head.
  */
 

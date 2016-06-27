@@ -23,7 +23,7 @@ int startup_businesses(const sync_conf_t *args)
 	int i;
 
 	/* g_busi_ary like this "xxx|  |xxx|  |xxx|  ".
-	 *   Because event_type contain { EV_XXX_REQ, EV_XXX_REP, ... }
+	 *   Because evt_type contain { EV_XXX_REQ, EV_XXX_REP, ... }
 	 *   BUSI_XXX(s) are only equals to EV_XXX_REP, except EV_DUMP_REQ (it's special).
 	 */
 	for (i = 0; i < BUSINESS_MAX_SIZE; i++) {

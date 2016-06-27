@@ -32,6 +32,8 @@ QITEM *qlist_pull(QLIST *list);
 
 void qlist_push(QLIST *list, QITEM *item);
 
+void qlist_free(QLIST *list);
+
 int qlist_view(QLIST *list);
 
 /* ----------------                 */

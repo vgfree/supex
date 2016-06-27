@@ -2,19 +2,19 @@
 #include <stdlib.h>
 
 /*CSV字符串域类型*/
-typedef struct csv_field_struct
+typedef struct csv_field
 {
 	char    *ptr;
 	size_t  len;
 } csv_field_t;
 
 /*CSV解析器类型*/
-typedef struct csv_parser_struct
+typedef struct csv_parse
 {
 	char            *string;
 	csv_field_t     *fields;// struct [] -> malloc()
 	size_t          count;
-} csv_parser_t;
+} csv_parse_t;
 
 #define csv_string(c)           ((c)->string)
 #define csv_field_num(c)        ((c)->count)
@@ -28,21 +28,21 @@ typedef struct csv_parser_struct
  * */
 extern char *xmq_csv_field_to_string(csv_field_t *field);
 
-/*xmq_csv_parser_init - 初始化解析器
+/*xmq_csv_parse_init - 初始化解析器
  * @csv:            需要初始化的解析器指针
  * return:          成功返回0，失败返回-1
  * */
-extern int xmq_csv_parser_init(csv_parser_t *csv);
+extern int xmq_csv_parse_init(csv_parse_t *csv);
 
 /*xmq_csv_parse_string - 解析csv 字符串
  * @csv:             解析器指针
  * @str:             需要解析的csv字符串
  * return:           csv字符串字段个数，失败返回-1
  * */
-extern int xmq_csv_parse_string(csv_parser_t *csv, const char *str);
+extern int xmq_csv_parse_string(csv_parse_t *csv, const char *str);
 
-/*xmq_csv_parser_destroy - 释放解析器
+/*xmq_csv_parse_destroy - 释放解析器
  * @csv:               需要释放的解析器指针
  * return:             无*/
-extern void xmq_csv_parser_destroy(csv_parser_t *csv);
+extern void xmq_csv_parse_destroy(csv_parse_t *csv);
 

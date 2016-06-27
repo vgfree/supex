@@ -3,9 +3,9 @@
 #include <string.h>
 
 #include "xmq_csv.h"
-#include "slog/slog.h"
+#include "base/utils.h"
 
-static int csv_parse(csv_parser_t *csv);
+static int csv_parse(csv_parse_t *csv);
 
 static size_t number_of_fields(const char *str, const char c);
 
@@ -43,7 +43,7 @@ extern char *xmq_csv_field_to_string(csv_field_t *field)
 static size_t number_of_fields(const char *str, char split)
 {
 	const char      *pos = str;
-	size_t          count = 0, index = strlen(str) - 1;
+	size_t          count = 0;
 
 	/* reject the type: ",one,two,three"*/
 	if (*pos == split) {
@@ -69,7 +69,7 @@ static size_t number_of_fields(const char *str, char split)
  * @csv:      解析器指针，内部封装要解析的字符串
  * return:    csv字符串字段个数
  * */
-static int csv_parse(csv_parser_t *csv)
+static int csv_parse(csv_parse_t *csv)
 {
 	csv_field_t *fields = NULL;
 
@@ -81,31 +81,22 @@ static int csv_parse(csv_parser_t *csv)
 			return 0;
 		}
 	} else {
-		return xmq_csv_parser_init(csv);
+		return xmq_csv_parse_init(csv);
 	}
 
-	size_t  count = 0, len, vl;
+	size_t  count = 0;
 	char    *pos = csv->string;
-	/* such as: ,xx,xx, ignore the last ','. */
-	len = strlen(pos);
-	vl = (*(pos + (len - 1)) == ',') ? len - 1 : len;
+	size_t  len = strlen(pos);
 
-	if (*pos == ',') {
-		pos++;
-	}
-
-	for (; *pos != '\0'; pos++) {
+	while (*pos != '\0') {
 		if (*pos != ',') {
 			fields[count].ptr = pos;
 			pos = strchr(pos, ',');
-			pos = (pos) ? pos : (csv->string + vl);
+			pos = (pos) ? pos : (csv->string + len);
 			fields[count].len = pos - fields[count].ptr;
 			count++;
-
-			/* Situation: csv->string = "A", only one character. */
-			if (*pos == '\0') {
-				break;
-			}
+		} else {
+			pos++;
 		}
 	}
 
@@ -115,11 +106,11 @@ static int csv_parse(csv_parser_t *csv)
 	return count;
 }
 
-/*xmq_csv_parser_init - 初始化解析器
+/*xmq_csv_parse_init - 初始化解析器
  * @csv:            需要初始化的解析器指针
  * return:          成功返回0，失败返回-1
  * */
-extern int xmq_csv_parser_init(csv_parser_t *csv)
+extern int xmq_csv_parse_init(csv_parse_t *csv)
 {
 	if (csv) {
 		csv->string = NULL;
@@ -137,7 +128,7 @@ extern int xmq_csv_parser_init(csv_parser_t *csv)
  * @str:             需要解析的csv字符串
  * return:           csv字符串字段个数，失败返回-1
  * */
-extern int xmq_csv_parse_string(csv_parser_t *csv, const char *str)
+extern int xmq_csv_parse_string(csv_parse_t *csv, const char *str)
 {
 	if (csv) {
 		csv->string = strdup(str);
@@ -150,10 +141,10 @@ extern int xmq_csv_parse_string(csv_parser_t *csv, const char *str)
 	return -1;
 }
 
-/*xmq_csv_parser_destroy - 释放解析器
+/*xmq_csv_parse_destroy - 释放解析器
  * @csv:               需要释放的解析器指针
  * return:             无*/
-extern void xmq_csv_parser_destroy(csv_parser_t *csv)
+extern void xmq_csv_parse_destroy(csv_parse_t *csv)
 {
 	if (csv) {
 		freeif(csv->string);

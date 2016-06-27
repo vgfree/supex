@@ -1,17 +1,13 @@
-
-# [args] Running mode, DEBUG: debug mode. RELEASE: release mode.
-ifeq ($(COMPILE), RELEASE)
-  CFLAGS=-O2 -DNDEBUG -Wall
-else
-  CFLAGS=-g -O0 -DDEBUG 
-endif
-
 SRV=libnetmod.a
 
 BIN=./bin
 INC=./include
 BASE_SRC=./src
-BASE_INC=-I$(INC) -I../libmini/include -I../zeromq-4.1.4/include/ -I../../engine/
+BASE_INC=-I$(INC) -I../libmini/include \
+	-I../zeromq-4.1.4/include/ \
+	-I../libevcs/include/engine \
+	-I/usr/local/include/luajit-2.0 \
+	-I/usr/local/include/
 
 LIB_INC=-L. -L../
 LIBS=-lpthread -lrt -lstdc++

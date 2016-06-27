@@ -22,10 +22,10 @@ all:$(OBJ)
 	-@echo "Done LIB!"
 
 libxmq.a:
-	$(MAKE) -C $(LIB_DIR)/libxmq COMPILE=RELEASE
+	$(MAKE) -C $(LIB_DIR)/libxmq
 	mv $(LIB_DIR)/libxmq/$@ $(LIB_DIR)
 libnetmod.a:
-	$(MAKE) -C $(LIB_DIR)/libnetmod COMPILE=RELEASE
+	$(MAKE) -C $(LIB_DIR)/libnetmod
 	mv $(LIB_DIR)/libnetmod/$@ $(LIB_DIR)
 
 libzmq.a:

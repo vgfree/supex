@@ -38,17 +38,17 @@ typedef struct
 
 enum dt_type { EV_STR, EV_STRUCT, EV_DOUBLE, EV_INT };
 
-static event_t *assemble_event(int type, const event_t *ev);
+static evt_t *assemble_event(int type, const evt_t *ev);
 
 static void *thrd_work(void *arg);
 
 int main(int argc, char *argv[])
 {
 	int             error = 0;
-	event_ctx_t     *ectx = event_ctx_init(&error, SOCK_SERVER, "tcp://*:8686", "");
+	evt_ctx_t       *ectx = evt_ctx_init(&error, SOCK_SERVER, "tcp://*:8686", "");
 
 	if (!ectx) {
-		printf("%s\n", event_error(error));
+		printf("%s\n", evt_error(error));
 		return -1;
 	}
 
@@ -61,7 +61,7 @@ int main(int argc, char *argv[])
 
 	pthread_join(thrd, NULL);
 
-	event_ctx_destroy(ectx);
+	evt_ctx_destroy(ectx);
 
 	return 0;
 }
@@ -70,17 +70,17 @@ void *thrd_work(void *arg)
 {
 	assert(arg != NULL);
 
-	event_ctx_t *ectx = arg;
+	evt_ctx_t *ectx = arg;
 
 	int     res, len, error = 0;
-	event_t *ev, *ev_des;
+	evt_t *ev, *ev_des;
 
 	while (1) {
-		ev = recv_event(&error, ectx, 20);
+		ev = recv_evt(&error, ectx, 20);
 
 		if (!ev) {
 			if (error != 0) {
-				printf("recv_event: fail. Error - %s\n", event_error(error));
+				printf("recv_evt: fail. Error - %s\n", evt_error(error));
 			}
 
 			continue;
@@ -113,8 +113,8 @@ void *thrd_work(void *arg)
 						break;
 
 					default:
-						ev_des = (event_t *)_alloc(sizeof(event_t));
-						memcpy(ev_des, ev, sizeof(event_t));
+						ev_des = (evt_t *)_alloc(sizeof(evt_t));
+						memcpy(ev_des, ev, sizeof(evt_t));
 						break;
 				}
 				break;
@@ -122,19 +122,19 @@ void *thrd_work(void *arg)
 			default:
 				break;
 		}
-		res = send_event(ectx, ev_des);
+		res = send_evt(ectx, ev_des);
 
 		if (res != 0) {
-			printf("%s\n", event_error(res));
+			printf("%s\n", evt_error(res));
 		}
 
 		_free(ev_des);
 	}	/* end while. */
 }
 
-event_t *assemble_event(int type, const event_t *ev)
+evt_t *assemble_event(int type, const evt_t *ev)
 {
-	event_t *ev_des;
+	evt_t *ev_des;
 
 	int     len, year = 2015;
 	double  money = 862400232342.98L;
@@ -144,25 +144,25 @@ event_t *assemble_event(int type, const event_t *ev)
 	{
 		case EV_STR:
 			len = strlen(sqltext[0]) + 1;
-			ev_des = (event_t *)_alloc(sizeof(event_t) + len);
+			ev_des = (evt_t *)_alloc(sizeof(evt_t) + len);
 			memcpy(ev_des->ev_data, sqltext[0], len);
 			break;
 
 		case EV_STRUCT:
 			len = sizeof(info_t);
-			ev_des = (event_t *)_alloc(sizeof(event_t) + len);
+			ev_des = (evt_t *)_alloc(sizeof(evt_t) + len);
 			memcpy(ev_des->ev_data, &info, len);
 			break;
 
 		case EV_DOUBLE:
 			len = sizeof(double);
-			ev_des = (event_t *)_alloc(sizeof(event_t) + len);
+			ev_des = (evt_t *)_alloc(sizeof(evt_t) + len);
 			memcpy(ev_des->ev_data, &money, len);
 			break;
 
 		case EV_INT:
 			len = sizeof(int);
-			ev_des = (event_t *)_alloc(sizeof(event_t) + len);
+			ev_des = (evt_t *)_alloc(sizeof(evt_t) + len);
 			memcpy(ev_des->ev_data, &year, len);
 			break;
 

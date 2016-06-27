@@ -1,20 +1,19 @@
 #include <assert.h>
 #include <zmq.h>
 
-#include "porter.h"
-#include "switcher.h"
+#include "evt_worker.h"
+#include "evt_hander.h"
 
-#include "event_dispenser.h"
-#include "event_handler.h"
-
-#include "ldb_cb.h"
+#include "storage_impl.h"
 #include "libmini.h"
 #include "conf.h"
 
+#include "base/hashmap.h"
 #include "xmq.h"
 #include "netmod.h"
+#include "libmini.h"
 
-// #include "supex.h"
+#include "pole_common.h"
 #include "major/swift_api.h"
 #include "load_swift_cfg.h"
 #include "swift_cpp_api.h"
@@ -24,20 +23,22 @@
 struct swift_cfg_list   g_swift_cfg_list = {};
 struct pole_conf        g_pole_conf = {};
 
-// g_xmq_producer: Just for swift module.
-xmq_producer_t *g_xmq_producer = NULL;
-
-// g_iProType: The input data protocol.
-enum pole_protype g_iProType = -1;
+// g_xmq_p1: Just for swift module.
+xmq_producer_t *g_xmq_p1 = NULL;
 
 // ---------------Global Area End-----------------//
 
-void *data_write_swift()
+void *data_write_swift(void *args)
 {
-	// g_iProType was initialized by load_cfg_file.
-	switch (g_iProType & 0xFFFFF0)
+	xmq_ctx_t *x_ctx = (xmq_ctx_t *)args;
+	
+	xmq_register_producer(x_ctx, "P1");
+	g_xmq_p1 = xmq_get_producer(x_ctx, "P1");
+	assert(g_xmq_p1 != NULL);
+
+	switch (g_swift_cfg_list.file_info.ptype)
 	{
-		case POLE_PROTYPE_HTTP:	// HTTP Protocal.
+		case USE_HTTP_PROTO:
 		{
 			g_swift_cfg_list.func_info[APPLY_FUNC_ORDER].type = BIT8_TASK_TYPE_ALONE;
 			g_swift_cfg_list.func_info[APPLY_FUNC_ORDER].func = (TASK_VMS_FCB)swift_vms_call;
@@ -45,7 +46,7 @@ void *data_write_swift()
 			break;
 		}
 
-		case POLE_PROTYPE_REDIS:// REDIS Protocal.
+		case USE_REDIS_PROTO:
 		{
 			g_swift_cfg_list.func_info[LPUSHX_FUNC_ORDER].type = BIT8_TASK_TYPE_ALONE;
 			g_swift_cfg_list.func_info[LPUSHX_FUNC_ORDER].func = (TASK_VMS_FCB)swift_vms_call;
@@ -55,16 +56,17 @@ void *data_write_swift()
 			break;
 		}
 
-		case POLE_PROTYPE_MTTP:	// MTTP Protocal.
+		case USE_MTTP_PROTO:	// fixme
 		{
 			g_swift_cfg_list.func_info[APPLY_FUNC_ORDER].type = BIT8_TASK_TYPE_ALONE;
 			g_swift_cfg_list.func_info[APPLY_FUNC_ORDER].func = (TASK_VMS_FCB)swift_vms_call;
 
 			break;
 		}
-
-		case POLE_PROTYPE_MFPTP:// MFPTP Protocal - doesn't implement yet!
+#if 0
+		case USE_MFPTP_PROTO:	// MFPTP Protocal - doesn't implement yet!
 			break;
+#endif
 	}
 
 	swift_mount(&g_swift_cfg_list);
@@ -92,6 +94,7 @@ void *data_write_zmq(void *args)
 	while (1) {
 		zmq_msg_t z_msg;
 
+		/*recv*/
 		res = zmq_msg_init(&z_msg);
 
 		if (res != 0) {
@@ -106,6 +109,7 @@ void *data_write_zmq(void *args)
 			break;
 		}
 
+		/*work*/
 		xmq_msg_t *x_msg = xmq_msg_new_data(zmq_msg_data(&z_msg), zmq_msg_size(&z_msg));
 		zmq_msg_close(&z_msg);
 
@@ -115,13 +119,14 @@ void *data_write_zmq(void *args)
 		}
 
 		res = xmq_push_tail(producer, x_msg);
-		xmq_msg_destroy(x_msg);
 
 		if (res != 0) {
 			x_printf(E, "xmq_push_tail: fail. Error-%s.", strerror(errno));
-			break;
 		}
 
+		xmq_msg_destroy(x_msg);
+
+		/*send*/
 		res = zmq_msg_init_data(&z_msg, (void *)resp, strlen(resp) + 1, NULL, NULL);
 
 		if (res != 0) {
@@ -130,7 +135,6 @@ void *data_write_zmq(void *args)
 		}
 
 		res = zmq_msg_send(&z_msg, z_skt, 0);
-
 		zmq_msg_close(&z_msg);
 
 		if (res != 3) {
@@ -147,51 +151,19 @@ void *data_write_zmq(void *args)
 	return NULL;
 }
 
-int data_write_start(xmq_ctx_t *ctx)
+static int input_start(xmq_ctx_t *ctx)
 {
 	pthread_t thrd_swift, thrd_zmq;
 
-	int res = pthread_create(&thrd_swift, NULL, data_write_swift, NULL);
-
-	usleep(10000);
+	int res = pthread_create(&thrd_swift, NULL, data_write_swift, ctx);
 	assert(res == 0);
 	x_printf(I, "Thread->For Swift Protocol startup succeed. ID:%ld", thrd_swift);
 
-	if (g_iProType & 0x01) {
-		res = pthread_create(&thrd_zmq, NULL, data_write_zmq, ctx);
-		usleep(10);
-		assert(res == 0);
-		x_printf(I, "Thread->For ZeroMQ Protocol startup succeed. ID:%ld", thrd_zmq);
-	}
+
+	res = pthread_create(&thrd_zmq, NULL, data_write_zmq, ctx);
+	assert(res == 0);
+	x_printf(I, "Thread->For ZeroMQ Protocol startup succeed. ID:%ld", thrd_zmq);
 }
-
-#ifdef TC_THREAD
-int __load_porters(event_ctx_t *ev_ctx, xmq_ctx_t *xmq_ctx)
-{
-	xlist_t *iter;
-
-	list_foreach(iter, &xmq_ctx->list_consumers)
-	{
-		xmq_consumer_t *consumer = (xmq_consumer_t *)container_of(iter, xmq_consumer_t, node);
-
-		if (consumer) {
-			porter_info_t *porter = porter_create(consumer->identity, consumer, ev_ctx, consumer->last_fetch_seq);
-
-			if (porter) {
-				pthread_mutex_lock(&porters_list_lock);
-				list_add_tail(&porter->list, &porters_list_head);
-				pthread_mutex_unlock(&porters_list_lock);
-
-				if (porter_work_start(porter)) {
-					x_printf(S, "Thread of work porter start fail. Consumer ID:[%s]", consumer->identity);
-					return -1;
-				}
-			}
-		}
-	}
-	return 0;
-}
-#endif	/* ifdef TC_THREAD */
 
 int main(int argc, char **argv)
 {
@@ -203,42 +175,56 @@ int main(int argc, char **argv)
 	// Loading Pole-M's configuration.
 	config_init(&g_pole_conf, g_swift_cfg_list.argv_info.conf_name);
 
-	// INIT XMQ's context.
-	xmq_ctx_t *xmq_ctx = xmq_context_init("./data", g_pole_conf.max_records, ldb_pvt_create, driver_ldb_put, driver_ldb_get, ldb_pvt_destroy);
+	// Init logs
+	char path[MAX_PATH_SIZE] = {};
+	snprintf(path, sizeof(path), "%s/%s.log", g_swift_cfg_list.file_info.log_path, g_swift_cfg_list.file_info.log_file);
+	SLogOpen(path, SLogIntegerToLevel(g_swift_cfg_list.file_info.log_level));
+
+	// Init XMQ's context.
+	xmq_ctx_t *xmq_ctx = xmq_context_init(POLE_DATA_PATH, g_pole_conf.max_records,
+			ldb_pvt_create, driver_ldb_put, driver_ldb_get, ldb_pvt_destroy);
 	assert(xmq_ctx != NULL);
 
-	xmq_register_producer(xmq_ctx, "P1");
-	g_xmq_producer = xmq_get_producer(xmq_ctx, "P1");
-
-	// INIT NETMOD's context.
-	int             error = 0;
-	event_ctx_t     *ev_ctx = event_ctx_init(&error, SOCK_SERVER, g_pole_conf.bind_uri, NULL);
-	assert(ev_ctx);
+	// Init NETMOD's context.
+	evt_ctx_t *evt_ctx = evt_ctx_init(SOCK_SERVER, g_pole_conf.bind_uri, NULL);
+	assert(evt_ctx);
+	// Startup the thread of Network Center to Recv & Send data.
+	pthread_t       thrd;
+	pthread_attr_t  attr;
+	pthread_attr_init(&attr);
+	pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
+	int ok = pthread_create(&thrd, &attr, work_evt, evt_ctx);
+	assert(ok == 0);
 
 	// Startup the input data thread.
-	data_write_start(xmq_ctx);
+	input_start(xmq_ctx);
 
-#ifdef TC_THREAD
-	x_printf(I, "MAIN: Current is thread version!");
-	// Loading worker porters
-	porters_list_init();
-	int res = __load_porters(ev_ctx, xmq_ctx);
-	assert(res == 0);
+	// 用于保存(KEY: consumer VALUE: 存储的每个consumer对象的指针
+	hashmap_t *g_hash_table = hashmap_open();
+	if (!g_hash_table) {
+		x_printf(E, "Create Thread Hash fail!");
+		return -1;
+	}
 
-	switcher_work(ev_ctx, xmq_ctx);
+	// Startup the output data thread.(内含协程处理)
+	int i;
+	int all = g_pole_conf.event_worker_counts;
+	tlpool_t *tlpool = tlpool_init(all, 10000, sizeof(struct online_task), NULL);
+	for (i = 0; i < all; i++) {
+		tlpool_bind(tlpool, (void (*)(void *))event_handler_startup, tlpool, i);
+	}
+	tlpool_boot(tlpool);
 
-	// Threads were suspend, and waitting for exit.
-	switcher_join_all_porter();
-#elif defined(TC_COROUTINE)
-	x_printf(I, "MAIN: Current is coroutine version!");
-	int res = event_handler_startup(ev_ctx, xmq_ctx, g_pole_conf.thread_number);
-	assert(res == 0);
+	// Startup the dispatch thread.
+	/* 第一次连上来的一定是主节点. */
+	x_printf(W, "First request client must be 'master'. " \
+			"Checking the pole-S_conf.json file's SLAVE_UNIQUE_ID");
+	event_dispenser_startup(xmq_ctx, evt_ctx, tlpool, g_hash_table, all);
 
-	res = event_dispenser_startup(ev_ctx, g_pole_conf.thread_number);
-	assert(res == 0);
-#endif
-	event_ctx_destroy(ev_ctx);
 
+	hashmap_close(g_hash_table);
+	pthread_kill(thrd, SIGQUIT);
+	evt_ctx_destroy(evt_ctx);
 	xmq_unregister_producer(xmq_ctx, "P1");
 	xmq_context_destroy(xmq_ctx);
 

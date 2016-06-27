@@ -18,7 +18,7 @@ LIGHT_WHITE     = "\x1B[1;37m"
 ######################################
 ######################################
 
-export OBJECT_SCENE ?= ONLINE
+#export OBJECT_SCENE ?= ONLINE
 
 export HOME_PATH = $(shell pwd)
 EXPORT_CFLAGS = -g
@@ -36,6 +36,7 @@ EXPORT_CFLAGS += -Wall \
 	-D_GNU_SOURCE \
 	-DOPEN_POLLING \
 	#-DDEBUG \
+	#-DNDEBUG \
 	#-DSECTION_SEND \
 	#-DOPEN_HASH \
 	#-DOPEN_EQUAL \
@@ -201,17 +202,11 @@ dtsync:
 	$(MAKE) -C ./programs/dtsync MAIN_APP_SERV=dtsync
 	@echo -e $(GREEN)"【"$(YELLOW) $@ $(GREEN)"】"$(RED)"\n-->OK!\n"$(NONE)
 
-# pole-M's compiler options.
-#
-# COMPILE: if not set with RELEASE, then it is DEBUG module.
-# TCLEVEL: THREAD or COROUTINE,
-#    If there isn't any clients, you can select THREAD,
-#    other situation, you may select COROUTINE.
 pole-M:
-	$(MAKE) -C ./programs/pole-M MAIN_APP_SERV=pole-M COMPILE=RELEAS TCLEVEL=COROUTINE
+	$(MAKE) -C ./programs/pole-M MAIN_APP_SERV=pole-M
 	@echo -e $(GREEN)"【"$(YELLOW) $@ $(GREEN)"】"$(RED)"\n-->OK!\n"$(NONE)
 pole-S:
-	$(MAKE) -C ./programs/pole-S MAIN_APP_SERV=pole-S COMPILE=RELEAS
+	$(MAKE) -C ./programs/pole-S MAIN_APP_SERV=pole-S
 	@echo -e $(GREEN)"【"$(YELLOW) $@ $(GREEN)"】"$(RED)"\n-->OK!\n"$(NONE)
 
 tagpick:

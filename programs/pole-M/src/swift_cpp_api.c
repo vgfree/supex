@@ -8,8 +8,8 @@
 #include "xmq.h"
 #include "xmq_msg.h"
 
-extern enum pole_protype        g_iProType;
-extern xmq_producer_t           *g_xmq_producer;
+extern xmq_producer_t *g_xmq_p1;
+extern struct swift_cfg_list   g_swift_cfg_list;
 
 int swift_vms_call(void *user, union virtual_system **VMS, struct adopt_task_node *task)
 {
@@ -17,18 +17,18 @@ int swift_vms_call(void *user, union virtual_system **VMS, struct adopt_task_nod
 	char                    *p_buf = cache_data_address(&p_node->mdl_recv.cache);
 	xmq_msg_t               *x_msg = NULL;
 
-	switch (g_iProType & 0xFFFFF0)
+	switch (g_swift_cfg_list.file_info.ptype)
 	{
-		case POLE_PROTYPE_HTTP:	// HTTP Protocal.
+		case USE_HTTP_PROTO:
 		{
 			struct http_status *p_hst = &(p_node->mdl_recv.parse.http_info.hs);
 			x_msg = xmq_msg_new_data((p_buf + p_hst->body_offset), p_hst->body_size);
 			break;
 		}
 
-		case POLE_PROTYPE_REDIS:// REDIS Protocal.
+		case USE_REDIS_PROTO:
 		{
-			struct redis_status *p_rst = &p_node->mdl_recv.parse.redis_info.rs;
+			struct redis_status *p_rst = &(p_node->mdl_recv.parse.redis_info.rs);
 			x_msg = xmq_msg_new_data((p_buf + p_rst->field[1].offset), (int)p_rst->field[1].len);
 
 			const char sndcnt[] = ":1\r\n";
@@ -36,7 +36,7 @@ int swift_vms_call(void *user, union virtual_system **VMS, struct adopt_task_nod
 			break;
 		}
 
-		case POLE_PROTYPE_MTTP:	// MTTP Protocal.
+		case USE_MTTP_PROTO:	// fixme
 		{
 #ifdef _mttptest
 			struct mttp_status *p_hst = &(p_node->mttp_info.mt);
@@ -46,15 +46,15 @@ int swift_vms_call(void *user, union virtual_system **VMS, struct adopt_task_nod
 #endif
 			break;
 		}
-
-		case POLE_PROTYPE_MFPTP:// MFPTP Protocal - doesn't implement yet!
+#if 0
+		case USE_MFPTP_PROTO:	// MFPTP Protocal - doesn't implement yet!
 		{
 			//	struct http_status *p_hst = &(p_node->http_info.hs);
 			//	x_msg = xmq_msg_new_data((p_buf + p_hst->body_offset), p_hst->body_size);
 			x_printf(W, "MFPTP Protocal doesn't implement yet!");
 			break;
 		}
-
+#endif
 		default:
 		{
 			x_printf(W, "swift_vms_call: Invalid translate protocal.");
@@ -65,14 +65,14 @@ int swift_vms_call(void *user, union virtual_system **VMS, struct adopt_task_nod
 	// printf("Thread:%ld p_node:%p size:%d data:%s \n p_buf:%s \n=================\n",\
 	//      //	(long)pthread_self(), p_node, (int)x_msg->len, x_msg->data, p_buf);
 
-	int res = xmq_push_tail(g_xmq_producer, x_msg);
-	xmq_msg_destroy(x_msg);
+	int res = xmq_push_tail(g_xmq_p1, x_msg);
 
 	if (res != 0) {
 		x_printf(W, "swift_vms_call: xmq_push_tail(%s) %d bytes fail.", x_msg->data, (int)x_msg->len);
-		return -1;
 	}
 
-	return 0;
+	xmq_msg_destroy(x_msg);
+
+	return res;
 }
 
