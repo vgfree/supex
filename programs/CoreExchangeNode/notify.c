@@ -59,7 +59,7 @@ void message_gateway_event_notify(struct comm_context *commctx,
 			node.status = 1;
 			list_push_back(MESSAGE_GATEWAY, &node);
 		}
-		 break;
+		break;
 
 		case FD_CLOSE:	// closed.
 		{
@@ -113,7 +113,7 @@ void setting_server_event_notify(struct comm_context *commctx,
 			node.status = 1;
 			list_push_back(SETTING_SERVER, &node);
 		}
-		 break;
+		break;
 
 		case FD_CLOSE:	// closed.
 		{
@@ -168,7 +168,7 @@ void login_server_event_notify(struct comm_context *commctx,
 			node.status = 1;
 			list_push_back(LOGIN_SERVER, &node);
 		}
-		 break;
+		break;
 
 		case FD_CLOSE:	// closed.
 		{

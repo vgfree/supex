@@ -79,7 +79,6 @@ static int __write_back_append(xmq_ctx_t *ctx, const char *key, const char *appe
 /* Delete string 'delete' and rewrite to database. */
 static int __write_back_delete(xmq_ctx_t *ctx, const char *key, const char *delete, const char *split);
 
-
 /* The base function to operator the K/V database. */
 static int __load_int(xmq_ops_t *ops, void *kv_ctx, const char *key, int *value);
 
@@ -364,6 +363,7 @@ int xmq_push_tail(xmq_producer_t *producer, const xmq_msg_t *msg)
 	pthread_mutex_lock(&ctx->lock_write);
 
 	uint64_t seq = ctx->last_write_db_seq;
+
 	/* 1. Checking: uint64_t is full with sequence = XMQ_U64_MAX */
 	if (seq == XMQ_U64_MAX) {
 		pthread_mutex_unlock(&ctx->lock_write);
@@ -400,7 +400,6 @@ int xmq_push_tail(xmq_producer_t *producer, const xmq_msg_t *msg)
 
 	ctx->last_write_db_seq++;
 
-
 	pthread_mutex_unlock(&ctx->lock_write);
 
 	return 0;
@@ -409,15 +408,16 @@ int xmq_push_tail(xmq_producer_t *producer, const xmq_msg_t *msg)
 xmq_msg_t *xmq_pull_that(xmq_consumer_t *consumer, uint64_t seq)
 {
 	assert(consumer);
-	
+
 	/* 1. Checking: uint64_t is full with sequence = XMQ_U64_MAX */
 	if (seq == XMQ_U64_MAX) {
 		x_printf(S, "Sequence of you request is 18446744073709551615 or (uint64_t)-1, we'll stop fetch next message.");
 		return NULL;
 	}
 
-	xmq_ctx_t *ctx = consumer->xmq_ctx;
-	xmq_db_t *db = __get_db_handler(ctx, seq);
+	xmq_ctx_t       *ctx = consumer->xmq_ctx;
+	xmq_db_t        *db = __get_db_handler(ctx, seq);
+
 	if (db == NULL) {
 		x_printf(W, "__get_db_handler(fetchpos:%llu) fail, database doesn't exist.", seq);
 		return NULL;
@@ -431,10 +431,11 @@ xmq_msg_t *xmq_pull_that(xmq_consumer_t *consumer, uint64_t seq)
 
 	int res = __load_string_bin(&ctx->kv_ops, db->db_handler, key, &value, &len);
 	assert(res != KV_LOAD_FAIL);
+
 	if (res == KV_LOAD_NULL) {
 		return NULL;
 	}
-	
+
 	return (xmq_msg_t *)value;
 }
 
@@ -771,7 +772,7 @@ int __load_string_list(xmq_ctx_t *ctx, const char *key, xlist_t *head, enum xmq_
 	{
 		case XMQ_TYPE_DATABASE:
 			/* e.g. key = 2847202334 */
-			{
+		{
 			uint64_t last_write_pos = strtoull(key, NULL, 10);
 
 			size_t  dbs = GET_NEED_COUNT(last_write_pos, ctx->kv_max_records);
@@ -790,12 +791,12 @@ int __load_string_list(xmq_ctx_t *ctx, const char *key, xlist_t *head, enum xmq_
 
 			value[len - 2] = '\0';
 			x_printf(D, "All the databases is:\n\t%s\n", value);
-			}
-			break;
+		}
+		break;
 
 		default:
 			// Others, such as: XMQ_TYPE_PRODUCER|XMQ_TYPE_CONSUMER
-			{
+		{
 			size_t  len;
 			int     res = __load_string_bin(&ctx->kv_ops, ctx->g_state_ctx, key, (void **)&value, &len);
 			return_if_false((res != KV_LOAD_FAIL), -1);
@@ -804,8 +805,8 @@ int __load_string_list(xmq_ctx_t *ctx, const char *key, xlist_t *head, enum xmq_
 				x_printf(I, "__load_string_string: (Key:%s Val:(char *)1). The Key doesn't exist.", key);
 				return 0;
 			}
-			}
-			break;
+		}
+		break;
 	}
 
 	x_printf(D, "__load_string_string: KEY:<%s> VALUE:<%s>", key, value);

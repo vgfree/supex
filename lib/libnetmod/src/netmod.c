@@ -186,12 +186,14 @@ void free_evt(evt_t *evt)
 
 evt_t *recv_evt(evt_ctx_t *evt_ctx)
 {
-	evt_t *evt = NULL;
-	QITEM *item = qlist_pull(&evt_ctx->qrecv);
+	evt_t   *evt = NULL;
+	QITEM   *item = qlist_pull(&evt_ctx->qrecv);
+
 	if (item) {
 		evt = item->data;
 		qitem_free(item);
 	}
+
 	return evt;
 }
 
@@ -212,7 +214,7 @@ void *work_evt(evt_ctx_t *evt_ctx)
 {
 	int     ok = 0;
 	char    id[IDENTITY_SIZE];
-	evt_t ev_head, *evt;
+	evt_t   ev_head, *evt;
 	char    *ev_body;
 	int     len, res = 0;
 

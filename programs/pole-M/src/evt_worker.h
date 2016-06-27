@@ -34,44 +34,41 @@
 #include "netmod.h"
 #include "xmq.h"
 
-
 typedef struct client_info client_info_t;
 
-struct online_task {
+struct online_task
+{
 	client_info_t *addr;
 };
-
-
 
 /* 保存客户端操作对象及状态信息*/
 struct client_info
 {
 	evt_ctx_t               *evt_ctx;	// 事件上下文指针,全局共享的,用于接收和发送客户端信息;
 	xmq_ctx_t               *xmq_ctx;	// XMQ 队列上下文对象,用于线程内部创建消费者对象;
-	hashmap_t		*hmap;
+	hashmap_t               *hmap;
 
 	/* 状态信息 */
-	char            id[IDENTITY_SIZE];	// 客户端标识
+	char                    id[IDENTITY_SIZE];	// 客户端标识
 
-	enum {
+	enum
+	{
 		EVT_STATE_INCR = 0,
 		EVT_STATE_WAIT,
 		EVT_STATE_DUMP,
 		EVT_STATE_EXIT,
 		EVT_STATE_RUIN,
-	}				state;
-	size_t			waits;
+	}                       state;
+	size_t                  waits;
 
 	/* 只有当所有的DUMP请求,处理完成后,才可以继续执行增量同步; */
-	struct queue_list   qdump;	// 临时存储待DUMP的事件对象;
-	struct queue_list   qevts;	// 临时存储待REP的事件对象;
-	struct queue_list   qincr;	// 临时存储待REQ的事件对象;
+	struct queue_list       qdump;	// 临时存储待DUMP的事件对象;
+	struct queue_list       qevts;	// 临时存储待REP的事件对象;
+	struct queue_list       qincr;	// 临时存储待REQ的事件对象;
 
 	/* 操作队列 */
-	xmq_consumer_t  *consumer;	// 每个客户节点对应一个消费者,用于同步队列的数据;
+	xmq_consumer_t          *consumer;	// 每个客户节点对应一个消费者,用于同步队列的数据;
 };
-
-
 
 /* 客户端信息相关操作 */
 /* ============================================================= */
@@ -85,7 +82,5 @@ int client_info_destroy(client_info_t *clinfo);
 /* ============================================================= */
 /* 启动事件处理机 */
 void event_handler_startup(void *data);
-
-
 #endif	/* ifndef _EVENT_HANDLER_H_ */
 

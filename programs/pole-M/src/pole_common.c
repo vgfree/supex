@@ -17,3 +17,4 @@ int custom_hash(const char *key, int num, int fix)
 
 	return hash % num + fix;
 }
+

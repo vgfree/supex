@@ -201,111 +201,121 @@ char *copy_query_string_value(qs_buf_t *buf, size_t buf_size, const char *key, s
 
 int alive_vms_call(void *user, union virtual_system **VMS, struct adopt_task_node *task)
 {
-	ALIVE_WORKER_PTHREAD    *p_alive_worker = (ALIVE_WORKER_PTHREAD *)user;
+	ALIVE_WORKER_PTHREAD *p_alive_worker = (ALIVE_WORKER_PTHREAD *)user;
 
-	size_t          n = 0;
-	char            *mirrtalk_id;
-	char            *gps_token;
-	qs_buf_t        bufs[MAX_QUERY_STRING_PAIRES * 2];
-  char            err[ERROR_STRING_LEN];
-	struct sniff_task_node sniff_task = {};
+	size_t                  n = 0;
+	char                    *mirrtalk_id;
+	char                    *gps_token;
+	qs_buf_t                bufs[MAX_QUERY_STRING_PAIRES * 2];
+	char                    err[ERROR_STRING_LEN];
+	struct sniff_task_node  sniff_task = {};
 
-	int size = task->size;
-  int plus_size = 0;
+	int     size = task->size;
+	int     plus_size = 0;
 
 	if (size == 0) {
-    x_printf(D, "Error: data size is zero");
-    goto ERROR;
+		x_printf(D, "Error: data size is zero");
+		goto ERROR;
 	}
 
 	size -= MTTPSVP_HEADER_SIZE;
 
-  /*for test*/
+	/*for test*/
 	if (size > MAX_SNIFF_DATA_SIZE - 64) {
-    size = 0;
-    x_printf(D, "Error: data size(%d) is greater than MAX_SNIFF_DATA_SIZE(%d)", size, MAX_SNIFF_DATA_SIZE);
+		size = 0;
+		x_printf(D, "Error: data size(%d) is greater than MAX_SNIFF_DATA_SIZE(%d)", size, MAX_SNIFF_DATA_SIZE);
 		goto ERROR;
 	}
 
-  struct pool_node *pnode = mapping_pool_addr(task->sfd);
-  if (pnode->cid != task->cid) {
-    x_printf(D, "Error: pool_node->cid(%d) and task->cid(%d) not equal", pnode->cid, task->cid);
-    goto ERROR;
-  }
+	struct pool_node *pnode = mapping_pool_addr(task->sfd);
 
-  uint8_t op_type = *((uint8_t*)task->data + 2);
-  const char* data = (const char*)task->data + MTTPSVP_HEADER_SIZE;
+	if (pnode->cid != task->cid) {
+		x_printf(D, "Error: pool_node->cid(%d) and task->cid(%d) not equal", pnode->cid, task->cid);
+		goto ERROR;
+	}
 
-  switch (op_type) {
-    case 0x00:  // 握手
-      // 已经握手，重复握手，非正常数据，断开连接
-      if (mttpsvp_libkv_check_handshake(task->cid, task->sfd, "1", 1) == 0) {
-        x_printf(D, "Handshake error: repeat handshake");
-        x_printf(D, "Handshake data: %s", data);
-        goto ERROR;
-      }
+	uint8_t         op_type = *((uint8_t *)task->data + 2);
+	const char      *data = (const char *)task->data + MTTPSVP_HEADER_SIZE;
 
-      int ret = parse_query_string(data, size, bufs, &n);
-      if (ret < 0) {
-        x_printf(D, "Handshake error: parse data error");
-        x_printf(D, "Handshake data: %s", data);
-        goto ERROR;
-      }
+	switch (op_type)
+	{
+		case 0x00:	// 握手
 
-      mirrtalk_id = copy_query_string_value(bufs, n, "M", 1);
-      if (mirrtalk_id == NULL) {
-        x_printf(D, "Handshake error: can't get mirrtalkID");
-        x_printf(D, "Handshake data: %s", data);
-        goto ERROR;
-      }
+			// 已经握手，重复握手，非正常数据，断开连接
+			if (mttpsvp_libkv_check_handshake(task->cid, task->sfd, "1", 1) == 0) {
+				x_printf(D, "Handshake error: repeat handshake");
+				x_printf(D, "Handshake data: %s", data);
+				goto ERROR;
+			}
 
-      gps_token = copy_query_string_value(bufs, n, "N", 1);
-      if (gps_token == NULL) {
-        free(mirrtalk_id);
-        x_printf(D, "Handshake error: can't get gpsToken");
-        x_printf(D, "Handshake data: %s", data);
-        goto ERROR;
-      }
+			int ret = parse_query_string(data, size, bufs, &n);
 
-      if (mttpsvp_redis_check_gpstoken(mirrtalk_id, gps_token, strlen(gps_token)) < 0) {
-        x_printf(D, "Handshake error: gpsToken error");
-        x_printf(D, "Handshake data: %s", data);
-        free(mirrtalk_id);
-        free(gps_token);
-        goto ERROR;
-      }
+			if (ret < 0) {
+				x_printf(D, "Handshake error: parse data error");
+				x_printf(D, "Handshake data: %s", data);
+				goto ERROR;
+			}
 
-      /*gpsToken is used only once*/
-      mttpsvp_redis_del_gpstoken(mirrtalk_id);
+			mirrtalk_id = copy_query_string_value(bufs, n, "M", 1);
 
-      mttpsvp_libkv_set(task->cid, task->sfd, "1");
+			if (mirrtalk_id == NULL) {
+				x_printf(D, "Handshake error: can't get mirrtalkID");
+				x_printf(D, "Handshake data: %s", data);
+				goto ERROR;
+			}
 
-      x_printf(D, "Handshake ok, mirrtalkID: %s, ip: %s, port: %d", mirrtalk_id, pnode->szAddr, pnode->port);
-      x_printf(D, "Handshake data: %s", data);
-      plus_size = sprintf(err, "&TYPE=%d&IP=%s&PORT=%d", 0, pnode->szAddr, pnode->port);
+			gps_token = copy_query_string_value(bufs, n, "N", 1);
 
-      free(mirrtalk_id);
-      free(gps_token);
-      /*return 0;*/
-      break;
-    case 0x01:  // 心跳
-      x_printf(D, "Heartbeat");
-      plus_size = sprintf(err, "TYPE=%d&IP=%s&PORT=%d", 1, pnode->szAddr, pnode->port);
-      /*return 0;*/
-      break;
-    case 0x02:  // 传输
-      // 未握手，直接传数据，非正常数据，断开连接
-      if (mttpsvp_libkv_check_handshake(task->cid, task->sfd, "1", 1) < 0) {
-        x_printf(D, "Should handshake first before transfer data");
-        goto ERROR;
-      }
+			if (gps_token == NULL) {
+				free(mirrtalk_id);
+				x_printf(D, "Handshake error: can't get gpsToken");
+				x_printf(D, "Handshake data: %s", data);
+				goto ERROR;
+			}
 
-      plus_size = sprintf(err, "&TYPE=%d&IP=%s&PORT=%d", 2, pnode->szAddr, pnode->port);
-      break;
-    default:
-      x_printf(D, "Unknow connection type");
-      goto ERROR;
-  }
+			if (mttpsvp_redis_check_gpstoken(mirrtalk_id, gps_token, strlen(gps_token)) < 0) {
+				x_printf(D, "Handshake error: gpsToken error");
+				x_printf(D, "Handshake data: %s", data);
+				free(mirrtalk_id);
+				free(gps_token);
+				goto ERROR;
+			}
+
+			/*gpsToken is used only once*/
+			mttpsvp_redis_del_gpstoken(mirrtalk_id);
+
+			mttpsvp_libkv_set(task->cid, task->sfd, "1");
+
+			x_printf(D, "Handshake ok, mirrtalkID: %s, ip: %s, port: %d", mirrtalk_id, pnode->szAddr, pnode->port);
+			x_printf(D, "Handshake data: %s", data);
+			plus_size = sprintf(err, "&TYPE=%d&IP=%s&PORT=%d", 0, pnode->szAddr, pnode->port);
+
+			free(mirrtalk_id);
+			free(gps_token);
+			/*return 0;*/
+			break;
+
+		case 0x01:	// 心跳
+			x_printf(D, "Heartbeat");
+			plus_size = sprintf(err, "TYPE=%d&IP=%s&PORT=%d", 1, pnode->szAddr, pnode->port);
+			/*return 0;*/
+			break;
+
+		case 0x02:	// 传输
+
+			// 未握手，直接传数据，非正常数据，断开连接
+			if (mttpsvp_libkv_check_handshake(task->cid, task->sfd, "1", 1) < 0) {
+				x_printf(D, "Should handshake first before transfer data");
+				goto ERROR;
+			}
+
+			plus_size = sprintf(err, "&TYPE=%d&IP=%s&PORT=%d", 2, pnode->szAddr, pnode->port);
+			break;
+
+		default:
+			x_printf(D, "Unknow connection type");
+			goto ERROR;
+	}
 
 	sniff_task.sfd = task->sfd;
 	sniff_task.type = task->type;
@@ -315,23 +325,26 @@ int alive_vms_call(void *user, union virtual_system **VMS, struct adopt_task_nod
 	sniff_task.stamp = time(NULL);
 	sniff_task.size = size + plus_size;
 	memcpy(sniff_task.data, data, size);
-	memcpy((char*)sniff_task.data + size, err, plus_size);
+	memcpy((char *)sniff_task.data + size, err, plus_size);
 
 	g_sniff_cfg_list.task_report(p_alive_worker->mount, &sniff_task);
 	return 0;
 
 ERROR:
-  mttpsvp_libkv_del(task->cid, task->sfd);
-  alive_close_conn(1, task->cid, task->sfd);
-  return 0;
+	mttpsvp_libkv_del(task->cid, task->sfd);
+	alive_close_conn(1, task->cid, task->sfd);
+	return 0;
 }
 
-int alive_vms_online(void *user, union virtual_system **VMS, struct adopt_task_node *task) {
-  mttpsvp_libkv_set(task->cid, task->sfd, "0");
-  return 0;
+int alive_vms_online(void *user, union virtual_system **VMS, struct adopt_task_node *task)
+{
+	mttpsvp_libkv_set(task->cid, task->sfd, "0");
+	return 0;
 }
 
-int alive_vms_offline(void *user, union virtual_system **VMS, struct adopt_task_node *task) {
-  mttpsvp_libkv_del(task->cid, task->sfd);
-  return 0;
+int alive_vms_offline(void *user, union virtual_system **VMS, struct adopt_task_node *task)
+{
+	mttpsvp_libkv_del(task->cid, task->sfd);
+	return 0;
 }
+

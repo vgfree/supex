@@ -284,6 +284,7 @@ void message_dispatch()
 	if (des.obj == CLIENT) {
 		int fd = 0;
 		find_best_gateway(&fd);
+
 		if (fd > 0) {
 			char cid[30] = {};
 			strcpy(cid, g_serv_info.ip);

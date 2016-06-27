@@ -8,8 +8,8 @@
 #include "xmq.h"
 #include "xmq_msg.h"
 
-extern xmq_producer_t *g_xmq_p1;
-extern struct swift_cfg_list   g_swift_cfg_list;
+extern xmq_producer_t           *g_xmq_p1;
+extern struct swift_cfg_list    g_swift_cfg_list;
 
 int swift_vms_call(void *user, union virtual_system **VMS, struct adopt_task_node *task)
 {
@@ -46,6 +46,7 @@ int swift_vms_call(void *user, union virtual_system **VMS, struct adopt_task_nod
 #endif
 			break;
 		}
+
 #if 0
 		case USE_MFPTP_PROTO:	// MFPTP Protocal - doesn't implement yet!
 		{

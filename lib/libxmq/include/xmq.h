@@ -47,14 +47,12 @@ typedef int (xmq_kv_put)(void *kv_ctx, const bin_entry_t *keys, const bin_entry_
 typedef int (xmq_kv_get)(void *kv_ctx, const bin_entry_t *keys, bin_entry_t *values, int count);
 typedef int (xmq_kv_ctx_free)(void *kv_ctx);
 
-
 enum
 {
 	KV_LOAD_FAIL = -1,
 	KV_LOAD_SUCC = 0,
 	KV_LOAD_NULL = 1,
 };
-
 
 struct _bin_entry
 {

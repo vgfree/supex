@@ -27,10 +27,10 @@ void set_expire_time(char *key, int len, int redis_num)
 	lua_pushnumber(L, 1);
 	lua_pushlstring(L, key, len);
 	lua_settable(L, -3);
-	
+
 	lua_pushnumber(L, 2);
-        lua_pushnumber(L, redis_num);
-        lua_settable(L, -3);	
+	lua_pushnumber(L, redis_num);
+	lua_settable(L, -3);
 
 	int iError = lua_pcall(L, 1, 0, 0);
 
@@ -42,7 +42,7 @@ void set_expire_time(char *key, int len, int redis_num)
 
 	lua_pop(L, 1);
 	lua_close(L);
-	
+
 	return 0;
 }
 

@@ -73,7 +73,7 @@ void *thrd_work(void *arg)
 	evt_ctx_t *ectx = arg;
 
 	int     res, len, error = 0;
-	evt_t *ev, *ev_des;
+	evt_t   *ev, *ev_des;
 
 	while (1) {
 		ev = recv_evt(&error, ectx, 20);

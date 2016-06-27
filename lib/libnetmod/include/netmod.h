@@ -67,45 +67,45 @@ struct incr_data
 
 typedef struct _evt
 {
-	char    id[IDENTITY_SIZE];	/* Client unique identity. */
-	enum evt_type     ev_type;		/* Event type, EV_XXX_(REQ|REP) */
-	enum evt_state     ev_state;		/* Last event excute state. */
+	char            id[IDENTITY_SIZE];	/* Client unique identity. */
+	enum evt_type   ev_type;		/* Event type, EV_XXX_(REQ|REP) */
+	enum evt_state  ev_state;		/* Last event excute state. */
 	union
 	{
 		/* Increment SQL request. */
 		struct incr_data incr;
 	};
-	size_t  ev_size;	/* The size of ev_data. if ev_data is null(empty),
-				 *   then ev_size must be 0; if ev_data store char* type,
-				 *   then ev_size should be strlen(ev_data)+1 for '\0', by yourself. */
-	char    ev_data[0];	/* Data to be send to client. */
+	size_t          ev_size;	/* The size of ev_data. if ev_data is null(empty),
+					 *   then ev_size must be 0; if ev_data store char* type,
+					 *   then ev_size should be strlen(ev_data)+1 for '\0', by yourself. */
+	char            ev_data[0];	/* Data to be send to client. */
 } evt_t;
 
 /* Event context define & APIS. */
 typedef struct
 {
-	void                    *zmq_ctx;	/* ZeroMQ type's Context. */
-	void                    *zmq_socket;	/* ZeroMQ type's Socket. */
-	void                    *zmq_monitor;	/* ZeroMQ event monitor. */
-	enum node_type                     type;	/* End point type, Server or Client. */
+	void            *zmq_ctx;	/* ZeroMQ type's Context. */
+	void            *zmq_socket;	/* ZeroMQ type's Socket. */
+	void            *zmq_monitor;	/* ZeroMQ event monitor. */
+	enum node_type  type;		/* End point type, Server or Client. */
 
-	QLIST       qrecv;		// receiving-queue of events.
-	QLIST       qsend;		// sending-queue of events.
+	QLIST           qrecv;		// receiving-queue of events.
+	QLIST           qsend;		// sending-queue of events.
 
-	pthread_t               thrd_kill;	// When call the evt_ctx_destroy(), it will execute pthread_kill(thrd, SIGQUIT).
+	pthread_t       thrd_kill;	// When call the evt_ctx_destroy(), it will execute pthread_kill(thrd, SIGQUIT).
 } evt_ctx_t;
 
 /* The evt_t package head size. */
-#define evt_head_size()       (sizeof(evt_t))
+#define evt_head_size()         (sizeof(evt_t))
 
 /* The evt_t package body size. ev is (evt_t *) type. */
-#define evt_body_size(ptr)    ((size_t)(ptr)->ev_size)
+#define evt_body_size(ptr)      ((size_t)(ptr)->ev_size)
 
 /* The evt_t package all size. ev is (evt_t *) type. */
-#define evt_total_size(ptr)   ((size_t)(evt_head_size() + evt_body_size(ptr)))
+#define evt_total_size(ptr)     ((size_t)(evt_head_size() + evt_body_size(ptr)))
 
 /* The evt_t package's data. */
-#define evt_body_data(ptr)         ((void *)(ptr)->ev_data)
+#define evt_body_data(ptr)      ((void *)(ptr)->ev_data)
 
 /*************************************************************************
  * FUNCTION:
@@ -269,6 +269,5 @@ const char *evt_error(int error);
 void print_evt(const evt_t *event);
 
 void *work_evt(evt_ctx_t *evt_ctx);
-
 #endif	/* _NETMOD_H_ */
 

@@ -14,7 +14,7 @@ int main(int argc, char *argv[])
 	int             res, len;
 	sync_conf_t     confs;
 	evt_ctx_t       *ev_ctx;
-	evt_t         ev_des, *ev;
+	evt_t           ev_des, *ev;
 
 	/* Parsing configure file. */
 	res = parse_config(&confs, "./pole-S_conf.json");

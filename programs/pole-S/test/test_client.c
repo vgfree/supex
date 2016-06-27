@@ -33,7 +33,7 @@ int main(int argc, char *argv[])
 	info_t  *info;
 	double  money;
 	int     year;
-	evt_t *ev, *ev_dump, ev_des;
+	evt_t   *ev, *ev_dump, ev_des;
 
 	evt_ctx_t *ectx = evt_ctx_init(&error, SOCK_CLIENT, argv[2], argv[1]);
 

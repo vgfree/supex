@@ -51,7 +51,7 @@ struct timport_cfg_file
 
 	int             delay_time;
 	int             start_time;
-        int		time_interval;
+	int             time_interval;
 
 	statistics_t    statistics;
 	int             has_ten_min;

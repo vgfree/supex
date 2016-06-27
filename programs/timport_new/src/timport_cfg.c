@@ -10,7 +10,7 @@
 void read_timport_cfg(struct timport_cfg_file *p_cfg, char *name)
 {
 	int                     i = 0;
-	int 			array_len = 0;
+	int                     array_len = 0;
 	const char              *str_val = NULL;
 	struct json_object      *obj = NULL, *tmp_obj = NULL;
 	struct json_object      *cfg = json_object_from_file(name);
@@ -22,22 +22,20 @@ void read_timport_cfg(struct timport_cfg_file *p_cfg, char *name)
 		goto fail;
 	}
 
-
 	if (json_object_object_get_ex(cfg, "delay_time", &obj)) {
 		p_cfg->delay_time = json_object_get_int(obj);
 		printf("(delay_time) found, delay_time = %d\n", p_cfg->delay_time);
 	}
-	
-		
+
 	if (json_object_object_get_ex(cfg, "start_time", &obj)) {
-                p_cfg->start_time = json_object_get_int(obj);
-                printf("(start_time) found, start_time = %d\n", p_cfg->start_time);
-        }
+		p_cfg->start_time = json_object_get_int(obj);
+		printf("(start_time) found, start_time = %d\n", p_cfg->start_time);
+	}
 
 	if (json_object_object_get_ex(cfg, "time_interval", &obj)) {
-                p_cfg->time_interval = json_object_get_int(obj);
-                printf("(time_interval) found, time_interval = %d\n", p_cfg->time_interval);
-        }
+		p_cfg->time_interval = json_object_get_int(obj);
+		printf("(time_interval) found, time_interval = %d\n", p_cfg->time_interval);
+	}
 
 	if (json_object_object_get_ex(cfg, "redis", &obj)) {
 		array_len = json_object_array_length(obj);
@@ -80,7 +78,6 @@ void read_timport_cfg(struct timport_cfg_file *p_cfg, char *name)
 		printf("(redis) not found");
 		goto fail;
 	}
-
 
 	if (json_object_object_get_ex(cfg, "statistics", &obj)) {
 		if (json_object_object_get_ex(obj, "host", &tmp_obj)) {
@@ -143,7 +140,6 @@ void read_timport_cfg(struct timport_cfg_file *p_cfg, char *name)
 			goto fail;
 		}
 	}
-
 
 	json_object_put(cfg);
 
