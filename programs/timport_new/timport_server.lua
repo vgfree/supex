@@ -21,6 +21,7 @@ local redis_api = require('redis_pool_api')
 local http_api  = require('http_short_api')
 local libhttps  = require("libhttps")
 local CFG_LIST	= require('cfg')
+local dk_utils	= require('get_tsdb_name')
 
 redis_api.init()
 
@@ -93,11 +94,13 @@ local function get_data_with_user(user, target_time, redis_num)
 
 	local user_data = nil
 	local data = nil
+	local tsdb_name = nil
 	for idx = 1, #CFG_LIST['timport'] do
 		data_key = CFG_LIST['timport'][idx]['key'] .. user .. ':' .. target_time
 		user_data = get_data(data_key, 'SMEMBERS', redis_num)
 		only.log('E', scan.dump(user_data))
 		data = assemble_data(user_data)
+		tsdb_name = dk_utils.get_tsdb_name(user, os.time(), idx)
 		set_data(data_key, data, 'SET', tsdb_name)
 	end
 end

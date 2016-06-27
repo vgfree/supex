@@ -57,7 +57,7 @@ timport =
 		zk_rnode = "/url",
 		key = "URL:",
 		data_type = "SET",
-		hash_filter = "time",
+		hash_filter = "imei",
 		tsdb =
                 {
                         {

@@ -58,11 +58,9 @@ local function set_data(redis, cmd, key, data)
 end
 
 local function creat_user(id)
-	local current_time = os.time()
-        local time = id .. os.date("%Y%m%d%H", current_time)
-	return time
+	return '1' .. tostring(os.time()) .. tostring(id)
 end
---[[ 
+--[[
 local function creat_key()
 	local current_time = os.time()
         local time = os.date("%Y%m%d%H", current_time)
@@ -125,6 +123,7 @@ local function work()
 	local user_tab = {}
 	for id = 1, 50 do
 		user_tab[id] = creat_user(id)
+		os.execute("sleep 1")
 	end
 	only.log("E", "the table = %s", scan.dump(user_tab))
 	local redis = 'redis' .. os.time() % 2 

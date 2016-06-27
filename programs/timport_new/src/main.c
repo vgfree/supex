@@ -185,12 +185,12 @@ static void __timer_start(int start_time)
 	printf("enter timer_start\n");
 	time_t  t;
 	int     current_time;
-
+/*
 	if (time(&t) > start_time) {
 		printf("startTime is incorrent !\n");
 		exit(0);
 	}
-
+*/
 	while ((current_time = time(&t)) < start_time) {
 		sleep(0.2);
 	}
