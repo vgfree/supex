@@ -14,7 +14,7 @@
 #include "get_user_key.h"
 #include "dispatch_data.h"
 #include "set_expire_time.h"
-
+#include "get_start_time.h"
 
 EVCS_MODULE_SETUP(kernel, kernel_init, kernel_exit, &g_kernel_evts);
 EVCS_MODULE_SETUP(evcs, evcs_init, evcs_exit, &g_evcs_evts);
@@ -38,6 +38,9 @@ char MAIN_TASK[64] = { 0 };
 char g_user_key[MAX_USER_KEY_LENGTH];
 
 tlpool_t *tlpool = NULL;
+
+static g_start_time = 0;
+
 struct user_task
 {
 	char *user;
@@ -108,7 +111,7 @@ void get_data_task(int redis_cnt)
 	struct xpool            *cpool = conn_xpool_find(g_timport_cfg_list.file_info.redis[redis_cnt].host, g_timport_cfg_list.file_info.redis[redis_cnt].port);
 	
 	memset(g_user_key, 0, MAX_USER_KEY_LENGTH);
-	get_user_key(g_timport_cfg_list.file_info.start_time, g_user_key, MAX_USER_KEY_LENGTH);
+	get_user_key(g_start_time, g_user_key, MAX_USER_KEY_LENGTH);
 	printf("g_user_key = %s, len = %d\n", g_user_key, strlen(g_user_key));
 	char    *proto = NULL;
 	int len = cmd_to_proto(&proto, "SMEMBERS %s", g_user_key);
@@ -213,7 +216,7 @@ void *get_data_task_handle(struct supex_evcoro *evcoro, void *step)
 	int r_idx;
 	while(1) {
 		//定时函数start
-		__timer_start(g_timport_cfg_list.file_info.start_time);//TODO
+		__timer_start(g_start_time);
 		for (r_idx = 0; r_idx < g_timport_cfg_list.file_info.redis_cnt; r_idx ++) {	
 			get_data_task(r_idx);
 			// set expire time,  need g_user_key and r_idx.
@@ -222,13 +225,15 @@ void *get_data_task_handle(struct supex_evcoro *evcoro, void *step)
 		}
 		
 		//每次定时处理完之后，起始时间+时间间隔（分钟*60s）
-		g_timport_cfg_list.file_info.start_time = get_start_time(g_timport_cfg_list.file_info.start_time);
+		g_start_time = get_start_time(g_start_time);
+		write_timestamp(g_start_time);
 	}
 }
 
 
 int main(int argc, char *argv[])
 {
+	g_start_time = read_timestamp();
 	load_supex_args(&g_timport_cfg_list.argv_info, argc, argv, NULL, NULL, NULL);
 	read_timport_cfg(&g_timport_cfg_list.file_info, g_timport_cfg_list.argv_info.conf_name);
 
