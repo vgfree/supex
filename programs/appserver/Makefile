@@ -20,7 +20,7 @@ INC_DIR=-I/usr/local/include/luajit-2.0 \
 
 LIB_DIR=-L/usr/local/lib -L../../lib
 LIBS=-lluajit-5.1 -lpthread -lrt -lm -lstdc++
-LIBA=-ljson-c -lkv -lzmq -lappsrv -lutils
+LIBA=-ljson-c -lkv -lappsrv -lutils -lzmq
 
 #[=========>MARK<=========]#
 MAIN_APP_SERV ?= ptop
