@@ -48,7 +48,7 @@ int main(int argc, char *argv[])
 			send_msg.vector[2].iov_base = gid0;
 			send_msg.vector[2].iov_len = strlen(gid0);
 
-			for (size_t i = 0; i < msg.vector_size; i++) {
+			for (size_t i = 2; i < msg.vector_size; i++) {
 				send_msg.vector[i + 3].iov_base = msg.vector[i].iov_base;
 				send_msg.vector[i + 3].iov_len = msg.vector[i].iov_len;
 			}

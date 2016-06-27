@@ -285,6 +285,14 @@ void message_dispatch()
 		int fd = 0;
 		find_best_gateway(&fd);
 		if (fd > 0) {
+			char cid[30] = {};
+			strcpy(cid, g_serv_info.ip);
+			strcat(cid, ":");
+			char buf[10] = {};
+			snprintf(buf, 10, "%d", msg.fd);
+			strcat(cid, buf);
+			set_msg_frame(0, &msg, strlen(cid), cid);
+			set_msg_frame(0, &msg, 8, "upstream");
 			set_msg_fd(&msg, fd);
 			comm_send(g_serv_info.commctx, &msg, true, -1);
 		}
