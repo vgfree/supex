@@ -3,7 +3,6 @@ module("cfg")
 USER_PART_KEY = "ACTIVEUSER"
 time_interval = 10
 migration_interval = 10
-delay_time = 600
 expire_time = 60
 
 zk_servers = "192.168.1.14:2181"

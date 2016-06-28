@@ -43,7 +43,15 @@ end
 
 
 function get_key(timestamp)
-	timestamp = timestamp - CFG_LIST['delay_time']
+	--timestamp = timestamp - CFG_LIST['delay_time']
 	return assemble_key(timestamp)
 end
+--[[
+function handle()
+	local timestamp = 1467093600
+	local key = get_key(timestamp)
+	print(key)
+end
 
+handle = handle()
+]]--

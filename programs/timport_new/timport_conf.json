@@ -1,5 +1,5 @@
 {
-    "delay_time": 7200,
+    "delay_time": 3600,
     "zk_servers": "192.168.1.14:2181",
     "backup_path": "./var/backup",
     "start_time": 1467000000,

@@ -139,11 +139,9 @@ void *set_data_task_handle(struct supex_evcoro *evcoro, int step)
 	lua_State *L = NULL;
 	struct user_task        *p_task = &((struct user_task *)evcoro->task)[step];
 	if (evcoro->VMS && evcoro->VMS->L) {
-		printf("VMS already exit\n");
 		L = evcoro->VMS->L;
 	}
 	else {
-		printf("VMS is not exit\n");
 		L = lua_vm_init();
 		evcoro->VMS->L = L;
 	}
@@ -203,15 +201,13 @@ static void __timer_start(int start_time)
 {
 	printf("enter timer_start\n");
 	time_t  t;
-	int     current_time;
-
 	/*
 	 *        if (time(&t) > start_time) {
 	 *                printf("startTime is incorrent !\n");
 	 *                exit(0);
 	 *        }
 	 */
-	while ((current_time = time(&t)) < start_time) {
+	while ((time(&t) - g_timport_cfg_list.file_info.delay_time) < start_time) {
 		sleep(5);
 	}
 
