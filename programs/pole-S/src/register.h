@@ -17,7 +17,7 @@ struct business_t
 {
 	/* sync_conf_t: was defined in parser.h */
 	int     (*init)(const sync_conf_t *conf);
-	int     (*done)(char *error, size_t err_size, void *args, size_t arg_size);
+	int     (*done)(void *args, size_t arg_size);
 	void    (*destroy)();
 };
 typedef struct business_t business_t;

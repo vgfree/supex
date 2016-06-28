@@ -19,7 +19,7 @@ int parse_config(sync_conf_t *conf, const char *conf_file_path)
 		goto PARSE_FAIL;
 	}
 
-	strcpy(conf->log_file_path, json_object_get_string(sub_obj));
+	strcpy(conf->log_file, json_object_get_string(sub_obj));
 	json_object_put(sub_obj);
 #if 0
 

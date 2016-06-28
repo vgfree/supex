@@ -29,7 +29,7 @@ int dump_init(const sync_conf_t *args)
 }
 
 /* Dump current MySQL base data. */
-int dump_db(char *error, size_t size, void *args, size_t arg_size)
+int dump_db(void *args, size_t arg_size)
 {
 #if 0
 	/* args coule be NULL.*/

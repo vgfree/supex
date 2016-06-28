@@ -21,7 +21,7 @@ int w2file_init(const sync_conf_t *conf)
 	return 0;
 }
 
-int w2file_done(char *error, size_t err_size, void *args, size_t arg_size)
+int w2file_done(void *args, size_t arg_size)
 {
 	if (!g_fp) {
 		return -1;

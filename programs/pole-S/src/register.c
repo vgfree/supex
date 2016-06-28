@@ -37,13 +37,10 @@ int startup_businesses(const sync_conf_t *args)
 	return 0;
 }
 
-int do_business(int busi_type, char *error, size_t size, void *args, size_t arg_size)
+int do_business(int busi_type, void *args, size_t arg_size)
 {
-	assert(error != NULL);
-	assert(size != 0);
-
 	return (g_busi_ary[busi_type].done != NULL)
-	       ? g_busi_ary[busi_type].done(error, size, args, arg_size)
+	       ? g_busi_ary[busi_type].done(args, arg_size)
 	       : -1;
 }
 

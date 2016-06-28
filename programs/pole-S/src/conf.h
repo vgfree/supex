@@ -4,7 +4,7 @@
 typedef struct
 {
 	/* Pole-S Log Configure. */
-	char    log_file_path[128];
+	char    log_file[128];
 	// char    log_file_name[32];
 	// int     log_count;	// The max log file's count.
 	int     log_level;	// LOG_DEBUG|LOG_INFO|LOG_WARN|LOG_ERROR|LOG_FATAL

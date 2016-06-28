@@ -2,7 +2,7 @@
     /* Pole-S log module configure. */
     //--------------------------------------------------
     // The log file full path (contain the file name).
-    "LOG_FILE_PATH" : "./logs/pole-s.log",
+    "LOG_FILE" : "./logs/pole-s.log",
     
     // Log Level: LOG_DEBUG|LOG_INFO|LOG_WARN|LOG_ERROR|LOG_SYS|LOG_FATAL
     "LOG_LEVEL"     : "LOG_DEBUG",

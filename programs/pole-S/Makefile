@@ -33,10 +33,9 @@ DEPS=../../lib
 BASE_SRC=./src
 
 BASE_OBJ=$(addprefix $(BIN)/,\
-    clog.o \
     main.o \
     register.o \
-    parser.o \
+    conf.o \
     )
 
 DEPS_OBJ=$(addprefix $(DEPS)/,\
