@@ -84,7 +84,7 @@ function DataPackage:isTokenChanged()
         local ret = false
         local key = self['IMEI'] .. ":tokenCode"
         -- get last tokenCode from redis
-        local ok, last_tokenCode = redis_api.cmd('owner', self['IMEI'] or '',  "get", key)
+        local ok, last_tokenCode = cachekv.pull('mapRTMileage', self['IMEI'] or '',  "get", key)
         if not ok or not last_tokenCode or last_tokenCode == "" then
               ret = true
         end
@@ -92,7 +92,7 @@ function DataPackage:isTokenChanged()
         --tokenCode发生变化，则认为是开机
         if (not last_tokenCode) or last_tokenCode ~= self['tokenCode'] then
                 if (not self['isDelay']) then
-                        redis_api.cmd('owner', self['IMEI'] or '',  "set", key, self['tokenCode'])
+                        cachekv.push('mapRTMileage', self['IMEI'] or '',  "set", key, self['tokenCode'])
                 end
 
                 return true, last_tokenCode
@@ -502,13 +502,13 @@ function DataPackage:driveOnlineTime(drive_time)
 	local key = string.format("%s:DriveHours", self['IMEI'])
 
 	if self['isTokenChanged'] then	--重新开机，重置时间为0
-		redis_api.cmd('owner', self['IMEI'] or '',  "set", key, 0)
+		cachekv.push('mapRTMileage', self['IMEI'] or '',  "set", key, 0)
 	else	--计算开机时间，达到整数时间则传递给疲劳驾驶模块
 		local hours = math.floor(drive_time/3600) 
 		if hours > 0 and (drive_time % 3600 < 300 ) then --在线大于1小时，且在这一小时的前10分钟内触发
-			local ok, last_hours = redis_api.cmd('owner', self['IMEI'] or '',  "get", key)
+			local ok, last_hours = cachekv.push('mapRTMileage', self['IMEI'] or '',  "get", key)
 			if ok and tonumber(last_hours or 0) < hours then
-                                redis_api.cmd('owner', self['IMEI'] or '',  "set", key, hours)
+                                cachekv.push('mapRTMileage', self['IMEI'] or '',  "set", key, hours)
                 		_G.add_origin_key_value("T_ONLINE_HOUR", hours)	--疲劳驾驶模块
 			end	
 		end
