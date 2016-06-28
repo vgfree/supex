@@ -58,9 +58,9 @@ local function set_data(redis, cmd, key, data)
 end
 
 local function creat_user(id)
-	return '1' .. tostring(os.time()) .. tostring(id)
+	return tostring(os.time()) .. tostring(id)
 end
---[[
+
 local function creat_key()
 	local current_time = os.time()
         local time = os.date("%Y%m%d%H", current_time)
@@ -78,8 +78,8 @@ local function creat_key()
 
         return user_key, time
 end
-]]--
 
+--[[
 local function creat_key()
         local current_time = os.time()
         local time = os.date("%Y%m%d%H", current_time)
@@ -91,17 +91,17 @@ local function creat_key()
 	if minute >= '30' then
 		time = time .. tostring(3)
 	end
---[[
+
         if interval < 10 then
                 time = time .. math.floor(os.date("%M", current_time)/10) .. interval
                 print(time)
         end
-]]--
+
         local user_key = "ACTIVEUSER:" ..time
 
         return user_key, time
 end
-
+]]--
 local gps_user_data = {}
 gps_user_data[1] = '1466044886|1466044901|508542171690587||460012202737137|160616024126|1234339042|418406815|65|29|0|QnsQkkBlen'
 gps_user_data[2] = '1466044885|1466044901|508542171690587||460012202737137|160616024125|1234339042|418406815|65|29|0|QnsQkkBlen'
@@ -123,7 +123,6 @@ local function work()
 	local user_tab = {}
 	for id = 1, 50 do
 		user_tab[id] = creat_user(id)
-		os.execute("sleep 1")
 	end
 	only.log("E", "the table = %s", scan.dump(user_tab))
 	local redis = 'redis' .. os.time() % 2 

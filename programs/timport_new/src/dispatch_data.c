@@ -14,14 +14,32 @@
 
 #include "dispatch_data.h"
 
-int dispatch_data(char *user, int user_len, char *time, int time_len, int redis_num)
+lua_State *lua_vm_init(void)
 {
-	// printf("user = %s\n", user);
 	lua_State *L;
+	int error = 0;
+        L = luaL_newstate();
+        luaL_openlibs(L);
 
-	L = luaL_newstate();
-	luaL_openlibs(L);
-	luaL_dofile(L, "./timport_server.lua");
+        error = luaL_dofile(L, "./timport_server.lua");
+    	if (error) {
+        	fprintf(stderr, "%s\n", lua_tostring(L, -1));
+                lua_pop(L, 1);
+                exit(EXIT_FAILURE);
+        }
+
+	return L;
+}
+
+int dispatch_data(lua_State *L, char *user, int user_len, char *time, int time_len, int redis_num)
+{
+	//printf("user = %s\n", user);
+	//lua_State *L;
+
+	//L = luaL_newstate();
+	//luaL_openlibs(L);
+	//luaL_dofile(L, "./timport_server.lua");
+	
 	lua_getglobal(L, "get_table");
 	lua_newtable(L);
 
@@ -41,13 +59,14 @@ int dispatch_data(char *user, int user_len, char *time, int time_len, int redis_
 
 	if (iError) {
 		printf("%s\n", lua_tostring(L, -1));
+		lua_pop(L, 1);
 		lua_close(L);
 		exit(0);
 	}
 
-	lua_pop(L, 1);
-	lua_close(L);
-
+	//lua_pop(L, 1);
+	//lua_close(L);
+	
 	return 0;
 }
 
