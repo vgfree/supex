@@ -8,25 +8,18 @@
 
 int main(int argc, char *argv[])
 {
-	int             res;
-	sync_conf_t     confs;
-	evt_ctx_t       *evt_ctx;
-	evt_t           ev_des, *evt;
+	evt_t           *evt;
+	struct pole_conf     confs;
 
 	/* Parsing configure file. */
-	res = parse_config(&confs, "./pole-S_conf.json");
-	assert(res == 0);
+	config_init(&confs, "./pole-S_conf.json");
 
 	/* Initialize the Pole-S Log file. */
 	SLogOpen(confs.log_file, SLogIntegerToLevel(confs.log_level));
 
 	/* Initialize the Network. */
-	evt_ctx = evt_ctx_init(SOCK_CLIENT, confs.conn_uri, confs.id);
-
-	if (evt_ctx == NULL) {
-		x_printf(E, "evt_ctx_init(,,'%s','%s') fail. Error\n", confs.conn_uri, confs.id);
-		return -1;
-	}
+	evt_ctx_t       *evt_ctx = evt_ctx_init(SOCK_CLIENT, confs.conn_uri, confs.self_uid);
+	assert(evt_ctx);
 
 	// Startup the thread of Network Center to Recv & Send data.
 	pthread_t       thrd;
@@ -34,17 +27,17 @@ int main(int argc, char *argv[])
 	pthread_attr_init(&attr);
 	pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
 	int ok = pthread_create(&thrd, &attr, work_evt, evt_ctx);
-	return_if_false(ok == 0, NULL);
+	assert(ok == 0);
 
-	/* Register the business functions. */
+	/* Register the business functions.
+	 * busi_dump you should never modify it.
+	 * busi_incr you can modify it's elements with your own.
+	 */
 	business_t busi_dump = {
 		dump_init,
 		dump_db,
 		NULL
 	};
-
-	// busi_incr you can modify it's elements with your own.
-	// But busi_dump, you should never modify it.
 	business_t busi_incr = {
 		w2file_init,
 		w2file_done,
@@ -55,36 +48,32 @@ int main(int argc, char *argv[])
 	register_business(BUSI_INCR, &busi_incr);
 
 	/* Startup all the businesses. */
-	res = startup_businesses(&confs);
+	int res = startup_businesses(&confs);
 	assert(res == 0);
 
 	/* Execute by current running type. */
-	if (!strcmp(confs.run_type, "EV_DUMP")) {
+	if (!strcmp(confs.run_type, "DUMP")) {
 		/* Current Running type is Synchronizing the database base data. */
 
 		/* Send NET_EV_DUMP_REQ command to Server. */
-		int len = strlen(confs.dump_id) + 1;
-
+		int len = strlen(confs.dump_uid) + 1;
 		if (len == 1) {
-			x_printf(W, "Warning: The pole-S_conf.json file DES_DUMP_ID should be set, when event type is EV_DUMP.\n");
+			x_printf(W, "The pole-S_conf.json file DEST_DUMP_UID should be set,"
+					" when event type is DUMP.\n");
 			goto FAIL;
 		}
 
-		evt_t *ev_dump = evt_new_by_size(len);
+		evt = evt_new_by_size(len);
+		assert(evt);
 
-		if (!ev_dump) {
-			x_printf(E, "evt_new_by_size(evt_t:%d) bytes fail. Error - %s.\n", len, strerror(errno));
-			goto FAIL;
-		}
+		strcpy(evt->id, confs.self_uid);
+		evt->ev_type = NET_EV_DUMP_REQ;
+		evt->ev_state = NET_EV_NONE;
+		evt->ev_size = len;
+		strcpy(evt->ev_data, confs.dump_uid);
 
-		strcpy(ev_dump->id, confs.id);
-		ev_dump->ev_type = NET_EV_DUMP_REQ;
-		ev_dump->ev_state = NET_EV_NONE;
-		// ev_dump->ev_size = len; // ev_size was set by evt_new_by_size().
-		strcpy(ev_dump->ev_data, confs.dump_id);
-
-		print_evt(ev_dump);
-		assert(0 == send_evt(evt_ctx, ev_dump));
+		print_evt(evt);
+		assert(0 == send_evt(evt_ctx, evt));
 
 		/* Recv NET_EV_DUMP_REP command from Server. */
 		/* We'll wait for a long time, Because Dump DB is very consume time. */
@@ -94,36 +83,34 @@ int main(int argc, char *argv[])
 		} while(!evt);
 
 		print_evt(evt);
-
 		if (evt->ev_state == NET_EV_FAIL) {
 			x_printf(E, "Destination Host, dump the MySQL database data fail.\n");
 			goto FAIL;
 		}
-
 		x_printf(I, "Destination Host, has already dumped the MySQL database succeed.\n");
 		free_evt(evt);
 
 		/* Process exit. */
 		evt_ctx_destroy(evt_ctx);
-		return 0;
-	} else if (!strcmp(confs.run_type, "EV_INCREMENT")) {
+	} else if (!strcmp(confs.run_type, "INCR")) {
 		/* Current Running type is Synchronizing the increment data. */
 
 		/* Send NET_EV_INCREMENT_REQ command to Server, for the first time. */
-		strcpy(ev_des.id, confs.id);
-		ev_des.ev_type = NET_EV_INCREMENT_REQ;
-		ev_des.ev_state = NET_EV_NONE;
-		ev_des.ev_size = 0;
-		ev_des.incr.task_seq = 0;//FIXME	// First time, we don't know the task_seq.
-		ev_des.incr.rows = 1;
+		evt = evt_new_by_size(0);
+		assert(evt);
+		strcpy(evt->id, confs.self_uid);
+		evt->ev_type = NET_EV_INCREMENT_REQ;
+		evt->ev_state = NET_EV_NONE;
+		evt->ev_size = 0;
+		evt->incr.task_seq = confs.incr_seq;	// First time, if we don't know the task_seq, set to 0.
+		evt->incr.rows = 1;
 
-		evt = copy_evt(&ev_des);
 		print_evt(evt);
 		assert(0 == send_evt(evt_ctx, evt));
 
 		enum evt_type   last_type = NET_EV_INCREMENT_REQ;
 		enum evt_state state = NET_EV_NONE;
-		while (1) {
+		while (true) {
 			/* Recv Server's response. */
 			do {
 				usleep(2000);
@@ -133,7 +120,7 @@ int main(int argc, char *argv[])
 
 			/* Doing businesses. return NET_EV_SUCC|NET_EV_FAIL|NET_EV_FATAL. */
 			if ( !((last_type == NET_EV_DUMP_REQ) && (evt->ev_type == NET_EV_DUMP_REQ)) ) {
-				state = do_business(evt->ev_type, errinfo, sizeof(errinfo), (evt->ev_size > 0) ? evt->ev_data : NULL, evt->ev_size);
+				state = do_business(evt->ev_type, (evt->ev_size > 0) ? evt->ev_data : NULL, evt->ev_size);
 			}
 			last_type = evt->ev_type;
 			/* Send Client Business execute state. */
@@ -168,13 +155,13 @@ int main(int argc, char *argv[])
 			if (state != NET_EV_SUCC) {
 				//严重错误时，程序退出
 				sleep(2);
-				x_printf(E, "send_result() fail. Error - %s.\n", evt_error(state));
+				x_printf(E, "*******************************.\n");
 				goto FAIL;
 			}
 		}
 	} else {
 		x_printf(E, "Invalid Running Type value <%s>\n", confs.run_type);
-		return -1;
+		goto FAIL;
 	}
 
 	return 0;

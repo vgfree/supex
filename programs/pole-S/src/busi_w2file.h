@@ -5,19 +5,18 @@
 
 static FILE *g_fp = NULL;
 
-int w2file_init(const sync_conf_t *conf)
+int w2file_init(struct pole_conf *conf)
 {
-	char fpath[256];
+	char fname[256] = "business.db";
 
-	sprintf(fpath, "%s/%s", conf->dt_filepath, conf->dt_filename);
-	g_fp = fopen(fpath, "a+");
+	g_fp = fopen(fname, "a+");
 
 	if (!g_fp) {
-		x_printf(E, "fopen:('%s', 'r+') fail. Error-%s.\n", fpath, strerror(errno));
+		x_printf(E, "fopen:('%s', 'r+') fail. Error-%s.\n", fname, strerror(errno));
 		return -1;
 	}
 
-	x_printf(I, "Open w2file <%s> succeed.\n", fpath);
+	x_printf(I, "Open w2file <%s> succeed.\n", fname);
 	return 0;
 }
 

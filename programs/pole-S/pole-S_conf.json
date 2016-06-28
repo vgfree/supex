@@ -1,75 +1,34 @@
 {
     /* Pole-S log module configure. */
-    //--------------------------------------------------
-    // The log file full path (contain the file name).
     "LOG_FILE" : "./logs/pole-s.log",
-    
-    // Log Level: LOG_DEBUG|LOG_INFO|LOG_WARN|LOG_ERROR|LOG_SYS|LOG_FATAL
-    "LOG_LEVEL"     : "LOG_DEBUG",
-    //--------------------------------------------------
+    "LOG_LEVEL"     : 0,
 
 
     /* Network communication with Server.*/
-    //--------------------------------------------------
-    // If current host is master node, then SLAVE_UNIQUE_ID should be set with 'master'
     "SLAVE_UNIQUE_ID" : "node1",
-    
-    // The ZeroMQ type's connect string, e.g. tcp://192.168.11.27:8686
     "SLAVE_CONN_URI"  : "tcp://192.168.1.16:8686",
-    //--------------------------------------------------
     
     
-    /* Operation type.*/
-    //--------------------------------------------------
-    // Now only afford (EV_DUMP | EV_INCREMENT).
-    
-    // EV_DUMP:      Dump MySQL database base data in xxx.sql.
-    // EV_INCREMENT: Synchronize the increment sql-request from server.
-    
-    // When execute EV_DUMP succeed <The process was exit and ./logs/**.log appeard dump succeed.>
-    // We should update it with EV_INCREMENT.
-    
-    "RUNNING_TYPE"  : "EV_DUMP",
-    
-    // Desination node host Client unique ID.
-    // This argument is only used for RUNNING_TYPE="EV_DUMP" type.
-    "DEST_DUMP_ID"  : "master",
-    //--------------------------------------------------
+    /* Operation type. Now only afford (DUMP | INCR).
+    	DUMP:	Dump MySQL database base data in xxx.sql.
+    	INCR:	Synchronize the increment sql-request from server.
+    We should update it with INCR When execute DUMP succeed <process exit and log appeard dump succeed.> */
+    "RUNNING_TYPE"  : "DUMP",
+    "DEST_DUMP_UID"  : "master",
+    "SELF_INCR_SEQ"  : 0,
     
     
     /* MySQL database local-host execute dump operation.*/
-    //--------------------------------------------------
-    // local hostname. <You should update it with your OS host.>
     "DUMP_HOSTNAME" : "192.168.11.27",
-    
-    // MySQL DB's username.
     "DUMP_USERNAME" : "hr",
-     
-    // MySQL DB's password.
     "DUMP_PASSWORD" : "hr",
-     
-    // Dumped file full path, the path should be exist and can be read and write.
     "DUMP_FILEPATH" : "./", 
-    //--------------------------------------------------
     
     
-    /* Database Operation.*/
-    //--------------------------------------------------
-    // MySQL connect string, e.g. 192.168.11.27:3306/test
+
+    /* Database Operation.MySQL connect string, e.g. 192.168.11.27:3306/test */
     "DB_CONN_STR" : "192.168.11.27:3306/test",
-    
-    // Database user's name.
     "DB_USERNAME" : "hr",
-    
-    // Database user's password.
-    "DB_PASSWORD" : "hr",
-    //--------------------------------------------------
-    
-    
-    /* Business for write data to file.*/
-    //--------------------------------------------------
-    "DT_FILEPATH" : "./",
-    "DT_FILENAME" : "business.db"
-    //--------------------------------------------------
+    "DB_PASSWORD" : "hr"
 }
 

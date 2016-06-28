@@ -10,7 +10,7 @@
 
 static MYSQL *g_pMysql = NULL;
 
-int db_connect(const sync_conf_t *conf)
+int db_connect(struct pole_conf *conf)
 {
 	assert(conf != NULL);
 

@@ -18,7 +18,7 @@ int register_business(int busi_type, const business_t *busi)
 	return 0;
 }
 
-int startup_businesses(const sync_conf_t *args)
+int startup_businesses(struct pole_conf *args)
 {
 	int i;
 

@@ -2,8 +2,7 @@
 #define _REGISTER_H_
 
 #include "netmod.h"
-#include "parser.h"
-#include "clog.h"
+#include "conf.h"
 
 /* Business type defined. */
 #define BUSI_DUMP       NET_EV_DUMP_REQ
@@ -15,8 +14,7 @@
 
 struct business_t
 {
-	/* sync_conf_t: was defined in parser.h */
-	int     (*init)(const sync_conf_t *conf);
+	int     (*init)(struct pole_conf *conf);
 	int     (*done)(void *args, size_t arg_size);
 	void    (*destroy)();
 };
@@ -56,7 +54,7 @@ int register_business(int busi_type, const business_t *busi);
  * OTHERS:
  *   (null)
  ************************************************************************/
-int startup_businesses(const sync_conf_t *args);
+int startup_businesses(struct pole_conf *args);
 
 /*************************************************************************
  * FUNCTION:
@@ -67,17 +65,10 @@ int startup_businesses(const sync_conf_t *args);
  * INPUT:
  *   busi_type:
  *     The business type, [BUSI_DUMP|BUSI_EXEC_SQL|...].
- *   error:
- *     The char *type memory to store error message;
- *   err_size:
- *     The size of error to be input;
  *   args:
  *     The business function(business_t.do(int, void *))'s parameter.
  *   arg_size:
  *     The argument size.
- * OUTPUT:
- *   error:
- *     The error message to return;
  *
  * RETURN:
  *   SUCC: 0.
@@ -85,7 +76,7 @@ int startup_businesses(const sync_conf_t *args);
  * OTHERS:
  *   (null)
  ************************************************************************/
-int do_business(int busi_type, char *error, size_t err_size, void *args, size_t arg_size);
+int do_business(int busi_type, void *args, size_t arg_size);
 
 /*************************************************************************
  * FUNCTION:

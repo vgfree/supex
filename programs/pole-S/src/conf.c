@@ -1,176 +1,108 @@
-#include "parser.h"
-#include "clog.h"
-#include "json.h"
 #include <string.h>
 #include <assert.h>
 
-int parse_config(sync_conf_t *conf, const char *conf_file_path)
+#include "conf.h"
+#include "json.h"
+#include "libmini.h"
+
+void config_init(struct pole_conf *p_cfg, char *name)
 {
-	assert(conf != NULL);
-	assert(conf_file_path != NULL);
+	const char              *str_val = NULL;
+	struct json_object      *obj = NULL;
+	struct json_object      *cfg = json_object_from_file(name);
 
-	struct json_object *sub_obj, *root_obj;
+	if (cfg == NULL) {
+		goto fail;
+	}
 
-	root_obj = json_object_from_file(conf_file_path);
-	assert(root_obj != NULL);
 
 	/* Pole-S Log Configure. */
-	if (!json_object_object_get_ex(root_obj, "LOG_FILE_PATH", &sub_obj)) {
-		goto PARSE_FAIL;
-	}
+	if (json_object_object_get_ex(cfg, "LOG_FILE", &obj)) {
+		str_val = json_object_get_string(obj);
+		strcpy(p_cfg->log_file, str_val);
+	} else { goto fail; }
 
-	strcpy(conf->log_file, json_object_get_string(sub_obj));
-	json_object_put(sub_obj);
-#if 0
+	if (json_object_object_get_ex(cfg, "LOG_LEVEL", &obj)) {
+		p_cfg->log_level = json_object_get_int(obj);
+	} else { goto fail; }
 
-	/*
-	 *   if (!json_object_object_get_ex(root_obj, "LOG_FILE_NAME", &sub_obj)) {
-	 *        goto PARSE_FAIL;
-	 *   }
-	 *
-	 *   strcpy(conf->log_file_name, json_object_get_string(sub_obj));
-	 * */
-#endif
-	char loglevel[12];
 
-	if (!json_object_object_get_ex(root_obj, "LOG_LEVEL", &sub_obj)) {
-		goto PARSE_FAIL;
-	}
-
-	strcpy(loglevel, json_object_get_string(sub_obj));
-	json_object_put(sub_obj);
-
-	if (!strcmp(loglevel, "LOG_DEBUG")) {
-		conf->log_level = LOG_DEBUG;
-	} else if (!strcmp(loglevel, "LOG_INFO")) {
-		conf->log_level = LOG_INFO;
-	} else if (!strcmp(loglevel, "LOG_WARN")) {
-		conf->log_level = LOG_WARN;
-	} else if (!strcmp(loglevel, "LOG_ERROR")) {
-		conf->log_level = LOG_ERROR;
-	} else if (!strcmp(loglevel, "LOG_SYS")) {
-		conf->log_level = LOG_SYS;
-	} else if (!strcmp(loglevel, "LOG_FATAL")) {
-		conf->log_level = LOG_FATAL;
-	}
-
-#if 0
-
-	/*
-	 *   if (!json_object_object_get_ex(root_obj, "LOG_COUNT", &sub_obj)) {
-	 *        goto PARSE_FAIL;
-	 *   }
-	 *
-	 *   conf->log_count = json_object_get_int(sub_obj);
-	 *
-	 *   if (!json_object_object_get_ex(root_obj, "LOG_MAX_SIZE", &sub_obj)) {
-	 *        goto PARSE_FAIL;
-	 *   }
-	 *
-	 *   conf->log_max_size = json_object_get_int(sub_obj);
-	 * */
-#endif
 
 	/* Network communication with Server. */
-	if (!json_object_object_get_ex(root_obj, "SLAVE_UNIQUE_ID", &sub_obj)) {
-		goto PARSE_FAIL;
-	}
+	if (json_object_object_get_ex(cfg, "SLAVE_UNIQUE_ID", &obj)) {
+		str_val = json_object_get_string(obj);
+		strcpy(p_cfg->self_uid, str_val);
+	} else { goto fail; }
 
-	strcpy(conf->id, json_object_get_string(sub_obj));
-	json_object_put(sub_obj);
+	if (json_object_object_get_ex(cfg, "SLAVE_CONN_URI", &obj)) {
+		str_val = json_object_get_string(obj);
+		strcpy(p_cfg->conn_uri, str_val);
+	} else { goto fail; }
 
-	if (!json_object_object_get_ex(root_obj, "SLAVE_CONN_URI", &sub_obj)) {
-		goto PARSE_FAIL;
-	}
-
-	strcpy(conf->conn_uri, json_object_get_string(sub_obj));
 
 	/* Network operation. */
-	if (!json_object_object_get_ex(root_obj, "RUNNING_TYPE", &sub_obj)) {
-		goto PARSE_FAIL;
-	}
+	if (json_object_object_get_ex(cfg, "RUNNING_TYPE", &obj)) {
+		str_val = json_object_get_string(obj);
+		strcpy(p_cfg->run_type, str_val);
+	} else { goto fail; }
 
-	strcpy(conf->run_type, json_object_get_string(sub_obj));
-	json_object_put(sub_obj);
+	if (json_object_object_get_ex(cfg, "DEST_DUMP_UID", &obj)) {
+		str_val = json_object_get_string(obj);
+		strcpy(p_cfg->dump_uid, str_val);
+	} else { goto fail; }
 
-	if (!json_object_object_get_ex(root_obj, "DEST_DUMP_ID", &sub_obj)) {
-		goto PARSE_FAIL;
-	}
+	if (json_object_object_get_ex(cfg, "SELF_INCR_SEQ", &obj)) {
+		p_cfg->incr_seq = json_object_get_int64(obj);
+	} else { goto fail; }
 
-	strcpy(conf->dump_id, json_object_get_string(sub_obj));
-	json_object_put(sub_obj);
+
 
 	/* MySQL localhost dump. */
-	if (!json_object_object_get_ex(root_obj, "DUMP_HOSTNAME", &sub_obj)) {
-		goto PARSE_FAIL;
-	}
+	if (json_object_object_get_ex(cfg, "DUMP_HOSTNAME", &obj)) {
+		str_val = json_object_get_string(obj);
+		strcpy(p_cfg->dump_host, str_val);
+	} else { goto fail; }
 
-	strcpy(conf->dump_host, json_object_get_string(sub_obj));
-	json_object_put(sub_obj);
+	if (json_object_object_get_ex(cfg, "DUMP_USERNAME", &obj)) {
+		str_val = json_object_get_string(obj);
+		strcpy(p_cfg->dump_user, str_val);
+	} else { goto fail; }
 
-	if (!json_object_object_get_ex(root_obj, "DUMP_USERNAME", &sub_obj)) {
-		goto PARSE_FAIL;
-	}
+	if (json_object_object_get_ex(cfg, "DUMP_PASSWORD", &obj)) {
+		str_val = json_object_get_string(obj);
+		strcpy(p_cfg->dump_pwd, str_val);
+	} else { goto fail; }
 
-	strcpy(conf->dump_user, json_object_get_string(sub_obj));
-	json_object_put(sub_obj);
+	if (json_object_object_get_ex(cfg, "DUMP_FILEPATH", &obj)) {
+		str_val = json_object_get_string(obj);
+		strcpy(p_cfg->dump_path, str_val);
+	} else { goto fail; }
 
-	if (!json_object_object_get_ex(root_obj, "DUMP_PASSWORD", &sub_obj)) {
-		goto PARSE_FAIL;
-	}
 
-	strcpy(conf->dump_pwd, json_object_get_string(sub_obj));
-	json_object_put(sub_obj);
-
-	if (!json_object_object_get_ex(root_obj, "DUMP_FILEPATH", &sub_obj)) {
-		goto PARSE_FAIL;
-	}
-
-	strcpy(conf->dump_path, json_object_get_string(sub_obj));
-	json_object_put(sub_obj);
 
 	/* Business for Database Operation. */
-	if (!json_object_object_get_ex(root_obj, "DB_CONN_STR", &sub_obj)) {
-		goto PARSE_FAIL;
-	}
+	if (json_object_object_get_ex(cfg, "DB_CONN_STR", &obj)) {
+		str_val = json_object_get_string(obj);
+		strcpy(p_cfg->db_conn_str, str_val);
+	} else { goto fail; }
 
-	strcpy(conf->db_conn_str, json_object_get_string(sub_obj));
-	json_object_put(sub_obj);
+	if (json_object_object_get_ex(cfg, "DB_USERNAME", &obj)) {
+		str_val = json_object_get_string(obj);
+		strcpy(p_cfg->db_user, str_val);
+	} else { goto fail; }
 
-	if (!json_object_object_get_ex(root_obj, "DB_USERNAME", &sub_obj)) {
-		goto PARSE_FAIL;
-	}
 
-	strcpy(conf->db_user, json_object_get_string(sub_obj));
-	json_object_put(sub_obj);
+	if (json_object_object_get_ex(cfg, "DB_PASSWORD", &obj)) {
+		str_val = json_object_get_string(obj);
+		strcpy(p_cfg->db_pwd, str_val);
+	} else { goto fail; }
 
-	if (!json_object_object_get_ex(root_obj, "DB_PASSWORD", &sub_obj)) {
-		goto PARSE_FAIL;
-	}
 
-	strcpy(conf->db_pwd, json_object_get_string(sub_obj));
-	json_object_put(sub_obj);
+	json_object_put(cfg);
+	return;
 
-	/* Business for writing data to file. */
-	if (!json_object_object_get_ex(root_obj, "DT_FILEPATH", &sub_obj)) {
-		goto PARSE_FAIL;
-	}
-
-	strcpy(conf->dt_filepath, json_object_get_string(sub_obj));
-	json_object_put(sub_obj);
-
-	if (!json_object_object_get_ex(root_obj, "DT_FILENAME", &sub_obj)) {
-		goto PARSE_FAIL;
-	}
-
-	strcpy(conf->dt_filename, json_object_get_string(sub_obj));
-	json_object_put(sub_obj);
-
-	json_object_put(root_obj);
-	return 0;
-
-PARSE_FAIL:
-	json_object_put(root_obj);
-	return -1;
+fail:
+	x_printf(E, "invalid config file :%s\n", name);
+	exit(EXIT_FAILURE);
 }
 

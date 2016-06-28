@@ -15,7 +15,7 @@ struct dump_t
 
 static struct dump_t g_dump;
 
-int dump_init(const sync_conf_t *args)
+int dump_init(struct pole_conf *args)
 {
 	assert(args != NULL);
 

@@ -1,12 +1,14 @@
 SRV=pole-M
-MAIN_APP_SERV ?= $(SRV)
 
 LOG=./logs
 SRC=./src
 BIN=./bin
 
 INC_PATH=\
-	 -I/usr/local/include/luajit-2.0 -I../../lib/libev -I../../lib/json-c \
+	 -I/usr/local/include/luajit-2.0 \
+	 -I/usr/local/include \
+	 -I../../lib/json-c \
+	 -I../../lib/libev \
 	 -I../../lib/libkv/release \
 	 -I../../lib/libmemhook/src \
 	 -I../../lib/libscco/include \
