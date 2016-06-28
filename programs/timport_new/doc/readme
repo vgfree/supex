@@ -1,0 +1,32 @@
+这个新的timport由C和lua编写。C负责大框架，lua负责业务相关的插件。和旧的timport相比，更加灵活的扩展业务，代码易懂。
+
+一。配置：
+1.启动前得在var目录下新建文件start_time.txt, 并写入start time, 是一个unix timestamp.
+2.有3个配置文件，cfg.lua, link.lua.这两个主要提供lua相关的配置文件。timport_conf.json提供C相关的配置。
+	（1）redis相关配置在timport_conf.json和link.lua里都有， 请保持这两个配置中的redis一模一样，包括顺序。
+	（2）delay_time在timport_conf.json里，因为C中的定时器需要。
+	（3）其他业务相关配置均在cfg.lua里，包括expire_time，等。
+
+二。使用用例的配置：
+1.配置1个timport，每10分钟取一次数据，
+
+time_interval = 10	//程序10分钟取一次数据，用来计算key的时间段。
+migration_interval = 10 //10分钟，计算下一个start_time.
+expire_time = 60	//timport 取完数据后设置redis的过期时间，60s。
+
+hash_filter		//hash函数选择，可以用imei和time两个纬度，目前只支持imei，time的hash函数要看具体场景。
+
+"delay_time": 3600,     //在timport_conf.json里填写，保留当前时间1个小时内的数据不取。
+
+2.配置两个timport，每60分钟取一次数据，两个timport分别管理前30分钟和后30分钟的数据。
+
+time_interval = 60      //程序60分钟取一次数据，用来计算key的时间段。
+migration_interval = 60 //60分钟，计算下一个start_time.
+expire_time = 60        //timport 取完数据后设置redis的过期时间，60s。
+
+"delay_time": 3600,     //在timport_conf.json里填写，保留当前时间1个小时内的数据不取。
+
+两个timport的var下的两个start_time.txt，一个正点，一个延后30分钟。
+
+三。使用测试代码写入测试数据到redis。以便timport测试。
+在test的目录里，有个lua写的测试用例，定时向redis写入数据。
