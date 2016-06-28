@@ -23,7 +23,7 @@ int gps_decode(struct ev_loop *loop, const char *data, GPS_INFO *gps_info)
 		goto fail;
 	}
 
-	gps_info->IMEI = atoll(son->valuestring);
+	strcpy(gps_info->IMEI, son->valuestring);
 
 	/*检查imei是否是测试imei*/
 	if (forward_imei_check(gps_info->IMEI)) {
@@ -85,11 +85,23 @@ int gps_decode(struct ev_loop *loop, const char *data, GPS_INFO *gps_info)
 	int direction = arr->valueint;
 
 	if (direction == -1) {
-		x_printf(E, "data error, direction is -1");
+		//x_printf(E, "data error, direction is -1");
 		goto fail;
 	}
 
 	gps_info->direction = direction;
+
+	/*parse altitude*/
+	son = cJSON_GetObjectItem(obj, "altitude");
+
+	if (NULL == son) {
+		x_printf(E, "data has no altitude!");
+		goto fail;
+	}
+
+	arr = cJSON_GetArrayItem(son, speed_max_idx);
+	int altitude = arr->valueint;
+	gps_info->altitude = altitude;
 
 	/*parse longitude*/
 	son = cJSON_GetObjectItem(obj, "longitude");
@@ -140,7 +152,7 @@ int gps_decode(struct ev_loop *loop, const char *data, GPS_INFO *gps_info)
 	cJSON_Delete(obj);
 
 	x_printf(D, "<=====================================================================>");
-	x_printf(D, "direction:%d, longitude:%f, latitude:%f, start_time:%ld, end_time:%ld, IMEI:%lld",
+	x_printf(D, "direction:%d, longitude:%f, latitude:%f, start_time:%ld, end_time:%ld, IMEI:%s",
 		gps_info->direction, gps_info->longitude, gps_info->latitude,
 		gps_info->start_time, gps_info->end_time, gps_info->IMEI);
 	return 0;

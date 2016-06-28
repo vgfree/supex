@@ -6,6 +6,7 @@
 #include <string.h>
 #include <ev.h>
 
+#include "rr_def.h"
 #include "cJSON.h"
 #include "utils.h"
 
@@ -15,11 +16,12 @@ typedef struct gps_info
 	int             point_cnt;
 	int             max_speed;
 	int             direction;
+        int             altitude;
 	long            start_time;
 	long            end_time;
 	double          longitude;
 	double          latitude;
-	long long       IMEI;
+	char            IMEI[MAX_IMEI_LEN];
 } GPS_INFO;
 
 typedef struct cal_info

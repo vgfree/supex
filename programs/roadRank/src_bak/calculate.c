@@ -1,16 +1,22 @@
 #include "calculate.h"
 #include "rr_cfg.h"
-#include "async_api.h"
 #include "utils.h"
 #include "kv_road.h"
 #include "kv_imei.h"
 #include "match_road.h"
+#include "async_tasks/async_api.h"
+#include "pools/xpool.h"
+#include "pool_api/conn_xpool_api.h"
+#include "redis_api/redis_status.h"
+#include "redis_parse.h"
 
 #include <time.h>
 
 #define ASYNC_LIBEV_THRESHOLD   6
 #define ASYNC_LUAKV_THRESHOLD   1
 #define BUFF_USE_LEN            10240
+#define REDIS_ERR       -1
+#define REDIS_OK        0
 
 extern struct rr_cfg_file g_rr_cfg_file;
 
@@ -56,7 +62,7 @@ static int snd_data_to_luakv(char *http_data, struct ev_loop *loop, char *host, 
 	return 0;
 }
 #endif	/* if 0 */
-
+/*
 static int add_redis_task(char *redis_buff, struct rr_link *link, struct async_ctx *ac)
 {
 	char *proto = NULL;
@@ -86,17 +92,42 @@ static int add_redis_task(char *redis_buff, struct rr_link *link, struct async_c
 
 	return 0;
 }
+*/
+static int add_redis_task(char command[], struct rr_link *link, struct ev_loop *loop)
+{       
+        struct xpool            *cpool = conn_xpool_find(link->host, link->port);
+        struct async_api        *api = async_api_initial(loop, 1, true, QUEUE_TYPE_FIFO, NEXUS_TYPE_TEAM, NULL, NULL, NULL);
+        
+        // x_printf(D,"import_to_redis: %s\n",command);
+        
+        if (api && cpool) {
+                /*data*/
+                char    *proto;
+                int     ok = cmd_to_proto(&proto, command);
+        
+                if (ok == REDIS_ERR) {
+                        async_api_distory(api);
+                        return -1;
+                }
+        
+                /*send*/
+                struct command_node *cmd = async_api_command(api, PROTO_TYPE_REDIS, cpool, proto, strlen(proto), NULL, NULL);
+                free(proto);
+        
+                if (cmd == NULL) {
+                        async_api_distory(api);
+                        return -1;
+                }
+        
+                async_api_startup(api);
+                return 0;
+        }
+        
+        return -1;
+}
 
 static int update_redis(KV_ROADID *kv_roadID, ROAD_INFO *road_info, struct ev_loop *loop)
 {
-	struct async_ctx *ac = NULL;
-
-	ac = async_initial(loop, QUEUE_TYPE_FIFO, NULL, NULL, NULL, ASYNC_LIBEV_THRESHOLD);
-
-	if (!ac) {
-		return 0;
-	}
-
 	int     old_rr_id = kv_roadID->old_roadID / 1000;
 	int     old_sg_id = kv_roadID->old_roadID % 1000;
 	int     save_time = g_rr_cfg_file.save_time;
@@ -105,12 +136,12 @@ static int update_redis(KV_ROADID *kv_roadID, ROAD_INFO *road_info, struct ev_lo
 	char redis_buff[BUFF_USE_LEN] = { 0 };
 	memset(redis_buff, 0, BUFF_USE_LEN);
 	sprintf(redis_buff,
-		"SET %ld:roadSpeedInfo %d@%d@%ld@%ld@%lld",
+		"SET %ld:roadSpeedInfo %d@%d@%ld@%ld@%s",
 		kv_roadID->old_roadID, kv_roadID->max_speed, kv_roadID->avg_speed,
 		kv_roadID->end_time, kv_roadID->used_time, kv_roadID->IMEI);
 	x_printf(D, "redis command: %s", redis_buff);
 
-	add_redis_task(redis_buff, &(g_rr_cfg_file.road_traffic_server), ac);
+	add_redis_task(redis_buff, &(g_rr_cfg_file.road_traffic_server), loop);
 
 	/*删除过期城市道路路况*/
 	time_t now_time;
@@ -119,7 +150,7 @@ static int update_redis(KV_ROADID *kv_roadID, ROAD_INFO *road_info, struct ev_lo
 	sprintf(redis_buff,
 		"ZREMRANGEBYSCORE %d:cityinfo -inf %ld",
 		kv_roadID->citycode, now_time - save_time);
-	add_redis_task(redis_buff, &(g_rr_cfg_file.city_traffic_server), ac);
+	add_redis_task(redis_buff, &(g_rr_cfg_file.city_traffic_server), loop);
 
 	/*添加城市道路路况*/
 	memset(redis_buff, 0, BUFF_USE_LEN);
@@ -127,14 +158,14 @@ static int update_redis(KV_ROADID *kv_roadID, ROAD_INFO *road_info, struct ev_lo
 		"ZADD %d:cityinfo %ld %d:%d:%d:%d:%ld:%ld",
 		kv_roadID->citycode, kv_roadID->end_time, old_rr_id, old_sg_id, kv_roadID->max_speed,
 		kv_roadID->avg_speed, kv_roadID->used_time, kv_roadID->end_time);
-	add_redis_task(redis_buff, &(g_rr_cfg_file.city_traffic_server), ac);
+	add_redis_task(redis_buff, &(g_rr_cfg_file.city_traffic_server), loop);
 
 	/*删除过期区县道路路况*/
 	memset(redis_buff, 0, BUFF_USE_LEN);
 	sprintf(redis_buff,
 		"ZREMRANGEBYSCORE %d:countyinfo -inf %ld",
 		kv_roadID->countycode, now_time - save_time);
-	add_redis_task(redis_buff, &(g_rr_cfg_file.county_traffic_server), ac);
+	add_redis_task(redis_buff, &(g_rr_cfg_file.county_traffic_server), loop);
 
 	/*添加城市道路路况*/
 	memset(redis_buff, 0, BUFF_USE_LEN);
@@ -142,9 +173,7 @@ static int update_redis(KV_ROADID *kv_roadID, ROAD_INFO *road_info, struct ev_lo
 		"ZADD %d:countyinfo %ld %d:%d:%d:%d:%ld:%ld",
 		kv_roadID->countycode, kv_roadID->end_time, old_rr_id, old_sg_id, kv_roadID->max_speed,
 		kv_roadID->avg_speed, kv_roadID->used_time, kv_roadID->end_time);
-	add_redis_task(redis_buff, &(g_rr_cfg_file.county_traffic_server), ac);
-
-	async_startup(ac);
+	add_redis_task(redis_buff, &(g_rr_cfg_file.county_traffic_server), loop);
 
 	return 0;
 }
@@ -167,7 +196,7 @@ static int set_IMEI_data(GPS_INFO *gps_info, ROAD_INFO *road_info, KV_IMEI *kv_I
 
 static void set_roadID_data(KV_IMEI *kv_IMEI, KV_ROADID *kv_roadID)
 {
-	kv_roadID->IMEI = kv_IMEI->IMEI;
+	strcpy(kv_roadID->IMEI, kv_IMEI->IMEI);
 	kv_roadID->old_roadID = kv_IMEI->roadID;
 	kv_roadID->avg_speed = kv_IMEI->max_speed_num / kv_IMEI->count;
 
@@ -190,7 +219,7 @@ static void init_IMEI_data(GPS_INFO *gps_info, ROAD_INFO *road_info, KV_IMEI *kv
 	kv_IMEI->str_time = gps_info->start_time;
 	kv_IMEI->end_time = gps_info->end_time;
 	kv_IMEI->roadID = road_info->new_roadID;
-	kv_IMEI->IMEI = gps_info->IMEI;
+	strcpy(kv_IMEI->IMEI, gps_info->IMEI);
 	kv_IMEI->citycode = road_info->citycode;
 	kv_IMEI->countycode = road_info->countycode;
 	kv_IMEI->direction = gps_info->direction;
@@ -223,7 +252,7 @@ int calculate(GPS_INFO *gps_info, void *data, struct ev_loop *loop)
 					}
 
 					x_printf(D,
-						"kv_roadID IMEI %lld shift %c max_speed %d avg_speed %d "
+						"kv_roadID IMEI %s shift %c max_speed %d avg_speed %d "
 						"end_time %ld used_time %ld old_roadID %ld citycode %d "
 						"countycode %d",
 						kv_roadID.IMEI, kv_roadID.shift, kv_roadID.max_speed,

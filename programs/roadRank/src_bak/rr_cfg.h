@@ -1,6 +1,8 @@
 #pragma once
 
+#include "rr_def.h"
 #include "utils.h"
+#include "base/utils.h"
 
 #define MAX_TEST_IMEI   32
 #define MAX_LINK_INDEX  32
@@ -26,7 +28,7 @@ struct rr_cfg_file
 	int             road_match_limit;
 	int             kv_cache_count;
 	int             redis_conn;
-	long            imei_buff[MAX_TEST_IMEI];
+	char            imei_buff[MAX_TEST_IMEI][MAX_IMEI_LEN];
 	int             imei_count;
 };
 

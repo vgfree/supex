@@ -4,16 +4,16 @@
 
 extern kv_cache *g_kv_cache;
 
-int get_IMEI_from_kv(long IMEI, KV_IMEI *kv_IMEI)
+int get_IMEI_from_kv(char* IMEI, KV_IMEI *kv_IMEI)
 {
 	char            buff[10240] = { 0 };
 	kv_answer_t     *ans;
 	int             flag = SUC_IMEI;
 
 	memset(buff, '\0', sizeof(buff));
-	sprintf(buff, "hmget %ld count max_speed_num max_speed str_time end_time roadID IMEI citycode countycode direction", IMEI);
+	sprintf(buff, "hmget %s count max_speed_num max_speed str_time end_time roadID IMEI citycode countycode direction", IMEI);
 	char kv_hash[128];
-	sprintf(kv_hash, "%ld", IMEI);
+	sprintf(kv_hash, "%s", IMEI);
 	ans = kv_cache_ask(g_kv_cache, kv_hash, buff);
 
 	if (ans->errnum != ERR_NONE) {
@@ -60,7 +60,7 @@ int get_IMEI_from_kv(long IMEI, KV_IMEI *kv_IMEI)
 					kv_IMEI->roadID = atoll(value->ptr); break;
 
 				case 7:
-					kv_IMEI->IMEI = atoll(value->ptr); break;
+					strcpy(kv_IMEI->IMEI,value->ptr); break;
 
 				case 8:
 					kv_IMEI->citycode = atoll(value->ptr); break;
@@ -91,12 +91,12 @@ int set_IMEI_to_kv(KV_IMEI *kv_IMEI)
 	int             flag = 0;
 	kv_answer_t     *ans = NULL;
 	sprintf(buff,
-		"hmset %ld count %d max_speed_num %d max_speed %d str_time %ld end_time %ld roadID %ld IMEI %ld citycode %ld countycode %ld direction %d",
+		"hmset %s count %d max_speed_num %d max_speed %d str_time %ld end_time %ld roadID %ld IMEI %s citycode %ld countycode %ld direction %d",
 		kv_IMEI->IMEI, kv_IMEI->count, kv_IMEI->max_speed_num, kv_IMEI->max_speed,
 		kv_IMEI->str_time, kv_IMEI->end_time, kv_IMEI->roadID, kv_IMEI->IMEI,
 		kv_IMEI->citycode, kv_IMEI->countycode, kv_IMEI->direction);
 	char kv_hash[128];
-	sprintf(kv_hash, "%ld", kv_IMEI->IMEI);
+	sprintf(kv_hash, "%s", kv_IMEI->IMEI);
 	ans = kv_cache_ask(g_kv_cache, kv_hash, buff);
 
 	if (ans->errnum != ERR_NONE) {

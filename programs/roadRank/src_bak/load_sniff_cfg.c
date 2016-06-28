@@ -18,6 +18,9 @@ void load_sniff_cfg_file(struct sniff_cfg_file *p_cfg, char *name)
 	if (json_object_object_get_ex(cfg, "sniff_worker_counts", &obj)) {
 		p_cfg->worker_counts = (short)json_object_get_int(obj);
 	} else { goto fail; }
+	if (json_object_object_get_ex(cfg, "sniff_tasker_counts", &obj)) {
+		p_cfg->tasker_counts = (short)json_object_get_int(obj);
+	} else { goto fail; }
 
 #ifdef OPEN_SCCO
 	if (json_object_object_get_ex(cfg, "sharer_counts", &obj)) {

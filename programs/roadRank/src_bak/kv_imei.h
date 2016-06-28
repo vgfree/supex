@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "rr_def.h"
 #include "utils.h"
 #include "libkv.h"
 #include "decode_gps.h"
@@ -22,12 +23,12 @@ typedef struct kv_imei
 	long    str_time;
 	long    end_time;
 	long    roadID;
-	long    IMEI;
+	char    IMEI[MAX_IMEI_LEN];
 	long    citycode;
 	long    countycode;
 } KV_IMEI;
 
-int get_IMEI_from_kv(long IMEI, KV_IMEI *kv_IMEI);
+int get_IMEI_from_kv(char* IMEI, KV_IMEI *kv_IMEI);
 
 int set_IMEI_to_kv(KV_IMEI *kv_IMEI);
 #endif	/* ifndef __KV_IMEI_H_ */

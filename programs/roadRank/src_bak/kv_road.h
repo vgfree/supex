@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "rr_def.h"
 #include "utils.h"
 #include "libkv.h"
 #include "decode_gps.h"
@@ -16,7 +17,7 @@ typedef struct kv_roadID
 	int             avg_speed;
 	int             citycode;
 	int             countycode;
-	long long       IMEI;
+        char            IMEI[MAX_IMEI_LEN];
 	long            end_time;
 	long            used_time;
 	long            old_roadID;

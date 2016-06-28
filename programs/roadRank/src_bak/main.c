@@ -6,19 +6,20 @@
 
 #include "mq_api.h"
 
-#include "swift_api.h"
+#include "major/swift_api.h"
 #include "swift_cpp_api.h"
 #include "load_swift_cfg.h"
 
-#include "sniff_api.h"
-#include "pool_api.h"
+#include "minor/sniff_api.h"
+#include "pool_api/conn_xpool_api.h"
 #include "load_sniff_cfg.h"
-#include "apply_def.h"
+//#include "apply_def.h"
 #include "rr_cfg.h"
 #include "kv_cache.h"
 #include "base/switch_queue.h"
+#include "app_queue.h"
 
-#include "sniff_evuv_cpp_api.h"
+#include "sniff_evcoro_cpp_api.h"
 
 #include "add_session_cmd.h"
 
@@ -44,7 +45,7 @@ static void swift_entry_init(void)
 	/*
 	 * 初始化支持的命令
 	 */
-	init_session_cmd();
+	//init_session_cmd();
 
 	// ---> init libkv
 	g_kv_cache = kv_cache_create(g_rr_cfg_file.kv_cache_count);
@@ -75,17 +76,8 @@ static void swift_shut_down(void)
 
 	/*通过每个swift_worker挂起sniff_worker的所有线程*/
 	for (i = 0; i < swift_worker_total; i++) {
-		struct mount_info *link = NULL;
-
-		int j = 0;
-
-		link = (struct mount_info *)swift_worker[i].mount;
-
-		for (j = 0; j < LIMIT_CHANNEL_KIND; j++) {
-			thds++;
-
-			sniff_suspend_thread(link[j].list, cond);
-		}
+                thds++;
+                sniff_suspend_thread(swift_worker[i].mount, cond);
 	}
 
 	/*
@@ -117,17 +109,8 @@ static void swift_reload_cfg(void)
 
 	/*通过每个swift_worker挂起sniff_worker的所有线程*/
 	for (i = 0; i < swift_worker_total; i++) {
-		struct mount_info *link = NULL;
-
-		int j = 0;
-
-		link = (struct mount_info *)swift_worker[i].mount;
-
-		for (j = 0; j < LIMIT_CHANNEL_KIND; j++) {
-			thds++;
-
-			sniff_suspend_thread(link[j].list, &cond);
-		}
+                thds++;
+                sniff_suspend_thread(swift_worker[i].mount, &cond);
 	}
 
 	/*
@@ -176,13 +159,13 @@ int main(int argc, char **argv)
 	}
 
 	g_swift_cfg_list.func_info[APPLY_FUNC_ORDER].type = BIT8_TASK_TYPE_ALONE;
-	g_swift_cfg_list.func_info[APPLY_FUNC_ORDER].func = (TASK_CALLBACK)swift_vms_call;
+	g_swift_cfg_list.func_info[APPLY_FUNC_ORDER].func = (TASK_VMS_FCB)swift_vms_call;
 
 	g_swift_cfg_list.entry_init = swift_entry_init;
 
 	g_swift_cfg_list.pthrd_init = swift_pthrd_init;
 
-	g_swift_cfg_list.vmsys_init = swift_vms_init;
+	//g_swift_cfg_list.vmsys_init = swift_vms_init;
 
 	g_swift_cfg_list.reload_cfg = swift_reload_cfg;
 
@@ -216,7 +199,7 @@ int main(int argc, char **argv)
 	g_sniff_cfg_list.task_lookup = sniff_task_lookup;
 	g_sniff_cfg_list.task_report = sniff_task_report;
 
-	g_sniff_cfg_list.vmsys_init = sniff_vms_init;
+	//g_sniff_cfg_list.vmsys_init = sniff_vms_init;
 
 	sniff_mount(&g_sniff_cfg_list);
 

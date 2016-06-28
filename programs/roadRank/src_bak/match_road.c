@@ -1,99 +1,74 @@
 #include "match_road.h"
+#include "redis_parse.h"
 #include "calculate.h"
+#include "redis_api/redis_status.h"
+#include "evcoro_async_tasks.h"
+#include "spx_evcs.h"
 
 #define ASYNC_LIBEV_THRESHOLD 10
 
 extern struct rr_cfg_file g_rr_cfg_file;
 
-void PMR_callback(struct async_ctx *ac, void *reply, void *data)
+struct user_data  
+{                 
+        char                    *p_buf;
+        struct redis_status     *status;
+}; 
+
+int match_road_v2(struct ev_loop *loop, CAL_INFO *cal_info)
 {
-	CAL_INFO                *cal_info = data;
-	struct redis_reply      *p_reply = reply;
-
-	x_printf(D, "------------\n");
-
-	//	x_printf(D, "IMEI IS:[%ld]\tPMR_callback data: %s", cal_info->gps_info->IMEI,
-	//		ac->obj.replies.work->cache.buf_addr);
-	if (p_reply && (p_reply->elements != 0)) {
-		ROAD_INFO road_info = { 0 };
-
-		if (REDIS_REPLY_ARRAY == p_reply->type) {
-			road_info.road_rootID = atoll(p_reply->element[0]->str);
-			road_info.segmentID = atoll(p_reply->element[1]->str);
-			road_info.countycode = atoll(p_reply->element[3]->str);
-			road_info.rt = atoi(p_reply->element[4]->str);
-
-			road_info.citycode = (road_info.countycode / 100) * 100;
-			road_info.new_roadID = road_info.road_rootID * 1000 + road_info.segmentID;
-
-			x_printf(D,
-				"road_info road_rootID %ld segmentID %d countycode %d rt %d citycode %d new_roadID %ld\n",
-				road_info.road_rootID, road_info.segmentID, road_info.countycode, road_info.rt,
-				road_info.citycode, road_info.new_roadID);
-			struct ev_loop *loop = ac->obj.settings.loop;
-
-			cal_info->cal_callback(&(cal_info->gps_info), (void *)&road_info, loop);
-		}
-	}
-
-	free(data);
-}
-
-static void pmr_abnormal_cb(const struct async_obj *obj, void *data)
-{
-	struct command_node *p_work = obj->replies.work;
-
-	if (p_work->privdata) {
-		free(p_work->privdata);
-		p_work->privdata = NULL;
-	}
-}
-
-static int forward_to_server(char *host, int port, const char *data, size_t size, struct ev_loop *loop, ASYNC_CALL_BACK fncb, void *with)
-{
-	struct cnt_pool         *cpool = NULL;
-	struct async_ctx        *ac = NULL;
-
-	ac = async_initial(loop, QUEUE_TYPE_FIFO, pmr_abnormal_cb, NULL, NULL, 1);
-
-	if (ac) {
-		void    *sfd = (void *)(intptr_t)-1;
-		int     rc = conn_xpool_gain(&cpool, host, port, &sfd);
-
-		if (rc) {
-			async_distory(ac);
-			return -1;
-		}
-
-		/*send*/
-		async_command(ac, PROTO_TYPE_REDIS, (int)(intptr_t)sfd, cpool, fncb, with, data, size);
-
-		async_startup(ac);
-		return 0;
-	}
-
-	return -1;
-}
-
-int match_road(struct ev_loop *loop, CAL_INFO *cal_info)
-{
+        int     len = 0;
+        char    *proto = NULL;
 	char    *host = g_rr_cfg_file.pmr_server.host;
 	int     port = g_rr_cfg_file.pmr_server.port;
-	int     ok = -1;
-	char    buff[128] = { 0 };
 
-	char *proto = NULL;
+        struct user_data g_user_data;
+        g_user_data.p_buf = NULL;
+        g_user_data.status = NULL;
+        struct supex_evcoro     *p_evcoro = supex_get_default();
+        struct evcoro_scheduler *p_scheduler = p_evcoro->scheduler;
+        struct xpool            *cpool = conn_xpool_find(host, port);
 
-	sprintf(buff, "hmget LOCATE %lf %lf %d", cal_info->gps_info.longitude,
-		cal_info->gps_info.latitude, cal_info->gps_info.direction);
-	x_printf(D, "redis command: %s", buff);
-	cmd_to_proto(&proto, buff);
+        char cmd_buff[120] = "";
+        snprintf(cmd_buff, 120, "hmget MLOCATE %s %lf %lf %d %d %d %ld", (cal_info->gps_info).IMEI, (cal_info->gps_info).longitude,(cal_info->gps_info).latitude, (cal_info->gps_info).direction, (cal_info->gps_info).altitude, (cal_info->gps_info).max_speed, (cal_info->gps_info).end_time);
+        len = cmd_to_proto(&proto, cmd_buff);
+        //len = cmd_to_proto(&proto, "hmget MLOCATE %s %lf %lf %d %d %d %ld", (cal_info->gps_info).IMEI, (cal_info->gps_info).longitude,(cal_info->gps_info).latitude, (cal_info->gps_info).direction, (cal_info->gps_info).altitude, (cal_info->gps_info).max_speed, (cal_info->gps_info).end_time);
+        //len = cmd_to_proto(&proto, "hgetall %s", "web");
+        //len = cmd_to_proto(&proto, "hmget MLOCATE 409601328282142roadRank 121.364435 31.224012 -1 32 0 1458711418");
+        struct async_evtasker   *tasker = evtask_initial(p_scheduler, 1, QUEUE_TYPE_FIFO, NEXUS_TYPE_SOLO);
+        struct command_node     *command = evtask_command(tasker, PROTO_TYPE_REDIS, cpool, proto, len);
 
-	if (proto) {
-		ok = forward_to_server(host, port, proto, strlen(proto), loop, PMR_callback, cal_info);
-		free(proto);
-	}
+        evtask_install(tasker);
+        evtask_startup(p_scheduler);
 
-	return ok;
+        g_user_data.p_buf = cache_data_address(&command->cache);
+        g_user_data.status = &command->parse.redis_info.rs;
+        /*printf("redis data fields = %d\n", g_user_data.status->fields);
+        int j = 0;
+        for (j = 0; j < g_user_data.status->fields; j++) {
+                printf("redis field[%d] = %s\n", j, g_user_data.p_buf + g_user_data.status->field[j].offset);
+        } 
+        */
+        ROAD_INFO road_info = { 0 };
+        
+        if (command->err == ASYNC_OK || g_user_data.status->error == 0) {
+                road_info.road_rootID = strtoll(g_user_data.p_buf + g_user_data.status->field[0].offset, NULL, 10);
+                road_info.segmentID = strtol(g_user_data.p_buf + g_user_data.status->field[1].offset, NULL, 10);
+                road_info.countycode = strtol(g_user_data.p_buf + g_user_data.status->field[3].offset, NULL, 10);
+                road_info.rt = strtol(g_user_data.p_buf + g_user_data.status->field[4].offset, NULL, 10);
+
+                road_info.citycode = (road_info.countycode / 100) * 100;
+                road_info.new_roadID = road_info.road_rootID * 1000 + road_info.segmentID;
+
+                x_printf(D, "road_info road_rootID %ld segmentID %d countycode %d rt %d citycode %d new_roadID %ld\n",
+                        road_info.road_rootID, road_info.segmentID, road_info.countycode, road_info.rt,
+                        road_info.citycode, road_info.new_roadID);
+
+                struct ev_loop *loop = command->ev_hook->loop;
+
+                cal_info->cal_callback(&(cal_info->gps_info), (void *)&road_info, loop);
+                
+        }
+        evtask_distory(tasker);
+        return 0;
 }
-
