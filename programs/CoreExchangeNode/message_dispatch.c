@@ -270,6 +270,15 @@ static void _setting_map(struct comm_message *msg)
 	}
 }
 
+static int _verified(struct comm_message *msg)
+{
+	if (msg->socket_type == PAIR_METHOD) {
+		comm_send(g_serv_info.commctx, msg, true, -1);
+		return 1;
+	}
+	return 0;
+}
+
 void message_dispatch()
 {
 	struct comm_message msg = {};
@@ -282,20 +291,22 @@ void message_dispatch()
 	log("des.obj:%d", des.obj);
 
 	if (des.obj == CLIENT) {
-		int fd = 0;
-		find_best_gateway(&fd);
+		if (_verified(&msg) == 0) {
+			int fd = 0;
+			find_best_gateway(&fd);
 
-		if (fd > 0) {
-			char cid[30] = {};
-			strcpy(cid, g_serv_info.ip);
-			strcat(cid, ":");
-			char buf[10] = {};
-			snprintf(buf, 10, "%d", msg.fd);
-			strcat(cid, buf);
-			set_msg_frame(0, &msg, strlen(cid), cid);
-			set_msg_frame(0, &msg, 8, "upstream");
-			set_msg_fd(&msg, fd);
-			comm_send(g_serv_info.commctx, &msg, true, -1);
+			if (fd > 0) {
+				char cid[30] = {};
+				strcpy(cid, g_serv_info.ip);
+				strcat(cid, ":");
+				char buf[10] = {};
+				snprintf(buf, 10, "%d", msg.fd);
+				strcat(cid, buf);
+				set_msg_frame(0, &msg, strlen(cid), cid);
+				set_msg_frame(0, &msg, 8, "upstream");
+				set_msg_fd(&msg, fd);
+				comm_send(g_serv_info.commctx, &msg, true, -1);
+			}
 		}
 	} else if (des.obj == MESSAGE_GATEWAY) {
 		_classified_message(&msg);

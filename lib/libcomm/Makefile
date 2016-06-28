@@ -79,6 +79,7 @@ endef
 #######
 ALL:
 	$(CC) $(BUILD_PWD)/test/timer_test.c -o $(BUILD_PWD)/test/timer_test
+	$(CC) $(BUILD_PWD)/test/mfptp_test.c -o $(BUILD_PWD)/test/mfptp_test
 	$(CC) $(BUILD_PWD)/test/list_test.c -o $(BUILD_PWD)/test/list_test
 	$(CC) $(BUILD_PWD)/test/server.c -o $(BUILD_PWD)/test/server
 	$(CC) $(BUILD_PWD)/test/client.c -o $(BUILD_PWD)/test/client
@@ -113,7 +114,8 @@ distclean : clean
 	@-rm -rf $(BUILD_PWD)/test/server
 	@-rm -rf $(BUILD_PWD)/test/list_test
 	@-rm -rf $(BUILD_PWD)/test/timer_test
-	@-rm -rf core*
+	@-rm -rf $(BUILD_PWD)/test/mfptp_test
+	@-rm -rf $(BUILD_PWD)/core*
 	$(ECHO) $(COLOR_TXT)"\n\tCLEAN\t >>> "$(COLOR_RED)"$@"$(COLOR_TXT)" <<< COMPLETE"$(COLOR_NONE)
 
 install : $(TARGET)

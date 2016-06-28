@@ -5,13 +5,14 @@
 
 #include "comm_epoll.h"
 
-#define MAXEPOLLSIZE 1024	/* epoll允许检测的最大的描述符数 */
+#define MAXEPOLLSIZE (1024*1000)	/* epoll允许检测的最大的描述符数 */
 
 bool commepoll_init(struct comm_epoll *commepoll, int epollsize)
 {
 	assert(commepoll);
 	memset(commepoll, 0, sizeof(*commepoll));
 	commepoll->epollsize = (epollsize <= 0 || epollsize > MAXEPOLLSIZE) ? MAXEPOLLSIZE : epollsize;
+	log("commepoll->epollsize:%d\n", commepoll->epollsize);
 	commepoll->epfd = epoll_create(commepoll->epollsize);
 
 	if (commepoll->epfd > -1) {

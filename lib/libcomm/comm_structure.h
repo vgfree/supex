@@ -19,7 +19,7 @@
 extern "C" {
 #endif
 
-#define EPOLL_SIZE              1000	/* 允许EPOLL能够监听的描述符的最大个数 */
+#define EPOLL_SIZE              (1024*100)	/* 允许EPOLL能够监听的描述符的最大个数 */
 #define LISTEN_SIZE             10	/* 允许监听fd的最大个数 */
 #define COMM_FRAMES             13	/* 允许一个包最大的总帧数 */
 #define REMAINFD_INCREASE_SIZE  10	/* remainfd扩容时的增加幅度 */
@@ -60,7 +60,7 @@ struct comm_message
 {
 	int                     fd;			/* 消息对应的描述符 */
 	int                     config;			/* 消息的加密压缩格式 */
-	int                     socket_type;		/* 消息套接字的类型 */
+	int                     socket_type;		/* 消息套接字的类型[要使用默认值的时候必须将此值设置为-1] */
 	char                    *content;		/* 消息的内容首地址 */
 	struct comm_package     package;		/* 消息包的设置 */
 	struct comm_list        list;			/* 链表节点 */

@@ -63,7 +63,11 @@ inline void copy_commmsg(struct comm_message *destmsg, const struct comm_message
 	assert(destmsg && srcmsg && destmsg->content && srcmsg->content);
 	destmsg->fd = srcmsg->fd;
 	destmsg->config = srcmsg->config;
-	destmsg->socket_type = srcmsg->socket_type;
+	if (srcmsg->socket_type < 0) {
+		destmsg->socket_type = REQ_METHOD;	/* socket_type的默认值*/
+	} else {
+		destmsg->socket_type = srcmsg->socket_type;
+	}
 	memcpy(&destmsg->package, &srcmsg->package, sizeof(srcmsg->package));
 	memcpy(destmsg->content, srcmsg->content, srcmsg->package.dsize);
 }

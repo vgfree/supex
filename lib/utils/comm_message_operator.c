@@ -8,6 +8,7 @@ void init_msg(struct comm_message *msg)
 {
 	assert(msg);
 	msg->package.packages = 1;
+	msg->socket_type = -1;
 	msg->content = (char *)malloc(MAX_MSG_SIZE * sizeof(char));
 }
 

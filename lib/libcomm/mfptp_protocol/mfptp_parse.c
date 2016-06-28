@@ -75,11 +75,19 @@ int mfptp_parse(struct mfptp_parser *parser)
 
 				if (dsize >= 6) {
 					if (CHECK_HEADER(parser)) {
+						parser->ms.step = MFPTP_VERSION;
 						dsize -= 6;
 						parser->ms.dosize += 6;
-						parser->ms.step = MFPTP_VERSION;
 					} else {
 						log("bad protocol\n");
+						int index = 0;
+						for (index = 0; index < 6; index++) {
+							if ((*parser->ms.data)[parser->ms.dosize] == '#') {
+								break ;
+							}
+							dsize -= 1;
+							parser->ms.dosize += 1;
+						}
 						parser->ms.error = MFPTP_HEAD_INVAILD;
 					}
 				} else {
@@ -93,13 +101,13 @@ int mfptp_parse(struct mfptp_parser *parser)
 				parser->header.minor_version = data[parser->ms.dosize] & 0x0F;
 
 				if (CHECK_VERSION(parser)) {
-					dsize--;
-					parser->ms.dosize += 1;
 					parser->ms.step = MFPTP_CONFIG;
 				} else {
 					log("bad mfptp protocol version\n");
 					parser->ms.error = MFPTP_VERSION_INVAILD;
 				}
+				dsize--;
+				parser->ms.dosize += 1;
 
 				break;
 
@@ -108,14 +116,14 @@ int mfptp_parse(struct mfptp_parser *parser)
 				parser->header.encryption = data[parser->ms.dosize] & 0x0F;
 
 				if (CHECK_CONFIG(parser)) {
-					dsize--;
-					parser->ms.dosize += 1;
 					_set_callback(parser);
 					parser->ms.step = MFPTP_SOCKET_TYPE;
 				} else {
 					log("bad mfptp protocol compression or encryption setting\n");
 					parser->ms.error = MFPTP_CONFIG_INVAILD;
 				}
+				dsize--;
+				parser->ms.dosize += 1;
 
 				break;
 
@@ -123,13 +131,17 @@ int mfptp_parse(struct mfptp_parser *parser)
 				parser->header.socket_type = data[parser->ms.dosize];
 
 				if (CHECK_SOCKTYPE(parser)) {
-					dsize--;
-					parser->ms.dosize += 1;
-					parser->ms.step = MFPTP_PACKAGES;
+					if (parser->header.socket_type == HEARTBEAT_METHOD) {
+						parser->ms.step = MFPTP_PARSE_OVER;
+					} else {
+						parser->ms.step = MFPTP_PACKAGES;
+					}
 				} else {
 					log("bad mfptp protocol socket type\n");
 					parser->ms.error = MFPTP_SOCKTYPE_INVAILD;
 				}
+				dsize--;
+				parser->ms.dosize += 1;
 
 				break;
 
@@ -137,13 +149,13 @@ int mfptp_parse(struct mfptp_parser *parser)
 				parser->header.packages = data[parser->ms.dosize];
 
 				if (CHECK_PACKAGES(parser)) {
-					dsize--;
-					parser->ms.dosize += 1;
 					parser->ms.step = MFPTP_FP_CONTROL;
 				} else {
 					log("illegal mfptp protocol packages\n");
 					parser->ms.error = MFPTP_PACKAGES_INVAILD;
 				}
+				dsize--;
+				parser->ms.dosize += 1;
 
 				break;
 
@@ -160,21 +172,21 @@ int mfptp_parse(struct mfptp_parser *parser)
 				if (dsize >= parser->header.size_f_size) {
 					if (CHECK_F_SIZE(parser)) {
 						parser->header.f_size = 0;
-
 						for (size_f_size = 0; size_f_size < parser->header.size_f_size; size_f_size++) {
 							parser->header.f_size = parser->header.f_size | ((unsigned char)data[parser->ms.dosize] << size_f_size * 8);
 							parser->ms.dosize += 1;
 						}
 
+						dsize -= parser->header.size_f_size;
 						if (parser->header.f_size > MFPTP_MAX_DATASIZE) {
 							/* 数据size大于帧允许的携带的数据大小 */
 							parser->ms.error = MFPTP_DATASIZE_INVAILD;
 							log("illegal datasize mfptp protocol frame carried\n");
 						} else {
-							dsize -= parser->header.size_f_size;
 							parser->ms.step = MFPTP_FRAME_START;
 						}
 					} else {
+						parser->ms.dosize += parser->header.size_f_size;
 						log("illegal datasize mfptp protocol frame carried\n");
 						parser->ms.error = MFPTP_DATASIZE_INVAILD;
 					}
