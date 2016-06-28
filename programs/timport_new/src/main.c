@@ -212,7 +212,7 @@ static void __timer_start(int start_time)
 	 *        }
 	 */
 	while ((current_time = time(&t)) < start_time) {
-		sleep(0.2);
+		sleep(5);
 	}
 
 	printf("exit timer_start\n");
