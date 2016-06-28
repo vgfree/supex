@@ -101,7 +101,7 @@ static void __set_task_config(char *buf, struct redis_status *status, int redis_
 	}
 }
 
-void get_data_task(int redis_cnt)
+int get_data_task(int redis_cnt)
 {
 	char                    *p_buf = NULL;
 	struct redis_status     *status = NULL;
@@ -124,23 +124,37 @@ void get_data_task(int redis_cnt)
 	p_buf = cache_data_address(&command->cache);
 	status = &command->parse.redis_info.rs;
 	printf("redis data fields = %d\n", status->fields);
+		
+	int redis_fields = status->fields;	
 
-	/*
-	 *        for (int j = 0; j < status->fields; j++) {
-	 *                printf("redis field[%d] = %s\n", j, p_buf + status->field[j].offset);
-	 *        }
-	 */
 	__set_task_config(p_buf, status, redis_cnt);
 
 	evtask_distory(tasker);
+	
+	return redis_fields;
 }
 
 void *set_data_task_handle(struct supex_evcoro *evcoro, int step)
 {
-	struct user_task *p_task = &((struct user_task *)evcoro->task)[step];
-
-	dispatch_data(p_task->user, strlen(p_task->user), g_user_key, strlen(g_user_key), p_task->redis_cnt);
-
+	lua_State *L = NULL;
+	struct user_task        *p_task = &((struct user_task *)evcoro->task)[step];
+	if (evcoro->VMS && evcoro->VMS->L) {
+		printf("VMS already exit\n");
+		L = evcoro->VMS->L;
+	}
+	else {
+		printf("VMS is not exit\n");
+		L = lua_vm_init();
+		evcoro->VMS->L = L;
+	}
+	
+	if (!L) {
+		printf("lua vm is NULL\n");
+		free(p_task->user);
+		exit(0);
+	}
+	
+	dispatch_data(L, p_task->user, strlen(p_task->user), g_user_key, strlen(g_user_key), p_task->redis_cnt);
 	free(p_task->user);
 }
 
@@ -217,16 +231,17 @@ static bool task_report_main(void *user, void *task)
 void *get_data_task_handle(struct supex_evcoro *evcoro, void *step)
 {
 	int r_idx;
-
-	while (1) {
-		// 定时函数start
+	int redis_fields = 0;
+	while(1) {
+		//定时函数start
 		__timer_start(g_start_time);
-
-		for (r_idx = 0; r_idx < g_timport_cfg_list.file_info.redis_cnt; r_idx++) {
-			get_data_task(r_idx);
+		for (r_idx = 0; r_idx < g_timport_cfg_list.file_info.redis_cnt; r_idx ++) {	
+			redis_fields = get_data_task(r_idx);
 			// set expire time,  need g_user_key and r_idx.
-			set_expire_time(g_user_key, strlen(g_user_key), r_idx);
-			sleep(2);	// 2秒处理1个redis
+			if (redis_fields > 0) {
+				set_expire_time(g_user_key, strlen(g_user_key), r_idx);
+			}
+			sleep(2);  // 2秒处理1个redis
 		}
 
 		// 每次定时处理完之后，起始时间+时间间隔（分钟*60s）
