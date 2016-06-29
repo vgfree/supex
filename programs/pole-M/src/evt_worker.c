@@ -98,8 +98,15 @@ int do_incr_rep_task(client_info_t *clinfo)
 			return EVT_STATE_EXIT;
 		}
 
+		/*
+		 * 因为zmq链接断开，数据请求会暂存队列.
+		 * 因此重启客户端会重复收到相同序列数据，以下条件会不成立.
+		 * 需要客户端做保护
+		 */
+#if 1
 		/* 检查当前的请求序列是不是上次的值加1. */
 		assert(EVENT_SEQ(evt) == clinfo->consumer->last_fetch_seq + 1);
+#endif
 
 		/* 修改数据库的值 */
 		int res = xmq_update_that(clinfo->consumer, EVENT_SEQ(evt));
@@ -253,12 +260,27 @@ int do_dump_rep_task(client_info_t *clinfo)
 				evt->incr.task_seq = clinfo->consumer->last_fetch_seq;
 
 				/* 修改数据库的值 */
+#if 0
 				client_info_t   *p_info = NULL;
 				size_t          vlen = sizeof(p_info);
 
 				bool ok = hashmap_get(clinfo->hmap, (void *)evt->id, strlen(evt->id), (void *)&p_info, &vlen);
 				assert(ok && p_info);
 				int res = xmq_update_that(p_info->consumer, EVENT_SEQ(evt));
+#else
+				xmq_consumer_t *p_consumer = xmq_get_consumer(clinfo->xmq_ctx, evt->id);
+
+				if (!p_consumer) {
+					x_printf(I, "This is the first time to create '%s' XMQ Consumer.", evt->id);
+
+					assert( !xmq_register_consumer(clinfo->xmq_ctx, evt->id) );
+
+					p_consumer = xmq_get_consumer(clinfo->xmq_ctx, evt->id);
+					assert(p_consumer != NULL);
+					x_printf(I, "Execute succeed and get consumer okay! ");
+				}
+				int res = xmq_update_that(p_consumer, EVENT_SEQ(evt));
+#endif
 				assert(res == 0);
 
 				/* 客户端执行DUMP成功后,正常返回. */
@@ -327,22 +349,34 @@ void *task_handle(struct supex_evcoro *evcoro, int step)
 				break;
 
 			case EVT_STATE_WAIT:
-				/* 检验: 在新的增量请求之前,是否有DUMP操作待处理. */
-				have = qlist_view(&p_info->qdump);
+				have = qlist_view(&p_info->qevts);
 
 				if (have) {
-					/* 客户端Node1 向服务器请求DUMP master节点, 但在event_dispenser.c中
-					 * 通过调换(ID) 将Node1的事件 直接放入了master所在的线程事件队列中*/
-
-					/* 执行DUMP请求前,需要等待上次的增量响应结果返回(也就是客户端返回成功)
-					 * 另外,我们需要将客户端新的增量请求缓存起来,等待执行完DUMP请求之后再来处理; */
-					p_info->state = do_dump_req_task(p_info);
+					/* 是否重启检查 */
+					p_info->state = do_incr_chk_task(p_info);
 				} else {
-					/* 新的增量请求缓存起来,等DUMP请求处理完后,再做处理.*/
-					have = qlist_view(&p_info->qincr);
+					/* 检验: 在新的增量请求之前,是否有DUMP操作待处理. */
+					have = qlist_view(&p_info->qdump);
 
 					if (have) {
-						p_info->state = do_incr_req_task(p_info);
+						/* 客户端Node1 向服务器请求DUMP master节点, 但在event_dispenser.c中
+						 * 通过调换(ID) 将Node1的事件 直接放入了master所在的线程事件队列中*/
+
+						/* 执行DUMP请求前,需要等待上次的增量响应结果返回(也就是客户端返回成功)
+						 * 另外,我们需要将客户端新的增量请求缓存起来,等待执行完DUMP请求之后再来处理; */
+						p_info->state = do_dump_req_task(p_info);
+					} else {
+						/* 新的增量请求缓存起来,等DUMP请求处理完后,再做处理.*/
+						have = qlist_view(&p_info->qincr);
+
+						if (have) {
+							p_info->state = do_incr_req_task(p_info);
+							if (p_info->state == EVT_STATE_WAIT) {
+								union evcoro_event event = {};
+								evcoro_timer_init(&event, 0.005);
+								evcoro_idleswitch(p_scheduler, &event, EVCORO_TIMER);
+							}
+						}
 					}
 				}
 

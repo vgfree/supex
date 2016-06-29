@@ -1,15 +1,15 @@
 {
-	"swift_port": 8008,
-	"swift_worker_counts": 8,
-	"swift_tasker_counts": 8,
-	"swift_protocol": "http",
+	"swift_port": 8000,
+	"swift_worker_counts": 1,
+	"swift_tasker_counts": 2,
+	"swift_protocol": "redis",
 
 	"max_req_size": 32768,
 
 	"log_path": "./logs/",
 	"log_file": "pole-M",
 	// 0 LOG_DEBUG|1 LOG_INFO|2 LOG_WARN|3 LOG_ERROR|4 LOG_SYS|5 LOG_FATAL
-	"log_level": 1,
+	"log_level": 0,
 
 	// 如果siwft的协议是HTTP时,下面配置才起作用;
 	"api_apply": "/pole-MApply.json",
@@ -20,17 +20,17 @@
 
 	/*------------------------------------------------*/
 	// Input ZeroMQ Server URI for Input Client connect and communication.
-        "input_uri": "tcp://*:8585",
+        "input_uri": "tcp://*:8888",
 
 	// Server URI for pole-S connect and communication.
-        "bind_uri": "tcp://*:8686",
+        "bind_uri": "tcp://*:9999",
 
 
 	// The Maxminum of XMQ's records.
 	// "max_records": 2000000,
-	"max_records": 100,
+	"max_records": 2000000,
 
-	"event_worker_counts": 8,
-	"event_tasker_counts": 16
+	"event_worker_counts": 2,
+	"event_tasker_counts": 8
 
 }

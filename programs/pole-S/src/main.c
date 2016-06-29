@@ -110,6 +110,7 @@ int main(int argc, char *argv[])
 
 		enum evt_type   last_type = NET_EV_INCREMENT_REQ;
 		enum evt_state state = NET_EV_NONE;
+		uint64_t last_seq = 0;
 		while (true) {
 			/* Recv Server's response. */
 			do {
@@ -118,8 +119,19 @@ int main(int argc, char *argv[])
 			} while(!evt);
 			print_evt(evt);
 
-			/* Doing businesses. return NET_EV_SUCC|NET_EV_FAIL|NET_EV_FATAL. */
+			// 避免连续重复incr
+			if (evt->ev_type == NET_EV_INCREMENT_REP) {
+				if (evt->incr.task_seq == last_seq) {
+					free_evt(evt);
+					continue;
+				} else {
+					last_seq = evt->incr.task_seq;
+				}
+			}
+
+			// 避免连续重复dump
 			if ( !((last_type == NET_EV_DUMP_REQ) && (evt->ev_type == NET_EV_DUMP_REQ)) ) {
+				/* Doing businesses. return NET_EV_SUCC|NET_EV_FAIL|NET_EV_FATAL. */
 				state = do_business(evt->ev_type, (evt->ev_size > 0) ? evt->ev_data : NULL, evt->ev_size);
 			}
 			last_type = evt->ev_type;

@@ -1,19 +1,21 @@
 {
+	/*服务端挂了，所有客户端必须重启*/
+
     /* Pole-S log module configure. */
     "LOG_FILE" : "./logs/pole-s.log",
     "LOG_LEVEL"     : 0,
 
 
     /* Network communication with Server.*/
-    "SLAVE_UNIQUE_ID" : "node1",
-    "SLAVE_CONN_URI"  : "tcp://192.168.1.16:8686",
+    "SLAVE_UNIQUE_ID" : "master",
+    "SLAVE_CONN_URI"  : "tcp://127.0.0.1:9999",
     
     
     /* Operation type. Now only afford (DUMP | INCR).
     	DUMP:	Dump MySQL database base data in xxx.sql.
     	INCR:	Synchronize the increment sql-request from server.
     We should update it with INCR When execute DUMP succeed <process exit and log appeard dump succeed.> */
-    "RUNNING_TYPE"  : "DUMP",
+    "RUNNING_TYPE"  : "INCR",
     "DEST_DUMP_UID"  : "master",
     "SELF_INCR_SEQ"  : 0,
     
