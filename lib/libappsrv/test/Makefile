@@ -1,4 +1,4 @@
-CC = gcc
+CC = gcc -std=c99
 AR = ar
 
 CFLAG = -O2 -W -Wall
