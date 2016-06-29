@@ -1,3 +1,10 @@
+/*
+ * CopyRight    : DT+
+ * Author       : louis.tin
+ * Date         : 06-28-2016
+ * Description  : Appserver
+ */
+
 #include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -9,83 +16,173 @@
 
 #include "load_cfg.h"
 #include "major/smart_api.h"
-
 #include "appsrv.h"
-
 #include "json.h"
 
 struct smart_cfg_list g_smart_cfg_list = {};
 
-char json_str[256];
+// 客户端登录时发送的cid
+char load_cid[256] = {};
 
-char *get_json(char *cid, int msgTime, char *msgID)
+void get_uid(struct app_msg recv_msg);
+void set_uidmap(struct app_msg recv_msg);
+void *t_msg_recv();
+int smart_vms_call_set(void *user, union virtual_system **VMS, struct adopt_task_node *task);
+
+int main(int argc, char **argv)
 {
-	json_object *my_object;
+	create_io();
 
-	my_object = json_object_new_object();
-	json_object_object_add(my_object, "opt", json_object_new_int("bind"));
-	json_object_object_add(my_object, "CID", json_object_new_string(cid));
-	json_object_object_add(my_object, "msgTime", json_object_new_boolean(msgTime));
-	json_object_object_add(my_object, "msgID", json_object_new_boolean(msgID));
-
-	printf("my_object=\n");
-	json_object_object_foreach(my_object, key, val)
-	{
-		printf("\t%s: %s\n", key, json_object_to_json_string(val));
+	// 创建线程接收客户端数据
+	pthread_t tid_recv;
+	int ret = 0;
+	ret = pthread_create(&tid_recv, NULL, (void *)t_msg_recv, NULL);
+	if (ret != 0) {
+		printf("Create send pthread error!\n");
+		return -1;
 	}
-	printf("my_object.to_string()=%s\n", json_object_to_json_string(my_object));
 
-	//	json_object_put(my_object);
-	strcpy(json_str, json_object_to_json_string(my_object));
+	load_supex_args(&g_smart_cfg_list.argv_info, argc, argv, NULL, NULL, NULL);
 
-	printf("json_str = %s", json_str);
+	load_cfg_file(&g_smart_cfg_list.file_info, g_smart_cfg_list.argv_info.conf_name);
 
-	return json_str;
+	g_smart_cfg_list.func_info[SET_FUNC_ORDER].type = BIT8_TASK_TYPE_ALONE;
+	g_smart_cfg_list.func_info[SET_FUNC_ORDER].func = (TASK_VMS_FCB)smart_vms_call_set;
+
+	smart_mount(&g_smart_cfg_list);
+	smart_start();
+
+	return 0;
 }
 
-char *get_uuid()
+void get_uid(struct app_msg recv_msg)
 {
-	uuid_t  uuid;
-	char    str[36];
+	printf("下发数据: 获取uid\n");
+	char *downstream = "downstream";
+	char *cid = "cid";
+	char cid_str[20] = {};
+	memcpy(cid_str, recv_msg.vector[2].iov_base, recv_msg.vector[2].iov_len);
+	memcpy(load_cid, recv_msg.vector[2].iov_base, recv_msg.vector[2].iov_len);
+	char *msg = "bind";
+	printf("cid = %s, cid_str = %s, msg = %s\n", cid, cid_str, msg);
 
-	uuid_generate(uuid);
-	uuid_unparse(uuid, str);
-
-	return str;
+	struct app_msg send_msg = {};
+	send_msg.vector_size = 4;
+	send_msg.vector[0].iov_base = downstream;
+	send_msg.vector[0].iov_len = strlen(downstream);
+	send_msg.vector[1].iov_base = cid;
+	send_msg.vector[1].iov_len = strlen(cid);
+	send_msg.vector[2].iov_base = cid_str;
+	send_msg.vector[2].iov_len = strlen(cid_str);
+	send_msg.vector[3].iov_base = msg;
+	send_msg.vector[3].iov_len = strlen(msg);
+	send_app_msg(&send_msg);
 }
 
-int get_time()
+void set_uidmap(struct app_msg recv_msg)
 {
-	time_t t;
+	printf("下发数据: 绑定uidmap\n");
+	// 从接收到的第四帧数据json中解析出uid
+	struct json_object *obj = NULL;
+	struct json_object *new_obj = json_tokener_parse(recv_msg.vector[3].iov_base);
+	char uid[64];
 
-	t = time(0);
+	if (json_object_object_get_ex(new_obj, "uid", &obj))
+		strcpy(uid, json_object_get_string(obj));
 
-	return t;
+	printf("uid = %s\n", uid);
+
+	char            setting[] = "setting";
+	char            uidmap[] = "uidmap";
+	char            cid[32] = {};
+	memcpy(cid, recv_msg.vector[1].iov_base, recv_msg.vector[1].iov_len);
+
+	struct app_msg  send_msg = {};
+	send_msg.vector_size = 4;
+	send_msg.vector[0].iov_base = setting;
+	send_msg.vector[0].iov_len = strlen(setting);
+	send_msg.vector[1].iov_base = uidmap;
+	send_msg.vector[1].iov_len = strlen(uidmap);
+	send_msg.vector[2].iov_base = cid;
+	send_msg.vector[2].iov_len = strlen(cid);
+	send_msg.vector[3].iov_base = uid;
+	send_msg.vector[3].iov_len = strlen(uid);
+	send_app_msg(&send_msg);
+}
+
+void *t_msg_recv()
+{
+	while (1) {
+		struct app_msg recv_msg = {};
+		int more = 0;
+		recv_app_msg(&recv_msg, &more, -1);
+
+		printf("recv_msg size:%d\t [0]iov_len:%d\t [0]iov_base = %s,\n",
+				recv_msg.vector_size, recv_msg.vector[0].iov_len, recv_msg.vector[0].iov_base);
+		printf("recv_msg size:%d\t [1]iov_len:%d\t [1]iov_base = %s,\n",
+				recv_msg.vector_size, recv_msg.vector[1].iov_len, recv_msg.vector[1].iov_base);
+		printf("recv_msg size:%d\t [2]iov_len:%d\t [2]iov_base = %s,\n",
+				recv_msg.vector_size, recv_msg.vector[2].iov_len, recv_msg.vector[2].iov_base);
+		printf("recv_msg size:%d\t [3]iov_len:%d\t [3]iov_base = %s,\n",
+				recv_msg.vector_size, recv_msg.vector[3].iov_len, recv_msg.vector[3].iov_base);
+		assert(recv_msg.vector_size > 0);
+
+		// 解析接收到的数据
+		if (memcmp(recv_msg.vector[0].iov_base, "status", 6) == 0) {
+			if (memcmp(recv_msg.vector[1].iov_base, "connected", 9) == 0) {
+				// 下发数据获取uid
+				get_uid(recv_msg);
+			}
+		} else if (memcmp(recv_msg.vector[0].iov_base, "upstream", 8) == 0) {
+			if (memcmp(recv_msg.vector[2].iov_base, "bind", 4) == 0) {
+				// 发送给setting server 设置uidmap
+				set_uidmap(recv_msg);
+			}
+		} else {
+			printf("recv_msg.vector[0].iov_base = %s\n", recv_msg.vector[0].iov_base);
+		}
+	}
 }
 
 int smart_vms_call_set(void *user, union virtual_system **VMS, struct adopt_task_node *task)
 {
-	char msg[16];
+	char msg[64];
 
-	struct data_node        *p_node = get_pool_data(task->sfd);
-	char                    *p_buf = cache_data_address(&p_node->mdl_recv.cache);
-
-	printf("p_buf = %s\n", p_buf);
+	struct data_node *p_node = get_pool_data(task->sfd);
+	char *p_buf = cache_data_address(&p_node->mdl_recv.cache);
+	//printf("p_buf = %s\n", p_buf);
 
 	struct redis_status *p_rst = &p_node->mdl_recv.parse.redis_info.rs;
 
-	printf("len: %d \n", p_rst->field[1].len);
-	printf("command_type: %x \n", p_rst->command_type);
+	//printf("len: %d \n", p_rst->field[1].len);
+	//printf("command_type: %x \n", p_rst->command_type);
 
 	memcpy(msg, p_buf + p_rst->field[1].offset, MIN(p_rst->field[1].len, 64 - 1));
 
-	// 发送
+	// 在登录后通过redis协议向客户端下发接收的redis数据
+	struct app_msg  send_msg = {};
 
-	struct app_msg send_msg = {};
+	char *downstream = "downstream";
+	char *cid = "cid";
+	printf("load_cid = %s, msg = %s\n", load_cid, msg);
 
-	char    downstream[] = "downstream";
-	char    gid[] = "gid";
-	char    gid0[] = "gid0";
+	send_msg.vector_size = 4;
+	send_msg.vector[0].iov_base = downstream;
+	send_msg.vector[0].iov_len = strlen(downstream);
+	send_msg.vector[1].iov_base = cid;
+	send_msg.vector[1].iov_len = strlen(cid);
+	send_msg.vector[2].iov_base = load_cid;
+	send_msg.vector[2].iov_len = strlen(load_cid);
+	send_msg.vector[3].iov_base = msg;
+	send_msg.vector[3].iov_len = strlen(msg);
+
+#if 0
+	// 向组gid0下发数据
+	char downstream[] = "downstream";
+	char gid[] = "gid";
+	char gid0[] = "gid0";
+
+	printf("msg = %s\n", msg);
 
 	send_msg.vector_size = 4;
 	send_msg.vector[0].iov_base = downstream;
@@ -96,188 +193,46 @@ int smart_vms_call_set(void *user, union virtual_system **VMS, struct adopt_task
 	send_msg.vector[2].iov_len = strlen(gid0);
 	send_msg.vector[3].iov_base = msg;
 	send_msg.vector[3].iov_len = strlen(msg);
-
+#endif
 	send_app_msg(&send_msg);
 
-	// server端给请求端回复内容
+	// server端向请求端回复
 	const char sndcnt[] = ":1\r\n";
 	cache_append(&p_node->mdl_send.cache, sndcnt, sizeof(sndcnt) - 1);
 }
 
-void *t_msg_recv()
-{
-	// 循环接收数据
-	while (1) {
-		/*
-		 *   // 接收数据
-		 *   printf("接受数据");
-		 *   struct app_msg recv_msg = {};
-		 *   int more = 0;
-		 *   recv_app_msg(&recv_msg, &more, -1);
-		 *   printf("recv_msg size:%d, [0]iov_len:%d\n",
-		 *   recv_msg.vector_size, recv_msg.vector[0].iov_len);
-		 *
-		 *   assert(recv_msg.vector_size > 0);
-		 *
-		 *   if (memcmp(recv_msg.vector[0].iov_base, "status", 6) == 0)
-		 *   {
-		 *   if (memcmp(recv_msg.vector[1].iov_base, "connected", 9) == 0)
-		 *   {
-		 *   // 发送请求UID
-		 *   char downstream[] = "downstream";
-		 *   char cid[] = "cid";
-		 *   char cid_str[20] = {};
-		 *   memcpy(cid_str, recv_msg.vector[2].iov_base, recv_msg.vector[2].iov_len);
-		 *   char *msg;
-		 *
-		 *   char *uuid = get_uuid();
-		 *   time_t time = get_time();
-		 *
-		 *   msg = get_json(cid, time, uuid);
-		 *
-		 *   struct app_msg  send_msg = {};
-		 *   send_msg.vector_size = 4;
-		 *   send_msg.vector[0].iov_base = downstream;
-		 *   send_msg.vector[0].iov_len = strlen(downstream);
-		 *   send_msg.vector[1].iov_base = cid;
-		 *   send_msg.vector[1].iov_len = strlen(cid);
-		 *   send_msg.vector[2].iov_base = cid_str;
-		 *   send_msg.vector[2].iov_len = strlen(cid_str);
-		 *   send_msg.vector[3].iov_base = msg;
-		 *   send_msg.vector[3].iov_len = strlen(msg);
-		 *   send_app_msg(&send_msg);
-		 *   }
-		 *   else if (memcmp(recv_msg.vector[1].iov_base, "closed", 6) == 0)
-		 *   {
-		 *
-		 *   }
-		 *   }
-		 *   else
-		 *   {
-		 *   /\*
-		 *   app-server先下发请求UID, 在接收到UID后, 再下发绑定cid-uid
-		 * *\/
-		 *   char setting[] = "setting";
-		 *   char uidmap = "uidmap";
-		 *   // 从返回值中获取UID, GID
-		 *   struct json_object *obj = NULL;
-		 *   char *json_string = json_object_to_json_string(recv_msg.vector[0].iov_base);
-		 *   struct json_object *cfg = json_object_from_file(json_string);
-		 *   char *cid = NULL;
-		 *   char *uid = NULL;
-		 *   if (json_object_object_get_ex(cfg, "CID", &obj))
-		 *   {
-		 *   strcpy(cid, json_object_get_string(obj));
-		 *   }
-		 *   else
-		 *   {
-		 *   printf("cid not found");
-		 *   }
-		 *
-		 *   if (json_object_object_get_ex(cfg, "UID", &obj))
-		 *   {
-		 *   strcpy(uid, json_object_get_string(obj));
-		 *   }
-		 *   else
-		 *   {
-		 *        printf("uid not found");
-		 *   }
-		 *
-		 *   struct app_msg  send_msg = {};
-		 *   send_msg.vector_size = 4;
-		 *   send_msg.vector[0].iov_base = setting;
-		 *   send_msg.vector[0].iov_len = strlen(setting);
-		 *   send_msg.vector[1].iov_base = uidmap;
-		 *   send_msg.vector[1].iov_len = strlen(uidmap);
-		 *   send_msg.vector[2].iov_base = cid;
-		 *   send_msg.vector[2].iov_len = strlen(cid);
-		 *   send_msg.vector[3].iov_base = uid;
-		 *   send_msg.vector[3].iov_len = strlen(uid);
-		 *   send_app_msg(&send_msg);
-		 *   }
-		 */
-		struct app_msg  msg = {};
-		int             more = 0;
-		printf("start to recv msg.\n");
-		recv_app_msg(&msg, &more, -1);
-		printf("msg size:%d, [0]iov_len:%d\n",
-			msg.vector_size, msg.vector[0].iov_len);
-		assert(msg.vector_size > 0);
+/*
+ * 数据帧格式
+ *
+ * Login server 发出的命令
+ * 0 status
+ * 1 [connected]/[closed]
+ * 2 CID
+ *
+ * 发送给Setting server 的命令
+ * 0 setting
+ * 1 [status]/[uidmap]/[gidmap]
+ * 2 CID
+ * 3 [closed]/[uid]/[gid]
+ *
+ * 普通消息下发
+ * 0 downstream
+ * 1 [cid]/[uid]/[gid]
+ * 2 CID/UID/GID
+ *
+ * bind 消息下发
+ * 0 downstream
+ * 1 [cid]
+ * 2 CID
+ * 3 [bind]
+ *
+ * bind 消息上行
+ * 0 upstream
+ * 1 CID
+ * 2 [bind]
+ * 3 {UID}
+ */
 
-		printf("msg[0]:iov_len:%d\n", (int)msg.vector[0].iov_len);
-		char buf[20] = {};
-		memcpy(buf, msg.vector[0].iov_base, msg.vector[0].iov_len);
-		printf("msg[0]:%s\n", buf);
-		printf("msg[1]:iov_len:%d\n", (int)msg.vector[1].iov_len);
 
-		if (memcmp(msg.vector[0].iov_base, "status", 6) == 0) {
-			printf("status.");
 
-			if (memcmp(msg.vector[1].iov_base, "connected", 9) == 0) {
-				char            setting[] = "setting";
-				char            gidmap[] = "gidmap";
-				char            cid[20] = {}; memcpy(cid, msg.vector[2].iov_base, msg.vector[2].iov_len);
-				char            gid[] = "gid0";
-				struct app_msg  send_msg = {};
-				send_msg.vector_size = 4;
-				send_msg.vector[0].iov_base = setting;
-				send_msg.vector[0].iov_len = strlen(setting);
-				send_msg.vector[1].iov_base = gidmap;
-				send_msg.vector[1].iov_len = strlen(gidmap);
-				send_msg.vector[2].iov_base = cid;
-				send_msg.vector[2].iov_len = strlen(cid);
-				send_msg.vector[3].iov_base = gid;
-				send_msg.vector[3].iov_len = strlen(gid);
-				send_app_msg(&send_msg);
-			}
-		} else {
-			struct app_msg send_msg = {};
-			send_msg.vector_size = 3 + msg.vector_size;
-			char    downstream[] = "downstream";
-			char    gid[] = "gid";
-			char    gid0[] = "gid0";
-			send_msg.vector[0].iov_base = downstream;
-			send_msg.vector[0].iov_len = strlen(downstream);
-			send_msg.vector[1].iov_base = gid;
-			send_msg.vector[1].iov_len = strlen(gid);
-			send_msg.vector[2].iov_base = gid0;
-			send_msg.vector[2].iov_len = strlen(gid0);
-
-			size_t i;
-
-			for (i = 0; i < msg.vector_size; i++) {
-				send_msg.vector[i + 3].iov_base = msg.vector[i].iov_base;
-				send_msg.vector[i + 3].iov_len = msg.vector[i].iov_len;
-			}
-
-			send_app_msg(&send_msg);
-		}
-	}
-}
-
-int main(int argc, char **argv)
-{
-	create_io();
-
-	pthread_t       tid_recv;
-	int             ret = 0;
-	ret = pthread_create(&tid_recv, NULL, (void *)t_msg_recv, NULL);
-
-	if (ret != 0) {
-		printf("Create send pthread error!\n");
-		return -1;
-	}
-
-	load_supex_args(&g_smart_cfg_list.argv_info, argc, argv, NULL, NULL, NULL);
-
-	load_cfg_file(&g_smart_cfg_list.file_info, g_smart_cfg_list.argv_info.conf_name);
-
-	g_smart_cfg_list.func_info[APPLY_FUNC_ORDER].type = BIT8_TASK_TYPE_ALONE;
-	g_smart_cfg_list.func_info[APPLY_FUNC_ORDER].func = (TASK_VMS_FCB)smart_vms_call_set;
-
-	smart_mount(&g_smart_cfg_list);
-	smart_start();
-
-	return 0;
-}
 
