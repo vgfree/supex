@@ -6,6 +6,7 @@
 
 int upstream_msg()
 {
+	int i = 0;
 	struct comm_message msg = {};
 
 	init_msg(&msg);
@@ -13,7 +14,7 @@ int upstream_msg()
 	recv_msg(&msg);
 	log("get_max_msg_frame, :%d", get_max_msg_frame(&msg));
 
-	for (int i = 0; i < get_max_msg_frame(&msg); i++) {
+	for (i = 0; i < get_max_msg_frame(&msg); i++) {
 		zmq_msg_t       msg_frame;
 		int             fsz = 0;
 		char            *frame = get_msg_frame(i, &msg, &fsz);
@@ -28,7 +29,7 @@ int upstream_msg()
 		}
 	}
 
-	for (int i = 0; i < get_max_msg_frame(&msg); i++) {
+	for (i = 0; i < get_max_msg_frame(&msg); i++) {
 		zmq_msg_t       msg_frame;
 		int             fsz = 0;
 		char            *frame = get_msg_frame(i, &msg, &fsz);
