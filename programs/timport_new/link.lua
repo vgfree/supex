@@ -30,6 +30,10 @@ OWN_POOL = {
 	},
 }
 
+OWN_ZOOKEEPER = {
+    zkhost = "192.168.1.14:2181,192.168.1.14:2181",
+}
+
 OWN_DIED = {
 	mysql = {},
 	http = {                                                              

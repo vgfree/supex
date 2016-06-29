@@ -15,8 +15,8 @@ OBJ = cutils.so \
       luakv.so \
       mfptppack.so \
       zmq.so \
-      http_message.so
-	
+      http_message.so \
+      zklua.so	
 
 export ADDITION_LPATH = -L$(LIB_DIR)/../../lib/
 
@@ -100,7 +100,9 @@ luaflif.so:
 libhttps.so:
 	tar -xzvf polarssl-1.2.8.tar.gz && mkdir build && cd build && ccmake ../polarssl-1.2.8/ && make && cp programs/ssl/libhttps.so ../
 
-
+zklua.so:
+	$(MAKE) -C $(LIB_DIR)/zklua
+	cp $(LIB_DIR)/zklua/$@ $(LIB_DIR)
 clean:
 	rm -rf ./*.so
 	$(MAKE) -C $(LIB_DIR)/lua-cjson-2.1.0 clean
@@ -117,6 +119,7 @@ clean:
 	cd ./lua-zlib && make clean
 	cd ./Lua-bit32 && make clean
 	cd ./lua-FLIF && make clean
+	cd ./zklua && make clean
 	-if [ -d ./build ];then rm -rf ./build; fi
 	-if [ -d ./polarssl-1.2.8 ];then rm -rf ./polarssl-1.2.8; fi
 

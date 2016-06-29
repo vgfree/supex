@@ -1,9 +1,6 @@
 {
     "delay_time": 3600,
-    "zk_servers": "192.168.1.14:2181",
     "backup_path": "./var/backup",
-    "start_time": 1467000000,
-    "time_interval": 10,
     "redis": [
         {
             "host": "192.168.1.12",
@@ -12,92 +9,6 @@
         {
             "host": "192.168.1.12",
             "port": 9002
-        }
-    ],
-    "index": "ACTIVEUSER",
-    "index_type": "xxxx",
-    "save_interval": "10m",
-    "migration_interval": [
-        "0m",
-        "10m"
-    ],
-    "data": [
-        {
-            "zk_disabled": 0,
-            "zk_rnode": "/gps",
-            "key": "GPS",
-            "type": "SET",
-            "param_cnt": 2,
-            "param_tm_pos": 1,
-            "hash_filter": "xxx",
-            "tsdb": [
-                {
-                    "key_set": [
-                        0,
-                        4096
-                    ],
-                    "data_set": [
-                        {
-                            "host": "192.168.1.15",
-                            "port": 7020
-                        },
-                        {
-                            "host": "192.168.1.15",
-                            "port": 7022
-                        }
-                    ]
-                },
-                {
-                    "key_set": [
-                        4096,
-                        8192
-                    ],
-                    "data_set": [
-                        {
-                            "host": "192.168.1.15",
-                            "port": 7030
-                        }
-                    ]
-                }
-            ]
-        },
-        {
-            "zk_disabled": 0,
-            "zk_rnode": "/url",
-            "key": "URL",
-            "type": "xxx",
-            "param_tm_pos": 1,
-            "hash_filter": "xxx",
-            "tsdb": [
-                {
-                    "key_set": [
-                        0,
-                        4096
-                    ],
-                    "data_set": [
-                        {
-                            "host": "192.168.1.15",
-                            "port": 7020
-                        },
-                        {
-                            "host": "192.168.1.15",
-                            "port": 7022
-                        }
-                    ]
-                },
-                {
-                    "key_set": [
-                        4096,
-                        8192
-                    ],
-                    "data_set": [
-                        {
-                            "host": "192.168.1.15",
-                            "port": 7030
-                        }
-                    ]
-                }
-            ]
         }
     ]
 }

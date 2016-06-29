@@ -28,33 +28,11 @@ typedef enum
 	STAT_MODE_SET
 } stat_mode_e;
 
-typedef struct statistics_key
-{
-	char                    *name;
-	unsigned long long      count;
-	unsigned long long      size;
-	stat_mode_e             mode;
-} statistics_key_t;
-
-typedef struct statistics
-{
-	char                    *host;
-	int                     port;
-	int                     keys_cnt;
-	statistics_key_t        *keys;
-} statistics_t;
-
 struct timport_cfg_file
 {
 	redis_link_t    *redis;
 	int             redis_cnt;
-
 	int             delay_time;
-	int             start_time;
-	int             time_interval;
-
-	statistics_t    statistics;
-	int             has_ten_min;
 };
 
 struct timport_cfg_list

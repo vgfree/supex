@@ -27,16 +27,6 @@ void read_timport_cfg(struct timport_cfg_file *p_cfg, char *name)
 		printf("(delay_time) found, delay_time = %d\n", p_cfg->delay_time);
 	}
 
-	if (json_object_object_get_ex(cfg, "start_time", &obj)) {
-		p_cfg->start_time = json_object_get_int(obj);
-		printf("(start_time) found, start_time = %d\n", p_cfg->start_time);
-	}
-
-	if (json_object_object_get_ex(cfg, "time_interval", &obj)) {
-		p_cfg->time_interval = json_object_get_int(obj);
-		printf("(time_interval) found, time_interval = %d\n", p_cfg->time_interval);
-	}
-
 	if (json_object_object_get_ex(cfg, "redis", &obj)) {
 		array_len = json_object_array_length(obj);
 
@@ -77,68 +67,6 @@ void read_timport_cfg(struct timport_cfg_file *p_cfg, char *name)
 	} else {
 		printf("(redis) not found");
 		goto fail;
-	}
-
-	if (json_object_object_get_ex(cfg, "statistics", &obj)) {
-		if (json_object_object_get_ex(obj, "host", &tmp_obj)) {
-			str_val = json_object_get_string(tmp_obj);
-			p_cfg->statistics.host = x_strdup(str_val);
-		} else {
-			printf("(statistics) has no (host)");
-			goto fail;
-		}
-
-		if (json_object_object_get_ex(obj, "port", &tmp_obj)) {
-			p_cfg->statistics.port = json_object_get_int(tmp_obj);
-		} else {
-			printf("(statistics) has no (host)");
-			goto fail;
-		}
-
-		if (json_object_object_get_ex(obj, "keys", &tmp_obj)) {
-			array_len = json_object_array_length(tmp_obj);
-
-			if (array_len <= 0) {
-				printf("(statistics) has 0 (keys)");
-				goto fail;
-			}
-
-			NewArray0(array_len, p_cfg->statistics.keys);
-
-			if (NULL == p_cfg->statistics.keys) {
-				printf("(statistics) (keys) NewArray0 failed");
-				goto fail;
-			}
-
-			p_cfg->statistics.keys_cnt = array_len;
-
-			for (i = 0; i < array_len; ++i) {
-				struct json_object *stat_obj = json_object_array_get_idx(tmp_obj, i);
-
-				if (json_object_object_get_ex(stat_obj, "key", &obj)) {
-					str_val = json_object_get_string(obj);
-					p_cfg->statistics.keys[i].name = x_strdup(str_val);
-				} else {
-					printf("(statistics) (keys[%d]) has no (key)", i);
-					goto fail;
-				}
-
-				if (json_object_object_get_ex(stat_obj, "mode", &obj)) {
-					str_val = json_object_get_string(obj);
-
-					if (strcasecmp(str_val, "INCR") == 0) {
-						p_cfg->statistics.keys[i].mode = STAT_MODE_INCR;
-					} else if (strcasecmp(str_val, "SET") == 0) {
-						p_cfg->statistics.keys[i].mode = STAT_MODE_SET;
-					} else {
-						p_cfg->statistics.keys[i].mode = STAT_MODE_UNKNOWN;
-					}
-				}
-			}
-		} else {
-			printf("(statistics) has no (keys)");
-			goto fail;
-		}
 	}
 
 	json_object_put(cfg);
