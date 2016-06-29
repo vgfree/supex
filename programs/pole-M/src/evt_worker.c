@@ -131,7 +131,8 @@ int do_incr_rep_task(client_info_t *clinfo)
 	serial = MAX(serial, 1);
 	evt_t   *old = evt;
 	int     idx = 0;
-	do {
+
+	while (serial-- > 0) {
 		evt = copy_evt(old);
 		evt->incr.task_seq = clinfo->consumer->last_fetch_seq + idx;
 		idx++;
@@ -146,7 +147,6 @@ int do_incr_rep_task(client_info_t *clinfo)
 #ifdef OPEN_BATCH
 }
 
-while (--serial > 0) {}
 free_evt(old);
 #endif
 
@@ -180,7 +180,10 @@ int do_incr_req_task(client_info_t *clinfo)
 
 #ifdef OPEN_BATCH
 	int have = qlist_view(&clinfo->qincr);
-	do {
+
+	assert(have);
+
+	while (qlist_view(&clinfo->qincr)) {
 #endif
 	QITEM *item = qlist_pull(&clinfo->qincr);
 
@@ -199,7 +202,9 @@ int do_incr_req_task(client_info_t *clinfo)
 		/* 将未处理的事件,重新放回指定线程队列里,待下次处理. */
 		qlist_push(&clinfo->qincr, item);
 		return EVT_STATE_WAIT;
-	} else {
+	}
+
+	else {
 		qitem_free(item);
 		assert(xmq_msg_size(msg) > 0);
 
@@ -223,8 +228,6 @@ int do_incr_req_task(client_info_t *clinfo)
 #ifdef OPEN_BATCH
 	clinfo->waits++;
 }
-
-while (qlist_view(&clinfo->qincr)) {}
 #endif
 	return EVT_STATE_INCR;
 }
