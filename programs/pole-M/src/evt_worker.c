@@ -114,12 +114,41 @@ int do_incr_rep_task(client_info_t *clinfo)
 
 		/* 设置时间的同步序列码 */
 		evt->incr.task_seq = clinfo->consumer->last_fetch_seq;
+#ifdef OPEN_BATCH
+		clinfo->waits--;
+#endif
 	}
+
+#ifdef OPEN_BATCH
+	qitem_free(item);
+
+	if (clinfo->waits > 0) {
+		free_evt(evt);
+		return EVT_STATE_INCR;
+	}
+
+	int serial = MIN(MAX_SYNC_STEP, clinfo->xmq_ctx->last_write_db_seq - clinfo->consumer->last_fetch_seq);
+	serial = MAX(serial, 1);
+	evt_t   *old = evt;
+	int     idx = 0;
+	do {
+		evt = copy_evt(old);
+		evt->incr.task_seq = clinfo->consumer->last_fetch_seq + idx;
+		idx++;
+		item = qitem_init(NULL);
+		item->data = evt;
+#endif
 
 	/* 获取持久化队列中的消息，发送给对端节点. */
 	evt->ev_state = NET_EV_SUCC;
 	evt->ev_type = NET_EV_INCREMENT_REP;
 	qlist_push(&clinfo->qincr, item);
+#ifdef OPEN_BATCH
+}
+
+while (--serial > 0) {}
+free_evt(old);
+#endif
 
 	return EVT_STATE_WAIT;
 }
@@ -147,18 +176,26 @@ int do_incr_chk_task(client_info_t *clinfo)
 
 int do_incr_req_task(client_info_t *clinfo)
 {
-	evt_t   *evt = NULL;
-	QITEM   *item = qlist_pull(&clinfo->qincr);
+	evt_t *evt = NULL;
+
+#ifdef OPEN_BATCH
+	int have = qlist_view(&clinfo->qincr);
+	do {
+#endif
+	QITEM *item = qlist_pull(&clinfo->qincr);
 
 	assert(item);
 	evt = item->data;
 	assert(evt);
 	assert(evt->ev_type == NET_EV_INCREMENT_REP);
 
-	uint64_t        task_seq = EVENT_SEQ(evt);
-	xmq_msg_t       *msg = xmq_pull_that(clinfo->consumer, task_seq);	// FIXME:last_db_seq
+	uint64_t task_seq = EVENT_SEQ(evt);
+	xmq_msg_t *msg = xmq_pull_that(clinfo->consumer, task_seq);		// FIXME:last_db_seq
 
 	if (!msg) {
+#ifdef OPEN_BATCH
+		assert(have == 1);
+#endif
 		/* 将未处理的事件,重新放回指定线程队列里,待下次处理. */
 		qlist_push(&clinfo->qincr, item);
 		return EVT_STATE_WAIT;
@@ -181,9 +218,15 @@ int do_incr_req_task(client_info_t *clinfo)
 
 		/* 发送增量响应结果给指定客户端. */
 		assert(0 == send_evt(clinfo->evt_ctx, ev_rsp));
-
-		return EVT_STATE_INCR;
 	}
+
+#ifdef OPEN_BATCH
+	clinfo->waits++;
+}
+
+while (qlist_view(&clinfo->qincr)) {}
+#endif
+	return EVT_STATE_INCR;
 }
 
 int do_dump_req_task(client_info_t *clinfo)
@@ -273,7 +316,7 @@ int do_dump_rep_task(client_info_t *clinfo)
 				if (!p_consumer) {
 					x_printf(I, "This is the first time to create '%s' XMQ Consumer.", evt->id);
 
-					assert( !xmq_register_consumer(clinfo->xmq_ctx, evt->id) );
+					assert(!xmq_register_consumer(clinfo->xmq_ctx, evt->id));
 
 					p_consumer = xmq_get_consumer(clinfo->xmq_ctx, evt->id);
 					assert(p_consumer != NULL);
@@ -371,6 +414,7 @@ void *task_handle(struct supex_evcoro *evcoro, int step)
 
 						if (have) {
 							p_info->state = do_incr_req_task(p_info);
+
 							if (p_info->state == EVT_STATE_WAIT) {
 								union evcoro_event event = {};
 								evcoro_timer_init(&event, 0.005);

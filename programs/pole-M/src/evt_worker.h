@@ -34,6 +34,9 @@
 #include "netmod.h"
 #include "xmq.h"
 
+#define OPEN_BATCH
+#define MAX_SYNC_STEP 10
+
 typedef struct client_info client_info_t;
 
 struct online_task

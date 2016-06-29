@@ -5,11 +5,10 @@
 #include "busi_dump.h"
 #include "busi_w2file.h"
 
-
 int main(int argc, char *argv[])
 {
-	evt_t           *evt;
-	struct pole_conf     confs;
+	evt_t                   *evt;
+	struct pole_conf        confs;
 
 	/* Parsing configure file. */
 	config_init(&confs, "./pole-S_conf.json");
@@ -18,7 +17,7 @@ int main(int argc, char *argv[])
 	SLogOpen(confs.log_file, SLogIntegerToLevel(confs.log_level));
 
 	/* Initialize the Network. */
-	evt_ctx_t       *evt_ctx = evt_ctx_init(SOCK_CLIENT, confs.conn_uri, confs.self_uid);
+	evt_ctx_t *evt_ctx = evt_ctx_init(SOCK_CLIENT, confs.conn_uri, confs.self_uid);
 	assert(evt_ctx);
 
 	// Startup the thread of Network Center to Recv & Send data.
@@ -33,12 +32,12 @@ int main(int argc, char *argv[])
 	 * busi_dump you should never modify it.
 	 * busi_incr you can modify it's elements with your own.
 	 */
-	business_t busi_dump = {
+	business_t      busi_dump = {
 		dump_init,
 		dump_db,
 		NULL
 	};
-	business_t busi_incr = {
+	business_t      busi_incr = {
 		w2file_init,
 		w2file_done,
 		w2file_destroy
@@ -57,9 +56,10 @@ int main(int argc, char *argv[])
 
 		/* Send NET_EV_DUMP_REQ command to Server. */
 		int len = strlen(confs.dump_uid) + 1;
+
 		if (len == 1) {
 			x_printf(W, "The pole-S_conf.json file DEST_DUMP_UID should be set,"
-					" when event type is DUMP.\n");
+				" when event type is DUMP.\n");
 			goto FAIL;
 		}
 
@@ -80,13 +80,15 @@ int main(int argc, char *argv[])
 		do {
 			sleep(1);
 			evt = recv_evt(evt_ctx);
-		} while(!evt);
+		} while (!evt);
 
 		print_evt(evt);
+
 		if (evt->ev_state == NET_EV_FAIL) {
 			x_printf(E, "Destination Host, dump the MySQL database data fail.\n");
 			goto FAIL;
 		}
+
 		x_printf(I, "Destination Host, has already dumped the MySQL database succeed.\n");
 		free_evt(evt);
 
@@ -109,14 +111,15 @@ int main(int argc, char *argv[])
 		assert(0 == send_evt(evt_ctx, evt));
 
 		enum evt_type   last_type = NET_EV_INCREMENT_REQ;
-		enum evt_state state = NET_EV_NONE;
-		uint64_t last_seq = 0;
+		enum evt_state  state = NET_EV_NONE;
+		uint64_t        last_seq = 0;
+
 		while (true) {
 			/* Recv Server's response. */
 			do {
 				usleep(2000);
 				evt = recv_evt(evt_ctx);
-			} while(!evt);
+			} while (!evt);
 			print_evt(evt);
 
 			// 避免连续重复incr
@@ -130,13 +133,15 @@ int main(int argc, char *argv[])
 			}
 
 			// 避免连续重复dump
-			if ( !((last_type == NET_EV_DUMP_REQ) && (evt->ev_type == NET_EV_DUMP_REQ)) ) {
+			if (!((last_type == NET_EV_DUMP_REQ) && (evt->ev_type == NET_EV_DUMP_REQ))) {
 				/* Doing businesses. return NET_EV_SUCC|NET_EV_FAIL|NET_EV_FATAL. */
 				state = do_business(evt->ev_type, (evt->ev_size > 0) ? evt->ev_data : NULL, evt->ev_size);
 			}
+
 			last_type = evt->ev_type;
 			/* Send Client Business execute state. */
-			switch (last_type) {
+			switch (last_type)
+			{
 				case BUSI_DUMP:
 					evt->ev_type = NET_EV_DUMP_REP;
 					evt->ev_state = state;
@@ -165,7 +170,7 @@ int main(int argc, char *argv[])
 			}
 
 			if (state != NET_EV_SUCC) {
-				//严重错误时，程序退出
+				// 严重错误时，程序退出
 				sleep(2);
 				x_printf(E, "*******************************.\n");
 				goto FAIL;
@@ -182,3 +187,4 @@ FAIL:
 	evt_ctx_destroy(evt_ctx);
 	return -1;
 }
+

@@ -15,7 +15,6 @@ void config_init(struct pole_conf *p_cfg, char *name)
 		goto fail;
 	}
 
-
 	/* Pole-S Log Configure. */
 	if (json_object_object_get_ex(cfg, "LOG_FILE", &obj)) {
 		str_val = json_object_get_string(obj);
@@ -25,8 +24,6 @@ void config_init(struct pole_conf *p_cfg, char *name)
 	if (json_object_object_get_ex(cfg, "LOG_LEVEL", &obj)) {
 		p_cfg->log_level = json_object_get_int(obj);
 	} else { goto fail; }
-
-
 
 	/* Network communication with Server. */
 	if (json_object_object_get_ex(cfg, "SLAVE_UNIQUE_ID", &obj)) {
@@ -38,7 +35,6 @@ void config_init(struct pole_conf *p_cfg, char *name)
 		str_val = json_object_get_string(obj);
 		strcpy(p_cfg->conn_uri, str_val);
 	} else { goto fail; }
-
 
 	/* Network operation. */
 	if (json_object_object_get_ex(cfg, "RUNNING_TYPE", &obj)) {
@@ -54,8 +50,6 @@ void config_init(struct pole_conf *p_cfg, char *name)
 	if (json_object_object_get_ex(cfg, "SELF_INCR_SEQ", &obj)) {
 		p_cfg->incr_seq = json_object_get_int64(obj);
 	} else { goto fail; }
-
-
 
 	/* MySQL localhost dump. */
 	if (json_object_object_get_ex(cfg, "DUMP_HOSTNAME", &obj)) {
@@ -78,8 +72,6 @@ void config_init(struct pole_conf *p_cfg, char *name)
 		strcpy(p_cfg->dump_path, str_val);
 	} else { goto fail; }
 
-
-
 	/* Business for Database Operation. */
 	if (json_object_object_get_ex(cfg, "DB_CONN_STR", &obj)) {
 		str_val = json_object_get_string(obj);
@@ -91,12 +83,10 @@ void config_init(struct pole_conf *p_cfg, char *name)
 		strcpy(p_cfg->db_user, str_val);
 	} else { goto fail; }
 
-
 	if (json_object_object_get_ex(cfg, "DB_PASSWORD", &obj)) {
 		str_val = json_object_get_string(obj);
 		strcpy(p_cfg->db_pwd, str_val);
 	} else { goto fail; }
-
 
 	json_object_put(cfg);
 	return;

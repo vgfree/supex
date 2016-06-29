@@ -108,7 +108,7 @@ int push_event_to_work(xmq_ctx_t *xmq_ctx, evt_ctx_t *evt_ctx, tlpool_t *tlpool,
 			p_temp = new_regist_one_client(xmq_ctx, evt_ctx, hmap, buf);
 
 			hashmap_set(hmap, (void *)&buf, strlen(buf), (void *)&p_temp, sizeof(p_temp));
-			
+
 			/* push task */
 			int hash = custom_hash(buf, threads, 0);
 			x_printf(D, "PUSH_EVENT_TO_THREAD: Thread<%d>....\n", hash);
@@ -119,7 +119,7 @@ int push_event_to_work(xmq_ctx_t *xmq_ctx, evt_ctx_t *evt_ctx, tlpool_t *tlpool,
 			assert(ok);
 		}
 	}
-#endif
+#endif	/* if 0 */
 
 	/* 添加新的事件到事件链表,供协程处理; */
 	QITEM *item = qitem_init(NULL);
