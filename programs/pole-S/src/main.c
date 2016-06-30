@@ -128,6 +128,7 @@ int main(int argc, char *argv[])
 					free_evt(evt);
 					continue;
 				} else {
+					assert(evt->incr.task_seq >= last_seq);
 					last_seq = evt->incr.task_seq;
 				}
 			}
