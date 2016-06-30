@@ -7,8 +7,7 @@ keywords = {
 	collect		= {{true},{},{},{}},
 
 	accountID	= {{},{},{},{}},
-	IMEI		= {{},{},{},{}},
-	model		= {{},{},{},{}},
+	M		= {{},{},{},{}},
 	tokenCode	= {{},{},{},{}},
 
 	GSENSORTime	= {{},{},{},{}},
@@ -44,8 +43,7 @@ slotlist = {
 	collect		= 3,
 
 	accountID	= 20,
-	IMEI		= 21,
-	model		= 22,
+	M		= 21,
 	tokenCode	= 23,
 
 	GSENSORTime	= 31,

@@ -24,7 +24,7 @@ local luakv_api     = require('luakv_pool_api')
 module('data_package', package.seeall)
 
 DataPackage = {
-        IMEI,
+        M,
         tokenCode,
         accountID,
         createTime,     --服务器接收时间
@@ -60,15 +60,15 @@ end
 function DataPackage:processLastTokenCode(last_tokenCode)
         --.处理上次tokenCode，移到sorted set中
         -- add mileage to FINISH_MILE_ZSET
-        local last_mileage_key = string.format("%s:%s:mileage", self['IMEI'], last_tokenCode)
-        local set_ok,_ = redis_api.cmd('mapRTMileage', self['IMEI'] or '',  "zadd", DEFS['STATIC']['FINISH_MILE_ZSET'], self['startPoint']['GPSTime'] or 0, last_mileage_key)
+        local last_mileage_key = string.format("%s:%s:mileage", self['M'], last_tokenCode)
+        local set_ok,_ = redis_api.cmd('mapRTMileage', self['M'] or '',  "zadd", DEFS['STATIC']['FINISH_MILE_ZSET'], self['startPoint']['GPSTime'] or 0, last_mileage_key)
 
         if not set_ok then
                 only.log('W', string.format("key>>%s, add to FINISH_MILE_ZSET error", last_mileage_key))
         end
 
         -- delete this mileage from LASTED_MILE_ZSET
-        local rem_ok, _ = redis_api.cmd('mapRTMileage', self['IMEI'] or '', "ZREM", DEFS['STATIC']['LASTED_MILE_ZSET'], last_mileage_key)
+        local rem_ok, _ = redis_api.cmd('mapRTMileage', self['M'] or '', "ZREM", DEFS['STATIC']['LASTED_MILE_ZSET'], last_mileage_key)
 
         if not rem_ok then
                 only.log('W', string.format("key>>%s, rem from LASTED_MILE_ZSET error", last_mileage_key))
@@ -82,9 +82,9 @@ end
 --修改：2015-06-27 重构实时里程
 function DataPackage:isTokenChanged()
         local ret = false
-        local key = self['IMEI'] .. ":tokenCode"
+        local key = self['M'] .. ":tokenCode"
         -- get last tokenCode from redis
-        local ok, last_tokenCode = redis_api.cmd('owner', self['IMEI'] or '',  "get", key)
+        local ok, last_tokenCode = redis_api.cmd('owner', self['M'] or '',  "get", key)
         if not ok or not last_tokenCode or last_tokenCode == "" then
               ret = true
         end
@@ -92,7 +92,7 @@ function DataPackage:isTokenChanged()
         --tokenCode发生变化，则认为是开机
         if (not last_tokenCode) or last_tokenCode ~= self['tokenCode'] then
                 if (not self['isDelay']) then
-                        redis_api.cmd('owner', self['IMEI'] or '',  "set", key, self['tokenCode'])
+                        redis_api.cmd('owner', self['M'] or '',  "set", key, self['tokenCode'])
                 end
 
                 return true, last_tokenCode
@@ -107,13 +107,13 @@ end
 --返回：无
 --修改：2015-07-01 重构实时里程
 function DataPackage:writeLastPoint(last_point)       
-        local last_time_key = string.format("%s:lastTime", self['IMEI'])
-        local last_lon_key = string.format("%s:lastLon", self['IMEI'])
-        local last_lat_key = string.format("%s:lastLat", self['IMEI'])
-        local last_speed_key = string.format("%s:lastSpeed", self['IMEI'])
-        local last_dir_key = string.format("%s:lastDir", self['IMEI'])
+        local last_time_key = string.format("%s:lastTime", self['M'])
+        local last_lon_key = string.format("%s:lastLon", self['M'])
+        local last_lat_key = string.format("%s:lastLat", self['M'])
+        local last_speed_key = string.format("%s:lastSpeed", self['M'])
+        local last_dir_key = string.format("%s:lastDir", self['M'])
         
-        local ok, _ = luakv_api.cmd('localRedis', self['IMEI'] or '', 
+        local ok, _ = luakv_api.cmd('localRedis', self['M'] or '', 
                 {
                         {'set', last_time_key, last_point['GPSTime']},
                         {'set', last_lon_key, last_point['longitude']},
@@ -132,13 +132,13 @@ end
 --返回：last_point --> 上个包数据的最新时间点信息，GPSPoint
 --修改：2015-07-01 重构实时里程
 function DataPackage:readLastPoint()
-        local last_time_key = string.format("%s:lastTime", self['IMEI'])
-        local last_lon_key = string.format("%s:lastLon", self['IMEI'])
-        local last_lat_key = string.format("%s:lastLat", self['IMEI'])
-        local last_speed_key = string.format("%s:lastSpeed", self['IMEI'])
-        local last_dir_key = string.format("%s:lastDir", self['IMEI'])
+        local last_time_key = string.format("%s:lastTime", self['M'])
+        local last_lon_key = string.format("%s:lastLon", self['M'])
+        local last_lat_key = string.format("%s:lastLat", self['M'])
+        local last_speed_key = string.format("%s:lastSpeed", self['M'])
+        local last_dir_key = string.format("%s:lastDir", self['M'])
         
-        local ok, ret = luakv_api.cmd('localRedis', self['IMEI'] or '', 
+        local ok, ret = luakv_api.cmd('localRedis', self['M'] or '', 
                 {
                         {'get', last_time_key},
                         {'get', last_lon_key},
@@ -211,7 +211,7 @@ end
 --返回：无
 --修改：2015-06-27 重构实时里程
 function DataPackage:init(req_body)
-        self['IMEI']        = req_body['IMEI']
+        self['M']        = req_body['M']
         self['tokenCode']    = req_body['tokenCode']
         self['accountID']    = req_body['accountID']
         self['createTime']   = os.time()
@@ -260,8 +260,8 @@ end
 --返回：无
 --修改：2015-06-27 重构实时里程
 function DataPackage:checkData()
-        if not  utils.check_imei(self['IMEI']) then
-                only.log('E', "check IMEI fail")
+        if not  self['M'] then
+                only.log('E', "check M fail")
                 return false
         end
 
@@ -281,15 +281,15 @@ end
 --修改：2015-07-01 重构实时里程
 function DataPackage:writeLossPoints(begin_point, end_point)
         only.log('D', string.format("DataPackage:writeLossPoints, begin: %s; end: %s", begin_point['GPSTime'], end_point['GPSTime']))
-        local begin_time_key = string.format("%s:lossBeginTime", self['IMEI'])
-        local begin_speed_key = string.format("%s:lossBeginSpeed", self['IMEI'])
-        local begin_dir_key = string.format("%s:lossBeginDir", self['IMEI'])
+        local begin_time_key = string.format("%s:lossBeginTime", self['M'])
+        local begin_speed_key = string.format("%s:lossBeginSpeed", self['M'])
+        local begin_dir_key = string.format("%s:lossBeginDir", self['M'])
         
-        local end_time_key = string.format("%s:lossEndTime", self['IMEI'])
-        local end_speed_key = string.format("%s:lossEndSpeed", self['IMEI'])
-        local end_dir_key = string.format("%s:lossEndDir", self['IMEI'])
+        local end_time_key = string.format("%s:lossEndTime", self['M'])
+        local end_speed_key = string.format("%s:lossEndSpeed", self['M'])
+        local end_dir_key = string.format("%s:lossEndDir", self['M'])
         
-        local ok, _ = luakv_api.cmd('localRedis', self['IMEI'] or "",
+        local ok, _ = luakv_api.cmd('localRedis', self['M'] or "",
                 {
                         {"set", begin_time_key, begin_point['GPSTime']}, 
                         {"set", begin_speed_key, begin_point['speed']}, 
@@ -322,15 +322,15 @@ function DataPackage:readLossPoints(points_array, range_begin_point, range_end_p
         local ret_points = {}
         
         local begin_point, end_point
-        local begin_time_key = string.format("%s:lossBeginTime", self['IMEI'])
-        local begin_speed_key = string.format("%s:lossBeginSpeed", self['IMEI'])
-        local begin_dir_key = string.format("%s:lossBeginDir", self['IMEI'])
+        local begin_time_key = string.format("%s:lossBeginTime", self['M'])
+        local begin_speed_key = string.format("%s:lossBeginSpeed", self['M'])
+        local begin_dir_key = string.format("%s:lossBeginDir", self['M'])
         
-        local end_time_key = string.format("%s:lossEndTime", self['IMEI'])
-        local end_speed_key = string.format("%s:lossEndSpeed", self['IMEI'])
-        local end_dir_key = string.format("%s:lossEndDir", self['IMEI'])
+        local end_time_key = string.format("%s:lossEndTime", self['M'])
+        local end_speed_key = string.format("%s:lossEndSpeed", self['M'])
+        local end_dir_key = string.format("%s:lossEndDir", self['M'])
 
-        local ok, ret = luakv_api.cmd('localRedis', self['IMEI'] or "", 
+        local ok, ret = luakv_api.cmd('localRedis', self['M'] or "", 
                 {
         	        {"get", begin_time_key}, 
         	        {"get", begin_speed_key}, 
@@ -379,14 +379,14 @@ function DataPackage:readLossPoints(points_array, range_begin_point, range_end_p
 end
 
 function DataPackage:remLossPoints()
-        local begin_time_key = string.format("%s:lossBeginTime", self['IMEI'])
-        local begin_speed_key = string.format("%s:lossBeginSpeed", self['IMEI'])
-        local begin_dir_key = string.format("%s:lossBeginDir", self['IMEI'])
+        local begin_time_key = string.format("%s:lossBeginTime", self['M'])
+        local begin_speed_key = string.format("%s:lossBeginSpeed", self['M'])
+        local begin_dir_key = string.format("%s:lossBeginDir", self['M'])
         
-        local end_time_key = string.format("%s:lossEndTime", self['IMEI'])
-        local end_speed_key = string.format("%s:lossEndSpeed", self['IMEI'])
-        local end_dir_key = string.format("%s:lossEndDir", self['IMEI'])
-        local ok, ret = luakv_api.cmd('localRedis', self['IMEI'] or "", 
+        local end_time_key = string.format("%s:lossEndTime", self['M'])
+        local end_speed_key = string.format("%s:lossEndSpeed", self['M'])
+        local end_dir_key = string.format("%s:lossEndDir", self['M'])
+        local ok, ret = luakv_api.cmd('localRedis', self['M'] or "", 
                 {
         	        {"del", begin_time_key}, 
         	        {"del", begin_speed_key}, 
@@ -398,7 +398,7 @@ function DataPackage:remLossPoints()
         )
         
         if not ok then
-                only.log('E', "DataPackage:remLossPoints ERROR, IMEI:%s", self['IMEI'])
+                only.log('E', "DataPackage:remLossPoints ERROR, M:%s", self['M'])
         end
 end
 
@@ -499,16 +499,16 @@ end
 --返回：无
 --修改：2015-07-01 重构实时里程
 function DataPackage:driveOnlineTime(drive_time)
-	local key = string.format("%s:DriveHours", self['IMEI'])
+	local key = string.format("%s:DriveHours", self['M'])
 
 	if self['isTokenChanged'] then	--重新开机，重置时间为0
-		redis_api.cmd('owner', self['IMEI'] or '',  "set", key, 0)
+		redis_api.cmd('owner', self['M'] or '',  "set", key, 0)
 	else	--计算开机时间，达到整数时间则传递给疲劳驾驶模块
 		local hours = math.floor(drive_time/3600) 
 		if hours > 0 and (drive_time % 3600 < 300 ) then --在线大于1小时，且在这一小时的前10分钟内触发
-			local ok, last_hours = redis_api.cmd('owner', self['IMEI'] or '',  "get", key)
+			local ok, last_hours = redis_api.cmd('owner', self['M'] or '',  "get", key)
 			if ok and tonumber(last_hours or 0) < hours then
-                                redis_api.cmd('owner', self['IMEI'] or '',  "set", key, hours)
+                                redis_api.cmd('owner', self['M'] or '',  "set", key, hours)
                 		_G.add_origin_key_value("T_ONLINE_HOUR", hours)	--疲劳驾驶模块
 			end	
 		end
@@ -528,7 +528,7 @@ function DataPackage:process()
         local old_miles         --保存计算前的redis中已有的数据
         local first_redis = false       --初次初始化redis记录
         if not self['isTokenChanged'] then
-                redis_miles = MilesRecord:new(self['IMEI'], self['tokenCode'], self['accountID'])
+                redis_miles = MilesRecord:new(self['M'], self['tokenCode'], self['accountID'])
                 local ok = redis_miles:initFromRedis()
                 if not ok then
                         redis_miles = nil       --redis中没有该记录
@@ -557,7 +557,7 @@ function DataPackage:process()
         
         --如果redis已经有数据，将redis数据与计算结果数据合并
         if not redis_miles then
-                redis_miles = MilesRecord:new(self['IMEI'], self['tokenCode'], self['accountID'])
+                redis_miles = MilesRecord:new(self['M'], self['tokenCode'], self['accountID'])
                 redis_miles:initFromData(miles_package)
                 first_redis = true
         else 

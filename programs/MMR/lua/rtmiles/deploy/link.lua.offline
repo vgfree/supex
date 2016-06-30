@@ -14,7 +14,7 @@ OWN_POOL = {
                         host = '192.168.1.11',
                         port = 6379,
                 },
-	        mapOnlineUserIMEI = {
+	        mapOnlineUserM = {
 			host = '192.168.71.66',
 			port =  5095,
                 },

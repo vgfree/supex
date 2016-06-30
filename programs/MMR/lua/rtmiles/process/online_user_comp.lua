@@ -18,7 +18,7 @@ function handle()
 	end
 
         local req_body = supex.get_our_body_table()
-	local IMEI = req_body['IMEI']
+	local M = req_body['M']
 	local tokenCode = req_body['tokenCode']
 	local accountID = req_body['accountID']
 	local model = req_body['model']
@@ -41,8 +41,8 @@ function handle()
 	local speed = req_body['speed'][last_idx]
 	local altitude = req_body['altitude'][last_idx]
 	
-	local online_key = string.format("%s:online", IMEI)
-	local ok, ret = redis_api.cmd('mapOnlineUserIMEI', IMEI, 'hmset', online_key,
+	local online_key = string.format("%s:online", M)
+	local ok, ret = redis_api.cmd('mapOnlineUserM', M, 'hmset', online_key,
 		'accountID', accountID,
 		'tokenCode', tokenCode,
 		'GPSTime'  , time,
@@ -54,13 +54,13 @@ function handle()
 		'altitude' , altitude)
 	
 	if not ok then
-		only.log('E', "write mapOnlineUser with IMEI ERROR")
+		only.log('E', "write mapOnlineUser with M ERROR")
 	end
 
 	if accountID ~= '' then
 		local online_key = string.format("%s:online", accountID)
                 local ok, ret = redis_api.cmd('mapOnlineUserAccountID', accountID, 'hmset', online_key,
-                        'imei', IMEI,
+                        'M', M,
                         'tokenCode', tokenCode,
                         'GPSTime'  , time,
                         'longitude', lon,
@@ -75,7 +75,7 @@ function handle()
                 end
 
 	end
---	ok, ret = redis_api.cmd('mapOnlineUser', IMEI, 'expire', online_key, ONLINE_TTL_TIME)
+--	ok, ret = redis_api.cmd('mapOnlineUser', M, 'expire', online_key, ONLINE_TTL_TIME)
 --	if not ok then
 --		only.log('E', "set ttl ERROR")
 --	end
