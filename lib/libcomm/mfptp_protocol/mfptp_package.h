@@ -15,6 +15,7 @@ extern "C" {
 typedef int (*Compression_CallBack)(char *dest, const char *src, int d_len, int s_len);
 typedef int (*Encryption_CallBack)(char *dest, const char *src, int d_len, int s_len);
 
+
 /* MFPTP打包器的状态 */
 struct mfptp_pack_stat
 {
@@ -69,8 +70,9 @@ int mfptp_check_memory(int memsize, int frames, int dsize);
 * @frame_size:待打包数据的每帧大小
 * @frames_of_pack:待打包数据每个单包中帧的总数
 * @packages:待打包数据的总包数
+* @datasize:待打包数据的总大小
 ***********************************************************************************/
-void mfptp_fill_package(struct mfptp_packager *packager, const int *frame_offset, const int *frame_size, const int *frames_of_pack, int packages);
+bool mfptp_fill_package(struct mfptp_packager *packager, const int *frame_offset, const int *frame_size, const int *frames_of_pack, int packages, int datasize);
 
 #ifdef __cplusplus
 }

@@ -88,12 +88,11 @@ bool socket_listen(struct comm_tcp *commtcp, const char *host, const char *servi
 
 /***********************************************************************************
 * 功能:连接到指定地址端口[地址端口填入到commtcp->peerlocal,commtcp->peeraddr]
-* @timeout: -1 一直尝试连接对方直到成功 0 只连接一次 >0 一直尝试连接直到超时
 * @connattr:	CONNECT_ONCE   只连接一次无论成功与否都返回
 *		CONNECT_ANYWAY 根据timeout的值确定尝试连接多少次
 * @返回值:true 连接成功 false 连接失败
 ***********************************************************************************/
-bool socket_connect(struct comm_tcp *commtcp, const char *host, const char *service, int timeout, int connattr);
+bool socket_connect(struct comm_tcp *commtcp, const char *host, const char *service, int connattr);
 
 
 /***********************************************************************************

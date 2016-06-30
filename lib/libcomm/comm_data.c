@@ -10,14 +10,14 @@
 #define MAXDISPOSEDATA  5			/* 最多联系解析打包的数据次数 */
 #define COMM_READ_MIOU  1024*1024		/* 一次性最多读取数据的字节数 */
 #define	CONNECTVALUE	1000*20			/* 当服务器端断开之后,过多长时间尝试第一次连接服务器[单位 ms]*/
-#define	CONNECTINTERVAL 1000*60			/* 当服务器断开之后，每间隔多长时间去尝试连接直到连接上服务器[单位 ms]*/
+#define	CONNECTINTERVAL 1000*10			/* 当服务器断开之后，每间隔多长时间去尝试连接直到连接上服务器[单位 ms]*/
 
 /* 删除一个fd的相关信息以及关闭一个fd */
 #define DELETEFD(commevent, fd, flag)				\
-	({      commdata_del(commevent, fd);			\
-		del_remainfd(&commevent->remainfd, fd, flag);	\
-		close(fd);					\
-	 })
+	do {    close(fd);					\
+		del_remainfd(&commevent->remainfd, fd, flag);   \
+		commdata_del(commevent, fd);			\
+	 } while(0)
 
 static void _fill_message_package(struct comm_message *message, const struct mfptp_parser *packager);
 
@@ -143,14 +143,19 @@ bool commdata_recv(struct connfd_info *connfd, struct comm_event *commevent, int
 				commtimer_start(connfd->commtimer, &commevent->commctx->timerhead);
 				log("%d closed and start commtimer\n", connfd->commtcp.fd);
 			} else {
-				DELETEFD(commevent, connfd->commtcp.fd, REMAINFD_READ);
 				log("%d closed\n", connfd->commtcp.fd);
+				DELETEFD(commevent, connfd->commtcp.fd, REMAINFD_READ);
+#if 0
+				commdata_del(commevent, connfd->commtcp.fd);
+				del_remainfd(&commevent->remainfd, fd, REMAINFD_READ);
+				close(fd);
+#endif
 			}
 		} else {
 			/* 读事件成功处理完毕，则添加解析事件并将此fd从读事件数组里移除 */
 			add_remainfd(&commevent->remainfd, connfd->commtcp.fd, REMAINFD_PARSE);
 			del_remainfd(&commevent->remainfd, connfd->commtcp.fd, REMAINFD_READ);
-			//	log("read data successed:%d\n", connfd->commtcp.fd);
+			log("read data successed:%d\n", connfd->commtcp.fd);
 		}
 
 		return true;
@@ -198,10 +203,10 @@ bool commdata_send(struct connfd_info *connfd, struct comm_event *commevent, int
 			}
 		}
 		if (flag) {
-			//log("write deal over\n");
+			log("write deal over\n");
 			del_remainfd(&commevent->remainfd, connfd->commtcp.fd, REMAINFD_WRITE);
 		} else {
-			//log("write not over\n");
+			log("write not over\n");
 		}
 		return flag;
 	}
@@ -262,20 +267,21 @@ bool commdata_package(struct connfd_info *connfd, struct comm_event *commevent, 
 			}
 		}
 
-		mfptp_fill_package(&connfd->packager, message->package.frame_offset, message->package.frame_size, message->package.frames_of_package, message->package.packages);
-		size = mfptp_package(&connfd->packager, message->content, message->config, message->socket_type);
+		if (mfptp_fill_package(&connfd->packager, message->package.frame_offset, message->package.frame_size, message->package.frames_of_package, message->package.packages, message->package.dsize)) {
+			size = mfptp_package(&connfd->packager, message->content, message->config, message->socket_type);
 
-		if ((size > 0) && (connfd->packager.ms.error == MFPTP_OK)) {
-			connfd->send_cache.end += size;
-			add_remainfd(&commevent->remainfd, connfd->commtcp.fd, REMAINFD_WRITE);
-			log("package successed\n");
-		} else {
-			log("package failed\n");
-			connfd->packager.ms.error = MFPTP_OK;
+			if ((size > 0) && (connfd->packager.ms.error == MFPTP_OK)) {
+				connfd->send_cache.end += size;
+				log("after packager socket_type:%d\n", connfd->send_cache.buffer[8]);
+				add_remainfd(&commevent->remainfd, connfd->commtcp.fd, REMAINFD_WRITE);
+				log("package successed\n");
+			} else {
+				log("package failed\n");
+				connfd->packager.ms.error = MFPTP_OK;
+			}
 		}
 
-		free_commmsg(message);	/* 打包失败也会直接放弃这个有问题的包 */
-
+		free_commmsg(message);	/* 包的信息设置错误或者打包失败也会直接放弃这个有问题的包 */
 		if ((connfd->send_queue.nodes == 0) && (connfd->send_list.nodes == 0)) {
 			del_remainfd(&commevent->remainfd, connfd->commtcp.fd, REMAINFD_PACKAGE);	/* 节点数等于0 说明没有数据需要进行打包 打包事件处理完毕 */
 			return true;
@@ -452,7 +458,7 @@ static void  _timer_event(struct comm_timer *commtimer, struct comm_list *timerh
 	memcpy(host, connfd->commtcp.peeraddr, strlen(connfd->commtcp.peeraddr));
 
 	log("deal with connect timer\n");
-	if (socket_connect(&connfd->commtcp, host, service, 0, CONNECT_ANYWAY)) {
+	if (socket_connect(&connfd->commtcp, host, service, CONNECT_ANYWAY)) {
 		/* 连接成功， 则停止计时器 */
 		commtimer_stop(commtimer, timerhead);
 		if (commepoll_add(&connfd->commevent->commctx->commepoll, connfd->commtcp.fd, EPOLLIN | EPOLLOUT | EPOLLET)) {

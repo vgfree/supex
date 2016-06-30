@@ -7,6 +7,7 @@
 
 #define  LISTENFDS      1024	/* 能够监听的描述符的个数 */
 #define  TIMEOUTTIME    5	/* select的超时事件[单位:s],超时就判定connect连接失败 */
+#define CONNECTTIMEOUT  1000*60*30	/* 连接服务器时的标志位设置了CONNECT_ANYWAY时，一直尝试连接服务器,超时时间到还没连接上就返回[单位:ms] */
 
 #define  CLOSEFD(fd)	   \
 	({		   \
@@ -48,12 +49,16 @@ bool socket_listen(struct comm_tcp *commtcp, const char *host, const char *servi
 	return commtcp->fd != -1;
 }
 
-bool socket_connect(struct comm_tcp *commtcp, const char *host, const char *service, int timeout, int connattr)
+bool socket_connect(struct comm_tcp *commtcp, const char *host, const char *service, int connattr)
 {
 	assert(commtcp && host && service);
 
 	struct addrinfo *ai = NULL;
+	long timeout = 0; /* @timeout: -1 一直尝试连接对方直到成功 0 只连接一次 >0 一直尝试连接直到超时 */
 
+	if (commtcp->stat != FD_CLOSE) {
+		timeout = CONNECTTIMEOUT;
+	}
 	memset(commtcp, 0, sizeof(*commtcp));
 	commtcp->peerport = atoi(service);
 	memcpy(commtcp->peeraddr, host, strlen(host));

@@ -134,10 +134,9 @@ void commevent_remainfd(struct comm_event *commevent, bool timeout)
 				/* 事件未处理完，则将下标增加1,下次轮询的时候执行下一个fd */
 				commevent->remainfd.circle[1] = (commevent->remainfd.circle[1] + 1) % commevent->remainfd.cnt[1];
 			} else if (commevent->remainfd.cnt[1] > 0 && commevent->remainfd.cnt[1] == commevent->remainfd.circle[1]){
-				//commevent->remainfd.circle[1] = commevent->remainfd.circle[1] % commevent->remainfd.cnt[1];
 				commevent->remainfd.circle[1] = 0;
 			}
-			//	log("commevent_remainfd after read fd:%d, index:%d,cnt:%d\n\n", commevent->remainfd.fda[1][commevent->remainfd.circle[1]], commevent->remainfd.circle[1], commevent->remainfd.cnt[1]);
+			log("commevent_remainfd after read fd:%d, index:%d,cnt:%d\n\n", commevent->remainfd.fda[1][commevent->remainfd.circle[1]], commevent->remainfd.circle[1], commevent->remainfd.cnt[1]);
 		}
 
 		if (commevent->remainfd.cnt[2] > 0) {
@@ -148,10 +147,9 @@ void commevent_remainfd(struct comm_event *commevent, bool timeout)
 			if (unlikely(!commdata_parse(commevent->connfd[fd], commevent, fd))) {
 				commevent->remainfd.circle[2] = (commevent->remainfd.circle[2] + 1) % commevent->remainfd.cnt[2];
 			} else if (commevent->remainfd.cnt[2] > 0 && commevent->remainfd.cnt[2] == commevent->remainfd.circle[2]){
-				//commevent->remainfd.circle[2] = commevent->remainfd.circle[2] % commevent->remainfd.cnt[2];
 				commevent->remainfd.circle[2] = 0;
 			}
-			//	log("commevent_remainfd after parse fd:%d, index:%d,cnt:%d\n\n", commevent->remainfd.fda[2][commevent->remainfd.circle[2]], commevent->remainfd.circle[2], commevent->remainfd.cnt[2]);
+			log("commevent_remainfd after parse fd:%d, index:%d,cnt:%d\n\n", commevent->remainfd.fda[2][commevent->remainfd.circle[2]], commevent->remainfd.circle[2], commevent->remainfd.cnt[2]);
 		}
 
 		if (commevent->remainfd.cnt[3] > 0) {
@@ -162,10 +160,9 @@ void commevent_remainfd(struct comm_event *commevent, bool timeout)
 			if (unlikely(!commdata_package(commevent->connfd[fd], commevent, fd))) {
 				commevent->remainfd.circle[3] = (commevent->remainfd.circle[3] + 1) % commevent->remainfd.cnt[3];
 			} else if (commevent->remainfd.cnt[3] > 0 && commevent->remainfd.cnt[3] == commevent->remainfd.circle[3]){
-				//commevent->remainfd.circle[3] = commevent->remainfd.circle[3] % commevent->remainfd.cnt[3];
 				commevent->remainfd.circle[3] = 0;
 			}
-		//	log("commevent_remainfd after package fd:%d, index:%d,cnt:%d\n\n", commevent->remainfd.fda[3][commevent->remainfd.circle[3]], commevent->remainfd.circle[3], commevent->remainfd.cnt[3]);
+			log("commevent_remainfd after package fd:%d, index:%d,cnt:%d\n\n", commevent->remainfd.fda[3][commevent->remainfd.circle[3]], commevent->remainfd.circle[3], commevent->remainfd.cnt[3]);
 		}
 
 		if (commevent->remainfd.cnt[4] > 0) {
@@ -176,10 +173,9 @@ void commevent_remainfd(struct comm_event *commevent, bool timeout)
 			if (unlikely(!commdata_send(commevent->connfd[fd], commevent, fd))) {
 				commevent->remainfd.circle[4] = (commevent->remainfd.circle[4] + 1) % commevent->remainfd.cnt[4];
 			} else if (commevent->remainfd.cnt[4] > 0 && commevent->remainfd.cnt[4] == commevent->remainfd.circle[4]){ 
-				//commevent->remainfd.circle[4] = commevent->remainfd.circle[4] % commevent->remainfd.cnt[4]; 
 				commevent->remainfd.circle[4] = 0;
 			}
-		//	log("commevent_remainfd after write fd:%d, index:%d,cnt:%d\n\n", commevent->remainfd.fda[4][commevent->remainfd.circle[4]], commevent->remainfd.circle[4], commevent->remainfd.cnt[4]); 
+			log("commevent_remainfd after write fd:%d, index:%d,cnt:%d\n\n", commevent->remainfd.fda[4][commevent->remainfd.circle[4]], commevent->remainfd.circle[4], commevent->remainfd.cnt[4]); 
 		} 
 		counter++;
 	}

@@ -78,6 +78,7 @@ int mfptp_package(struct mfptp_packager *packager, const char *data, unsigned ch
 
 	/* socket工作类型 */
 	(*packager->ms.buff)[*packager->ms.size] = packager->header.socket_type;
+	log("index:%d data:%d socket_type:%d\n", *packager->ms.size, (*packager->ms.buff)[*packager->ms.size], packager->header.socket_type);
 	*packager->ms.size += 1;
 	packager->ms.dosize += 1;
 
@@ -109,26 +110,46 @@ int mfptp_check_memory(int memsize, int frames, int dsize)
 	return size - memsize;
 }
 
-void mfptp_fill_package(struct mfptp_packager *packager, const int *frame_offset, const int *frame_size, const int *frames_of_package, int packages)
+bool mfptp_fill_package(struct mfptp_packager *packager, const int *frame_offset, const int *frame_size, const int *frames_of_pack, int packages, int datasize)
 {
-	assert(packager && packager->init && frame_offset && frame_size);
+	assert(packager && packager->init && frame_offset && frame_size && frames_of_pack);
 	int     index = 0;
 	int     dsize = 0;	/* 数据的总大小 */
 	int     pckidx = 0;	/* 包的索引 */
 	int     frmidx = 0;	/* 帧的索引 */
 
 	for (pckidx = 0; pckidx < packages; pckidx++) {
-		for (frmidx = 0; frmidx < frames_of_package[pckidx]; frmidx++, index++) {
-			packager->bodyer.package[pckidx].frame[frmidx].frame_offset = frame_offset[index];
-			packager->bodyer.package[pckidx].frame[frmidx].frame_size = frame_size[index];
-			dsize += frame_size[index];
+		if (frames_of_pack[pckidx] > 0) {
+			for (frmidx = 0 ; frmidx < frames_of_pack[pckidx]; frmidx++, index++) {
+				if (frame_size[index] <= datasize && dsize < datasize) {
+					if (frame_offset[index] < datasize) {
+						packager->bodyer.package[pckidx].frame[frmidx].frame_offset = frame_offset[index];
+						packager->bodyer.package[pckidx].frame[frmidx].frame_size = frame_size[index];
+						dsize += frame_size[index];
+					} else {
+
+						log("wrong frame_offset in comm_package\n");
+						return false;
+					}
+				} else {
+					log("wrong frame_size in comm_package\n");
+					return false;
+				}
+			}
+			packager->bodyer.package[pckidx].frames = frames_of_pack[pckidx];
+		} else {
+			log("wrong sum of package in comm_packages\n");
+			return false;
 		}
-
-		packager->bodyer.package[pckidx].frames = frames_of_package[pckidx];
 	}
-
-	packager->bodyer.dsize = dsize;
-	packager->bodyer.packages = packages;
+	if (dsize == datasize) {
+		packager->bodyer.dsize = dsize;
+		packager->bodyer.packages = packages;
+		return true;
+	} else {
+		log("wrong sum of datasize in comm_package\n");
+		return false;
+	}
 }
 
 /* 将帧组合成一个包数据 @package:此包数据的相关信息 @data：需要进行打包的数据 */
@@ -141,8 +162,8 @@ static void _make_package(struct mfptp_packager *packager, struct mfptp_package_
 	/* 开始组装帧 */
 	for (frmidx = 0; frmidx < package->frames; frmidx++) {
 		/* 先加密 再压缩 */
-		if (package->frame[frmidx].frame_size > MFPTP_MAX_DATASIZE) {
-			/* 数据size大于允许帧所携带的数据大小 */
+		if (package->frame[frmidx].frame_size < 1 || package->frame[frmidx].frame_size > MFPTP_MAX_DATASIZE) {
+			/* 数据size大于允许帧所携带的数据大小或小于零 */
 			packager->ms.error = MFPTP_DATASIZE_INVAILD;
 			log("illegal datasize mfptp protocol frame carried\n");
 			return;

@@ -1,7 +1,6 @@
 #include "../communication.h"
 #include <signal.h>
 
-#define         EPOLLSIZE 1024
 
 static void event_fun(struct comm_context *commctx, struct comm_tcp *commtcp, void *usr);
 
@@ -30,7 +29,7 @@ int main(int argc, char *argv[])
 	signal(SIGPIPE, SIG_IGN);
 	port = atoi(argv[2]);
 	message.content = content;
-	commctx = comm_ctx_create(EPOLLSIZE);
+	commctx = comm_ctx_create(-1);
 
 	if (unlikely(!commctx)) {
 		log("server comm_ctx_create failed\n");
@@ -55,13 +54,6 @@ int main(int argc, char *argv[])
 
 	/* 循环接收 发送数据 */
 	while (1) {
-		if (message.fd == -1) {
-			printf("close aready destroy anything\n");
-			comm_ctx_destroy(commctx);
-			printf("destroy done and quit\n");
-			return -1;
-		}
-
 		if (comm_recv(commctx, &message, true, -1) > -1) {
 #if 0
 			for (pckidx = 0, k = 0; pckidx < message.package.packages; pckidx++) {
@@ -75,7 +67,7 @@ int main(int argc, char *argv[])
 				log("messag fd: %d message body: %s\n", message.fd, buff);
 			}
 #endif
-			log("message fd: %d message body:%.*s\n", message.fd, message.package.dsize, message.content);
+			log("\x1B[1;32m""message fd: %d message body:%.*s\n""\x1B[m", message.fd, message.package.dsize, message.content);
 
 			/* 接收成功之后将此消息体再返回给用户 */
 			if (message.fd > 0) {
@@ -83,7 +75,6 @@ int main(int argc, char *argv[])
 			}
 		} else {
 			log("comm_recv failed\n");
-			sleep(1);
 		}
 	}
 
