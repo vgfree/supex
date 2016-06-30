@@ -14,7 +14,7 @@ local DEFS = require('realtime_defs')
 module('miles_record', package.seeall)
 
 MilesRecord = {
-        IMEI,
+        M,
         tokenCode,
         accountID,
         createTime,     --服务器接收时间
@@ -41,8 +41,8 @@ MilesRecord = {
 }
 
 -- Return new object of MilesRecord
-function MilesRecord:new(IMEI, tokenCode, accountID)
-        if not IMEI or not tokenCode then
+function MilesRecord:new(M, tokenCode, accountID)
+        if not M or not tokenCode then
                 return nil
         end
 
@@ -52,10 +52,10 @@ function MilesRecord:new(IMEI, tokenCode, accountID)
         setmetatable(self, MilesRecord)
         MilesRecord.__index = MilesRecord
 
-        self['IMEI'] = IMEI
+        self['M'] = M
         self['tokenCode'] = tokenCode
         self['accountID'] = accountID
-        self['recordKey'] = string.format("%s:%s:mileage", IMEI, tokenCode)
+        self['recordKey'] = string.format("%s:%s:mileage", M, tokenCode)
 
         return self
 end
@@ -65,7 +65,7 @@ end
 --返回：无
 --修改：2015-07-01 重构实时里程
 function MilesRecord:initFromRedis()
-        local ok,ret = redis_pool_api.cmd('mapRTMileage', self['IMEI'] or '', "HMGET", self['recordKey'],
+        local ok,ret = redis_pool_api.cmd('mapRTMileage', self['M'] or '', "HMGET", self['recordKey'],
                 'startTime',
                 'endTime',
                 'sumMileage',
@@ -218,7 +218,7 @@ end
 --返回：无
 --修改：2015-07-01 重构实时里程
 function MilesRecord:write()
-        local ok , ret = redis_pool_api.cmd('mapRTMileage', self['IMEI'] or "" ,"HMSET", self['recordKey'],
+        local ok , ret = redis_pool_api.cmd('mapRTMileage', self['M'] or "" ,"HMSET", self['recordKey'],
                 'createTime', self['createTime'],
                 'startLongitude', self['startLongitude'],
                 'startLatitude', self['startLatitude'],
@@ -247,14 +247,14 @@ function MilesRecord:write()
         end
 
         -- write to last gps time to, wait for data curing
-        ok , ret = redis_pool_api.cmd('mapRTMileage', self['IMEI'] or '', "ZADD", DEFS['STATIC']['LASTED_MILE_ZSET'], self['endTime'], self['recordKey'])
+        ok , ret = redis_pool_api.cmd('mapRTMileage', self['M'] or '', "ZADD", DEFS['STATIC']['LASTED_MILE_ZSET'], self['endTime'], self['recordKey'])
         if not ok then
                 only.log('E', string.format("Write %s to LASTED_MILE_ZSET error", self['recordKey']))
                 return
         end
 
         -- write mileage count
-        ok , ret = redis_pool_api.cmd('mapRTMileage',self['IMEI'], "INCR", 'mileageCount')
+        ok , ret = redis_pool_api.cmd('mapRTMileage',self['M'], "INCR", 'mileageCount')
         if not ok then
                 only.log('E', "incr mileageCount error")
                 return
@@ -285,7 +285,7 @@ end
 function MilesRecord:update(old_miles)
         local diff_attr = self:diffAttr(old_miles)
         if diff_attr and next(diff_attr) then
-                local ok , ret = redis_pool_api.cmd('mapRTMileage', self['IMEI'] or "" ,"HMSET", self['recordKey'], unpack(diff_attr))
+                local ok , ret = redis_pool_api.cmd('mapRTMileage', self['M'] or "" ,"HMSET", self['recordKey'], unpack(diff_attr))
 
                 if not ok then
                         only.log('E', string.format("MilesRecord:update error, record key>>%s", self['recordKey']))

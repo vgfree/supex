@@ -17,7 +17,7 @@ local DEFS = require('realtime_defs')
 module('miles_package', package.seeall)
 
 MilesPackage = {
-        IMEI,
+        M,
         tokenCode,
         accountID,
         createTime,     --服务器接收时间
@@ -58,7 +58,7 @@ end
 --返回：无
 --修改：2015-07-01 重构实时里程
 function MilesPackage:init(points, data_package)
-        self['IMEI'] = data_package['IMEI']
+        self['M'] = data_package['M']
         self['tokenCode'] = data_package['tokenCode']
         self['accountID'] = data_package['accountID']
         self['createTime'] = data_package['createTime']

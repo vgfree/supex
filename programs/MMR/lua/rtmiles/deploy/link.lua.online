@@ -21,7 +21,7 @@ OWN_POOL = {
                         host = 'public.redis.daoke.com',
                         port = 6349,
                 },
-	        mapOnlineUserIMEI = {
+	        mapOnlineUserM = {
 			host = 'rtmiles1.redis.daoke.com',
 			port =  5095,
                 },
