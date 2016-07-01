@@ -21,6 +21,8 @@ local scan 			= require("scan")
 local FACTORY			= require('FACTORY_LIST')
 local KV_INFO_LIST		= require('KV_INFO_LIST')
 
+local Coro 				= require("coro")
+
 local CLASSIFY			= CFG_LIST["OWN_INFO"]["OPEN_LOGS_CLASSIFY"]
 
 local OWN_EXACT_MODE = 1
@@ -368,7 +370,75 @@ function add_origin_key_value(key, value)
 end
 
 
+local function self_cycle_idle( coro, idleable )
+	if not idleable then 
+		only.log('E',"IDLE~~~~")
+	else
+		if coro:isactive() then
+			--print("\x1B[1;35m".."LOOP~~~~".."\x1B[m")
+			--coro:fastswitch()lua_default_switch, supex["__TASKER_SCHEME__"],txt)
+			lua_default_switch(supex["__TASKER_SCHEME__"])
+		else
+			only.log('D',"coro:stop()")
+			coro:stop()
+			return
+		end
+	end
+end
+
+local function execute_alone()
+		-->>[alone]
+		if not CLASSIFY then
+			lualog.open( "alone" )
+		end
+		OWN_MAIN_RUNMODS[ OWN_ALONE_MODE ]( app_name, not app_name )
+end
+local function execute_whole()
+		-->>[whole]
+		if not CLASSIFY then
+			lualog.open( "whole" )
+		end
+		OWN_MAIN_RUNMODS[ OWN_WHOLE_MODE ]( app_name, not app_name  )
+end
+local function execute_exact()
+		-->>[exact]
+		if not CLASSIFY then
+			lualog.open( "exact" )
+		end
+		OWN_MAIN_RUNMODS[ OWN_EXACT_MODE ]( app_name, not app_name )
+end
+local  function execute_local()
+		-->>[local]
+		if not CLASSIFY then
+			lualog.open( "local" )
+		end
+		OWN_MAIN_RUNMODS[ OWN_LOCAL_MODE ]( app_name, not app_name )
+		print(scan.dump(OWN_MAIN_RUNMODS[OWN_LOCAL_MODE]))
+end
+
+local execute_four_mode = {
+		[1] = execute_alone,
+		[2] = execute_whole,
+		[3] = execute_exact,
+		[4] = execute_local,
+}
+
+local function do_once_task() 
+		local coro = Coro:open(true)
+		for k,v in pairs(execute_four_mode) do
+			coro:addtask(execute_four_mode[k](),coro,true)
+		end
+		local ret = coro:startup(self_cycle_idle, coro, true)
+		if ret  then
+			only.log('D',"Tasks execute success.")
+		else			
+			only.log('E',"Tasks execute failure.ret = %s",tostring(ret))
+		end
+		coro:close()		
+end
+
 function main_call( )
+
 	scene.init( )
 	--添加源数据
 	lualog.open( "factory" )
@@ -404,27 +474,7 @@ function main_call( )
 		--only.log("I", string.format("app_mode->[%s] OWN_APP_MODE->[%s] OWN_MODE_INDEX->[%d]", app_mode, pool["OWN_APP_MODE"], OWN_MODE_INDEX[app_mode]))
 		OWN_MAIN_RUNMODS[ OWN_MODE_INDEX[app_mode] ]( app_name, not app_name )
 	else
-		-->>[alone]
-		if not CLASSIFY then
-			lualog.open( "alone" )
-		end
-		OWN_MAIN_RUNMODS[ OWN_ALONE_MODE ]( app_name, not app_name )
-		-->>[whole]
-		if not CLASSIFY then
-			lualog.open( "whole" )
-		end
-		OWN_MAIN_RUNMODS[ OWN_WHOLE_MODE ]( app_name, not app_name  )
-		-->>[exact]
-		if not CLASSIFY then
-			lualog.open( "exact" )
-		end
-		OWN_MAIN_RUNMODS[ OWN_EXACT_MODE ]( app_name, not app_name )
-		-->>[local]
-		if not CLASSIFY then
-			lualog.open( "local" )
-		end
-		OWN_MAIN_RUNMODS[ OWN_LOCAL_MODE ]( app_name, not app_name )
-		print(scan.dump(OWN_MAIN_RUNMODS[OWN_LOCAL_MODE]))
+		do_once_task()
 	end
 	if cmp_need then
 		--> reset map
