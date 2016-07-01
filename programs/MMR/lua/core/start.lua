@@ -386,28 +386,28 @@ local function self_cycle_idle( coro, idleable )
 	end
 end
 
-local function execute_alone()
+local function execute_alone(app_name)
 		-->>[alone]
 		if not CLASSIFY then
 			lualog.open( "alone" )
 		end
 		OWN_MAIN_RUNMODS[ OWN_ALONE_MODE ]( app_name, not app_name )
 end
-local function execute_whole()
+local function execute_whole(app_name)
 		-->>[whole]
 		if not CLASSIFY then
 			lualog.open( "whole" )
 		end
 		OWN_MAIN_RUNMODS[ OWN_WHOLE_MODE ]( app_name, not app_name  )
 end
-local function execute_exact()
+local function execute_exact(app_name)
 		-->>[exact]
 		if not CLASSIFY then
 			lualog.open( "exact" )
 		end
 		OWN_MAIN_RUNMODS[ OWN_EXACT_MODE ]( app_name, not app_name )
 end
-local  function execute_local()
+local  function execute_local(app_name)
 		-->>[local]
 		if not CLASSIFY then
 			lualog.open( "local" )
@@ -416,17 +416,17 @@ local  function execute_local()
 		print(scan.dump(OWN_MAIN_RUNMODS[OWN_LOCAL_MODE]))
 end
 
-local execute_four_mode = {
+local execute_four_mode_list = {
 		[1] = execute_alone,
 		[2] = execute_whole,
 		[3] = execute_exact,
 		[4] = execute_local,
 }
 
-local function do_once_task() 
+local function execute_all_task(app_name)
 		local coro = Coro:open(true)
-		for k,v in pairs(execute_four_mode) do
-			coro:addtask(execute_four_mode[k](),coro,true)
+		for k,v in ipairs(execute_four_mode) do
+			coro:addtask(execute_four_mode_list[k](app_name),coro,true)
 		end
 		local ret = coro:startup(self_cycle_idle, coro, true)
 		if ret  then
@@ -474,7 +474,7 @@ function main_call( )
 		--only.log("I", string.format("app_mode->[%s] OWN_APP_MODE->[%s] OWN_MODE_INDEX->[%d]", app_mode, pool["OWN_APP_MODE"], OWN_MODE_INDEX[app_mode]))
 		OWN_MAIN_RUNMODS[ OWN_MODE_INDEX[app_mode] ]( app_name, not app_name )
 	else
-		do_once_task()
+		execute_all_task(app_name)
 	end
 	if cmp_need then
 		--> reset map
