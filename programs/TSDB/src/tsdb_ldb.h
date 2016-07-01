@@ -16,6 +16,8 @@ int tsdb_ldb_del(struct data_node *p_node);
 
 int tsdb_ldb_mset(struct data_node *p_node);
 
+int tsdb_ldb_sadd(struct data_node *p_node);
+
 int tsdb_ldb_get(struct data_node *p_node);
 
 int tsdb_ldb_lrange(struct data_node *p_node);

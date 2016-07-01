@@ -131,6 +131,37 @@ int tsdb_cmd_mset(struct data_node *p_node)
 	return X_INTERIOR_ERROR;
 }
 
+int tsdb_cmd_sadd(struct data_node *p_node)
+{
+	switch (s_engine_type)
+        {
+                case TSDB_ENGINE_LDB:
+                        return tsdb_ldb_sadd(p_node);
+
+                        break;
+
+                case TSDB_ENGINE_KV:
+                        //return tsdb_kv_set(p_node);
+                        printf("TSDB_ENGINE_KV did't support yet.");
+			return X_INTERIOR_ERROR;
+                        break;
+
+                case TSDB_ENGINE_MIX:
+                        //tsdb_kv_set(p_node);
+                        //cache_clean(&p_node->mdl_send.cache);   // FIXME
+                        //return tsdb_ldb_set(p_node);
+                        printf("TSDB_ENGINE_MIX did't support yet.");
+			return X_INTERIOR_ERROR;
+                        break;
+
+                default:
+                        break;
+        }
+
+        cache_append(&p_node->mdl_send.cache, OPT_INTERIOR_ERROR, strlen(OPT_INTERIOR_ERROR));
+        return X_INTERIOR_ERROR;
+}
+
 int tsdb_cmd_get(struct data_node *p_node)
 {
 	switch (s_engine_type)

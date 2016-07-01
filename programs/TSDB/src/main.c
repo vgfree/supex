@@ -19,6 +19,7 @@
 		{ DEL_FUNC_ORDER,     (TASK_VMS_FCB)name##_ldb_del     }, \
 		{ MSET_FUNC_ORDER,    (TASK_VMS_FCB)name##_ldb_mset    }, \
 		{ GET_FUNC_ORDER,     (TASK_VMS_FCB)name##_ldb_get     }, \
+		{ SADD_FUNC_ORDER,    (TASK_VMS_FCB)name##_ldb_sadd    }, \
 		{ LRANGE_FUNC_ORDER,  (TASK_VMS_FCB)name##_ldb_lrange  }, \
 		{ KEYS_FUNC_ORDER,    (TASK_VMS_FCB)name##_ldb_keys    }, \
 		{ VALUES_FUNC_ORDER,  (TASK_VMS_FCB)name##_ldb_values  }, \

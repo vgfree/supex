@@ -266,6 +266,12 @@ int tsdb_kv_mset(struct data_node *p_node)
 	return X_DONE_OK;
 }
 
+int tsdb_kv_sadd(struct data_node *p_node)
+{
+	//TODO
+	return 1;
+}
+
 int tsdb_kv_get(struct data_node *p_node)
 {
 	char                    *p_buf = cache_data_address(&p_node->mdl_recv.cache);

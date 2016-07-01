@@ -14,6 +14,8 @@ int tsdb_cmd_del(struct data_node *p_node);
 
 int tsdb_cmd_mset(struct data_node *p_node);
 
+int tsdb_cmd_sadd(struct data_node *p_node);
+
 int tsdb_cmd_get(struct data_node *p_node);
 
 int tsdb_cmd_lrange(struct data_node *p_node);

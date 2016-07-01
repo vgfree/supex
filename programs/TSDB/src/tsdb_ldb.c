@@ -169,6 +169,83 @@ int tsdb_ldb_mset(struct data_node *p_node)
 	return X_DONE_OK;
 }
 
+int tsdb_ldb_sadd(struct data_node *p_node)
+{
+	int                     ok = 0;
+        char                    *p_buf = cache_data_address(&p_node->mdl_recv.cache);
+        struct redis_status     *p_rst = &p_node->mdl_recv.parse.redis_info.rs;
+	//struct redis_status     *r_rst = (struct redis_status     *)malloc(sizeof(struct redis_status));
+	char                    *result = NULL;
+	int			size = 0;
+	char			*new_str = NULL;
+
+        if ((LDB_READONLY_SWITCH == 1) || (p_rst->fields < 2)) {
+                cache_append(&p_node->mdl_send.cache, OPT_CMD_ERROR, strlen(OPT_CMD_ERROR));
+                return X_EXECUTE_ERROR;
+        }
+
+	char target_str[p_rst->field[1].len + 1];
+	memset(target_str, 0, p_rst->field[1].len + 1);
+        strncpy(target_str, p_buf + p_rst->field[1].offset, p_rst->field[1].len);
+        printf("The target_str = %s\n", target_str);	
+
+	result = ldb_get(s_ldb, p_buf + p_rst->field[0].offset, p_rst->field[0].len, &size);
+	if (NULL != result) {
+		char str[strlen(result) +1];
+		memset(str, 0, strlen(result) +1);
+		strncpy(str, result, strlen(result));
+		printf("The str = %s\n", str);
+		if (str && target_str) {
+				
+			char *p = strtok(result, "|");
+			while(p!=NULL) {
+				printf("%s\n",p);
+				if(strcmp(target_str, p) == 0) {
+					printf("Had set the data.\n");
+					return X_DONE_OK;
+				}
+				p=strtok(NULL,"|");
+			}
+			new_str = (char *)malloc(strlen(str) + strlen(target_str) + 2); // "\0" 和"|"
+			memset(new_str, 0, strlen(str) + strlen(target_str) + 2);
+			strcpy(new_str, str);  
+    			strcat(new_str, "|");
+			strcat(new_str, target_str);
+			printf("new_str is %s\n", new_str);
+		}
+		else {
+			printf("str is NULL or target_str is NULL\n");
+			return X_EXECUTE_ERROR;
+		}
+	}
+	else{
+		if(target_str) {
+			char *head = "1*1@";
+			new_str = (char*)malloc(strlen(head) + strlen(target_str) + 2);
+			strcpy(new_str, head);
+			strcat(new_str, "|");
+			strcat(new_str, target_str);
+			printf("new_str is %s\n", new_str);
+		}
+		else {
+			printf("target_str is NULL or target_str is NULL\n");
+                        return X_EXECUTE_ERROR;
+		}
+	}
+
+	ok = binlog_put(s_ldb, p_buf + p_rst->field[0].offset, p_rst->field[0].len, new_str, strlen(new_str));
+
+        if ((ok == 0) || (ok == 1)) {
+                cache_append(&p_node->mdl_send.cache, OPT_OK, strlen(OPT_OK));
+		free(new_str);
+                return X_DONE_OK;
+        } else {
+                cache_append(&p_node->mdl_send.cache, OPT_INTERIOR_ERROR, strlen(OPT_INTERIOR_ERROR));
+		free(new_str);
+                return X_EXECUTE_ERROR;
+        }
+}
+
 int tsdb_ldb_get(struct data_node *p_node)
 {
 	char                    *result = NULL;
