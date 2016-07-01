@@ -11,7 +11,7 @@ module("api_dk_newstatus", package.seeall)
 
 local ctx = zmq.init(1)
 local s = ctx:socket(zmq.PUSH)
-s:bind("tcp://127.0.0.1:8111")
+s:bind("tcp://192.168.71.143:8111")
 
 local function parseFirstFrame(table)
 	if table[1] == 'status' then	
