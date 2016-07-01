@@ -22,11 +22,13 @@ int find_fd(char *uid)
 
 	if (ans->errnum != ERR_NONE) {
 		error("errnum:%d\terr:%s\n", ans->errnum, ans->err);
+		kv_answer_release(ans);
 		return -1;
 	}
 
 	kv_answer_value_t       *value = kv_answer_first_value(ans);
 	int                     fd = atoi((char *)value->ptr);
+	kv_answer_release(ans);
 	return fd;
 }
 
@@ -42,6 +44,7 @@ int find_uid(char *uid, int *size, int fd)
 
 	if (ans->errnum != ERR_NONE) {
 		error("errnum:%d\terr:%s\n", ans->errnum, ans->err);
+		kv_answer_release(ans);
 		return -1;
 	}
 
@@ -52,6 +55,7 @@ int find_uid(char *uid, int *size, int fd)
 		uid[i] = ((char *)value->ptr)[i];
 	}
 
+	kv_answer_release(ans);
 	*size = i;
 	return i;
 }
@@ -69,6 +73,7 @@ int insert_fd(char *uid, int fd)
 
 	if (ans->errnum != ERR_NONE) {
 		error("failed:%s.\n", cmd);
+		kv_answer_release(ans);
 		return -1;
 	}
 
@@ -80,8 +85,11 @@ int insert_fd(char *uid, int fd)
 
 	if (uid_ans->errnum != ERR_NONE) {
 		error("insert fd:%s, uid:%s error.\n", buf, uid);
+		kv_answer_release(uid_ans);
 		return -1;
 	}
+	kv_answer_release(ans);
+	kv_answer_release(uid_ans);
 
 	return 0;
 }
@@ -95,8 +103,10 @@ int remove_fd(char *uid)
 
 	if (ans->errnum != ERR_NONE) {
 		error("removed uid:%s error.\n", uid);
+		kv_answer_release(ans);
 		return -1;
 	}
+	kv_answer_release(ans);
 
 	return 0;
 }
@@ -112,9 +122,11 @@ int remove_uid(int fd)
 
 	if (ans->errnum != ERR_NONE) {
 		error("removed fd:%d error.\n", fd);
+		kv_answer_release(ans);
 		return -1;
 	}
 
+	kv_answer_release(ans);
 	return 0;
 }
 

@@ -22,6 +22,7 @@ int find_fd_list(char *gid, int *fd_list)
 
 	if (ans->errnum != ERR_NONE) {
 		error("find multi fd error, cmd:%s", cmd);
+		kv_answer_release(ans);
 		return -1;
 	}
 
@@ -36,10 +37,9 @@ int find_fd_list(char *gid, int *fd_list)
 		char buf[20] = {};
 		strncpy(buf, (char *)value->ptr, value->ptrlen);
 		fd_list[i] = atoi(buf);
-		i++;
-	}
-
+		i++; } 
 	kv_answer_release_iter(iter);
+	kv_answer_release(ans);
 	return i;
 }
 
@@ -60,8 +60,10 @@ int insert_fd_list(char *gid, int fd_list[], int size)
 
 	if (ans->errnum != ERR_NONE) {
 		error("errnum:%d\terr:%s\n", ans->errnum, ans->err);
+		kv_answer_release(ans);
 		return -1;
 	}
+	kv_answer_release(ans);
 
 	return 0;
 }
@@ -81,8 +83,10 @@ int remove_fd_list(char *gid, int fd_list[], int size)
 		if (ans->errnum != ERR_NONE) {
 			error("cmd:%s, errnum:%d\terr:%s\n",
 				cmd, ans->errnum, ans->err);
+		kv_answer_release(ans);
 			return -1;
 		}
+		kv_answer_release(ans);
 	}
 
 	return 0;
@@ -101,9 +105,11 @@ int insert_gid_list(int fd, char *gid)
 
 	if (ans->errnum != ERR_NONE) {
 		error("errnum:%d\terr:%s\n", ans->errnum, ans->err);
+		kv_answer_release(ans);
 		return -1;
 	}
 
+	kv_answer_release(ans);
 	return 0;
 }
 
@@ -138,6 +144,7 @@ int find_gid_list(int fd, char *gid_list[], int *size)
 	}
 
 	kv_answer_release_iter(iter);
+	kv_answer_release(ans);
 	*size = gid_count;
 	return gid_count;
 }
@@ -157,8 +164,10 @@ int remove_gid_list(int fd, char *gid[], int size)
 
 		if (ans->errnum != ERR_NONE) {
 			error("errnum:%d\terr:%s\n", ans->errnum, ans->err);
+			kv_answer_release(ans);
 			return -1;
 		}
+		kv_answer_release(ans);
 	}
 
 	return 0;

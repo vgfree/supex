@@ -7,6 +7,10 @@
 #include "status.h"
 #include "uid_map.h"
 
+#ifdef _HKEY_
+#include "hkey.h"
+#endif
+
 #include <assert.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -272,10 +276,37 @@ static void _setting_map(struct comm_message *msg)
 
 static int _verified(struct comm_message *msg)
 {
+#ifdef _HKEY_
 	if (msg->socket_type == PAIR_METHOD) {
+		int frame_size = 0;
+		char    *frame = get_msg_frame(0, msg, &frame_size);
+		char *key = (char *)malloc((frame_size + 1)* sizeof(char));
+		memcpy(key, frame, frame_size);
+		key[frame_size] = '\0';
+		int fd = hkey_get_fd(key);
+		char buf[10] = {};
+		if (fd == -1) { // first hkey.
+			snprintf(buf, 10, "%d", 0);
+			set_msg_frame(0, msg, strlen(buf), buf);
+		}
+		else {
+			struct residue_package package;
+			char *value = hkey_get_value(key);
+			int offset = hkey_get_offset(key);
+			init_residue_package(&package, msg->fd, offset, value, strlen(value));
+			push_residue_package(&package);
+			snprintf(buf, 10, "%d", offset);
+			set_msg_frame(0, msg, strlen(buf), buf); // 接收大小。
+			hkey_del_fd(key);
+			hkey_del_fd_key(fd);
+			hkey_del_value(key);
+			destroy_residue_package(&package);
+		}
+		hkey_insert_fd(key, msg->fd);
 		comm_send(g_serv_info.commctx, msg, true, -1);
 		return 1;
 	}
+#endif
 	return 0;
 }
 

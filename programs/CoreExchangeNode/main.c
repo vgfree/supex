@@ -155,6 +155,9 @@ static int init()
 	destroy_config_reader(config);
 	init_uid_map();
 	init_gid_map();
+#ifdef _HKEY_
+	hkey_init();
+#endif
 	return 0;
 }
 
@@ -180,6 +183,9 @@ int main(int argc, char *argv[])
 	list_destroy();
 	destroy_uid_map();
 	destroy_gid_map();
+#ifdef _HKEY_
+	hkey_destroy();
+#endif
 	CSLog_destroy(g_imlog);
 	daemon_exit(SERVER_FILE);
 	return 0;

@@ -6,8 +6,8 @@ CFLAG = -O2 -W -Wall -std=c99
 
 INCLUDE_PATH = -I. -I../../lib/libcomm -I../../lib/liblog -I../../lib/utils -I../../lib/libkv/src
 TARGET = ./core_exchange_node
-OBJ = fd_manager.o message_dispatch.o status.o uid_map.o gid_map.o notify.o main.o
-SRC = fd_manager.c message_dispatch.c status.c uid_map.c gid_map.c notify.c main.c
+OBJ = hkey.o fd_manager.o message_dispatch.o status.o uid_map.o gid_map.o notify.o main.o
+SRC = hkey.c fd_manager.c message_dispatch.c status.c uid_map.c gid_map.c notify.c main.c
 
 all: $(TARGET)
 $(OBJ): $(SRC)
