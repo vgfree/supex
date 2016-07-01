@@ -1,9 +1,9 @@
 /*
- * CopyRight    : DT+
- * Author       : louis.tin
- * Date         : 06-28-2016
- * Description  : Appserver
- */
+* CopyRight    : DT+
+* Author       : louis.tin
+* Date         : 06-28-2016
+* Description  : Appserver
+*/
 
 #include <string.h>
 #include <stdlib.h>
@@ -14,6 +14,10 @@
 #include <time.h>
 #include <pthread.h>
 
+#include <lua.h>
+#include <lauxlib.h>
+#include <lualib.h>
+
 #include "load_cfg.h"
 #include "major/smart_api.h"
 #include "appsrv.h"
@@ -21,11 +25,13 @@
 
 struct smart_cfg_list g_smart_cfg_list = {};
 
-// 客户端登录时发送的cid
 char load_cid[256] = {};
 
-void get_uid(struct app_msg recv_msg);
-void set_uidmap(struct app_msg recv_msg);
+static void stackDump (lua_State *L);
+static int get_uid(lua_State *L);
+static int set_uidmap(lua_State *L);
+static int send_msg(lua_State *L);
+int luaopen_power(lua_State *L);
 void *t_msg_recv();
 int smart_vms_call_set(void *user, union virtual_system **VMS, struct adopt_task_node *task);
 
@@ -33,7 +39,6 @@ int main(int argc, char **argv)
 {
 	create_io();
 
-	// 创建线程接收客户端数据
 	pthread_t tid_recv;
 	int ret = 0;
 	ret = pthread_create(&tid_recv, NULL, (void *)t_msg_recv, NULL);
@@ -55,14 +60,23 @@ int main(int argc, char **argv)
 	return 0;
 }
 
-void get_uid(struct app_msg recv_msg)
+int luaopen_power(lua_State *L)
+{
+	lua_register(L, "get_uid", get_uid);
+	lua_register(L, "set_uidmap", set_uidmap);
+	lua_register(L, "send_msg",  send_msg);
+
+	return 0;
+}
+
+static int get_uid(lua_State *L)
 {
 	printf("下发数据: 获取uid\n");
+
+	char *cid_str = lua_tostring(L, -1);
+
 	char *downstream = "downstream";
 	char *cid = "cid";
-	char cid_str[20] = {};
-	memcpy(cid_str, recv_msg.vector[2].iov_base, recv_msg.vector[2].iov_len);
-	memcpy(load_cid, recv_msg.vector[2].iov_base, recv_msg.vector[2].iov_len);
 	char *msg = "bind";
 	printf("cid = %s, cid_str = %s, msg = %s\n", cid, cid_str, msg);
 
@@ -77,69 +91,157 @@ void get_uid(struct app_msg recv_msg)
 	send_msg.vector[3].iov_base = msg;
 	send_msg.vector[3].iov_len = strlen(msg);
 	send_app_msg(&send_msg);
+
+	printf("获取uid完成\n\n");
+
+	return 1;
 }
 
-void set_uidmap(struct app_msg recv_msg)
+static int set_uidmap(lua_State *L)
 {
 	printf("下发数据: 绑定uidmap\n");
-	// 从接收到的第四帧数据json中解析出uid
-	struct json_object *obj = NULL;
-	struct json_object *new_obj = json_tokener_parse(recv_msg.vector[3].iov_base);
-	char uid[64];
 
-	if (json_object_object_get_ex(new_obj, "uid", &obj))
-		strcpy(uid, json_object_get_string(obj));
+	int n = lua_gettop(L);
+	printf("stack number is %d\n",n);
 
-	printf("uid = %s\n", uid);
+	lua_pushnumber(L, 1);
+	lua_gettable(L, -2);
+	printf("setting = %s\n", lua_tostring(L, -1));
+	char *frame_1 = lua_tostring(L, -1);
+	lua_pop(L, 1);
 
-	char            setting[] = "setting";
-	char            uidmap[] = "uidmap";
-	char            cid[32] = {};
-	memcpy(cid, recv_msg.vector[1].iov_base, recv_msg.vector[1].iov_len);
+	lua_pushnumber(L, 2);
+	lua_gettable(L, -2);
+	printf("setting = %s\n", lua_tostring(L, -1));
+	char *frame_2 = lua_tostring(L, -1);
+	lua_pop(L, 1);
+
+	lua_pushnumber(L, 3);
+	lua_gettable(L, -2);
+	printf("setting = %s\n", lua_tostring(L, -1));
+	char *frame_3 = lua_tostring(L, -1);
+	lua_pop(L, 1);
+
+	lua_pushnumber(L, 4);
+	lua_gettable(L, -2);
+	printf("setting = %s\n", lua_tostring(L, -1));
+	char *frame_4 = lua_tostring(L, -1);
+	lua_pop(L, 1);
 
 	struct app_msg  send_msg = {};
 	send_msg.vector_size = 4;
-	send_msg.vector[0].iov_base = setting;
-	send_msg.vector[0].iov_len = strlen(setting);
-	send_msg.vector[1].iov_base = uidmap;
-	send_msg.vector[1].iov_len = strlen(uidmap);
-	send_msg.vector[2].iov_base = cid;
-	send_msg.vector[2].iov_len = strlen(cid);
-	send_msg.vector[3].iov_base = uid;
-	send_msg.vector[3].iov_len = strlen(uid);
+	send_msg.vector[0].iov_base = frame_1;
+	send_msg.vector[0].iov_len = strlen(frame_1);
+	send_msg.vector[1].iov_base = frame_2;
+	send_msg.vector[1].iov_len = strlen(frame_2);
+	send_msg.vector[2].iov_base = frame_3;
+	send_msg.vector[2].iov_len = strlen(frame_3);
+	send_msg.vector[3].iov_base = frame_4;
+	send_msg.vector[3].iov_len = strlen(frame_4);
 	send_app_msg(&send_msg);
+	printf("绑定完成\n\n");
+
+	return 1;
+}
+
+static int send_msg(lua_State *L)
+{
+	printf("下发消息\n");
+
+	int n = lua_gettop(L);
+
+	lua_pushnumber(L, 1);
+	lua_gettable(L, -2);
+	printf("setting = %s\n", lua_tostring(L, -1));
+	char *frame_1 = lua_tostring(L, -1);
+	lua_pop(L, 1);
+
+	lua_pushnumber(L, 2);
+	lua_gettable(L, -2);
+	printf("setting = %s\n", lua_tostring(L, -1));
+	char *frame_2 = lua_tostring(L, -1);
+	lua_pop(L, 1);
+
+	lua_pushnumber(L, 3);
+	lua_gettable(L, -2);
+	printf("setting = %s\n", lua_tostring(L, -1));
+	char *frame_3 = lua_tostring(L, -1);
+	lua_pop(L, 1);
+
+	struct app_msg  send_msg = {};
+	send_msg.vector_size = 4;
+	send_msg.vector[0].iov_base = frame_1;
+	send_msg.vector[0].iov_len = strlen(frame_1);
+	send_msg.vector[1].iov_base = frame_2;
+	send_msg.vector[1].iov_len = strlen(frame_2);
+	send_msg.vector[2].iov_base = frame_3;
+	send_msg.vector[2].iov_len = strlen(frame_3);
+	printf("消息发送完成\n\n");
+
+	return 1;
+
 }
 
 void *t_msg_recv()
 {
+
 	while (1) {
 		struct app_msg recv_msg = {};
 		int more = 0;
 		recv_app_msg(&recv_msg, &more, -1);
+		int i;
+		for (i = 0; i <= recv_msg.vector_size; i++) {
+			printf("recv_msg size:%d\t [%d]iov_len:%d\t [%d]iov_base = %s,\n",
+					recv_msg.vector_size, i, recv_msg.vector[i].iov_len, i , recv_msg.vector[i].iov_base);
+		}
 
-		printf("recv_msg size:%d\t [0]iov_len:%d\t [0]iov_base = %s,\n",
-				recv_msg.vector_size, recv_msg.vector[0].iov_len, recv_msg.vector[0].iov_base);
-		printf("recv_msg size:%d\t [1]iov_len:%d\t [1]iov_base = %s,\n",
-				recv_msg.vector_size, recv_msg.vector[1].iov_len, recv_msg.vector[1].iov_base);
-		printf("recv_msg size:%d\t [2]iov_len:%d\t [2]iov_base = %s,\n",
-				recv_msg.vector_size, recv_msg.vector[2].iov_len, recv_msg.vector[2].iov_base);
-		printf("recv_msg size:%d\t [3]iov_len:%d\t [3]iov_base = %s,\n",
-				recv_msg.vector_size, recv_msg.vector[3].iov_len, recv_msg.vector[3].iov_base);
-		assert(recv_msg.vector_size > 0);
+		char str[32];
+		strcpy(str, recv_msg.vector[0].iov_base);
+		int len = strlen(str);
 
-		// 解析接收到的数据
-		if (memcmp(recv_msg.vector[0].iov_base, "status", 6) == 0) {
-			if (memcmp(recv_msg.vector[1].iov_base, "connected", 9) == 0) {
-				// 下发数据获取uid
-				get_uid(recv_msg);
+		printf("len = %d\t第一帧 = %s\n", len, str);
+
+		{
+			lua_State *L;
+			L = luaL_newstate(); // 打开lua
+			luaL_openlibs(L); // 打开标准库
+
+			luaopen_power(L);
+
+			int status = luaL_loadfile(L, "script.lua");
+			if (status) {
+				perror("luaL_dofile error");
+				exit(1);
 			}
-		} else if (memcmp(recv_msg.vector[0].iov_base, "upstream", 8) == 0) {
-			if (memcmp(recv_msg.vector[2].iov_base, "bind", 4) == 0) {
-				// 发送给setting server 设置uidmap
-				set_uidmap(recv_msg);
+
+			lua_newtable(L);
+
+			for (i = 1; i <= recv_msg.vector_size; i++) {
+				printf("recv_msg size:%d\t [%d]iov_len:%d\t [%d]iov_base = %s,\n",
+						recv_msg.vector_size, i - 1, recv_msg.vector[i - 1].iov_len, i -1 , recv_msg.vector[i - 1].iov_base);
+				lua_pushnumber(L, i);
+				lua_pushlstring(L, recv_msg.vector[i - 1].iov_base, recv_msg.vector[i - 1].iov_len);
+				lua_rawset(L, -3);
 			}
-		} else {
-			printf("recv_msg.vector[0].iov_base = %s\n", recv_msg.vector[0].iov_base);
+			printf("\n");
+			// 声明lua中的变量
+			lua_setglobal(L, "msg");
+			//lua_call(L, 0, 0);
+			int result = lua_pcall(L, 0, LUA_MULTRET, 0);
+			if (result) {
+				fprintf(stdout, "bad, bad script\n");
+				exit(1);
+			}    /* 获得堆栈顶的值*/
+			int sum = lua_tonumber(L, lua_gettop(L));
+			if (!sum) {
+				fprintf(stdout, "lua_tonumber() failed!\n");
+				exit(1);
+			}
+			fprintf(stdout, "Script returned: %d\n", sum);
+			lua_pop(L, 1);
+			printf("top = %d\n", lua_gettop(L));
+			lua_close(L);
+			printf("\n");
 		}
 	}
 }
@@ -150,56 +252,59 @@ int smart_vms_call_set(void *user, union virtual_system **VMS, struct adopt_task
 
 	struct data_node *p_node = get_pool_data(task->sfd);
 	char *p_buf = cache_data_address(&p_node->mdl_recv.cache);
-	//printf("p_buf = %s\n", p_buf);
+	printf("p_buf = %s\n", p_buf);
 
 	struct redis_status *p_rst = &p_node->mdl_recv.parse.redis_info.rs;
 
-	//printf("len: %d \n", p_rst->field[1].len);
-	//printf("command_type: %x \n", p_rst->command_type);
+	printf("len: %d \n", p_rst->field[1].len);
+	printf("command_type: %x \n", p_rst->command_type);
 
 	memcpy(msg, p_buf + p_rst->field[1].offset, MIN(p_rst->field[1].len, 64 - 1));
-
-	// 在登录后通过redis协议向客户端下发接收的redis数据
 	struct app_msg  send_msg = {};
-
-	char *downstream = "downstream";
-	char *cid = "cid";
-	printf("load_cid = %s, msg = %s\n", load_cid, msg);
-
-	send_msg.vector_size = 4;
-	send_msg.vector[0].iov_base = downstream;
-	send_msg.vector[0].iov_len = strlen(downstream);
-	send_msg.vector[1].iov_base = cid;
-	send_msg.vector[1].iov_len = strlen(cid);
-	send_msg.vector[2].iov_base = load_cid;
-	send_msg.vector[2].iov_len = strlen(load_cid);
-	send_msg.vector[3].iov_base = msg;
-	send_msg.vector[3].iov_len = strlen(msg);
-
-#if 0
-	// 向组gid0下发数据
-	char downstream[] = "downstream";
-	char gid[] = "gid";
-	char gid0[] = "gid0";
-
-	printf("msg = %s\n", msg);
-
-	send_msg.vector_size = 4;
-	send_msg.vector[0].iov_base = downstream;
-	send_msg.vector[0].iov_len = strlen(downstream);
-	send_msg.vector[1].iov_base = gid;
-	send_msg.vector[1].iov_len = strlen(gid);
-	send_msg.vector[2].iov_base = gid0;
-	send_msg.vector[2].iov_len = strlen(gid0);
-	send_msg.vector[3].iov_base = msg;
-	send_msg.vector[3].iov_len = strlen(msg);
-#endif
 	send_app_msg(&send_msg);
 
-	// server端向请求端回复
 	const char sndcnt[] = ":1\r\n";
 	cache_append(&p_node->mdl_send.cache, sndcnt, sizeof(sndcnt) - 1);
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 /*
  * 数据帧格式
