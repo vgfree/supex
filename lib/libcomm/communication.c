@@ -154,8 +154,9 @@ int comm_socket(struct comm_context *commctx, const char *host, const char *serv
 	//log("commtcp peer port:%d addr:%s\n", commtcp.peerport, commtcp.peeraddr);
 
 	/* 将状态值设置为COMM_STAT_RUN并唤醒等待的线程 */
-	commlock_wake(&commctx->statlock, (int *)&commctx->stat, COMM_STAT_RUN, false);
-
+	if (commctx->stat == COMM_STAT_INIT) {
+		commlock_wake(&commctx->statlock, (int *)&commctx->stat, COMM_STAT_RUN, false);
+	}
 	return commtcp.fd;
 }
 

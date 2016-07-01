@@ -78,7 +78,7 @@ endef
 
 #######
 ALL:
-	$(CC) $(BUILD_PWD)/test/timer_test.c -o $(BUILD_PWD)/test/timer_test
+	#$(CC) $(BUILD_PWD)/test/timer_test.c -o $(BUILD_PWD)/test/timer_test
 	$(CC) $(BUILD_PWD)/test/mfptp_test.c -o $(BUILD_PWD)/test/mfptp_test
 	$(CC) $(BUILD_PWD)/test/list_test.c -o $(BUILD_PWD)/test/list_test
 	$(CC) $(BUILD_PWD)/test/server.c -o $(BUILD_PWD)/test/server

@@ -86,16 +86,18 @@ void packager(struct comm_cache *cache)
 		log("expend commcache successed\n");
 	}
 
-	mfptp_fill_package(&packager, message.package.frame_offset, message.package.frame_size, message.package.frames_of_package, message.package.packages);
-	size = mfptp_package(&packager, message.content, message.config, message.socket_type);
+	if (mfptp_fill_package(&packager, message.package.frame_offset, message.package.frame_size, message.package.frames_of_package, message.package.packages, message.package.dsize)) {
+		size = mfptp_package(&packager, message.content, message.config, message.socket_type);
 
-	if ((size > 0) && (packager.ms.error == MFPTP_OK)) {
-		printf("packager successed\n");
-		cache->end += size;
-	} else {
-		printf("packager failed\n");
-		packager.ms.error = MFPTP_OK;
+		if ((size > 0) && (packager.ms.error == MFPTP_OK)) {
+			printf("packager successed\n");
+			cache->end += size;
+		} else {
+			printf("packager failed\n");
+			packager.ms.error = MFPTP_OK;
+		}
 	}
+	
 }
 
 void parser(struct comm_cache *pack_cache, struct comm_cache *parse_cache)

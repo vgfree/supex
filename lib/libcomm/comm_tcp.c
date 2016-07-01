@@ -23,7 +23,7 @@ static bool _bind_listen(struct comm_tcp *commtcp, struct addrinfo *ai);
 
 static bool _start_connect(struct comm_tcp *commtcp, struct addrinfo *ai, int timeout);
 
-static bool _connect(struct comm_tcp *commtcp, struct addrinfo *ai);
+static bool _sconnect(struct comm_tcp *commtcp, struct addrinfo *ai);
 
 bool socket_listen(struct comm_tcp *commtcp, const char *host, const char *service)
 {
@@ -250,11 +250,13 @@ static bool _start_connect(struct comm_tcp *commtcp, struct addrinfo *ai, int ti
 
 		if (commtcp->fd > 0) {
 			if (fd_setopt(commtcp->fd, O_NONBLOCK)) {
-				while (!_connect(commtcp, aiptr)) {
+				while (connect(commtcp->fd, aiptr->ai_addr, aiptr->ai_addrlen) == 0) {
+				//while (!_sconnect(commtcp, aiptr)) {
 					/* 连接失败 */
 					if ((commtcp->connattr == CONNECT_ONCE) || (timeout == 0)) {
 						/* 只允许尝试连接一次 */
 						CLOSEFD(commtcp->fd);
+						log("connecnt once and failed\n");
 						return false;
 					} else {
 						/* 尝试重复连接，判断是否超时 */
@@ -268,12 +270,15 @@ static bool _start_connect(struct comm_tcp *commtcp, struct addrinfo *ai, int ti
 							if (timeout - diffms < 1) {
 								log("try connect to peer faile because of timeout\n");
 								CLOSEFD(commtcp->fd);
+								log("connect many times and failed\n");
 								return false;
 							}
 						}
+						log("connect faile and try again\n");
 					}
 				}
-
+				//printf("------------------------%x\n", commtcp);
+				log(" connect return successed fd:%d\n", commtcp->fd);
 				return true;
 			}
 
@@ -284,43 +289,117 @@ static bool _start_connect(struct comm_tcp *commtcp, struct addrinfo *ai, int ti
 	return false;
 }
 
-static bool _connect(struct comm_tcp *commtcp, struct addrinfo *aiptr)
+
+static bool _sconnect(struct comm_tcp *commtcp, struct addrinfo *aiptr)
 {
-	bool flag = false;
+	assert(commtcp && aiptr);
 
-	if (connect(commtcp->fd, aiptr->ai_addr, aiptr->ai_addrlen) == -1) {
-		if (errno == EINPROGRESS) {
-			/* 连接正在进程中 检测是否会连接成功 */
-			fd_set          set;
-			int             error = -1;
-			int             retval = -1;
-			int             len = sizeof(int);
-			struct timeval  tm;
-			FD_ZERO(&set);
-			FD_SET(commtcp->fd, &set);
-			tm.tv_sec = TIMEOUTTIME;
-			tm.tv_usec = 0;
+	fd_set          wset, rset;
+	int             error = -1;
+	int             retval = -1;
+	int             len = sizeof(int);
+	struct timeval  tm;
 
-			if (select(commtcp->fd + 1, NULL, &set, NULL, &tm) > 0) {
-				retval = getsockopt(commtcp->fd, SOL_SOCKET, SO_ERROR, &error, (socklen_t *)&len);
-
-				if ((retval < 0) || error) {
-					/*失败 Solaris版本将retval设为-1,Berkeley版本返回0,设置error错误值 */
-					if ((error == EHOSTUNREACH) || (errno == EHOSTUNREACH)) {
-						/* 错误值为此，则代表对端端口未打开 */
-						// log("%s\n", strerror(errno));
-						log("peer port isn't open\n");
-					}
-				} else {
-					/* 连接成功 */
-					flag = true;
-				}
-			}
-		}
-	} else {
-		flag = true;
+	if (connect(commtcp->fd, aiptr->ai_addr, aiptr->ai_addrlen) == 0) {
+		log("connect success on first try:%d\n", commtcp->fd);
+		return true;
 	}
 
-	return flag;
+	/* 连接产生致命错误 */
+	if (errno != EINPROGRESS && errno != EALREADY) {
+		log("connect fatal error fd: %d errno:%d\n", commtcp->fd, errno);
+		return false;
+	}
+
+	/* 连接正在进行中，检测是否会连接成功 */
+	FD_ZERO(&wset);
+	FD_ZERO(&rset);
+	FD_SET(commtcp->fd, &wset);
+	FD_SET(commtcp->fd, &rset);
+	tm.tv_sec = TIMEOUTTIME;
+	tm.tv_usec = 0;
+
+	if (select(commtcp->fd + 1, &rset, &wset, NULL, &tm) < 1) {
+		log("select failed\n");
+		return false;
+	}
+	if (FD_ISSET(commtcp->fd, &wset) || FD_ISSET(commtcp->fd, &rset)) {
+		retval = getsockopt(commtcp->fd, SOL_SOCKET, SO_ERROR, &error, (socklen_t *)&len);
+		if ((retval < 0) || error) {
+			/*失败 Solaris版本将retval设为-1,Berkeley版本返回0,设置error错误值 */
+			if ((error == EHOSTUNREACH) || (errno == EHOSTUNREACH)) {
+				/* 错误值为此，则代表对端端口未打开 */
+				// log("%s\n", strerror(errno));
+				log("peer port isn't open\n");
+			} else {
+				log("get socketopt error:%d fd:%d\n", error, commtcp->fd);
+			}
+			return false;
+		} else {
+			/* 连接成功 */
+			log("connect successed:%d\n", commtcp->fd);
+			return true;
+		}
+	} else {
+		log("return select is other fd, not fd:%d\n", commtcp->fd);
+		return false;
+	}
 }
 
+#if 0
+static bool _sconnect(struct comm_tcp *commtcp, struct addrinfo *aiptr)
+{
+	assert(commtcp && aiptr);
+
+	fd_set          wset, rset;
+	int             error = -1;
+	int             retval = -1;
+	int             len = sizeof(int);
+	struct timeval  tm;
+
+	if (connect(commtcp->fd, aiptr->ai_addr, aiptr->ai_addrlen) == 0) {
+		log("connect success on first try:%d\n", commtcp->fd);
+		return true;
+	}
+
+	/* 连接产生致命错误 */
+	if (errno != EINPROGRESS && errno != EALREADY) {
+		log("connect fatal error fd: %d errno:%d\n", commtcp->fd, errno);
+		return false;
+	}
+
+	/* 连接正在进行中，检测是否会连接成功 */
+	FD_ZERO(&wset);
+	FD_ZERO(&rset);
+	FD_SET(commtcp->fd, &wset);
+	FD_SET(commtcp->fd, &rset);
+	tm.tv_sec = TIMEOUTTIME;
+	tm.tv_usec = 0;
+
+	if (select(commtcp->fd + 1, &rset, &wset, NULL, &tm) < 1) {
+		log("select failed\n");
+		return false;
+	}
+	if (FD_ISSET(commtcp->fd, &wset) || FD_ISSET(commtcp->fd, &rset)) {
+		retval = getsockopt(commtcp->fd, SOL_SOCKET, SO_ERROR, &error, (socklen_t *)&len);
+		if ((retval < 0) || error) {
+			/*失败 Solaris版本将retval设为-1,Berkeley版本返回0,设置error错误值 */
+			if ((error == EHOSTUNREACH) || (errno == EHOSTUNREACH)) {
+				/* 错误值为此，则代表对端端口未打开 */
+				// log("%s\n", strerror(errno));
+				log("peer port isn't open\n");
+			} else {
+				log("get socketopt error:%d fd:%d\n", error, commtcp->fd);
+			}
+			return false;
+		} else {
+			/* 连接成功 */
+			log("connect successed:%d\n", commtcp->fd);
+			return true;
+		}
+	} else {
+		log("return select is other fd, not fd:%d\n", commtcp->fd);
+		return false;
+	}
+}
+#endif

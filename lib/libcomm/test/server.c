@@ -85,12 +85,14 @@ int main(int argc, char *argv[])
 
 void close_fun(void *usr)
 {
-	// struct comm_tcp* commtcp = (struct comm_tcp*)usr;
+#if 1
+	 struct comm_tcp* commtcp = (struct comm_tcp*)usr;
+	printf("server here is close_fun():%d\n", commtcp->fd);
+#else
 	struct comm_message *message = (struct comm_message *)usr;
-
-	message->fd = -1;
 	printf("server here is close_fun():%d\n", message->fd);
-	//	printf("server here is close_fun():%d\n", commtcp->fd);
+	message->fd = -1;
+#endif
 }
 
 void write_fun(void *usr)
@@ -124,7 +126,7 @@ static void event_fun(struct comm_context *commctx, struct comm_tcp *commtcp, vo
 	switch (commtcp->stat)
 	{
 		case FD_CLOSE:
-			close_fun(usr);
+			close_fun(commtcp);
 			break;
 
 		case FD_WRITE:

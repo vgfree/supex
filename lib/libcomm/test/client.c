@@ -47,13 +47,16 @@ int main(int argc, char *argv[])
 	for (n = 0; n < atoi(argv[3]); n++) {
 		sprintf(str_port, "%d", (port + n));
 
-		if (unlikely((fd[n] = comm_socket(commctx, argv[1], argv[2], &finishedcb, COMM_CONNECT | CONNECT_ANYWAY)) == -1)) {
+		if (unlikely((fd[n] = comm_socket(commctx, argv[1], argv[2], &finishedcb, COMM_CONNECT)) == -1)) {
 			comm_ctx_destroy(commctx);
 			log("client comm_socket failed\n");
 			return retval;
 		}
 
 		log("client connect successed fd:%d\n", fd[n]);
+		if (n == atoi(argv[3]) -1) {
+			log("\x1B[1;31m""client connect successed fd:%d\n""\x1B[m",fd[n]);
+		}
 	}
 
 	/* 循环接收 发送数据 */
