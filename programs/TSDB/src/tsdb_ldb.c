@@ -191,17 +191,27 @@ int tsdb_ldb_sadd(struct data_node *p_node)
 
 	result = ldb_get(s_ldb, p_buf + p_rst->field[0].offset, p_rst->field[0].len, &size);
 	if (NULL != result) {
+/*
+		char *r = strtok(result, "*");
+		if (r) {
+			atoi(r) + 1
+		}
+*/
 		char str[strlen(result) +1];
 		memset(str, 0, strlen(result) +1);
 		strncpy(str, result, strlen(result));
 		printf("The str = %s\n", str);
 		if (str && target_str) {
-				
-			char *p = strtok(result, "|");
+			char *p = strtok(result, "@");
+			if (!p) {
+				printf("The data in tsdb can't be sadd\n");
+			}		
+			p = strtok(NULL, "|");
 			while(p!=NULL) {
 				printf("%s\n",p);
 				if(strcmp(target_str, p) == 0) {
 					printf("Had set the data.\n");
+					cache_append(&p_node->mdl_send.cache, OPT_OK, strlen(OPT_OK));
 					return X_DONE_OK;
 				}
 				p=strtok(NULL,"|");
@@ -215,6 +225,7 @@ int tsdb_ldb_sadd(struct data_node *p_node)
 		}
 		else {
 			printf("str is NULL or target_str is NULL\n");
+			cache_append(&p_node->mdl_send.cache, OPT_INTERIOR_ERROR, strlen(OPT_INTERIOR_ERROR));
 			return X_EXECUTE_ERROR;
 		}
 	}
@@ -229,6 +240,7 @@ int tsdb_ldb_sadd(struct data_node *p_node)
 		}
 		else {
 			printf("target_str is NULL or target_str is NULL\n");
+			cache_append(&p_node->mdl_send.cache, OPT_INTERIOR_ERROR, strlen(OPT_INTERIOR_ERROR));
                         return X_EXECUTE_ERROR;
 		}
 	}
