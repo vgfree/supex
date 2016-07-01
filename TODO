@@ -56,3 +56,5 @@ REMIND:
 	55)airing is a bug, must register a vms_init function
 	56)cache_add,缓冲区太小会直接导致崩溃
 	57)MMR模块用集群去完成
+	58)支持外部提供队列接口						[done]
+	59)无锁队列支持放大						[done]

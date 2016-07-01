@@ -54,6 +54,7 @@ enum
 	redis_command_del = 0x0000085f,
 	redis_command_mset = 0x000367e3,
 	redis_command_hset = 0x0002109b,
+	redis_command_sadd = 0x0004d421,
 	redis_command_lpush = 0x0050f033,
 	redis_command_rpush = 0x007ac693,
 	redis_command_lpushx = 0x08386545,
