@@ -7,6 +7,7 @@
 #include <lauxlib.h>
 #include <lualib.h>
 
+#include "luakv/luakv.h"
 #include "skt.h"
 #include "load_cfg.h"
 #include "supex.h"

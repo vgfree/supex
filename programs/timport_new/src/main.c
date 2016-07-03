@@ -138,12 +138,13 @@ void *set_data_task_handle(struct supex_evcoro *evcoro, int step)
 {
 	lua_State *L = NULL;
 	struct user_task        *p_task = &((struct user_task *)evcoro->task)[step];
-	if (evcoro->VMS && evcoro->VMS->L) {
-		L = evcoro->VMS->L;
+	union virtual_system    *p_VMS = &((union virtual_system *)evcoro->VMS)[step];
+	if (p_VMS) {
+		L = p_VMS->L;
 	}
 	else {
 		L = lua_vm_init();
-		evcoro->VMS->L = L;
+		evcoro->VMS[step].L = L;
 	}
 	
 	if (!L) {

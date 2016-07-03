@@ -1,6 +1,6 @@
 #pragma once
 
-#include "utils.h"
+#include "base/utils.h"
 
 // leveldb 参数设置
 #define HIT_LDB_NAME            "loghitDB"

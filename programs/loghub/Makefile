@@ -1,13 +1,17 @@
 BASE_SRC=./src
 INC_DIR=-I/usr/local/include/luajit-2.0 -I../../lib/libev \
 	-I../../lib/json-c -I../../lib/http-parser -I../../lib/libscco \
-	-I../../lib/libucmq/src -I../../engine -I../../engine/major \
-	-I../../engine/minor -I./src \
+	-I../../lib/libucmq/src \
+	-I../../lib/libscco/include \
+	-I../../lib/libmini/include \
+	-I../../lib/libevcs/include/engine \
+	-I../../lib/libevcs/include/frame \
+	-I./src \
 	-I../../lib/zeromq-4.1.4/include
 
-LIB_DIR=-L/usr/local/lib -L../../lib -L../../engine/
+LIB_DIR=-L/usr/local/lib -L../../lib
 LIBS=-lluajit-5.1 -lpthread -lrt -lm -lstdc++ 
-LIBA=-ljson-c -lzmq 
+LIBA=-ljson-c -lzmq -levcs -lmini -lkv -ldl
 
 #[=========>MARK<=========]#
 MAIN_APP_SERV ?= loghub
