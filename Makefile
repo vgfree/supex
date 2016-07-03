@@ -47,7 +47,7 @@ EXPORT_CFLAGS += -Wall \
 	#-static-libgcc -static-libstdc++
 
 #<--内存管理钩子链接选项，如果不需要监控内存分配请去掉-->#
-#EXPORT_CFLAGS += -DUSE_MEMHOOK \
+##EXPORT_CFLAGS += -DUSE_MEMHOOK \
 	-export-dynamic \
 	-Wl,-wrap,malloc -Wl,-wrap,calloc \
 	-Wl,-wrap,realloc -Wl,-wrap,free \
@@ -66,7 +66,7 @@ SRV := $(openIMX) $(openHLS) $(openPMS) \
 	drisamp drimode goby rtmiles rta \
 	drisampapi drimodeapi gobyapi rtmilesapi rtaapi \
 	msgsearchapi spxapi dfsapi appserver ptop robais tsearchapi driviewapi \
-	loghub topology crzptX crzptY ACB damS roadRank \
+	loghub topology crzptX crzptY ACB damS  loghit roadRank \
 	gdgive bdgive gopath gomile ashman adcube_v2\
 	spark releaseServer dfsdb tsdb \
 	timport msgimport rtimport simimport PMR tagpick trafficapi mttpServer mttpSvp rrtopo damR BRM mfptpServer pmrhttp weibo-S weibo-G
@@ -176,6 +176,9 @@ ACB:
 
 damS:
 	$(MAKE) -C ./programs/greatWall MAIN_APP_SERV=damS
+	@echo -e $(GREEN)"【"$(YELLOW) $@ $(GREEN)"】"$(RED)"\n-->OK!\n"$(NONE)
+loghit:
+	$(MAKE) -C ./programs/loghit MAIN_APP_SERV=loghit
 	@echo -e $(GREEN)"【"$(YELLOW) $@ $(GREEN)"】"$(RED)"\n-->OK!\n"$(NONE)
 
 damR:

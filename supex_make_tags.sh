@@ -13,7 +13,7 @@ fi
 BRANCH=$1
 PROJECT=$2
 NEWTREE=supex
-GITUSER=tianlu
+GITUSER=lanjian
 TAGNAME=$PROJECT-`date "+%G-%m-%d_%H-%M-%S"`
 
 git clone ssh://$GITUSER@192.168.71.33:29418/supex.git $NEWTREE
@@ -79,6 +79,22 @@ function copy_open(){
 
 
 case $PROJECT in
+	"loghub")
+		copy_open
+
+		mkdir $TAGNAME/lua
+		cp -r $NEWTREE/lua/*				$TAGNAME/lua
+		cp -r $NEWTREE/cfg.lua				$TAGNAME
+		cp -r $NEWTREE/link.lua				$TAGNAME
+		cp -r $NEWTREE/$PROJECT				$TAGNAME
+		cp -r $NEWTREE/$PROJECT"_conf.json"		$TAGNAME
+		echo -e $MAKEFILE > $TAGNAME/Makefile
+		;;
+	"loghit")
+		cp -r $NEWTREE/$PROJECT				$TAGNAME
+		cp -r $NEWTREE/$PROJECT"_conf.json"		$TAGNAME
+		echo -e $MAKEFILE > $TAGNAME/Makefile
+		;;
 	"crzptY")
 		copy_open
 
