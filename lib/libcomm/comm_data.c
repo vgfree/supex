@@ -303,61 +303,60 @@ bool commdata_parse(struct connfd_info *connfd, struct comm_event *commevent, in
 	struct comm_message     *message = NULL;
 
 	if (connfd != NULL) {
-		if (connfd->recv_cache.size > 0) {
-			do {
-				size = mfptp_parse(&connfd->parser);
-				if ((size > 0) && (connfd->parser.ms.step == MFPTP_PARSE_OVER)) {	/* 成功解析了一个连续的包 */
-					flag = true;
-					switch (connfd->parser.header.socket_type) {
-						case HEARTBEAT_METHOD:	/* 心跳包，则直接丢弃 */
-							break ;
-						default:
-							if (new_commmsg(&message, connfd->parser.bodyer.dsize)) {
-								message->fd = connfd->commtcp.fd;
-								memcpy(message->content, &connfd->parser.ms.cache.buffer[connfd->parser.ms.cache.start], connfd->parser.bodyer.dsize);
-								_fill_message_package(message, &connfd->parser);
-								connfd->recv_cache.start += size;
-								connfd->recv_cache.size -= size;
-								commcache_clean(&connfd->recv_cache);
+		while(connfd->recv_cache.size > 0) {
+			size = mfptp_parse(&connfd->parser);
+			if ((size > 0) && (connfd->parser.ms.step == MFPTP_PARSE_OVER)) {	/* 成功解析了一个连续的包 */
+				flag = true;
+				switch (connfd->parser.header.socket_type) {
+					case HEARTBEAT_METHOD:	/* 心跳包，则直接丢弃 */
+						break ;
+					default:
+						if (new_commmsg(&message, connfd->parser.bodyer.dsize)) {
+							message->fd = connfd->commtcp.fd;
+							memcpy(message->content, &connfd->parser.ms.cache.buffer[connfd->parser.ms.cache.start], connfd->parser.bodyer.dsize);
+							_fill_message_package(message, &connfd->parser);
+							connfd->recv_cache.start += size;
+							connfd->recv_cache.size -= size;
+							commcache_clean(&connfd->recv_cache);
 
-								commlock_lock(&commevent->commctx->recvlock);
+							commlock_lock(&commevent->commctx->recvlock);
 
-								// commlist_push(&commevent->commctx->recvlist, &message->list);
-								if (unlikely(!commqueue_push(&commevent->commctx->recvqueue, (void *)&message))) {
-									/* 队列已满，则放入链表中 */
-									if (unlikely(!commlist_push(&commevent->commctx->recvlist, &message->list))) {
-										flag = false;
-									}
+							// commlist_push(&commevent->commctx->recvlist, &message->list);
+							if (unlikely(!commqueue_push(&commevent->commctx->recvqueue, (void *)&message))) {
+								/* 队列已满，则放入链表中 */
+								if (unlikely(!commlist_push(&commevent->commctx->recvlist, &message->list))) {
+									flag = false;
 								}
-								if (flag && (commevent->commctx->recvqueue.readable == 0)) {		/* 为0不可读，代表有线程在等待可读 */
-									/* 唤醒在commctx->recv_queue.readable上等待的线程并设置其为1 */
-									commlock_wake(&commevent->commctx->recvlock, &commevent->commctx->recvqueue.readable, 1, true);
-								}
-								commlock_unlock(&commevent->commctx->recvlock);
-								// log("parse successed and push the data\n");
-							} else {
-								/* 分配内存失败 数据未处理 */
 							}
-					}
-				} else if (connfd->parser.ms.error == MFPTP_DATA_TOOFEW) {
-					connfd->parser.ms.error = MFPTP_OK;	/* 重新恢复正常值 */
-					del_remainfd(&commevent->remainfd, connfd->commtcp.fd, REMAINFD_PARSE);
-					return true;
-				} else {
-					/* 解析出错 抛弃已解析的错误数据 继续解析后面的数据 */
-					connfd->recv_cache.start += size;
-					connfd->recv_cache.size -= size;
-					commcache_clean(&connfd->recv_cache);
-					connfd->parser.ms.error = MFPTP_OK;	/* 重新恢复正常值 */
-					log("parse failed\n");
+							if (flag && (commevent->commctx->recvqueue.readable == 0)) {		/* 为0不可读，代表有线程在等待可读 */
+								/* 唤醒在commctx->recv_queue.readable上等待的线程并设置其为1 */
+								commlock_wake(&commevent->commctx->recvlock, &commevent->commctx->recvqueue.readable, 1, true);
+							}
+							commlock_unlock(&commevent->commctx->recvlock);
+							// log("parse successed and push the data\n");
+						} else {
+							/* 分配内存失败 数据未处理 */
+						}
 				}
-				if (connfd->recv_cache.size == 0) {
-					del_remainfd(&commevent->remainfd, connfd->commtcp.fd, REMAINFD_PARSE);	/* 数据已解析完，则将remainfd里面的此fd删除 */
-					return true;
-				} else if (flag) {
-					return false;
-				}
-			}while(1);
+				break ;		/* 成功解析了一个包 退出循环 */
+			} else if (connfd->parser.ms.error == MFPTP_DATA_TOOFEW) {	/* 数据未接收完毕 直接退出 */
+				connfd->parser.ms.error = MFPTP_OK;	/* 重新恢复正常值 */
+				del_remainfd(&commevent->remainfd, connfd->commtcp.fd, REMAINFD_PARSE);
+				return true;
+			} else {
+				/* 解析出错 抛弃已解析的错误数据 继续解析后面的数据 */
+				log("parse failed data:%*.s\n", connfd->recv_cache.size, &connfd->recv_cache.buffer[connfd->recv_cache.start]);
+				connfd->recv_cache.start += size;
+				connfd->recv_cache.size -= size;
+				commcache_clean(&connfd->recv_cache);
+				connfd->parser.ms.error = MFPTP_OK;	/* 重新恢复正常值 */
+			}
+		}
+		if (connfd->recv_cache.size == 0) {
+			del_remainfd(&commevent->remainfd, connfd->commtcp.fd, REMAINFD_PARSE);	/* 数据已解析完，则将remainfd里面的此fd删除 */
+			return true;
+		} else if (flag) {
+			return false;
 		}
 	}
 	del_remainfd(&commevent->remainfd, fd, REMAINFD_PARSE);

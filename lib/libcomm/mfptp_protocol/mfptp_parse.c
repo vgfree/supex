@@ -83,6 +83,10 @@ int mfptp_parse(struct mfptp_parser *parser)
 						int index = 0;
 						for (index = 0; index < 6; index++) {
 							if ((*parser->ms.data)[parser->ms.dosize] == '#') {
+								if (index == 0) {
+									dsize -= 1;
+									parser->ms.dosize += 1;
+								}
 								break ;
 							}
 							dsize -= 1;
