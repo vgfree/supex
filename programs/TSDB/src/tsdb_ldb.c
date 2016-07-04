@@ -178,25 +178,22 @@ int tsdb_ldb_sadd(struct data_node *p_node)
 	char                    *result = NULL;
 	int			size = 0;
 	char			*new_str = NULL;
+	int			idx;
+	bool			has_set_data = false;	
 
         if ((LDB_READONLY_SWITCH == 1) || (p_rst->fields < 2)) {
                 cache_append(&p_node->mdl_send.cache, OPT_CMD_ERROR, strlen(OPT_CMD_ERROR));
                 return X_EXECUTE_ERROR;
         }
-
-	char target_str[p_rst->field[1].len + 1];
-	memset(target_str, 0, p_rst->field[1].len + 1);
-        strncpy(target_str, p_buf + p_rst->field[1].offset, p_rst->field[1].len);
+	for (idx = 1; idx < p_rst->fields; idx++) {
+	has_set_data = false;
+	char target_str[p_rst->field[idx].len + 1];
+	memset(target_str, 0, p_rst->field[idx].len + 1);
+        strncpy(target_str, p_buf + p_rst->field[idx].offset, p_rst->field[idx].len);
         printf("The target_str = %s\n", target_str);	
 
 	result = ldb_get(s_ldb, p_buf + p_rst->field[0].offset, p_rst->field[0].len, &size);
 	if (NULL != result) {
-/*
-		char *r = strtok(result, "*");
-		if (r) {
-			atoi(r) + 1
-		}
-*/
 		char str[strlen(result) +1];
 		memset(str, 0, strlen(result) +1);
 		strncpy(str, result, strlen(result));
@@ -211,16 +208,23 @@ int tsdb_ldb_sadd(struct data_node *p_node)
 				printf("%s\n",p);
 				if(strcmp(target_str, p) == 0) {
 					printf("Had set the data.\n");
-					cache_append(&p_node->mdl_send.cache, OPT_OK, strlen(OPT_OK));
-					return X_DONE_OK;
+					//cache_append(&p_node->mdl_send.cache, OPT_OK, strlen(OPT_OK));
+					//return X_DONE_OK;
+					has_set_data = true;
+					break;
 				}
 				p=strtok(NULL,"|");
 			}
-			new_str = (char *)malloc(strlen(str) + strlen(target_str) + 2); // "\0" 和"|"
+
+			if (has_set_data) {
+				continue;
+			}
+
+			new_str = (char *)malloc(strlen(str) + strlen(target_str) + 2); // "\0" 和"|", head '*'前的数字可能进位
 			memset(new_str, 0, strlen(str) + strlen(target_str) + 2);
 			strcpy(new_str, str);  
-    			strcat(new_str, "|");
 			strcat(new_str, target_str);
+			strcat(new_str, "|");
 			printf("new_str is %s\n", new_str);
 		}
 		else {
@@ -231,11 +235,12 @@ int tsdb_ldb_sadd(struct data_node *p_node)
 	}
 	else{
 		if(target_str) {
-			char *head = "1*1@";
+			char *head = "0*1@";
 			new_str = (char*)malloc(strlen(head) + strlen(target_str) + 2);
+			memset(new_str, 0, strlen(head) + strlen(target_str) + 2);
 			strcpy(new_str, head);
-			strcat(new_str, "|");
 			strcat(new_str, target_str);
+			strcat(new_str, "|");
 			printf("new_str is %s\n", new_str);
 		}
 		else {
@@ -245,17 +250,36 @@ int tsdb_ldb_sadd(struct data_node *p_node)
 		}
 	}
 
-	ok = binlog_put(s_ldb, p_buf + p_rst->field[0].offset, p_rst->field[0].len, new_str, strlen(new_str));
+	//Update head.
+	char *string = (char*)malloc(strlen(new_str) + 2);
+	memset(string, 0, strlen(new_str) + 2);
+	char *n = strchr(new_str, '*');
+	char str_tmp[strlen(n) + 1];
+	strcpy(str_tmp, n);
+	printf("* addr is %s\n", n);
+	char *r = strtok(new_str, "*");
+        if (r) {
+        	sprintf(string, "%d%s",atoi(r) + 1, str_tmp);
+        }
+	
+	printf("string = %s\n", string);
+
+	ok = binlog_put(s_ldb, p_buf + p_rst->field[0].offset, p_rst->field[0].len, string, strlen(string));
 
         if ((ok == 0) || (ok == 1)) {
-                cache_append(&p_node->mdl_send.cache, OPT_OK, strlen(OPT_OK));
+                //cache_append(&p_node->mdl_send.cache, OPT_OK, strlen(OPT_OK));
 		free(new_str);
-                return X_DONE_OK;
+		free(string);
+                //return X_DONE_OK;
         } else {
                 cache_append(&p_node->mdl_send.cache, OPT_INTERIOR_ERROR, strlen(OPT_INTERIOR_ERROR));
 		free(new_str);
+		free(string);
                 return X_EXECUTE_ERROR;
         }
+	}
+	cache_append(&p_node->mdl_send.cache, OPT_OK, strlen(OPT_OK));
+	return X_DONE_OK;
 }
 
 int tsdb_ldb_get(struct data_node *p_node)
