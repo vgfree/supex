@@ -1,5 +1,5 @@
 {
-	"alive_port":4102 ,
+	"alive_port": 6688,
 	"alive_worker_counts": 5,
 	"alive_tasker_counts": 15,
 	"alive_protocol": "mttp",
@@ -7,8 +7,8 @@
 	"sniff_worker_counts": 1,
 	"sniff_tasker_counts": 1,
 
-  "redis_host": "127.0.0.1",
-  "redis_port": 9002, 
+  "redis_host": "172.16.71.43",
+  "redis_port": 6379, 
 	
 	"max_req_size": 32768,
 	"log_path": "./logs/",
