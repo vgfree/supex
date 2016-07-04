@@ -16,6 +16,7 @@ EVCS_MODULE_SETUP(evcs, evcs_init, evcs_exit, &g_evcs_evts);
 struct free_queue_list  glist;
 char                    TASK[64] = { 0 };
 char                    DATA[] = "GET / HTTP/1.0\r\nUser-Agent: curl/7.38.0\r\nHost: www.sina.com\r\nAccept: */*\r\n\r\n";
+//char			DATA[] = "*9\r\n$5\r\nhmget\r\n$7\r\nMLOCATE\r\n$15\r\n409101916615134\r\n$10\r\n127.340448\r\n$9\r\n43.722578\r\n$2\r\n16\r\n$3\r\n284\r\n$2\r\n29\r\n$10\r\n1435988723\r\n";
 
 static bool task_lookup(void *user, void *task)
 {
@@ -34,9 +35,11 @@ void *task_handle(struct supex_evcoro *evcoro, int step)
 	struct supex_evcoro     *p_evcoro = supex_get_default();
 	struct evcoro_scheduler *p_scheduler = p_evcoro->scheduler;
 	struct xpool            *cpool = conn_xpool_find("www.sina.com", 80);
+	//struct xpool            *cpool = conn_xpool_find("192.168.1.10", 5555);
 
 	struct async_evtasker   *tasker = evtask_initial(p_scheduler, 1, QUEUE_TYPE_FIFO, NEXUS_TYPE_SOLO);
 	struct command_node     *command = evtask_command(tasker, PROTO_TYPE_HTTP, cpool, DATA, sizeof(DATA) - 1);
+	//struct command_node     *command = evtask_command(tasker, PROTO_TYPE_REDIS, cpool, DATA, sizeof(DATA) - 1);
 
 	evtask_install(tasker);
 
@@ -50,6 +53,7 @@ void *task_handle(struct supex_evcoro *evcoro, int step)
 void main(void)
 {
 	conn_xpool_init("www.sina.com", 80, 10, true);
+	//conn_xpool_init("192.168.1.10", 5555, 10, true);
 	free_queue_init(&glist, sizeof(TASK), 8);
 
 	task_report(NULL, TASK);
