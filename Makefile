@@ -47,7 +47,7 @@ EXPORT_CFLAGS += -Wall \
 	#-static-libgcc -static-libstdc++
 
 #<--内存管理钩子链接选项，如果不需要监控内存分配请去掉-->#
-##EXPORT_CFLAGS += -DUSE_MEMHOOK \
+#EXPORT_CFLAGS += -DUSE_MEMHOOK \
 	-export-dynamic \
 	-Wl,-wrap,malloc -Wl,-wrap,calloc \
 	-Wl,-wrap,realloc -Wl,-wrap,free \
@@ -62,11 +62,12 @@ export EXPORT_LIBA
 openIMX := IMX_coreExchangeNode IMX_messageGateway IMX_loginServer IMX_settingServer IMX_userInfoApi
 openHLS := rmsapi hlsapi hlsldb
 openPMS := dtsync pole-M pole-S
-SRV := $(openIMX) $(openHLS) $(openPMS) \
+openLOG := loghit loghub
+SRV := $(openIMX) $(openHLS) $(openPMS) $(openLOG) \
 	drisamp drimode goby rtmiles rta \
 	drisampapi drimodeapi gobyapi rtmilesapi rtaapi \
 	msgsearchapi spxapi dfsapi appserver ptop robais tsearchapi driviewapi \
-	loghub topology crzptX crzptY ACB damS  loghit roadRank \
+	topology crzptX crzptY ACB damS  roadRank \
 	gdgive bdgive gopath gomile ashman adcube_v2\
 	spark releaseServer dfsdb tsdb \
 	timport msgimport rtimport simimport PMR tagpick trafficapi mttpServer mttpSvp rrtopo damR BRM mfptpServer pmrhttp weibo-S weibo-G

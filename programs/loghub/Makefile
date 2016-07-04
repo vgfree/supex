@@ -18,9 +18,9 @@ MAIN_APP_SERV ?= loghub
 
 CFLAGS += -DSELECT_MULTIPROCESS
 
-#ifeq ($(MAIN_APP_SERV), loghub)
-#HANDLE_MODEL = EVUV
-#endif
+ifeq ($(MAIN_APP_SERV), loghub)
+HANDLE_MODEL = EVCORO
+endif
 #<------------------------>#
 -include $(HOME_PATH)/programs/link.mk
 -include $(HOME_PATH)/share.mk
