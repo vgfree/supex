@@ -196,7 +196,7 @@ int tsdb_ldb_sadd(struct data_node *p_node)
 	if (NULL != result) {
 		char str[strlen(result) +1];
 		memset(str, 0, strlen(result) +1);
-		strncpy(str, result, strlen(result));
+		strncpy(str, result, strlen(result) + 1);
 		printf("The str = %s\n", str);
 		if (str && target_str) {
 			char *p = strtok(result, "@");
