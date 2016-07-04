@@ -88,7 +88,7 @@ local function get_data_with_user(user, target_time, redis_num)
 	if redis_num == nil then
 		return nil
 	end
-
+	local time_key = target_time
 	target_time = string.gsub(target_time, CFG_LIST['USER_PART_KEY'] .. ':', '')
 	print(target_time)
 
@@ -102,6 +102,7 @@ local function get_data_with_user(user, target_time, redis_num)
 		data = assemble_data(user_data)
 		tsdb_name = dk_utils.get_tsdb_name(user, os.time(), idx)
 		set_data(data_key, data, 'SET', tsdb_name)
+		set_data(time_key, user, 'SADD', tsdb_name)
 	end
 end
 

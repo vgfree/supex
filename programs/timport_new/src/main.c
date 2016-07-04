@@ -23,7 +23,7 @@ EVCS_MODULE_SETUP(evcs, evcs_init, evcs_exit, &g_evcs_evts);
 #include "evcoro_async_tasks.h"
 #include "thread_pool_loop/tlpool.h"
 
-#define MAX_UTHREAD_COUNT       128
+#define MAX_UTHREAD_COUNT       8
 #define MAX_PTHREAD_COUNT       16
 
 #define MAX_USER_KEY_LENGTH     64
@@ -139,14 +139,23 @@ void *set_data_task_handle(struct supex_evcoro *evcoro, int step)
 	lua_State *L = NULL;
 	struct user_task        *p_task = &((struct user_task *)evcoro->task)[step];
 	union virtual_system    *p_VMS = &((union virtual_system *)evcoro->VMS)[step];
-	if (p_VMS) {
+	
+	if (p_VMS->L) {
 		L = p_VMS->L;
 	}
 	else {
 		L = lua_vm_init();
 		evcoro->VMS[step].L = L;
 	}
-	
+/*
+	if (evcoro->VMS && evcoro->VMS->L) {
+		L = evcoro->VMS->L;
+	}
+	else {
+		L = lua_vm_init();
+		evcoro->VMS->L = L;
+	}
+*/	
 	if (!L) {
 		printf("lua vm is NULL\n");
 		free(p_task->user);
