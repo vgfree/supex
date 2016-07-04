@@ -125,8 +125,8 @@ int main(int argc, char *argv[])
 		printf("arg not right\n");
 		return -1;
 	}
-
-	for (int i = 0; i < atoi(argv[1]); i++) {
+	int i;
+	for (i = 0; i < atoi(argv[1]); i++) {
 		pthread_t tid;
 		assert(pthread_create(&tid, NULL, multi_client, argv[2]) == 0);
 	}
