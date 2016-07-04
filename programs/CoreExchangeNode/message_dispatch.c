@@ -276,6 +276,20 @@ static void _setting_map(struct comm_message *msg)
 
 static int _verified(struct comm_message *msg)
 {
+#define debug 1
+#ifdef debug
+		log("client msg frame number:%d", get_max_msg_frame(msg));
+		int i = 0;
+		for (; i < get_max_msg_frame(msg); i++) {
+			int frame_size = 0;
+			char    *frame = get_msg_frame(i, msg, &frame_size);
+			char *buf = malloc(sizeof(char) * (frame_size + 1));
+			memcpy(buf, frame, frame_size);
+			buf[frame_size] = '\0';
+			log("%d frame, data:%s", i, buf);
+			free(buf);
+		}
+#endif
 #ifdef _HKEY_
 	if (msg->socket_type == PAIR_METHOD) {
 		int frame_size = 0;

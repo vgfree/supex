@@ -19,7 +19,7 @@ BUILD_HOST =		$(shell uname | tr '[A-Z]' '[a-z]')
 
 BUILD_CFLAGS =		-fPIC -Wall -Wno-unused-function -Wno-unused-variable -g
 BUILD_LIBS =		-lpthread -lm -lcomm
-BUILD_INC_DIR = 	-I/usr/include -I/usr/local/include -I../liblog
+BUILD_INC_DIR = 	-I/usr/include -I/usr/local/include 
 BUILD_LIB_DIR =		-L/usr/local/lib -L/usr/lib -L/usr/libexec -L$(BUILD_PWD)/lib
 
 #######
