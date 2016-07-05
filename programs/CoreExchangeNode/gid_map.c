@@ -124,7 +124,7 @@ int find_gid_list(int fd, char *gid_list[], int *size)
 	kv_answer_t *ans = kv_ask(g_gid_map, cmd, strlen(cmd));
 
 	if (ans->errnum != ERR_NONE) {
-		error("find multi gid error, cmd:%s\n", cmd);
+		trace("find multi gid error, cmd:%s\n", cmd);
 		*size = 0;
 		return -1;
 	}

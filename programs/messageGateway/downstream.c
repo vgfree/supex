@@ -19,6 +19,12 @@ int downstream_msg(struct comm_message *msg)
 
 		if (send_msg(msg) == -1) {
 			error("wrong msg, msg fd:%d.", msg->fd);
+			int j = i;
+			for (; j < g_node_ptr->max_size - 1; j++) {
+				g_node_ptr->fd_array[j] = g_node_ptr->fd_array[j + 1];
+			}
+			i--;
+			g_node_ptr->max_size--;
 		}
 	}
 
