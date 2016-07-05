@@ -3,12 +3,12 @@ module("link")
 OWN_POOL = {
 	redis = {
 		newstatusRedis= {
-                        host = '127.0.0.1', 
-                        port = 6379
+                        host = '192.168.1.12', 
+                        port = 9002
              	},
                 dcRedis = {
-                        host = '172.16.71.43',
-                        port = 6379
+                        host = '192.168.1.12',
+                        port = 9002
                 } 
 
 

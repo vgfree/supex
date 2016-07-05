@@ -10,7 +10,7 @@ local only		= require('only')
 local supex		= require('supex')
 local luakv_api		= require('luakv_pool_api')
 local BYNAME_LIST	= require('BYNAME_LIST')
-
+local newstatus         = require('api_dc_newstatus')
 
 
 function app_line_init()
@@ -232,7 +232,9 @@ end
 local function app_call_by_msg( top, msg, way )
 	lualog.open( "access" )
 	only.log("D", '_________________________________START_________________________________________')
-	supex["_FINAL_STAGE_"] = top
+	lualog.open( "api_dc_newstatus" )
+	newstatus.handle(msg)
+--[[	supex["_FINAL_STAGE_"] = top
 	supex["_SOCKET_HANDLE_"] = nil
 
 	------- method , head , body , path , uri_arg
@@ -257,6 +259,7 @@ local function app_call_by_msg( top, msg, way )
 	main_call( way )
 
 	lualog.addinfo( nil )
+--]]
 	only.log("D", '_________________________________OVER_________________________________________\n\n')
 end
 
