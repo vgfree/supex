@@ -24,6 +24,8 @@ local assert	= assert
 local CFG_LIST	= require('cfg')
 local CLASSIFY	= CFG_LIST["OWN_INFO"]["OPEN_LOGS_CLASSIFY"]
 local LOGTRACK	= CFG_LIST["OWN_INFO"]["SYSLOGLV"]
+local Coro 	= require("coro")
+local redis_api = require('redis_pool_api')
 
 local BASE = _G
 
@@ -38,11 +40,35 @@ function load_mod( name )
     return fun
 end
 ]]--
-local function one_app_job( name, insp, ifon, func )
+
+local function self_cycle_idle( coro, idleable )
+	if not idleable then 
+		only.log('E',"IDLE~~~~")
+	else
+		if coro:isactive() then
+			--print("\x1B[1;35m".."LOOP~~~~".."\x1B[m")
+			--coro:fastswitch()lua_default_switch, supex["__TASKER_SCHEME__"],txt)
+			lua_default_switch(supex["__TASKER_SCHEME__"])
+		else
+			only.log('D',"coro:stop()")
+			coro:stop()
+			return
+		end
+	end
+end
+
+local function go_once_job(coro, args)
+	local idle = coro.fastswitch
+        redis_api.reg( idle, coro )
+	local name, insp, ifon, func = args[1],args[2],args[3],args[4]
+	one_app_job( name, insp, ifon, func)
+end
+
+local function one_app_job( name, insp, ifon, func)
+
 	local t1 = socket.gettime()
 	local t2 = nil
-	local state = true
-	
+	local state = true	
 	monitor.mod_bef_entry( name )
 	if ifon then
 		--> set app log
@@ -154,6 +180,7 @@ function exact_rmmod( name )
 	end
 end
 
+
 function exact_runmods( name, insp )
 	if name then
 		one_app_job( name, insp, OWN_EXACT_IFON_POOL[ name ], OWN_EXACT_FUNC_POOL[ name ] )
@@ -161,9 +188,25 @@ function exact_runmods( name, insp )
 		--> fetch index
 		local word = APP_POOL_EXACT_MAKE( )
 		--> get task list
+		local args = {}	
+		local coro = Coro:open(true)
 		for _, name in pairs(OWN_EXACT_NAME_POOL[ word ] or {}) do
-			one_app_job( name, insp, OWN_EXACT_IFON_POOL[ name ], OWN_EXACT_FUNC_POOL[ name ] )
+			args = {
+				[1] = name,
+				[2] = insp,
+				[3] = OWN_EXACT_IFON_POOL[ name ],
+				[4] = OWN_EXACT_FUNC_POOL[ name ],
+			}					
+			coro:addtask(go_once_job, coro, args)
 		end
+		local ret = coro:startup(self_cycle_idle, coro, true)
+      	        if ret  then
+      		only.log('D',"Tasks execute success.")
+     	        else  
+      		only.log('E',"Tasks execute failure.ret = %s",tostring(ret))
+     	        end
+	    	coro:close()
+
 	end
 end
 
@@ -232,10 +275,26 @@ function local_runmods( name, insp )
 		local word = APP_POOL_LOCAL_MAKE( )
 		for idx in pairs(OWN_LOCAL_NAME_POOL) do
 			--> get task list
+					
 			if APP_POOL_LOCAL_CHECK( word, idx ) then
+                                local args = {} 
+				local coro = Coro:open(true)
 				for _, name in pairs(OWN_LOCAL_NAME_POOL[ idx ]) do
-					one_app_job( name, insp, OWN_LOCAL_IFON_POOL[ name ], OWN_LOCAL_FUNC_POOL[ name ] )
+					args = {
+	        				[1] = name,
+						[2] = insp,
+						[3] = OWN_LOCAL_IFON_POOL[ name ],
+						[4] = OWN_LOCAL_FUNC_POOL[ name ],
+					}
+					coro:addtask(go_once_job, coro, args)
 				end
+				local ret = coro:startup(self_cycle_idle, coro, true)
+		      	        if ret  then
+		      		only.log('D',"Tasks execute success.")
+		     	        else  
+		      		only.log('E',"Tasks execute failure.ret = %s",tostring(ret))
+		     	        end
+			    	coro:close()
 			end
 		end
 	end
@@ -285,9 +344,24 @@ function whole_runmods( name, insp )
 	if name then
 		one_app_job( name, insp, OWN_WHOLE_IFON_POOL[ name ], OWN_WHOLE_FUNC_POOL[ name ] )
 	else
+		local args = {}	
+		local coro = Coro:open(true)
 		for name in pairs(OWN_WHOLE_FUNC_POOL) do
-			one_app_job( name, insp, OWN_WHOLE_IFON_POOL[ name ], OWN_WHOLE_FUNC_POOL[ name ] )
+			args = {
+				[1] = name,
+				[2] = insp,
+				[3] = OWN_WHOLE_IFON_POOL[ name ],
+				[4] = OWN_WHOLE_FUNC_POOL[ name ],
+			}
+			coro:addtask(go_once_job, coro, args)
 		end
+		local ret = coro:startup(self_cycle_idle, coro, true)
+      	        if ret  then
+      		only.log('D',"Tasks execute success.")
+     	        else  
+      		only.log('E',"Tasks execute failure.ret = %s",tostring(ret))
+     	        end
+	    	coro:close()
 	end
 end
 ----------------------------------------alone--------------------------------------------
@@ -331,7 +405,7 @@ function alone_rmmod( name )
 end
 
 function alone_runmods( name, insp )
-	if name then
-		one_app_job( name, insp, OWN_ALONE_IFON_POOL[ name ], OWN_ALONE_FUNC_POOL[ name ] )
-	end
+   	if name then	
+        one_app_job( name, insp, OWN_ALONE_IFON_POOL[ name ], OWN_ALONE_FUNC_POOL[ name ])
+   	end
 end
