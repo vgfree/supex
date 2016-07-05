@@ -31,7 +31,7 @@ int sniff_vms_call(void *user, union virtual_system **VMS, struct sniff_task_nod
 //	struct supex_evcoro     *p_evcoro = supex_get_default();
 //	struct ev_loop          *loop = p_evcoro->scheduler->listener;
         struct ev_loop  *loop = supex_get_default()->scheduler->listener;
-	x_printf(S, "task <shift> %d\t<come> %ld\t<delay> %ld",
+	x_printf(I, "task <shift> %d\t<come> %ld\t<delay> %ld",
 		p_task->base.shift, p_task->stamp, delay);
 
 	x_printf(D, "%s", p_task->data);
@@ -61,7 +61,9 @@ int sniff_vms_call(void *user, union virtual_system **VMS, struct sniff_task_nod
 		free(cal_info); cal_info = NULL;
 		return -1;
 	}
-
+        
+        if(cal_info)        
+                free(cal_info);
 	return 0;
 }
 

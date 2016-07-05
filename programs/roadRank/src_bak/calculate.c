@@ -106,6 +106,9 @@ static int add_redis_task(char command[], struct rr_link *link, struct ev_loop *
                 int     ok = cmd_to_proto(&proto, command);
         
                 if (ok == REDIS_ERR) {
+                        if(proto)
+                                free(proto);
+
                         async_api_distory(api);
                         return -1;
                 }

@@ -16,7 +16,7 @@ int gps_decode(struct ev_loop *loop, const char *data, GPS_INFO *gps_info)
 	}
 
 	/*parse IMEI*/
-	son = cJSON_GetObjectItem(obj, "IMEI");
+	son = cJSON_GetObjectItem(obj, "M");
 
 	if (NULL == son) {
 		x_printf(E, "data has no IMEI!");

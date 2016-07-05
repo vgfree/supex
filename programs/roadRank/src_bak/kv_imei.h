@@ -7,6 +7,7 @@
 
 #include "rr_def.h"
 #include "utils.h"
+#include "base/utils.h"
 #include "libkv.h"
 #include "decode_gps.h"
 

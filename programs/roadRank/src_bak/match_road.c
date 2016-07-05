@@ -49,6 +49,11 @@ int match_road_v2(struct ev_loop *loop, CAL_INFO *cal_info)
                 printf("redis field[%d] = %s\n", j, g_user_data.p_buf + g_user_data.status->field[j].offset);
         } 
         */
+        if (g_user_data.status->fields != 11) {
+                evtask_distory(tasker);
+                return -1;
+        }
+
         ROAD_INFO road_info = { 0 };
         
         if (command->err == ASYNC_OK || g_user_data.status->error == 0) {
