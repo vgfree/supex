@@ -2,104 +2,56 @@
 #include "comm_message_operator.h"
 #include "core_exchange_node_test.h"
 #include "sys/time.h"
-#define TEST 0
-#include <pthread.h>
-#include <uuid/uuid.h>
-#include "json.h"
+//#include "loger.h"
 
-void print_current_time()
-{
-	struct timeval  tv;
+#include <pthread.h>
+
+void print_current_time() {
+	struct timeval tv;
 //	struct timezone tz;
-//	freopen("out.txt", "w", stdout);
-	gettimeofday(&tv, NULL);
+//	gettimeofday(&tv, &tz);
 	printf("tv_sec:%d", tv.tv_sec);
 	printf("tv_usec:%d--", tv.tv_usec);
 }
 
-static int              connectfd = 0;
-struct comm_context     *g_ctx = NULL;
-void *client_thread_read(void *usr)
-{
-	while (1) {
+static int connectfd = 0;
+struct comm_context *g_ctx = NULL;
+void *client_thread_read(void *usr) {
+	while(1) {
 		struct comm_message msg = {};
 		init_msg(&msg);
 		printf("start recv msg.\n");
 		comm_recv(g_ctx, &msg, true, -1);
-		int     size = 0;
-		char    *frame = get_msg_frame(0, &msg, &size);
-		char    *buf = (char *)malloc((size + 1) * sizeof(char));
+		int size = 0;
+		char *frame = get_msg_frame(0, &msg, &size);
+		char *buf = (char *)malloc((size + 1) * sizeof(char));
 		memcpy(buf, frame, size);
 		buf[size] = '\0';
 		printf("recv msg:");
 		print_current_time();
-		printf("recev_data_len:%d\n", strlen(buf));
-		printf("buf : %s\n", buf);
-		if(memcmp(buf, "bind", 4) == 0) {
-			printf("recv frames : %d\n", get_max_msg_frame(&msg));
-			remove_first_nframe( get_max_msg_frame(&msg), &msg);
-			printf("is recv bind :%s\n", buf);
-                        set_msg_frame(0, &msg, strlen(buf), buf);
-			printf("frames after set bind: %d\n", msg.package.frames);
-			struct json_object *my_json = NULL;
-                        my_json = json_object_new_object();
-			if(my_json == NULL) {
-				printf("new json object failed.\n"); 
-				return;
-			}
-                        char uuid[36];
-			uuid_t uu;
-                        uuid_generate(uu);
-			uuid_unparse(uu, uuid);
-                        printf("start send uuid: %s\n", uuid);
-			json_object_object_add(my_json, "uid", json_object_new_string(uuid));
-                        memset(buf, 0, sizeof(buf));
-			buf = json_object_to_json_string(my_json);
-                        set_msg_frame(1, &msg, strlen(buf), buf);
-			printf("frames after set json: %d\n", msg.package.frames);
-                        comm_send(g_ctx, &msg, true, -1);
-			printf("send json successfull!\n");
-			free(buf);
-			destroy_msg(&msg);
-                }
+		printf("%s\n", buf);
+		free(buf);
+		destroy_msg(&msg);
 	}
-
 	return NULL;
 }
 
-int test_simulate_client(char *ip)
-{
+int test_simulate_client(char *ip) {
 	g_ctx = comm_ctx_create(EPOLL_SIZE);
 	struct cbinfo callback_info = {};
 	callback_info.callback = NULL;
 	printf("ip:%s\n", ip);
 	connectfd = comm_socket(g_ctx, ip, "8082", &callback_info, COMM_CONNECT);
 	printf("connectfd:%d\n", connectfd);
-
-	if (connectfd == -1) {
+	if(connectfd == -1) {
 		printf("connect error.");
 		return -1;
 	}
-
 	pthread_t tid;
 	assert(pthread_create(&tid, NULL, client_thread_read, NULL) == 0);
-	int datasize = (1024*1024*2+1);
-	char *str = (char*)malloc(datasize);
-	memset(str, 0, datasize);
+	char str[1024];
 	snprintf(str, 10, "tid:%u", tid);
-	char temp[1024] = {0};
-
 	while (fgets(str, 1024, stdin) != NULL) {
-#if 0
-		int i;
-		for(i = 0; i < 2*1024*1024; i++) {
-			str[i] = 'a';
-		}
-		str[i] = '\0';
-#endif
-		printf("str_size:%d\n", sizeof(str));
-
-		printf("data_length:%d\n", strlen(str));
 		printf("send msg:");
 		print_current_time();
 		printf("\n");
@@ -107,11 +59,9 @@ int test_simulate_client(char *ip)
 		init_msg(&msg);
 		set_msg_fd(&msg, connectfd);
 		set_msg_frame(0, &msg, strlen(str), str);
-		printf("fgets input frames: %d\n", msg.package.frames);
 		comm_send(g_ctx, &msg, true, -1);
 		destroy_msg(&msg);
-//		sleep(10);
+		sleep(5);
 	}
 	return 0;
 }
-
