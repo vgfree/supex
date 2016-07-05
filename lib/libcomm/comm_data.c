@@ -350,13 +350,9 @@ bool commdata_parse(struct connfd_info *connfd, struct comm_event *commevent, in
 				connfd->recv_cache.size -= size;
 				commcache_clean(&connfd->recv_cache);
 				connfd->parser.ms.error = MFPTP_OK;	/* 重新恢复正常值 */
-				break ;
 			}
 		}
-		if (connfd->recv_cache.size == 0) {
-			del_remainfd(&commevent->remainfd, connfd->commtcp.fd, REMAINFD_PARSE);	/* 数据已解析完，则将remainfd里面的此fd删除 */
-			return true;
-		} else if (flag) {
+		if (connfd->recv_cache.size != 0) {
 			return false;
 		}
 	}

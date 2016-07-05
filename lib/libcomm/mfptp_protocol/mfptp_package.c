@@ -217,7 +217,14 @@ static void _make_package(struct mfptp_packager *packager, struct mfptp_package_
 		packager->ms.dosize += 1;
 
 		/*F_SIZE字段的设置 */
+#if 0
 		for (size_f_size = 0; size_f_size < packager->header.size_f_size; size_f_size++) {
+			(*packager->ms.buff)[*packager->ms.size] = (frame_size << (size_f_size * 8)) & 0xFF;
+			*packager->ms.size += 1;
+		}
+#endif
+
+		for(size_f_size = packager->header.size_f_size-1; size_f_size > -1; size_f_size--) {
 			(*packager->ms.buff)[*packager->ms.size] = (frame_size >> (size_f_size * 8)) & 0xFF;
 			*packager->ms.size += 1;
 		}

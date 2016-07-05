@@ -176,13 +176,19 @@ int mfptp_parse(struct mfptp_parser *parser)
 				if (dsize >= parser->header.size_f_size) {
 					if (CHECK_F_SIZE(parser)) {
 						parser->header.f_size = 0;
+#if 0
 						for (size_f_size = 0; size_f_size < parser->header.size_f_size; size_f_size++) {
+							parser->header.f_size = parser->header.f_size | ((unsigned char)data[parser->ms.dosize] << size_f_size * 8);
+							parser->ms.dosize += 1;
+						}
+#endif
+						for (size_f_size = parser->header.size_f_size-1; size_f_size > -1; size_f_size--) {
 							parser->header.f_size = parser->header.f_size | ((unsigned char)data[parser->ms.dosize] << size_f_size * 8);
 							parser->ms.dosize += 1;
 						}
 
 						dsize -= parser->header.size_f_size;
-						if (parser->header.f_size > MFPTP_MAX_DATASIZE) {
+						if (parser->header.f_size < 1 || parser->header.f_size > MFPTP_MAX_DATASIZE) {
 							/* 数据size大于帧允许的携带的数据大小 */
 							parser->ms.error = MFPTP_DATASIZE_INVAILD;
 							log("illegal datasize mfptp protocol frame carried\n");
