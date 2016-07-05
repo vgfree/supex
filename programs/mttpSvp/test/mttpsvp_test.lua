@@ -8,10 +8,10 @@ local color = require('color')
 
 local options = {
   host = '127.0.0.1',
-  port = 4102
+  port = 6688
 }
 
-local handshake1 = 'M=1111111111111111111111111&A=eoEl7P&N=11111111111'
+local handshake1 = 'M=luaio&A=eoEl7P&N=luaio'
 local handshake2 = 'M=2222222222222222222222222&A=eoEl7P&N=22222222222'
 local handshake3 = 'M=2222222222222222222222222&A=eoEl7P&N=11111111111'
 local handshake4 = 'M=1111111111111111111111111&A=eoEl7P&N=22222222222'
@@ -80,7 +80,7 @@ if err < 0 then
   return
 end
 
-for i = 1, 1000 do
+for i = 1, 1 do
   bytes, err = socket:write(ts_buf)
   if err < 0 then
     print(color.red('测试：先握手后传输，数据发送失败。错误原因：' .. ERRNO.parse(err)))
@@ -94,7 +94,7 @@ print('--------------------\n')
 
 print(color.green('测试：先握手后传输，心跳开始。'))
 
-for i = 1, 1000 do
+for i = 1, 1 do
   bytes, err = socket:write(hb0_buf)
   if err < 0 then
     print(color.red('测试：先握手后传输，心跳不带数据发送失败。错误原因：' .. ERRNO.parse(err)))
@@ -102,7 +102,7 @@ for i = 1, 1000 do
   end
 end
 
-for i = 1, 1000 do
+for i = 1, 1 do
   bytes, err = socket:write(ts_buf)
   if err < 0 then
     print(color.red('测试：先握手后传输，心跳后数据发送失败。错误原因：' .. ERRNO.parse(err)))
@@ -110,7 +110,7 @@ for i = 1, 1000 do
   end
 end
 
-for i = 1, 1000 do
+for i = 1, 1 do
   bytes, err = socket:write(hb_buf)
   if err < 0 then
     print(color.red('测试：先握手后传输，心跳带数据发送失败。错误原因：' .. ERRNO.parse(err)))
@@ -153,7 +153,7 @@ end
 
 print(color.green('测试：直接发送心跳，开始。'))
 
-for i = 1, 1000 do
+for i = 1, 1 do
   bytes, err = socket:write(hb0_buf)
   if err < 0 then
     print(color.red('测试：直接发送心跳，心跳不带数据发送失败。错误原因：' .. ERRNO.parse(err)))
@@ -161,7 +161,7 @@ for i = 1, 1000 do
   end
 end
 
-for i = 1, 1000 do
+for i = 1, 1 do
   bytes, err = socket:write(hb_buf)
   if err < 0 then
     print(color.red('测试：直接发送心跳，心跳带数据发送失败。错误原因：' .. ERRNO.parse(err)))
