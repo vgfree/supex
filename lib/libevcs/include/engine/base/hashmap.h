@@ -39,3 +39,4 @@ void hashmap_set(hashmap_t *hashmap, void *key, size_t klen, void *val, size_t v
 
 bool hashmap_get(hashmap_t *hashmap, void *key, size_t klen, void *val, size_t *vlen);
 
+bool hashmap_del(hashmap_t *hashmap, void *key, size_t klen);

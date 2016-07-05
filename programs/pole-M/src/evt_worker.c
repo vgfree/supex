@@ -457,13 +457,9 @@ void *task_handle(struct supex_evcoro *evcoro, int step)
 				xmq_unregister_consumer(p_info->xmq_ctx, p_info->id);
 
 			case EVT_STATE_EXIT:
-				/* hashmap.h 中并未提供删除HASH的操作,所以,我们只能将其值设置为NULL */
-			{
-				void *info = NULL;
-				hashmap_set(p_info->hmap, (void *)p_info->id, strlen(p_info->id), (void *)&info, sizeof(info));
+				hashmap_del(p_info->hmap, (void *)p_info->id, strlen(p_info->id));
 
 				client_info_destroy(p_info);
-			}
 				return NULL;
 
 			default:
