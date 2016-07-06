@@ -2,6 +2,8 @@
 #include "sys/time.h"
 #include "communication.h"  
 
+static struct comm_context  *comm_ctx = NULL;
+
 void print_current_time() {
 	struct timeval  tv;
 	gettimeofday(&tv, NULL);
@@ -9,84 +11,81 @@ void print_current_time() {
 	printf("tv_usec:%d--", tv.tv_usec);
 }
 
-static int send_data(struct comm_context *commctx, struct comm_message *message,
-		int fd) {
-	int i, ret = 0;
+static int send_data(struct comm_context *commctx, int fd) {
+	int i;
 	int datasize = 1024;
-	char *buff = (char *)malloc(datasize);
-	memset(buff, 0, datasize);
-	for(i = 0; i < datasize; i++) {
-		buff[i] = '@';
-	}	
-	init_msg(message);
-	set_msg_fd(message, fd);
-	set_msg_frame(0, message, strlen(buff), buff); 
-	printf("data:%s, data size:%d\n", message->content, message->package.dsize);
-	ret = comm_send(commctx, message, false, -1);
-	free(buff);
-	return ret;
+	char *str = (char *)malloc(datasize);
+	memset(str, 0, datasize);
+	//fgets(str, 1024, stdin);
+	for(i = 0; i < 1024; i++) {
+		str[i] = 's';
+	}
+	str[i] = '\0';
+	struct comm_message sendmsg = {};
+	init_msg(&sendmsg);
+	set_msg_fd(&sendmsg, fd);
+	set_msg_frame(0, &sendmsg, strlen(str), str); 
+	//printf("data(send):%s, data size:%d\n", sendmsg.content, sendmsg.package.dsize);
+	comm_send(commctx, &sendmsg, false, -1);
+	destroy_msg(&sendmsg);
+	free(str);
+	str = NULL;
+	return 0;
+}
+
+void *read_message(void *arg) {
+	while(1) {
+		struct comm_message recvmsg = {};
+		init_msg(&recvmsg);
+		printf("start recv msg.\n");
+		comm_recv(comm_ctx, &recvmsg, true, -1);
+		size_t size = 0;
+		char *frame = get_msg_frame(0, &recvmsg, &size);
+		char *buf = (char *)malloc((size + 1) * sizeof(char));
+		memcpy(buf, frame, size);
+		buf[size] = '\0';
+	//	printf("recv_data:%*.s\n", recvmsg.package.dsize, recvmsg.content);
+		printf("recv msg:");
+		print_current_time();
+		printf("%s\n", buf);
+		free(buf);
+		destroy_msg(&recvmsg);
+	}
+	return NULL;
 }
 
 int main(int argc, char *argv[]) {
 	int fd[10000] = {};
 	int i;
-	int datasize = 1024*1024;
-	char *content = (char *)malloc(datasize);
-	char *buff = (char *)malloc(datasize);
 
-	struct comm_context  *commctx = NULL;
-	struct comm_message  sendmsg  = {};
-	struct comm_message  recvmsg  = {};
 	struct cbinfo        cb = {};
 
 	if(argc < 3) {
 		printf("usge:%s <ip> <port> <client_count>\n", argv[0]);
 		return -1;
 	}
-	commctx = comm_ctx_create(EPOLL_SIZE);
-	printf("%s", commctx);
-	if(!commctx) {
-		printf("client context create failed\n");
+	comm_ctx = comm_ctx_create(EPOLL_SIZE);
+	if(unlikely(!comm_ctx)) {
+		printf("send context create failed\n");
 		return -1;
 	}
-	recvmsg.content = content;
 	for(i = 0; i < atoi(argv[3]); i++) {
-		fd[i] = comm_socket(commctx, argv[1], argv[2], &cb, COMM_CONNECT);
+		fd[i] = comm_socket(comm_ctx, argv[1], argv[2], &cb, COMM_CONNECT);
 		if(fd[i] == -1) {
 			printf("establish connection failed\n");
-			comm_ctx_destroy(commctx);
+			comm_ctx_destroy(comm_ctx);
 			return -1;
 		}
-		printf("client[%d]-fd[%d] establish connection successful!\n", i+1, fd[i]);
+		printf("client[%d]-fd[%d] establish connection successful!\n", i + 1, fd[i]);
 
 	}	
-
-	while(1) {
-		for(i = 0; i < atoi(argv[3]); i++) {
-			if(send_data(commctx, &sendmsg, fd[i]) != -1) {
- 				print_current_time();
-				printf("client[%d]-fd[%d]:send data successfully\n", i+1,fd[i]);
-				if(comm_recv(commctx, &recvmsg, true, -1) != -1) {
-					printf("stay in here\n");
-					size_t size;
-					char    *frame = get_msg_frame(0, &recvmsg, &size); 
-					buff = memcpy(buff, frame, size);
-					buff[size] = '\0';
- 					print_current_time();
-				//	printf("recv_data: %s", buff);
-				//	printf("recv_data_len: %d\n", strlen(buff));
-					printf("recv_data:%*.s\n", recvmsg.package.dsize, recvmsg.content);
-					free(buff);
-				}else {
-					printf("recv data failed\n");
-				}
-			}else {
-				printf("send data failed\n");
-			} 
-		}
+	pthread_t tid;
+	assert(pthread_create(&tid, NULL, read_message, NULL) == 0);
+	sleep(1);
+	for(i = 0; i < atoi(argv[3]); i++) {
+		send_data(comm_ctx, fd[i]);
 	}
-	destroy_msg(&sendmsg);
-	destroy_msg(&recvmsg);
-	comm_ctx_destroy(commctx);
+	while(1){};
+	comm_ctx_destroy(comm_ctx);
 	return 0;
 }

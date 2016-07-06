@@ -9,7 +9,7 @@ INCLUDE_PATH = -I. -I../ -I/usr/include/ \
 	-I../../../lib/utils  \
 	-I../../../lib/libkv/src \
 	-I../../../lib/liblog \
-	-I../../../lib/json-c 
+#	-I../../../lib/json-c 
 LIBA_PATH = -L../../../lib/libkv/src \
 	-L../../../lib/ \
 	-L/usr/local/lib/ \
