@@ -25,7 +25,7 @@ LIBA=-ljson-c -lkv -lappsrv -lutils -lzmq
 #[=========>MARK<=========]#
 MAIN_APP_SERV ?= ptop
 
-ifeq ($(MAIN_APP_SERV), appserver)
+ifeq ($(MAIN_APP_SERV), appUpServer)
 HANDLE_MODEL = EVCORO
 endif
 #<------------------------>#
@@ -71,8 +71,8 @@ push:
 	git push origin HEAD:refs/for/master
 
 clean:
-	rm -rf ./bin_appserver
-	rm -rf appserver
+	rm -rf ./bin_appUpServer
+	rm -rf appUpServer
 	rm -f $(CLEANFILES)
 	@-if [ ! -d ./logs ];then mkdir logs; fi
 

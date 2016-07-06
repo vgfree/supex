@@ -180,7 +180,7 @@ lua_State *lua_vm_init(void)
 	{
 		int app_lua_get_serv_name(lua_State *L)
 		{
-			lua_pushstring(L, "appserver");
+			lua_pushstring(L, "appUpServer");
 			return 1;
 		}
 
