@@ -67,7 +67,7 @@ openLOG := loghit loghub
 SRV := $(openIMX) $(openHLS) $(openPMS) $(openLOG) \
 	drisamp drimode goby rtmiles rta \
 	drisampapi drimodeapi gobyapi rtmilesapi rtaapi \
-	msgsearchapi spxapi dfsapi appUpServer ptop robais tsearchapi driviewapi \
+	msgsearchapi spxapi dfsapi appUpServer appDwServer ptop robais tsearchapi driviewapi \
 	topology crzptX crzptY ACB damS  roadRank \
 	gdgive bdgive gopath gomile ashman adcube_v2\
 	spark releaseServer dfsdb tsdb \
@@ -109,6 +109,9 @@ dfsapi:
 	@echo -e $(GREEN)"【"$(YELLOW) $@ $(GREEN)"】"$(RED)"\n-->OK!\n"$(NONE)
 appUpServer:
 	$(MAKE) -C ./programs/appUpServer MAIN_APP_SERV=appUpServer
+	@echo -e $(GREEN)"【"$(YELLOW) $@ $(GREEN)"】"$(RED)"\n-->OK!\n"$(NONE)
+appDwServer:
+	$(MAKE) -C ./programs/appDwServer MAIN_APP_SERV=appDwServer
 	@echo -e $(GREEN)"【"$(YELLOW) $@ $(GREEN)"】"$(RED)"\n-->OK!\n"$(NONE)
 rmsapi:
 	$(MAKE) -C ./programs/RTAP MAIN_APP_SERV=rmsapi
@@ -372,6 +375,7 @@ clean:
 	$(MAKE) -C ./programs/loginServer clean
 	$(MAKE) -C ./programs/UserInfoApi clean
 	$(MAKE) -C ./programs/appUpServer clean
+	$(MAKE) -C ./programs/appDwServer clean
 
 distclean:
 	$(MAKE) -C ./programs/damR distclean
@@ -409,6 +413,7 @@ distclean:
 	$(MAKE) -C ./programs/PMR_HTTP distclean
 	$(MAKE) -C ./programs/mfptpServer distclean
 	$(MAKE) -C ./programs/appUpServer distclean
+	$(MAKE) -C ./programs/appDwServer distclean
 	$(MAKE) -C ./lib clean
 	$(MAKE) -C ./open/lib clean
 	cd lib/mapdata && make clean && cd $(HOME_PATH)

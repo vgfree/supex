@@ -1,0 +1,13 @@
+{
+	"swift_port": 9009,
+	"swift_worker_counts": 8,
+	"swift_tasker_counts": 8,
+	"swift_protocol": "redis",
+
+	"max_req_size": 32768,
+
+
+	"log_path": "./logs/",
+	"log_file": "appDwServer",
+	"log_level": 3
+}
