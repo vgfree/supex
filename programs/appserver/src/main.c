@@ -30,7 +30,6 @@
 #include "spx_evcs_module.h"
 #include "async_tasks/async_obj.h"
 #include "base/free_queue.h"
-//#include "dispatch_data.h"
 
 EVCS_MODULE_SETUP(kernel, kernel_init, kernel_exit, &g_kernel_evts);
 EVCS_MODULE_SETUP(evcs, evcs_init, evcs_exit, &g_evcs_evts);
@@ -44,13 +43,6 @@ EVCS_MODULE_SETUP(evcs, evcs_init, evcs_exit, &g_evcs_evts);
 
 struct smart_cfg_list g_smart_cfg_list = {};
 
-//struct app_msg recv_msg = {};
-
-struct user_task
-{
-        char    *user;
-        struct app_msg recv_msg;
-};
 
 static int get_uid(lua_State *L)
 {
@@ -167,9 +159,8 @@ static int send_msg(lua_State *L)
 
 lua_State *lua_vm_init(void)
 {
-	lua_State *L;
-	int error = 0;
-	L = luaL_newstate();
+	int             error = 0;
+	lua_State       *L = luaL_newstate();
 	assert(L);
 	luaopen_base(L);
 	luaL_openlibs(L);
@@ -181,18 +172,28 @@ lua_State *lua_vm_init(void)
 
 	error = luaL_dofile(L, "lua/core/init.lua");
 	if (error) {
-		fprintf(stderr, "%s\n", lua_tostring(L, -1));
+		x_printf(E, "%s\n", lua_tostring(L, -1));
 		lua_pop(L, 1);
 		exit(EXIT_FAILURE);
 	}
 
 	error = luaL_dofile(L, "lua/core/start.lua");
-
 	if (error) {
-		//x_printf(E, "%s\n", lua_tostring(L, -1));
+		x_printf(E, "%s\n", lua_tostring(L, -1));
 		lua_pop(L, 1);
 		exit(EXIT_FAILURE);
 	}
+	
+	lua_getglobal(L, "app_evcoro_init");
+	lua_pushinteger(L, supex_get_default()->scheduler);
+	lua_pushinteger(L, 0);
+	error = lua_pcall(L, 2, 0, 0);
+	if (error) {
+		x_printf(E, "%s", lua_tostring(L, -1));
+		lua_pop(L, 1);
+		exit(EXIT_FAILURE);
+	}
+	
 	return L;
 }
 
@@ -212,69 +213,40 @@ void *task_handle(struct supex_evcoro *evcoro, int step)
 {
 	lua_State *L = NULL;
 	// 将数据取出
-	struct user_task *p_task = &((struct user_task *)evcoro->task)[step];
+	struct app_msg *p_task = &((struct app_msg *)evcoro->task)[step];
 	union virtual_system *p_VMS = &((union virtual_system *)evcoro->VMS)[step];
 	// 判断Lua虚拟机是否存在, 存在则赋给L, 不存在则初始化
 	if (p_VMS->L) {
 		L = p_VMS->L;
+		x_printf(D, "No need to init LUA VM!\n");
 	} else {
 		L = lua_vm_init();
 		evcoro->VMS[step].L = L;
+		x_printf(S, "first init LUA VM!\n");
 	}
-
 	if (!L) {
 		printf("lua vm is NULL\n");
-		free(p_task->user);
 		exit(0);
 	}
 
 	/******************************************/
 
 	// 执行数据处理
+	int i;
+	lua_getglobal(L, "app_call");
 	lua_newtable(L);
-	for (k=0; k<y; ++k) {
-		lua_pushnumber(L, k+1);
-		lua_pushlstring(L, pro[i][j*y+k].data, pro[i][j*y+k].len);
+	for (i = 0; i < p_task->vector_size; ++i) {
+		lua_pushnumber(L, i+1);
+		lua_pushlstring(L, p_task->vector[i].iov_base, p_task->vector[i].iov_len);
 		lua_settable(L, -3);
 	}
-	lua_settable(L, -3);
-#if 0
-	int status = luaL_loadfile(L, "script.lua");
-	if (status) {
-		perror("luaL_dofile error");
-		exit(1);
+	error = lua_pcall(L, 1, 0, 0);
+	if (error) {
+		assert(L);
+		x_printf(E, "%s", lua_tostring(L, -1));
+		lua_pop(L, 1);
 	}
-#endif
-	lua_newtable(L);
-	int i;
-	for (i = 1; i <= recv_msg.vector_size; i++) {
-		printf("recv_msg size:%d\t [%d]iov_len:%d\t [%d]iov_base = %s,\n",
-				recv_msg.vector_size, i - 1, recv_msg.vector[i - 1].iov_len, i -1 , recv_msg.vector[i - 1].iov_base);
-		lua_pushnumber(L, i);
-		lua_pushlstring(L, recv_msg.vector[i - 1].iov_base, recv_msg.vector[i - 1].iov_len);
-		lua_rawset(L, -3);
-	}
-
-	lua_setglobal(L, "msg");
-
-	int result = lua_pcall(L, 0, LUA_MULTRET, 0);
-	if (result) {
-		fprintf(stdout, "bad, bad script\n");
-		exit(1);
-	}    /* 获得堆栈顶的值*/
-	int sum = lua_tonumber(L, lua_gettop(L));
-	if (!sum) {
-		fprintf(stdout, "lua_tonumber() failed!\n");
-		exit(1);
-	}
-	fprintf(stdout, "Script returned: %d\n", sum);
-	lua_pop(L, 1);
-	printf("top = %d\n", lua_gettop(L));
-	lua_close(L);
-
-
-//	dispatch_data(L, p_task->user, strlen(p_task->user), g_user_key, strlen(g_user_key), p_task->redis_cnt);
-	free(p_task->user);
+	return NULL;
 }
 
 void task_worker(void *data)
@@ -320,7 +292,6 @@ int main(int argc, char **argv)
 	// 2. 循环接收数据
 	struct app_msg recv_msg = {};
 	int more = 0;
-//	struct user_task task;
 
 	while (1) {
 		if (recv_app_msg(&recv_msg, &more, -1)) {
