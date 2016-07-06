@@ -24,8 +24,8 @@ int main(int argc, char **argv)
 
 	load_cfg_file(&g_swift_cfg_list.file_info, g_swift_cfg_list.argv_info.conf_name);
 
-	g_swift_cfg_list.func_info[APPLY_FUNC_ORDER].type = BIT8_TASK_TYPE_ALONE;
-	g_swift_cfg_list.func_info[APPLY_FUNC_ORDER].func = (TASK_VMS_FCB)swift_vms_call;
+	g_swift_cfg_list.func_info[SADD_FUNC_ORDER].type = BIT8_TASK_TYPE_ALONE;
+	g_swift_cfg_list.func_info[SADD_FUNC_ORDER].func = (TASK_VMS_FCB)swift_vms_call;
 
 	g_swift_cfg_list.entry_init = entry_init;
 

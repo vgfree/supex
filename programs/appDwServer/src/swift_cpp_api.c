@@ -12,9 +12,7 @@ int swift_vms_call(void *user, union virtual_system **VMS, struct adopt_task_nod
 	char                    *p_buf = cache_data_address(&p_node->mdl_recv.cache);
 	struct redis_status     *p_rst = &p_node->mdl_recv.parse.redis_info.rs;
 
-	assert(p_rst->field[0].len < MAX_SNIFF_LABEL_LENGTH);
 
-	memcpy(p_rmsg->label, p_buf + p_rst->field[0].offset, MIN(p_rst->field[0].len, MAX_SNIFF_LABEL_LENGTH - 1));
 
 	sniff_task.size = MIN((int)p_rst->field[1].len, MAX_SNIFF_FLOWS_LENGTH);
 
