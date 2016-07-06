@@ -205,10 +205,6 @@ static bool task_lookup(void *user, void *task)
 	// 抢占模式
 	ok = tlpool_pull(pool, task, TLPOOL_TASK_SEIZE, idx);
 
-	if (!ok) {
-		return -1;
-	}
-
 	return ok;
 }
 
@@ -235,18 +231,20 @@ void *task_handle(struct supex_evcoro *evcoro, int step)
 	/******************************************/
 
 	// 执行数据处理
-//	lua_State *L;
-//	L = luaL_newstate(); // 打开lua
-	luaL_openlibs(L); // 打开标准库
-
-//	luaopen_power(L);
-
+	lua_newtable(L);
+	for (k=0; k<y; ++k) {
+		lua_pushnumber(L, k+1);
+		lua_pushlstring(L, pro[i][j*y+k].data, pro[i][j*y+k].len);
+		lua_settable(L, -3);
+	}
+	lua_settable(L, -3);
+#if 0
 	int status = luaL_loadfile(L, "script.lua");
 	if (status) {
 		perror("luaL_dofile error");
 		exit(1);
 	}
-
+#endif
 	lua_newtable(L);
 	int i;
 	for (i = 1; i <= recv_msg.vector_size; i++) {
@@ -318,9 +316,6 @@ int main(int argc, char **argv)
 		tlpool_bind(tlpool, (void (*)(void *))task_worker, tlpool, idx);
 	}
 	tlpool_boot(tlpool);
-
-	EVCS_MODULE_MOUNT(kernel);
-	EVCS_MODULE_ENTRY(kernel, true);
 
 	// 2. 循环接收数据
 	struct app_msg recv_msg = {};
