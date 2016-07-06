@@ -29,6 +29,7 @@ EXPORT_CFLAGS += -finstrument-functions
 endif
 EXPORT_CFLAGS += $(EXCESS_CFLAGS)
 EXPORT_CFLAGS += -Wall \
+	-DSCCO_USE_STATIC_STACK \
 	-DUSE_PIPE \
 	-DUSE_SPINLOCK \
 	-DCRZPT_OPEN_MSMQ \
@@ -189,10 +190,6 @@ damR:
 loghub:
 	$(MAKE) -C ./programs/loghub MAIN_APP_SERV=loghub
 	@echo -e $(GREEN)"【"$(YELLOW) $@ $(GREEN)"】"$(RED)"\n-->OK!\n"$(NONE)
-
-# dam:
-# 	$(MAKE) -C ./programs/dam MAIN_APP_SERV=dam
-# 	@echo -e $(GREEN)"【"$(YELLOW) $@ $(GREEN)"】"$(RED)"\n-->OK!\n"$(NONE)
 
 BRM:
 	$(MAKE) -C ./programs/BRM MAIN_APP_SERV=BRM

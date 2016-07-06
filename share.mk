@@ -1,19 +1,9 @@
 #[=========>MARK<=========]#
-OBJECT_SCENE ?= ONLINE
-
-#[=========>MARK<=========]#
-HANDLE_MODEL ?= SCCO
-
-ifeq ($(HANDLE_MODEL), SCCO)
-CFLAGS += $(SCCO_STACK_TYPE)
-endif
-
+HANDLE_MODEL ?= EVCORO
 CFLAGS += -DOPEN_$(HANDLE_MODEL)
-
-
-
-#[========================]#
 CFLAGS += $(EXPORT_CFLAGS)
+#CFLAGS += -fprofile-arcs
+#[========================]#
 
 LIBA += $(EXPORT_LIBA)
 
