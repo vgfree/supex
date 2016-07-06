@@ -18,7 +18,6 @@
 #include <lauxlib.h>
 #include <lualib.h>
 
-#include "load_cfg.h"
 #include "major/smart_api.h"
 #include "appsrv.h"
 #include "json.h"
@@ -30,6 +29,10 @@
 #include "spx_evcs_module.h"
 #include "async_tasks/async_obj.h"
 #include "base/free_queue.h"
+#include "lua_expand/lj_c_coro.h"
+#include "lua_expand/lua_link.h"
+#include "lua_expand/lj_http_info.h"
+#include "lua_expand/lj_cache.h"
 #include "luakv/luakv.h"
 
 EVCS_MODULE_SETUP(kernel, kernel_init, kernel_exit, &g_kernel_evts);
@@ -169,6 +172,8 @@ lua_State *lua_vm_init(void)
 	lua_register(L, "get_uid", get_uid);
 	lua_register(L, "set_uidmap", set_uidmap);
 	lua_register(L, "send_msg",  send_msg);
+	lua_register(L, "supex_http", async_http);
+	lua_register(L, "lua_default_switch", lj_evcoro_switch);
 	lua_register(L, "search_kvhandle", search_kvhandle);
 
 	/*lua init*/
@@ -310,6 +315,20 @@ int main(int argc, char **argv)
 	struct app_msg recv_msg = {};
 	int more = 0;
 
+	char *t1 = malloc(8);
+	memcpy(t1, "upstream", 8);
+	char *t2 = malloc(10);
+	memcpy(t2, "cid 5", 6);
+	char *t3 = malloc(20);
+	memcpy(t3, "{opt:567}", 10);
+	recv_msg.vector_size = 3;
+	recv_msg.vector[0].iov_base = t1;
+	recv_msg.vector[0].iov_len = 8;
+	recv_msg.vector[1].iov_base = t2;
+	recv_msg.vector[1].iov_len = 10;
+	recv_msg.vector[2].iov_base = t3;
+	recv_msg.vector[2].iov_len = 20;
+	task_report(tlpool, &recv_msg);
 	while (1) {
 		if (recv_app_msg(&recv_msg, &more, -1)) {
 			task_report(tlpool, &recv_msg);

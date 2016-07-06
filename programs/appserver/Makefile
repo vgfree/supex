@@ -41,7 +41,6 @@ BIN=./bin_$(MAIN_APP_SERV)
 BASE_OBJ = $(addprefix $(BIN)/, \
 	   $(ADD_OBJ) \
 	   main.o \
-	   load_cfg.o \
 	   )
 
 OBJ ?= $(BASE_OBJ)

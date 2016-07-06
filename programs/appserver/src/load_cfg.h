@@ -1,6 +1,0 @@
-#pragma once
-
-#include "major/smart_cfg.h"
-
-void load_cfg_file(struct smart_cfg_file *p_cfg, char *name);
-
