@@ -48,6 +48,17 @@ struct comm_tcp
 	}               stat;			/* 套接字的状态 */
 };
 
+/* 设置socket套接字keep_alive选项 */
+static inline bool set_keepalive(int fd)
+{
+	int optval = 1;
+	socklen_t optlen = sizeof(optval);
+	if (setsockopt(fd, SOL_SOCKET, SO_KEEPALIVE, &optval, optlen) == -1) {
+		printf("set keep alive failed\n");
+		return false;
+	}
+	return true;
+}
 /* 检查描述符是否可写 */
 static inline bool check_writeable(int fd)
 {

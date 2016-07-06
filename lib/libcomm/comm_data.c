@@ -366,7 +366,12 @@ bool commdata_add(struct comm_event *commevent, struct comm_tcp *commtcp, struct
 
 	if ((commtcp->type == COMM_CONNECT) || (commtcp->type == COMM_ACCEPT)) {
 		struct connfd_info *connfd = NULL;
-
+		if (commtcp->type == COMM_ACCEPT) {
+			/* 连接到服务器端的socket设置keepalive选项 */
+			if (unlikely(!set_keepalive(commtcp->fd))) {
+				return false;
+			}
+		}
 		if (commepoll_add(&commevent->commctx->commepoll, commtcp->fd, EPOLLIN | EPOLLOUT | EPOLLET)) {
 			if (commdata_init(&connfd, commevent, commtcp, finishedcb)) {
 				commevent->connfd[commtcp->fd] = connfd;
@@ -376,8 +381,8 @@ bool commdata_add(struct comm_event *commevent, struct comm_tcp *commtcp, struct
 		}
 	} else {
 		if (commepoll_add(&commevent->commctx->commepoll, commtcp->fd, EPOLLIN | EPOLLET)) {
-			memcpy(&commevent->bindfd[commevent->bindfdcnt].commtcp, commtcp, sizeof(*commtcp));
 
+			memcpy(&commevent->bindfd[commevent->bindfdcnt].commtcp, commtcp, sizeof(*commtcp));
 			if (finishedcb) {
 				memcpy(&commevent->bindfd[commevent->bindfdcnt].finishedcb, finishedcb, sizeof(*finishedcb));
 			}

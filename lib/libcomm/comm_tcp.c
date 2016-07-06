@@ -7,7 +7,7 @@
 
 #define  LISTENFDS      1024	/* 能够监听的描述符的个数 */
 #define  TIMEOUTTIME    5	/* select的超时事件[单位:s],超时就判定connect连接失败 */
-#define CONNECTTIMEOUT  1000*60*30	/* 连接服务器时的标志位设置了CONNECT_ANYWAY时，一直尝试连接服务器,超时时间到还没连接上就返回[单位:ms] */
+#define CONNECTTIMEOUT  1000*5	/* 连接服务器时的标志位设置了CONNECT_ANYWAY时，一直尝试连接服务器,超时时间到还没连接上就返回[单位:ms] */
 
 #define  CLOSEFD(fd)	   \
 	({		   \
@@ -54,10 +54,14 @@ bool socket_connect(struct comm_tcp *commtcp, const char *host, const char *serv
 	assert(commtcp && host && service);
 
 	struct addrinfo *ai = NULL;
+	bool flag = true;
+	int trys = 0;
+	int counter = 1000;
 	long timeout = 0; /* @timeout: -1 一直尝试连接对方直到成功 0 只连接一次 >0 一直尝试连接直到超时 */
 
-	if (commtcp->stat != FD_CLOSE) {
-		timeout = CONNECTTIMEOUT;
+	if (commtcp->stat == FD_CLOSE) {
+		/* 属于已关闭的端口尝试再次去连接服务器 */
+		flag = true;
 	}
 	memset(commtcp, 0, sizeof(*commtcp));
 	commtcp->peerport = atoi(service);
@@ -65,7 +69,28 @@ bool socket_connect(struct comm_tcp *commtcp, const char *host, const char *serv
 
 	if (_get_addrinfo(&ai, host, service)) {
 		commtcp->connattr = connattr;
+		while (!_start_connect(commtcp, ai, CONNECTTIMEOUT)) {
+			if (connattr == CONNECT_ONCE || flag) {
+				/* fd属性为CONNECT_ONCE和关闭端口再次连接服务器时只尝试连接一次 */
+				CLOSEFD(commtcp->fd);
+				log("connecnt once and failed\n");
+				return false;
+			}
+			/* 属性为CONNECT_ANYWAY并且是新端口请求连接 */
+			trys ++;
+			if (trys == counter) {
+				/* 尝试次数超过counter则表示服务器不可达 */
+				return false;
+			}
+		}
 
+		if (_get_portinfo(commtcp, true)) {
+			commtcp->type = COMM_CONNECT;
+			commtcp->stat = FD_INIT;
+		} else {
+			CLOSEFD(commtcp->fd);
+		}
+#if 0
 		if (_start_connect(commtcp, ai, timeout)) {
 			if (_get_portinfo(commtcp, true)) {
 				commtcp->type = COMM_CONNECT;
@@ -74,6 +99,7 @@ bool socket_connect(struct comm_tcp *commtcp, const char *host, const char *serv
 				CLOSEFD(commtcp->fd);
 			}
 		}
+#endif
 
 		freeaddrinfo(ai);
 	} else {
@@ -240,6 +266,8 @@ static bool _start_connect(struct comm_tcp *commtcp, struct addrinfo *ai, int ti
 
 	struct addrinfo *aiptr = NULL;
 	struct timeval  start = {};
+	struct timeval  end = {};
+	long            diffms = 0;
 
 	if (timeout > 0) {
 		gettimeofday(&start, NULL);
@@ -250,34 +278,32 @@ static bool _start_connect(struct comm_tcp *commtcp, struct addrinfo *ai, int ti
 
 		if (commtcp->fd > 0) {
 			if (fd_setopt(commtcp->fd, O_NONBLOCK)) {
-				while (connect(commtcp->fd, aiptr->ai_addr, aiptr->ai_addrlen) == 0) {
-				//while (!_sconnect(commtcp, aiptr)) {
-					/* 连接失败 */
+				while (connect(commtcp->fd, aiptr->ai_addr, aiptr->ai_addrlen) == -1) {
+					/* 连接失败 连接产生致命错误 */
+					if (errno != EINPROGRESS && errno != EALREADY) {
+						log("connect fatal error fd: %d errno:%d\n", commtcp->fd, errno);
+						return false;
+					}
+
+					gettimeofday(&end, NULL);
+					diffms = (end.tv_sec - start.tv_sec) * 1000;
+					diffms += (end.tv_usec - start.tv_usec) / 1000;
+					if (timeout - diffms < 1) {
+						log("try connect to peer failed because of timeout\n");
+						CLOSEFD(commtcp->fd);
+						log("connect many times and failed\n");
+						return false;
+					}
+#if 0
 					if ((commtcp->connattr == CONNECT_ONCE) || (timeout == 0)) {
 						/* 只允许尝试连接一次 */
 						CLOSEFD(commtcp->fd);
 						log("connecnt once and failed\n");
 						return false;
 					} else {
-						/* 尝试重复连接，判断是否超时 */
-						if (timeout > 0) {
-							struct timeval  end = {};
-							long            diffms = 0;
-							gettimeofday(&end, NULL);
-							diffms = (end.tv_sec - start.tv_sec) * 1000;
-							diffms += (end.tv_usec - start.tv_usec) / 1000;
-
-							if (timeout - diffms < 1) {
-								log("try connect to peer faile because of timeout\n");
-								CLOSEFD(commtcp->fd);
-								log("connect many times and failed\n");
-								return false;
-							}
-						}
-						log("connect faile and try again\n");
 					}
+#endif
 				}
-				//printf("------------------------%x\n", commtcp);
 				log(" connect return successed fd:%d\n", commtcp->fd);
 				return true;
 			}
