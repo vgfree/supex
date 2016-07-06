@@ -30,6 +30,7 @@
 #include "spx_evcs_module.h"
 #include "async_tasks/async_obj.h"
 #include "base/free_queue.h"
+#include "luakv/luakv.h"
 
 EVCS_MODULE_SETUP(kernel, kernel_init, kernel_exit, &g_kernel_evts);
 EVCS_MODULE_SETUP(evcs, evcs_init, evcs_exit, &g_evcs_evts);
@@ -168,15 +169,27 @@ lua_State *lua_vm_init(void)
 	lua_register(L, "get_uid", get_uid);
 	lua_register(L, "set_uidmap", set_uidmap);
 	lua_register(L, "send_msg",  send_msg);
+	lua_register(L, "search_kvhandle", search_kvhandle);
 
+	/*lua init*/
+	{
+		int app_lua_get_serv_name(lua_State *L)
+		{
+			lua_pushstring(L, "appserver");
+			return 1;
+		}
 
-	error = luaL_dofile(L, "lua/core/init.lua");
-	if (error) {
-		x_printf(E, "%s\n", lua_tostring(L, -1));
-		lua_pop(L, 1);
-		exit(EXIT_FAILURE);
+		lua_register(L, "app_lua_get_serv_name", app_lua_get_serv_name);
+
+		error = luaL_dofile(L, "lua/core/init.lua");
+
+		if (error) {
+			x_printf(E, "%s\n", lua_tostring(L, -1));
+			lua_pop(L, 1);
+			exit(EXIT_FAILURE);
+		}
 	}
-
+	/*app init*/
 	error = luaL_dofile(L, "lua/core/start.lua");
 	if (error) {
 		x_printf(E, "%s\n", lua_tostring(L, -1));
@@ -238,9 +251,10 @@ void *task_handle(struct supex_evcoro *evcoro, int step)
 	for (i = 0; i < p_task->vector_size; ++i) {
 		lua_pushnumber(L, i+1);
 		lua_pushlstring(L, p_task->vector[i].iov_base, p_task->vector[i].iov_len);
+		free(p_task->vector[i].iov_base);
 		lua_settable(L, -3);
 	}
-	error = lua_pcall(L, 1, 0, 0);
+	int error = lua_pcall(L, 1, 0, 0);
 	if (error) {
 		assert(L);
 		x_printf(E, "%s", lua_tostring(L, -1));
@@ -280,6 +294,9 @@ static bool task_report(void *user, void *task)
 
 int main(int argc, char **argv)
 {
+	if (!kvpool_init()) {
+		exit(EXIT_FAILURE);
+	}
 	create_io();
 	// 1. 初始化线程池
 	tlpool_t *tlpool = tlpool_init(MAX_PTHREAD_COUNT, 100, sizeof(struct app_msg), NULL);

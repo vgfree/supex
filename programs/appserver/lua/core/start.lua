@@ -10,7 +10,7 @@ local only		= require('only')
 local supex		= require('supex')
 local luakv_api		= require('luakv_pool_api')
 local BYNAME_LIST	= require('BYNAME_LIST')
-local script		= require('script')
+
 
 
 function app_line_init()
@@ -202,27 +202,6 @@ function main_call( way )
 	]]--
 end
 
-local function smart_vms_call_set(void *user, union virtual_system **VMS, struct adopt_task_node *task)
-	char msg[64];
-
-	struct data_node *p_node = get_pool_data(task->sfd);
-	char *p_buf = cache_data_address(&p_node->mdl_recv.cache);
-	printf("p_buf = %s\n", p_buf);
-
-	struct redis_status *p_rst = &p_node->mdl_recv.parse.redis_info.rs;
-
-	printf("len: %d \n", p_rst->field[1].len);
-	printf("command_type: %x \n", p_rst->command_type);
-
-	memcpy(msg, p_buf + p_rst->field[1].offset, MIN(p_rst->field[1].len, 64 - 1));
-	struct app_msg  send_msg = {};
-	send_app_msg(&send_msg);
-
-	const char sndcnt[] = ":1\r\n";
-	cache_append(&p_node->mdl_send.cache, sndcnt, sizeof(sndcnt) - 1);
-
-
-end
 
 local function app_call_by_sfd( top, sfd, way )
 	lualog.open( "access" )
@@ -299,3 +278,37 @@ end
 
 app_call_all	= app_call_all_by_sfd
 app_call_one	= app_call_one_by_sfd
+
+
+function app_call( tab )
+	lualog.open( "access" )
+	only.log("D", '_________________________________START_________________________________________')
+	supex["_FINAL_STAGE_"] = false
+	supex["_SOCKET_HANDLE_"] = 0
+
+	--> get data
+	supex["_DATA_"] = tab
+
+
+	--local come_msize = collectgarbage("count")
+	--> run call
+	local api = BYNAME_LIST["OWN_LIST"][ tab[1] ] or tab[1]
+	APP_REDIS_API.reg( lua_default_switch, supex["__TASKER_SCHEME__"] )
+	APP_LHTTP_API.reg( lua_default_switch, supex["__TASKER_SCHEME__"] )
+	APP_APPLY.apply_execute( api )
+	APP_REDIS_API.reg( lua_default_switch, supex["__TASKER_SCHEME__"] )
+	APP_LHTTP_API.reg( lua_default_switch, supex["__TASKER_SCHEME__"] )
+
+	--[[
+	local done_msize = collectgarbage("count")
+	collectgarbage("collect")
+	local over_msize = collectgarbage("count")
+	print( string.format("APPLY CALL COME : memory size \t[%d]KB \t[%d]M", come_msize, come_msize/1024) )
+	print( string.format("APPLY CALL DONE : memory size \t[%d]KB \t[%d]M", done_msize, done_msize/1024) )
+	print( string.format("APPLY CALL OVER : memory size \t[%d]KB \t[%d]M", over_msize, over_msize/1024) )
+	print()
+	]]--
+
+	lualog.addinfo( nil )
+	only.log("D", '_________________________________OVER_________________________________________\n\n')
+end

@@ -125,7 +125,7 @@ function app_pull( top, sfd )
 				APP_GOSAY.resp( 200, data )
 			end,
 		}
-		if jo["operate"] then 
+		if jo["operate"] then
 			local ok,result = pcall( pull_cmd_list[ jo["operate"] ] )
 			if not ok then
 				only.log("E", result)
@@ -162,7 +162,7 @@ function app_push( top, sfd )
 				APP_APPLY.push_config( jo["appname"], jo["config"] )
 			end,
 		}
-		if jo["operate"] then 
+		if jo["operate"] then
 			local ok,result = pcall( push_cmd_list[ jo["operate"] ] )
 			if not ok then
 				only.log("E", result)
@@ -208,7 +208,7 @@ local function app_call_by_sfd( top, sfd, way )
 	only.log("D", '_________________________________START_________________________________________')
 	supex["_FINAL_STAGE_"] = top
 	supex["_SOCKET_HANDLE_"] = sfd
-	
+
 	--> get data
 	supex.http_req_init( )
 	supex.set_our_info_data( app_lua_get_recv_data(sfd) )
@@ -218,7 +218,7 @@ local function app_call_by_sfd( top, sfd, way )
 	supex.set_our_body_table( )
 	supex.set_our_uri_args( app_lua_get_uri_args(sfd) )
 	supex.set_our_uri_table()
-	
+
 	lualog.addinfo( supex.get_our_body_table()["accountID"] )
 	only.log("I", "BODY DATA is:%s", tostring(supex.get_our_body_data()))
 	only.log("I", "URI DATA is:%s", tostring(supex.get_our_uri_args()))
@@ -247,7 +247,7 @@ local function app_call_by_msg( top, msg, way )
 	supex.set_our_body_table( )
 	supex.set_our_uri_args(our_uri_args)
 	supex.set_our_uri_table( )
-	
+
 
 	lualog.addinfo( supex.get_our_body_table()["accountID"] )
 	only.log("I", "BODY DATA is:%s", tostring(supex.get_our_body_data()))

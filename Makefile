@@ -371,6 +371,7 @@ clean:
 	$(MAKE) -C ./programs/settingServer clean
 	$(MAKE) -C ./programs/loginServer clean
 	$(MAKE) -C ./programs/UserInfoApi clean
+	$(MAKE) -C ./programs/appserver clean
 
 distclean:
 	$(MAKE) -C ./programs/damR distclean
@@ -407,6 +408,7 @@ distclean:
 	$(MAKE) -C ./programs/PMR distclean
 	$(MAKE) -C ./programs/PMR_HTTP distclean
 	$(MAKE) -C ./programs/mfptpServer distclean
+	$(MAKE) -C ./programs/appserver distclean
 	$(MAKE) -C ./lib clean
 	$(MAKE) -C ./open/lib clean
 	cd lib/mapdata && make clean && cd $(HOME_PATH)

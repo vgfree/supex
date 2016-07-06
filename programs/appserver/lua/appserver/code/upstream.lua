@@ -2,7 +2,7 @@ local only = require('only')
 local supex = require('supex')
 local redis_api = require('redis_pool_api')
 
-module('w_xxx', package.seeall)
+module('upstream', package.seeall)
 
 
 function handle()
