@@ -48,118 +48,7 @@ EVCS_MODULE_SETUP(evcs, evcs_init, evcs_exit, &g_evcs_evts);
 struct smart_cfg_list g_smart_cfg_list = {};
 
 
-static int get_uid(lua_State *L)
-{
-	printf("下发数据: 获取uid\n");
 
-	char *cid_str = lua_tostring(L, -1);
-
-	char *downstream = "downstream";
-	char *cid = "cid";
-	char *msg = "bind";
-	printf("cid = %s, cid_str = %s, msg = %s\n", cid, cid_str, msg);
-
-	struct app_msg send_msg = {};
-	send_msg.vector_size = 4;
-	send_msg.vector[0].iov_base = downstream;
-	send_msg.vector[0].iov_len = strlen(downstream);
-	send_msg.vector[1].iov_base = cid;
-	send_msg.vector[1].iov_len = strlen(cid);
-	send_msg.vector[2].iov_base = cid_str;
-	send_msg.vector[2].iov_len = strlen(cid_str);
-	send_msg.vector[3].iov_base = msg;
-	send_msg.vector[3].iov_len = strlen(msg);
-	send_app_msg(&send_msg);
-
-	printf("获取uid完成\n\n");
-
-	return 1;
-}
-
-static int set_uidmap(lua_State *L)
-{
-	printf("下发数据: 绑定uidmap\n");
-
-	int n = lua_gettop(L);
-	printf("stack number is %d\n",n);
-
-	lua_pushnumber(L, 1);
-	lua_gettable(L, -2);
-	printf("setting = %s\n", lua_tostring(L, -1));
-	char *frame_1 = lua_tostring(L, -1);
-	lua_pop(L, 1);
-
-	lua_pushnumber(L, 2);
-	lua_gettable(L, -2);
-	printf("setting = %s\n", lua_tostring(L, -1));
-	char *frame_2 = lua_tostring(L, -1);
-	lua_pop(L, 1);
-
-	lua_pushnumber(L, 3);
-	lua_gettable(L, -2);
-	printf("setting = %s\n", lua_tostring(L, -1));
-	char *frame_3 = lua_tostring(L, -1);
-	lua_pop(L, 1);
-
-	lua_pushnumber(L, 4);
-	lua_gettable(L, -2);
-	printf("setting = %s\n", lua_tostring(L, -1));
-	char *frame_4 = lua_tostring(L, -1);
-	lua_pop(L, 1);
-
-	struct app_msg  send_msg = {};
-	send_msg.vector_size = 4;
-	send_msg.vector[0].iov_base = frame_1;
-	send_msg.vector[0].iov_len = strlen(frame_1);
-	send_msg.vector[1].iov_base = frame_2;
-	send_msg.vector[1].iov_len = strlen(frame_2);
-	send_msg.vector[2].iov_base = frame_3;
-	send_msg.vector[2].iov_len = strlen(frame_3);
-	send_msg.vector[3].iov_base = frame_4;
-	send_msg.vector[3].iov_len = strlen(frame_4);
-	send_app_msg(&send_msg);
-	printf("绑定完成\n\n");
-
-	return 1;
-}
-
-static int send_msg(lua_State *L)
-{
-	printf("下发消息\n");
-
-	int n = lua_gettop(L);
-
-	lua_pushnumber(L, 1);
-	lua_gettable(L, -2);
-	printf("setting = %s\n", lua_tostring(L, -1));
-	char *frame_1 = lua_tostring(L, -1);
-	lua_pop(L, 1);
-
-	lua_pushnumber(L, 2);
-	lua_gettable(L, -2);
-	printf("setting = %s\n", lua_tostring(L, -1));
-	char *frame_2 = lua_tostring(L, -1);
-	lua_pop(L, 1);
-
-	lua_pushnumber(L, 3);
-	lua_gettable(L, -2);
-	printf("setting = %s\n", lua_tostring(L, -1));
-	char *frame_3 = lua_tostring(L, -1);
-	lua_pop(L, 1);
-
-	struct app_msg  send_msg = {};
-	send_msg.vector_size = 4;
-	send_msg.vector[0].iov_base = frame_1;
-	send_msg.vector[0].iov_len = strlen(frame_1);
-	send_msg.vector[1].iov_base = frame_2;
-	send_msg.vector[1].iov_len = strlen(frame_2);
-	send_msg.vector[2].iov_base = frame_3;
-	send_msg.vector[2].iov_len = strlen(frame_3);
-	printf("消息发送完成\n\n");
-
-	return 1;
-
-}
 
 lua_State *lua_vm_init(void)
 {
@@ -169,9 +58,6 @@ lua_State *lua_vm_init(void)
 	luaopen_base(L);
 	luaL_openlibs(L);
 
-	lua_register(L, "get_uid", get_uid);
-	lua_register(L, "set_uidmap", set_uidmap);
-	lua_register(L, "send_msg",  send_msg);
 	lua_register(L, "supex_http", async_http);
 	lua_register(L, "lua_default_switch", lj_evcoro_switch);
 	lua_register(L, "search_kvhandle", search_kvhandle);
@@ -180,7 +66,7 @@ lua_State *lua_vm_init(void)
 	{
 		int app_lua_get_serv_name(lua_State *L)
 		{
-			lua_pushstring(L, "appUpServer");
+			lua_pushstring(L, "appServer");
 			return 1;
 		}
 
@@ -335,48 +221,6 @@ int main(int argc, char **argv)
 			printf("在这里\n");
 		}
 	}
-#if 0
-	/*******************************************/
-	// 执行数据处理
-	lua_State *L;
-	L = luaL_newstate(); // 打开lua
-	luaL_openlibs(L); // 打开标准库
-
-//	luaopen_power(L);
-
-	int status = luaL_loadfile(L, "script.lua");
-	if (status) {
-		perror("luaL_dofile error");
-		exit(1);
-	}
-
-	lua_newtable(L);
-	int i;
-	for (i = 1; i <= recv_msg.vector_size; i++) {
-		printf("recv_msg size:%d\t [%d]iov_len:%d\t [%d]iov_base = %s,\n",
-				recv_msg.vector_size, i - 1, recv_msg.vector[i - 1].iov_len, i -1 , recv_msg.vector[i - 1].iov_base);
-		lua_pushnumber(L, i);
-		lua_pushlstring(L, recv_msg.vector[i - 1].iov_base, recv_msg.vector[i - 1].iov_len);
-		lua_rawset(L, -3);
-	}
-
-	lua_setglobal(L, "msg");
-
-	int result = lua_pcall(L, 0, LUA_MULTRET, 0);
-	if (result) {
-		fprintf(stdout, "bad, bad script\n");
-		exit(1);
-	}    /* 获得堆栈顶的值*/
-	int sum = lua_tonumber(L, lua_gettop(L));
-	if (!sum) {
-		fprintf(stdout, "lua_tonumber() failed!\n");
-		exit(1);
-	}
-	fprintf(stdout, "Script returned: %d\n", sum);
-	lua_pop(L, 1);
-	printf("top = %d\n", lua_gettop(L));
-	lua_close(L);
-#endif
 }
 
 
