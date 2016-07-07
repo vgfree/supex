@@ -45,8 +45,16 @@ function network.write(client, buffer)
 end
 
 function network.read(client, len)
-	if len == nil then len = '*l' end
-	local res, err = client.network.socket:receive(len)
+  local res, err, part
+	if len == nil then
+    len = '*l'
+    res, err = client.network.socket:receive(len)
+  else
+    res, err, part = client.network.socket:receive(len)
+    if part == '' then part = nil end
+    res = res or part
+  end
+
 	local ok = res and true or false
 	if ok then
 		return ok, res
@@ -120,7 +128,8 @@ local function custom_request(client, query)
 	local parser = lhp.response(cbs)
 	while true do
 		local ok, append = client.network.read(client, 1024)
-		--print("\x1B[1;35m".."~~~~".."\x1B[m", ok, append)
+		print("\x1B[1;35m".."~~~~~~~~~~~~~OK: ".."\x1B[m", ok)
+		print("\x1B[1;35m".."~~~~~~~~~~~~~APPEND: ".."\x1B[m", append)
 		if not ok then
 			if append == "closed" then
 				if #reply["data"] == 0 then

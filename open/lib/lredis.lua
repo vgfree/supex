@@ -108,19 +108,16 @@ function network.write(client, buffer)
 end
 
 function network.read(client, len)
-	if len == nil then len = '*l' end
-	local res, err, part = client.network.socket:receive(len)
-  res = res or part
-	local ok = res and true or false
-	if ok then
-		return ok, res
-	else
-		return ok, err
-	end
-end
+  local res, err, part
+	if len == nil then
+    len = '*l'
+    res, err = client.network.socket:receive(len)
+  else
+    res, err, part = client.network.socket:receive(len)
+    if part == '' then part = nil end
+    res = res or part
+  end
 
-function network.readline(client)
-	local res, err = client.network.socket:receive('*l')
 	local ok = res and true or false
 	if ok then
 		return ok, res
@@ -166,7 +163,7 @@ end
 
 local function readline(client)
 	while true do
-		local ok, line = client.network.readline(client)
+		local ok, line = client.network.read(client)
 		if not ok then
 			if line == "timeout" then
 				--EWOULDBLOCK
@@ -198,7 +195,7 @@ local function read(client, size)
       else
         error('lredis network read error: ' .. part);
 			end
-		else
+		elseif part then
       data = data .. part
 
       local part_size = #part
@@ -354,7 +351,6 @@ local function create_client(proto, client_socket, commands)
 	client.network = {
 		socket = client_socket,
 		read   = network.read,
-    readline = network.readline,
 		write  = network.write,
 	}
 	return client
