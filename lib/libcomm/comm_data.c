@@ -6,7 +6,7 @@
 #include "comm_data.h"
 
 #define NODESIZE        sizeof(intptr_t)	/* 队列里面保存的一个节点的大小 */
-#define QUEUENODES      1024			/* 队列里面保存的节点总个数 */
+#define QUEUENODES      100			/* 队列里面保存的节点总个数 */
 #define MAXDISPOSEDATA  5			/* 最多联系解析打包的数据次数 */
 #define COMM_READ_MIOU  1024*1024		/* 一次性最多读取数据的字节数 */
 #define	CONNECTVALUE	1000*20			/* 当服务器端断开之后,过多长时间尝试第一次连接服务器[单位 ms]*/
@@ -41,14 +41,6 @@ bool commdata_init(struct connfd_info **connfd, struct comm_event *commevent, st
 		goto error;
 	}
 
-	if (unlikely(!mfptp_parse_init(&(*connfd)->parser, &(*connfd)->recv_cache.buffer, &(*connfd)->recv_cache.size))) {
-		goto error;
-	}
-
-	if (unlikely(!mfptp_package_init(&(*connfd)->packager, &(*connfd)->send_cache.buffer, &(*connfd)->send_cache.size))) {
-		goto error;
-	}
-	
 	if (commtcp->connattr == CONNECT_ANYWAY) {
 
 		(*connfd)->commtimer = commtimer_create(CONNECTVALUE, CONNECTINTERVAL, _timer_event, (void*)*connfd);
@@ -62,6 +54,9 @@ bool commdata_init(struct connfd_info **connfd, struct comm_event *commevent, st
 	commcache_init(&(*connfd)->send_cache);
 	commcache_init(&(*connfd)->recv_cache);
 	memcpy(&(*connfd)->commtcp, commtcp, sizeof(*commtcp));
+	mfptp_parse_init(&(*connfd)->parser, &(*connfd)->recv_cache.buffer, &(*connfd)->recv_cache.size);
+	mfptp_package_init(&(*connfd)->packager, &(*connfd)->send_cache.buffer, &(*connfd)->send_cache.size);
+	
 
 	if (finishedcb) {
 		memcpy(&(*connfd)->finishedcb, finishedcb, sizeof(*finishedcb));
@@ -75,8 +70,6 @@ error:
 	commcache_free(&(*connfd)->recv_cache);
 	commcache_free(&(*connfd)->send_cache);
 	commlist_destroy(&(*connfd)->send_list, COMMMSG_OFFSET);
-	mfptp_parse_destroy(&(*connfd)->parser);
-	mfptp_package_destroy(&(*connfd)->packager);
 	Free(*connfd);
 	return false;
 }

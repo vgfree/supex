@@ -12,24 +12,35 @@
 extern "C" {
 #endif
 
-/* 解压和解密回调函数 */
+/* 解压和解密回调函数 返回值为解压/解密之后的数据的字节数 */
 typedef int (*Decompression_CallBack)(char *dest, const char *src, int d_len, int s_len);
 typedef int (*Decryption_CallBack)(char *dest, const char *src, int d_len, int s_len);
 
 /* MFPTP协议的状态码[当前解析或打包正在处理协议的哪部分] */
 enum mfptp_status
 {
-	MFPTP_PARSE_INIT = 0x00,	/* 0 MFPTP协议解析初始化的状态 */
-	MFPTP_HEAD,			/* 1 MFPTP协议的前6个字节"#MFPTP" */
-	MFPTP_VERSION,			/* 2 MFPTP协议的版本号 */
-	MFPTP_CONFIG,			/* 3 MFPTP协议的压缩解密格式 */
-	MFPTP_SOCKET_TYPE,		/* 4 MFPTP协议socket的类型 */
-	MFPTP_PACKAGES,			/* 5 MFPTP协议携带的包数 */
-	MFPTP_FP_CONTROL,		/* 6 MFPTP协议的FP_control字段 */
-	MFPTP_F_SIZE,			/* 7 MFPTP协议F_size字段 */
-	MFPTP_FRAME_START,		/* 8 MFPTP协议的帧 */
-	MFPTP_FRAME_OVER,		/* 9 MFPTP协议解析完一包的数据 */
-	MFPTP_PARSE_OVER		/* 10 MFPTP协议解析完*/
+	MFPTP_PARSE_INIT = 0x00,	/*  0 MFPTP协议解析初始化的状态 */
+	MFPTP_HEAD_FIRST,		/*  1 MFPTP协议的第一个字节'#' */
+	MFPTP_HEAD_M,			/*  3 MFPTP协议的第二个字节'M'*/
+	MFPTP_HEAD_F,			/*  4 MFPTP协议的第三个字节'F'*/
+	MFPTP_HEAD_P,			/*  5 MFPTP协议的第四个字节'P'*/
+	MFPTP_HEAD_T,			/*  6 MFPTP协议的第五个字节'T'*/
+	MFPTP_HEAD_LAST,		/*  7 MFPTP协议的最后一个字节'P'*/
+	MFPTP_VERSION,			/*  8 MFPTP协议的版本号 */
+	MFPTP_CONFIG,			/*  9 MFPTP协议的压缩解密格式 */
+	MFPTP_SOCKET_TYPE,		/* 10 MFPTP协议socket的类型 */
+	MFPTP_PACKAGES,			/* 11 MFPTP协议携带的包数 */
+	MFPTP_FP_CONTROL,		/* 12 MFPTP协议的FP_control字段 */
+	MFPTP_F_SIZE_1,			/* 13 MFPTP协议F_size字段的第一位 */
+	MFPTP_F_SIZE_2,			/* 14 MFPTP协议F_size字段的第二位 */
+	MFPTP_F_SIZE_3,			/* 15 MFPTP协议F_size字段的第三位 */
+	MFPTP_F_SIZE_4,			/* 16 MFPTP协议F_size字段的第四位 */
+	MFPTP_FRAME_START,		/* 17 MFPTP协议的帧 */
+	MFPTP_FRAME_DECOMPRESS,		/* 18 MFPTP协议解压数据 */
+	MFPTP_FRAME_DECRYPT,		/* 19 MFPTP协议解密数据 */
+	MFPTP_FRAME_COPYDATA,		/* 20 MFPTP协议将数据拷贝到保存解析后数据的缓冲区 */
+	MFPTP_FRAME_OVER,		/* 21 MFPTP协议解析完一包的数据 */
+	MFPTP_PARSE_OVER		/* 22 MFPTP协议解析完*/
 };
 
 /* MFPTP解析器的状态 */
@@ -55,15 +66,13 @@ struct mfptp_parser
 	Decompression_CallBack          decompresscb;		/* 解压的回调函数 */
 	Decryption_CallBack             decryptcb;		/* 解密的回调函数 */
 	struct mfptp_parser_stat        ms;			/* MFPTP协议数据解析器状态 */
-	char                            *decryptbuff;		/* 保存解密之后的数据 */
-	char                            *decompressbuff;	/* 保存解压之后的数据 */
 };
 
 /***********************************************************************************
 * 功能：初始化解析结构体
 * @data:待解析数据缓冲区地址  @size:待解析数据大小的地址
 ***********************************************************************************/
-bool mfptp_parse_init(struct mfptp_parser *parser, char *const *data, const int *size);
+void mfptp_parse_init(struct mfptp_parser *parser, char *const *data, const int *size);
 
 /***********************************************************************************
 * 功能：销毁一个解析结构体

@@ -4,9 +4,9 @@
 #include "../mfptp_protocol/mfptp_parse.h"
 #include "../comm_structure.h"
 
-#define MAXDATASIZE 4194304
+#define MAXDATASIZE 0x22222222
 
-void packager(struct comm_cache *cache);
+bool packager(struct comm_cache *cache);
 
 void parser(struct comm_cache *pack_cache, struct comm_cache *parse_cache);
 
@@ -19,15 +19,19 @@ int main()
 	struct comm_cache       parse_cache = {};
 
 	commcache_init(&pack_cache);
+	commcache_append(&pack_cache, "#ihi", 4);
 	commcache_init(&parse_cache);
 
-	packager(&pack_cache);
-	parser(&pack_cache, &parse_cache);
+	if (packager(&pack_cache)) {
+		parser(&pack_cache, &parse_cache);
+	}
 }
 
-void packager(struct comm_cache *cache)
+bool packager(struct comm_cache *cache)
 {
-	char    buff[MAXDATASIZE] = "you never know what's gonna happen to you";
+//	char    buff[MAXDATASIZE] = "you never know what's gonna happen to you";
+	char*	buff = malloc(MAXDATASIZE);
+	memcpy(buff, "you never know what's gonna happen to you", strlen("you never know what's gonna happen to you"));
 	int     dsize = strlen(buff);
 	int     packages = 1;
 	int     pckidx = 0;
@@ -37,7 +41,7 @@ void packager(struct comm_cache *cache)
 
 	struct mfptp_packager   packager = {};
 	struct comm_message     message = {};
-	int                     frames_of_package[10] = { 8 };
+	int                     frames_of_package[10] = {8};
 	int                     frame_size[64] = {
 		strlen("you "),
 		strlen("never "),
@@ -60,9 +64,11 @@ void packager(struct comm_cache *cache)
 	mfptp_package_init(&packager, &cache->buffer, &cache->size);
 	// message.fd = fd;
 	message.content = buff;
-	message.config = IDEA_ENCRYPTION | GZIP_COMPRESSION;
+//	message.config = IDEA_ENCRYPTION | GZIP_COMPRESSION;
+	message.config = IDEA_ENCRYPTION | NO_COMPRESSION;
 	message.socket_type = REQ_METHOD;
-	message.package.dsize = strlen(buff);
+	//message.package.dsize = strlen(buff);
+	message.package.dsize =	10245;
 	message.package.frames = 8;
 	message.package.packages = 1;
 
@@ -80,11 +86,13 @@ void packager(struct comm_cache *cache)
 		/* 检测到内存不够 则增加内存*/
 		if (commcache_expend(cache, size) == false) {
 			printf("expend commcache failed\n");
-			return;
+			return false;
 		}
 
 		log("expend commcache successed\n");
 	}
+	message.package.frame_size[7] = 0x11121314 - (strlen(buff)-3);
+	printf("frame_size[7] 0x%x strlen(buff):%d", message.package.frame_size[7], strlen(buff));
 
 	if (mfptp_fill_package(&packager, message.package.frame_offset, message.package.frame_size, message.package.frames_of_package, message.package.packages, message.package.dsize)) {
 		size = mfptp_package(&packager, message.content, message.config, message.socket_type);
@@ -92,17 +100,22 @@ void packager(struct comm_cache *cache)
 		if ((size > 0) && (packager.ms.error == MFPTP_OK)) {
 			printf("packager successed\n");
 			cache->end += size;
+			free(buff);
+			return true;
 		} else {
 			printf("packager failed\n");
 			packager.ms.error = MFPTP_OK;
+			return false;
 		}
 	}
 	
+	return false;
 }
 
 void parser(struct comm_cache *pack_cache, struct comm_cache *parse_cache)
 {
-	char    buff[1024] = {};
+	//char    buff[MAXDATASIZE] = {};
+	char*	buff = malloc(MAXDATASIZE);
 	int     len = pack_cache->size / 2;
 	int     pckidx = 0;
 	int     frmidx = 0;
@@ -117,43 +130,39 @@ void parser(struct comm_cache *pack_cache, struct comm_cache *parse_cache)
 
 	mfptp_parse_init(&parser, &parse_cache->buffer, &parse_cache->size);
 	commcache_append(parse_cache, pack_cache->buffer, len);
-	size = mfptp_parse(&parser);
-
-	if ((size > 0) && (parser.ms.error == MFPTP_OK) && (parser.ms.step == MFPTP_PARSE_OVER)) {	/* 成功解析了一个连续的包 */
-		memcpy(message.content, &parser.ms.cache.buffer[parser.ms.cache.start], parser.bodyer.dsize);
-		_fill_message_package(&message, &parser);
-		printf("parse success\n");
-	} else if (parser.ms.error == MFPTP_DATA_TOOFEW) {
-		printf("data too few\n");
-		parser.ms.error = MFPTP_OK;	/* 重新恢复正常值 */
-		commcache_append(parse_cache, &pack_cache->buffer[len], pack_cache->size - len);
+	while (1) {
 		size = mfptp_parse(&parser);
-		memcpy(message.content, &parser.ms.cache.buffer[parser.ms.cache.start], parser.bodyer.dsize);
-		_fill_message_package(&message, &parser);
-
-		if ((size > 0) && (parser.ms.error == MFPTP_OK) && (parser.ms.step == MFPTP_PARSE_OVER)) {
+		if ((size > 0) && (parser.ms.error == MFPTP_OK) && (parser.ms.step == MFPTP_PARSE_OVER)) {	/* 成功解析了一个连续的包 */
+			memcpy(message.content, &parser.ms.cache.buffer[parser.ms.cache.start], parser.bodyer.dsize);
+			_fill_message_package(&message, &parser);
 			for (pckidx = 0, index = 0; pckidx < message.package.packages; pckidx++) {
+#if 0
 				size = 0;
-
 				for (frmidx = 0; frmidx < message.package.frames_of_package[pckidx]; frmidx++, index++) {
 					memcpy(&buff[size], &message.content[message.package.frame_offset[index]], message.package.frame_size[index]);
 					size += message.package.frame_size[index];
+					log("message frame body: %*.s\n", size, buff);
 				}
+#endif
 
-				log("message body: %s\n", buff);
+				log("message body: %s datasize:0x%x\n", message.content, message.package.dsize);
 			}
-		} else {
-			printf("send parse failed\n");
+			free(buff);
+			free(message.content);
+			printf("parse success\n");
+			return ;
+		} else if (parser.ms.error == MFPTP_DATA_TOOFEW) {
+			printf("data too few\n");
+			parser.ms.error = MFPTP_OK;	/* 重新恢复正常值 */
+			commcache_append(parse_cache, &pack_cache->buffer[len], pack_cache->size - len);
+		} else if (parser.ms.error != MFPTP_DATA_TOOFEW) {
+			/* 解析出错 抛弃已解析的错误数据 继续解析后面的数据 */
+			parse_cache->start += size;
+			parse_cache->size -= size;
+			commcache_clean(parse_cache);
+			parser.ms.error = MFPTP_OK;	/* 重新恢复正常值 */
+			printf("parse failed\n");
 		}
-
-		return;
-	} else if (parser.ms.error != MFPTP_DATA_TOOFEW) {
-		/* 解析出错 抛弃已解析的错误数据 继续解析后面的数据 */
-		parse_cache->start += size;
-		parse_cache->size -= size;
-		commcache_clean(parse_cache);
-		parser.ms.error = MFPTP_OK;	/* 重新恢复正常值 */
-		printf("parse failed\n");
 	}
 }
 

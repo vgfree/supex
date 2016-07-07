@@ -14,7 +14,7 @@ extern "C" {
 #define MFPTP_MAJOR_VERSION     1	/* MFPTP协议的主版本号 */
 #define MFPTP_MINOR_VERSION     0	/* MFPTP协议的副版本号 */
 #define MFPTP_MAX_FRAMES        13	/* MFPTP协议单包支持最大的帧的数量 */
-#define MFPTP_MAX_DATASIZE      4194304	/* MFPTP协议一个帧携带数据的最大值 */
+#define MFPTP_MAX_FRAMESIZE   1024*1024*100	/* MFPTP协议一个帧携带数据的最大值 */
 #define MFPTP_MAX_PACKAGES      8	/* MFPTP协议支持携带的最大包数 */
 
 #define MFPTP_HEADER_LEN        10	/* MFPTP协议头的所占的字节数 */
@@ -59,11 +59,11 @@ extern "C" {
 enum mfptp_config
 {
 	NO_COMPRESSION = 0x00 << 4,
-		ZIP_COMPRESSION = 0x01 << 4,
-		GZIP_COMPRESSION = 0x02 << 4,
-		NO_ENCRYPTION = 0x00,
-		IDEA_ENCRYPTION = 0x01,
-		AES_ENCRYPTION = 0x02
+	ZIP_COMPRESSION = 0x01 << 4,
+	GZIP_COMPRESSION = 0x02 << 4,
+	NO_ENCRYPTION = 0x00,
+	IDEA_ENCRYPTION = 0x01,
+	AES_ENCRYPTION = 0x02
 };
 
 /* MFPTP协议的socket的type值 */
@@ -85,14 +85,18 @@ enum mfptp_socket_type
 /* MFPTP协议错误码 */
 enum mfptp_error
 {
-	MFPTP_OK = 0x00,		/* 0 MFPTP打包解析的时候没发生错误，继续下一步 */
-	MFPTP_HEAD_INVAILD,		/* 1 MFPTP协议解析前6个字节“#MFPTP”出错 */
-	MFPTP_VERSION_INVAILD,		/* 2 MFPTP协议版本无效 */
-	MFPTP_CONFIG_INVAILD,		/* 3 MFPTP压缩解密格式设置错误 */
-	MFPTP_SOCKTYPE_INVAILD,		/* 4 MFPTP协议socket_type设置错误 */
-	MFPTP_PACKAGES_INVAILD,		/* 5 MFPTP协议包数不合法[小于零或大于允许携带的最大包数] */
-	MFPTP_DATA_TOOFEW,		/* 6 MFPTP协议帧携带的数据太少[数据未接收完毕] */
-	MFPTP_DATASIZE_INVAILD		/* 7 MFPTP协议帧携带的数据长度无效[携带的数据小于零或者大于允许帧携带最大数] */
+	MFPTP_OK = 0x00,		/*  0 MFPTP打包解析的时候没发生错误，继续下一步 */
+	MFPTP_HEAD_INVAILD,		/*  1 MFPTP协议解析前6个字节“#MFPTP”出错 */
+	MFPTP_VERSION_INVAILD,		/*  2 MFPTP协议版本无效 */
+	MFPTP_CONFIG_INVAILD,		/*  3 MFPTP压缩解密格式设置错误 */
+	MFPTP_SOCKTYPE_INVAILD,		/*  4 MFPTP协议socket_type设置错误 */
+	MFPTP_PACKAGES_INVAILD,		/*  5 MFPTP协议包数不合法[小于零或大于允许携带的最大包数] */
+	MFPTP_DATA_TOOFEW,		/*  6 MFPTP协议帧携带的数据太少[数据未接收完毕] */
+	MFPTP_DATASIZE_INVAILD,		/*  7 MFPTP协议帧携带的数据长度无效[携带的数据小于零或者大于允许帧携带最大数] */
+	MFPTP_DECOMPRESS_NO_SPACE,	/*  8 MFPTP协议解压数据时分配解压缓冲区失败 */
+	MFPTP_DECRYPT_NO_SPACE,		/*  9 MFPTP协议解密数据时分配解密缓冲区失败 */
+	MFPTP_ENCRYPT_NO_SPACE,		/* 10 MFPTP协议加密数据时分配解密缓冲区失败 */
+	MFPTP_ENCOMPRESS_NO_SPACE	/* 11 MFPTP协议压缩数据时分配解压缓冲区失败 */
 };
 
 /* MFPTP协议帧的相关信息 */

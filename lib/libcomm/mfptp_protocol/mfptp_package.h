@@ -11,7 +11,7 @@
 extern "C" {
 #endif
 
-/* 加密和解密的回调函数原型 */
+/* 加密和解密的回调函数原型 返回值为加密/解密之后数据的字节数 */
 typedef int (*Compression_CallBack)(char *dest, const char *src, int d_len, int s_len);
 typedef int (*Encryption_CallBack)(char *dest, const char *src, int d_len, int s_len);
 
@@ -34,15 +34,13 @@ struct mfptp_packager
 	Encryption_CallBack             encryptcb;	/* MFPTP协议加密的回调函数 */
 	Compression_CallBack            compresscb;	/* MFPTP协议压缩的回调函数 */
 	struct mfptp_pack_stat          ms;		/* 打包器的状态 */
-	char                            *encryptbuff;	/* 用于保存加密之后的数据 */
-	char                            *compressbuff;	/* 用于保存压缩之后的数据 */
 };
 
 /***********************************************************************************
  * 功能：初始化打包器结构体
  * @buff:保存打包好的数据缓冲区的地址  @size：保存打包好的数据大小的地址
  ************************************************************************************/
-bool mfptp_package_init(struct mfptp_packager *packager, char **buff, int *size);
+void mfptp_package_init(struct mfptp_packager *packager, char **buff, int *size);
 
 /***********************************************************************************
  * 功能：销毁打包器结构体
