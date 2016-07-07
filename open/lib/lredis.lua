@@ -109,7 +109,18 @@ end
 
 function network.read(client, len)
 	if len == nil then len = '*l' end
-	local res, err = client.network.socket:receive(len)
+	local res, err, part = client.network.socket:receive(len)
+  res = res or part
+	local ok = res and true or false
+	if ok then
+		return ok, res
+	else
+		return ok, err
+	end
+end
+
+function network.readline(client)
+	local res, err = client.network.socket:receive('*l')
 	local ok = res and true or false
 	if ok then
 		return ok, res
@@ -155,7 +166,7 @@ end
 
 local function readline(client)
 	while true do
-		local ok, line = client.network.read(client)
+		local ok, line = client.network.readline(client)
 		if not ok then
 			if line == "timeout" then
 				--EWOULDBLOCK
@@ -171,33 +182,67 @@ local function readline(client)
   end
 end
 
+local function read(client, size)
+  local data = ''
+  local data_size = 0
+  local recv_size = size
+
+	while true do
+		local ok, part = client.network.read(client, recv_size)
+		if not ok then
+			if part == "timeout" then
+				--EWOULDBLOCK
+				if idle_fcb then
+					idle_fcb(idle_arg)
+				end
+      else
+        error('lredis network read error: ' .. part);
+			end
+		else
+      data = data .. part
+
+      local part_size = #part
+      data_size = data_size + part_size
+
+      local rest_size = size - data_size
+      if rest_size == 0 then
+        return data
+      end
+
+      recv_size = rest_size
+    end
+  end
+end
+
 local function read_reply(client)
   local line = readline(client)
-  print(line)
   local prefix = byte(line)
 
   if prefix == 36 then    -- char '$'
-    print("bulk reply")
+    --print("bulk reply")
  
     local size = tonumber(sub(line, 2))
+    --print(size)
     if size < 0 then
       error('lredis illegal bulk string length $' .. size);
     end
  
-    local str = readline(client)
-    assert(size == #str)
+    local data = read(client, size)
+
+    -- \r\n
+    read(client, 2)
   
-    return str
+    return data
  
   elseif prefix == 43 then    -- char '+'
-    print("status reply")
+    --print("status reply")
  
     return sub(line, 2)
  
   elseif prefix == 42 then -- char '*'
     local n = tonumber(sub(line, 2))
  
-    print("multi-bulk reply: ", n)
+    --print("multi-bulk reply: ", n)
     if n < 0 then
       error('lredis illegal multi-bulk string line size $' .. n);
     end
@@ -232,7 +277,7 @@ local function custom_request(client, ...)
     local req = gen_req(args)
 		repeat
 			local out = client.network.write(client, req)
-			print("send size:", out)
+      --print('send: ' .. out)
 			req = string.sub(req, out + 1, -1)
 		until (#req == 0)
 	else
@@ -309,6 +354,7 @@ local function create_client(proto, client_socket, commands)
 	client.network = {
 		socket = client_socket,
 		read   = network.read,
+    readline = network.readline,
 		write  = network.write,
 	}
 	return client
@@ -410,6 +456,32 @@ end
 
 local cmds = {}
 
+function cmds.hmset(client, hashname, ...)
+  local args = {...}
+  if #args == 1 then
+    local t = args[1]
+
+    local n = 0
+    for k, v in pairs(t) do
+        n = n + 2
+    end
+
+    local array = {}
+
+    local i = 0
+    for k, v in pairs(t) do
+      array[i + 1] = k
+      array[i + 2] = v
+      i = i + 2
+    end
+    -- print("key", hashname)
+    return custom_request(self, "hmset", hashname, unpack(array))
+  end
+
+  -- backwards compatibility
+  return custom_request(self, "hmset", hashname, ...)
+end
+
 for i = 1, #commands do
   local cmd = commands[i]
 
@@ -418,7 +490,6 @@ for i = 1, #commands do
       return custom_request(client, cmd, ...)
     end
 end
-
 
 lredis.commands = cmds
 
