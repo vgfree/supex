@@ -13,7 +13,7 @@ int main(int argc, char *argv[])
 		struct app_msg  msg = {};
 		int             more = 0;
 		size_t		i;
-		recv_app_msg(&msg, &more, -1);
+		app_recv_all_msg(&msg, &more, -1);
 		printf("msg size:%d, [0]iov_len:%d\n",
 			msg.vector_size, msg.vector[0].iov_len);
 		assert(msg.vector_size > 0);
@@ -34,7 +34,7 @@ int main(int argc, char *argv[])
 				send_msg.vector[2].iov_len = strlen(cid);
 				send_msg.vector[3].iov_base = gid;
 				send_msg.vector[3].iov_len = strlen(gid);
-				send_app_msg(&send_msg);
+				app_send_msg(&send_msg);
 			}
 		} else {
 			struct app_msg send_msg = {};
@@ -54,7 +54,7 @@ int main(int argc, char *argv[])
 				send_msg.vector[i + 3].iov_len = msg.vector[i+2].iov_len;
 			}
 
-			send_app_msg(&send_msg);
+			app_send_msg(&send_msg);
 		}
 
 		for (i = 0; i < msg.vector_size; i++) {

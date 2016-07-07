@@ -29,7 +29,7 @@ void destroy_io()
 	zmq_ctx_destroy(g_ctx);
 }
 
-int send_app_msg(struct app_msg *msg)
+int app_send_msg(struct app_msg *msg)
 {
 	AO_SpinLock(g_send_lock);
 	assert(msg && msg->vector_size > 0);
@@ -47,7 +47,26 @@ int send_app_msg(struct app_msg *msg)
 	return rc;
 }
 
-int recv_app_msg(struct app_msg *msg, int *more, int flag)
+int app_send_to_api(struct app_msg *msg) {
+	AO_SpinLock(g_send_lock);
+	int rc = -1;
+	printf("send to api.\n");
+	rc = send_to_api(msg);
+	AO_SpinUnlock(g_send_lock);
+	return rc;
+}
+
+int app_send_to_gateway(struct app_msg *msg) {
+	AO_SpinLock(g_send_lock);
+	int rc = -1;
+	printf("send to messageGate.\n");
+	rc = send_to_gateway(msg);
+	AO_SpinUnlock(g_send_lock);
+	return rc;
+	
+}
+
+int app_recv_all_msg(struct app_msg *msg, int *more, int flag)
 {
 	AO_SpinLock(g_recv_lock);
 	assert(msg);
@@ -56,3 +75,20 @@ int recv_app_msg(struct app_msg *msg, int *more, int flag)
 	return rc;
 }
 
+int app_recv_login_msg(struct app_msg *msg, int flag)
+{
+	AO_SpinLock(g_recv_lock);
+	assert(msg);
+	int rc = recv_login_msg(msg, flag);
+	AO_SpinUnlock(g_recv_lock);
+	return rc;
+}
+
+int app_recv_gateway_msg(struct app_msg *msg, int flag)
+{
+	AO_SpinLock(g_recv_lock);
+	assert(msg);
+	int rc = recv_gateway_msg(msg, flag);
+	AO_SpinUnlock(g_recv_lock);
+	return rc;
+}

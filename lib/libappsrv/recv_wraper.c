@@ -10,35 +10,87 @@
 #define PULL_LOGIN_PORT         "PullLoginPort"
 #define PULL_GATEWAY_IP         "PullGatewayIP"
 #define PULL_GATEWAY_PORT       "PullGatewayPort"
+#define RECV_STRATEGY           "AppServRecvStrategy"
 
 static void     *s_gateway = NULL;
 static void     *s_login = NULL;
-
+static void     *recv_strategy = NULL;
 void init_recv(void *ctx)
 {
-	assert(!s_gateway && !s_login);
-	struct config_reader    *config = init_config_reader(CONFIG);
-	char                    *ip = get_config_name(config, PULL_LOGIN_IP);
-	char                    *port = get_config_name(config, PULL_LOGIN_PORT);
-	char                    addr[64] = {};
-	snprintf(addr, 63, "tcp://%s:%s", ip, port);
-	s_login = zmq_socket(ctx, ZMQ_PULL);
-	int rc = zmq_connect(s_login, addr);
-	assert(rc == 0);
-	ip = get_config_name(config, PULL_GATEWAY_IP);
-	port = get_config_name(config, PULL_GATEWAY_PORT);
-	memset(addr, 0, 64);
-	snprintf(addr, 63, "tcp://%s:%s", ip, port);
-	s_gateway = zmq_socket(ctx, ZMQ_PULL);
-	rc = zmq_connect(s_gateway, addr);
-	assert(rc == 0);
+	assert(!s_gateway && !s_login && !recv_strategy);
+	struct config_reader *config = init_config_reader(CONFIG);
+	recv_strategy = get_config_name(config, RECV_STRATEGY); 
+	int rc = -1;
+	char *ip;
+	char *port;
+	char addr[64] = {};
+	if(memcmp(recv_strategy, "all", 3) == 0) {
+		ip = get_config_name(config, PULL_LOGIN_IP);
+		port = get_config_name(config, PULL_LOGIN_PORT);
+		snprintf(addr, 63, "tcp://%s:%s", ip, port);
+		s_login = zmq_socket(ctx, ZMQ_PULL);
+		int rc = zmq_connect(s_login, addr);
+		assert(rc == 0);
+
+		ip = get_config_name(config, PULL_GATEWAY_IP);
+		port = get_config_name(config, PULL_GATEWAY_PORT);
+		memset(addr, 0, 64);
+		snprintf(addr, 63, "tcp://%s:%s", ip, port);
+		s_gateway = zmq_socket(ctx, ZMQ_PULL);
+		rc = zmq_connect(s_gateway, addr);	
+		assert(rc == 0);
+	}else if(memcmp(recv_strategy, "onlyLogin", 9) == 0) {
+		ip = get_config_name(config, PULL_LOGIN_IP);
+		port = get_config_name(config, PULL_LOGIN_PORT);
+		snprintf(addr, 63, "tcp://%s:%s", ip, port);
+		s_login = zmq_socket(ctx, ZMQ_PULL);
+		int rc = zmq_connect(s_login, addr);
+		assert(rc == 0);
+	}else if(memcmp(recv_strategy, "onlyGateway", 11) == 0){
+		ip = get_config_name(config, PULL_GATEWAY_IP);
+		port = get_config_name(config, PULL_GATEWAY_PORT);
+		snprintf(addr, 63, "tcp://%s:%s", ip, port);
+		s_gateway = zmq_socket(ctx, ZMQ_PULL);
+		rc = zmq_connect(s_gateway, addr);	
+		assert(rc == 0);
+	}
 }
 
 void destroy_recv()
 {
-	assert(s_login && s_gateway);
-	zmq_close(s_login);
-	zmq_close(s_gateway);
+	assert(s_login && s_gateway && recv_strategy);
+	if(memcmp(recv_strategy, "all", 3) == 0) {
+		zmq_close(s_login);
+		zmq_close(s_gateway);
+	}else if(memcmp(recv_strategy, "onlyLogin", 9) == 0) {
+		zmq_close(s_login);
+	}else if(memcmp(recv_strategy, "onlyGateway", 11) == 0) {
+		zmq_close(s_gateway);
+	}
+}
+
+/**
+ * flag: 0 means block, ZMQ_DONTWAIT means not block
+ */
+int recv_login_msg(struct app_msg *msg, int flag) {
+	assert(msg);
+	int rc = zmq_msg_recv(msg, s_login, flag);
+	assert (rc != -1);
+
+	msg->vector_size = MAX_SPILL_DEPTH;
+	return zmq_recviov(s_login, msg->vector, &msg->vector_size, 0);
+}
+
+/**
+ * flag: 0 means block, ZMQ_DONTWAIT means not block
+ */
+int recv_gateway_msg(struct app_msg *msg, int flag) {
+	assert(msg);
+	int rc = zmq_msg_recv(msg, s_gateway, flag);
+	assert (rc != -1);
+
+	msg->vector_size = MAX_SPILL_DEPTH;
+	return zmq_recviov(s_gateway, msg->vector, &msg->vector_size, 0);
 }
 
 int recv_all_msg(struct app_msg *msg, int *more, int flag)
