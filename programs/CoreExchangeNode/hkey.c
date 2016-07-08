@@ -142,7 +142,7 @@ int hkey_get_offset(char *key)
 	if (ans->errnum != ERR_NONE) {
 		error("get key:%s error.", key);
 		kv_answer_release(ans);
-		return -1;
+		return 0;
 	}
 	kv_answer_value_t *value = kv_answer_first_value(ans);
 	int offset = atoi((char *)value->ptr);

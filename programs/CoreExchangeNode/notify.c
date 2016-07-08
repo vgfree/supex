@@ -1,3 +1,4 @@
+#include "comm_message_operator.h"
 #include "fd_manager.h"
 #include "loger.h"
 #include "message_dispatch.h"
@@ -28,10 +29,10 @@ void client_event_notify(struct comm_context *commctx,
 			send_status_msg(portinfo->fd, FD_CLOSE);
 			log("errase client fd:%d.", portinfo->fd);
 #ifdef _HKEY_
-			struct residue_package package = {};
-			package.fd = portinfo->fd;
+			struct residue_package package;
+			init_residue_package(&package, portinfo->fd, 0, NULL, 0);
 			pop_residue_package(&package);
-			char * key = hkey_find_key(portinfo->fd);
+			char *key = hkey_find_key(portinfo->fd);
 			hkey_insert_value(key, package.serial_data);
 			hkey_insert_offset(key, package.offset);
 			destroy_residue_package(&package);

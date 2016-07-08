@@ -2,6 +2,8 @@
 #define _COMM_MESSAGE_OPERATOR_H_
 #include "comm_structure.h"
 
+#define _HKEY_ 1
+
 struct residue_package {
 	int fd;
 	int offset;
@@ -32,7 +34,10 @@ inline int pop_residue_package(struct residue_package *package)
 
 inline void destroy_residue_package(struct residue_package *package)
 {
-	free(package);
+
+	if (package->serial_data) {
+		free(package->serial_data);
+	}
 }
 
 void init_msg(struct comm_message *msg);

@@ -297,11 +297,12 @@ static int _verified(struct comm_message *msg)
 		char *key = (char *)malloc((frame_size + 1)* sizeof(char));
 		memcpy(key, frame, frame_size);
 		key[frame_size] = '\0';
+		remove_first_nframe(1, msg);
 		int fd = hkey_get_fd(key);
-		char buf[10] = {};
+		char buf[21] = {};
+		buf[0] = 1;
 		if (fd == -1) { // first hkey.
-			snprintf(buf, 10, "%d", 0);
-			set_msg_frame(0, msg, strlen(buf), buf);
+			set_msg_frame(0, msg, 21, buf);
 		}
 		else {
 			struct residue_package package;
@@ -309,14 +310,19 @@ static int _verified(struct comm_message *msg)
 			int offset = hkey_get_offset(key);
 			init_residue_package(&package, msg->fd, offset, value, strlen(value));
 			push_residue_package(&package);
-			snprintf(buf, 10, "%d", offset);
-			set_msg_frame(0, msg, strlen(buf), buf); // 接收大小。
+			int i = 4;
+			for (; i >= 1; i--) {
+				buf[i] = offset % 256;
+				offset = offset / 256;
+			}
+			set_msg_frame(0, msg, 21, buf); // 接收大小。
 			hkey_del_fd(key);
 			hkey_del_fd_key(fd);
 			hkey_del_value(key);
 			destroy_residue_package(&package);
 		}
 		hkey_insert_fd(key, msg->fd);
+		free(key);
 		comm_send(g_serv_info.commctx, msg, true, -1);
 		return 1;
 	}
