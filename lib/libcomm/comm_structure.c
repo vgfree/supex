@@ -64,7 +64,7 @@ inline void copy_commmsg(struct comm_message *destmsg, const struct comm_message
 	destmsg->fd = srcmsg->fd;
 	destmsg->config = srcmsg->config;
 	if (srcmsg->socket_type < 0) {
-		destmsg->socket_type = REQ_METHOD;	/* socket_type的默认值*/
+		destmsg->socket_type = PUSH_METHOD;	/* socket_type的默认值*/
 	} else {
 		destmsg->socket_type = srcmsg->socket_type;
 	}
