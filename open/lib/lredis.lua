@@ -63,7 +63,9 @@ local commands = {
     "zrem",              "zremrangebyrank",   "zremrangebyscore",
     "zrevrange",         "zrevrangebyscore",  "zrevrank",
     "zscan",
-    "zscore",            "zunionstore",       "evalsha"
+    "zscore",            "zunionstore",       "evalsha",
+    "geoadd",            "geopos",            "geodist",
+    "georadius",         "georadiusbymember", "geohash"
 }
 
 --module('lredis', package.seeall)
@@ -289,17 +291,8 @@ local function custom_request(client, ...)
 		client.network.socket:settimeout(nil) -- restore to block indefinitely
 	end
 
-	local reply = {
-		is_finish = false,
-		origin_time = os.time(),
-		finish_time = nil,
-	}
-
-  local ret, reply_type = read_reply(client)
-  reply.finish_time = os.time()
-  reply.value = ret
-
-  return reply
+  local ret = read_reply(client)
+  return ret
 end
 
 
