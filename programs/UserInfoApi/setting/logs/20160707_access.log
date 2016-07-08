@@ -1,0 +1,66 @@
+194   |INFO |2016-07-07 14:31:44.019146|       lualog.so.024898.001|           new_connect()|              redis_pool_api.lua:  48|() : REDIS: 192.168.1.12:9002 | RECNT: 1 |---> Tcp:connect: SUCCESS!
+194   |INFO |2016-07-07 14:31:44.029129|       lualog.so.024898.001|           new_connect()|              redis_pool_api.lua:  48|() : REDIS: 192.168.1.12:9002 | RECNT: 1 |---> Tcp:connect: SUCCESS!
+431   |SYS  |2016-07-07 14:31:44.029523|       lualog.so.024898.001|                  init()|              redis_pool_api.lua: 361|() : [OWN_REDIS_POOLS:{
+	["GidKey"] = {
+		[1] = {
+			["host"] = "192.168.1.12",
+			["vnode"] = 0,
+			["mark"] = "",
+			["mode"] = "M",
+			["port"] = 9002,
+		},
+	},
+	["IdKey"] = {
+		[1] = {
+			["host"] = "192.168.1.12",
+			["vnode"] = 0,
+			["mark"] = "",
+			["mode"] = "M",
+			["port"] = 9002,
+		},
+	},
+}]
+194   |INFO |2016-07-07 16:19:59.612352|       lualog.so.026238.001|           new_connect()|              redis_pool_api.lua:  48|() : REDIS: 192.168.1.12:9002 | RECNT: 1 |---> Tcp:connect: SUCCESS!
+194   |INFO |2016-07-07 16:19:59.622480|       lualog.so.026238.001|           new_connect()|              redis_pool_api.lua:  48|() : REDIS: 192.168.1.12:9002 | RECNT: 1 |---> Tcp:connect: SUCCESS!
+431   |SYS  |2016-07-07 16:19:59.623019|       lualog.so.026238.001|                  init()|              redis_pool_api.lua: 361|() : [OWN_REDIS_POOLS:{
+	["GidKey"] = {
+		[1] = {
+			["host"] = "192.168.1.12",
+			["vnode"] = 0,
+			["mark"] = "",
+			["mode"] = "M",
+			["port"] = 9002,
+		},
+	},
+	["IdKey"] = {
+		[1] = {
+			["host"] = "192.168.1.12",
+			["vnode"] = 0,
+			["mark"] = "",
+			["mode"] = "M",
+			["port"] = 9002,
+		},
+	},
+}]
+194   |INFO |2016-07-07 16:23:11.358200|       lualog.so.026493.001|           new_connect()|              redis_pool_api.lua:  48|() : REDIS: 192.168.1.12:9002 | RECNT: 1 |---> Tcp:connect: SUCCESS!
+194   |INFO |2016-07-07 16:23:11.369317|       lualog.so.026493.001|           new_connect()|              redis_pool_api.lua:  48|() : REDIS: 192.168.1.12:9002 | RECNT: 1 |---> Tcp:connect: SUCCESS!
+431   |SYS  |2016-07-07 16:23:11.369683|       lualog.so.026493.001|                  init()|              redis_pool_api.lua: 361|() : [OWN_REDIS_POOLS:{
+	["GidKey"] = {
+		[1] = {
+			["host"] = "192.168.1.12",
+			["vnode"] = 0,
+			["mark"] = "",
+			["mode"] = "M",
+			["port"] = 9002,
+		},
+	},
+	["IdKey"] = {
+		[1] = {
+			["host"] = "192.168.1.12",
+			["vnode"] = 0,
+			["mark"] = "",
+			["mode"] = "M",
+			["port"] = 9002,
+		},
+	},
+}]
