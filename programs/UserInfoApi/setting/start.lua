@@ -3,7 +3,7 @@ local lualog		= require('lualog')
 local only		= require('only')
 local cutils		= require('cutils')
 local redis_api		= require('redis_pool_api')
-local api_dk_newstatus	= require("api_dk_newstatus")
+local api_dk		= require("api_dk")
 
 function app_init()
 	--> init first
@@ -18,6 +18,6 @@ end
 
 function app_call(tab)
 	if #tab > 2 then
-		api_dk_newstatus.handle(tab)
+		api_dk.handle(tab)
 	end
 end

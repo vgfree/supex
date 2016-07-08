@@ -3,7 +3,7 @@ local lualog		= require('lualog')
 local only		= require('only')
 local cutils		= require('cutils')
 local redis_api		= require('redis_pool_api')
-local api_dk_newstatus	= require("api_dk_newstatus")
+local api_dk		= require("api_dk")
 
 module("start", package.seeall)
 
@@ -21,7 +21,7 @@ end
 function app_call(tab)
 	local ret = nil
 	if #tab > 2 then
-		ret = api_dk_newstatus.handle(tab)
+		ret = api_dk.handle(tab)
 	end
 	--only.log('E', 'In app_call the ret = %s', scan.dump(ret))
 	return ret
