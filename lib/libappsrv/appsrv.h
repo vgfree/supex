@@ -29,6 +29,8 @@ enum askt_type {
 #define USERINFOAPI_PULL_HOST		"usrinfoapi_pull_setting_host"
 #define USERINFOAPI_PULL_PORT		"usrinfoapi_pull_setting_port"
 
+#define USERINFOAPI_REP_HOST		"usrinfoapi_rep_looking_host"
+#define USERINFOAPI_REP_PORT		"usrinfoapi_rep_looking_port"
 
 
 #define MAX_SPILL_DEPTH    32

@@ -1,11 +1,9 @@
 #include "appsrv.h"
 #include "libmini.h"
-#include "recv_wraper.h"
-#include "send_wraper.h"
 
 #include <assert.h>
 #include <string.h>
-#include "connect_oper.h"
+#include "appsrv_handle.h"
 #include "config_reader.h"
 
 static void *g_ctx = NULL;
@@ -31,18 +29,30 @@ void destroy_io(void)
 }
 
 
-int app_recv_msg(struct app_msg *msg, int* more, int flag) {
+int app_recv_msg(enum askt_type type, struct app_msg *msg)
+{
 	assert(msg);
 	AO_SpinLock(g_recv_lock);
-	int rc = recv_msg(msg, more, flag);
+	int rc = recv_msg(type, msg);
 	AO_SpinUnlock(g_recv_lock);
 	return rc;
 }
 
-int app_send_msg(struct app_msg *msg) {
+
+int app_send_msg(enum askt_type type, struct app_msg *msg)
+{
 	assert(msg && msg->vector_size > 0);
 	AO_SpinLock(g_recv_lock);
-	int rc = send_msg(msg);
+	int rc = send_msg(type, msg);
+	AO_SpinUnlock(g_recv_lock);
+	return rc;
+}
+
+int app_recv_more_msg(int types, struct app_msg *msg, int flag)
+{
+	assert(msg);
+	AO_SpinLock(g_recv_lock);
+	int rc = recv_more_msg(types, msg, flag);
 	AO_SpinUnlock(g_recv_lock);
 	return rc;
 }

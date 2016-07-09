@@ -4,11 +4,9 @@
  */
 #include "config_reader.h"
 #include "zmq.h"
-#include "recv_wraper.h"
-#include "send_wraper.h"
 #include <assert.h>
 #include <memory.h>
-#include "connect_oper.h"
+#include "appsrv_handle.h"
 
 
 static int g_conn_types = 0x00000000;
@@ -26,7 +24,6 @@ void init_connect(void *ctx, int types) {
 	char addr[64] = {};
 	/*set types*/
 	g_conn_types = types;
-	printf("g_conn_types : %x\n", g_conn_types);
 	assert(g_conn_types > 0);
 	/*init socket*/
 	struct config_reader *config = init_config_reader(SRV_CONFIG);
@@ -70,15 +67,24 @@ void init_connect(void *ctx, int types) {
 
 		g_skt_setting = zmq_socket(ctx, ZMQ_PUSH);
 		rc = zmq_connect(g_skt_setting, addr);
-		printf("connected with userinfoapi\n");
+		printf("connected with userinfoapi to setting\n");
 		assert(rc == 0);
 	}
-	//TODO:
+	//TODO: look interface
+	if((g_conn_types & TYPE_LOOKING) == TYPE_LOOKING) {
+		host = get_config_name(config, USERINFOAPI_REP_HOST);
+		port = get_config_name(config, USERINFOAPI_REP_PORT);
+		snprintf(addr, 63, "tcp://%s:%s", host, port);
+
+		g_skt_looking = zmq_socket(ctx, ZMQ_REQ);
+		rc = zmq_connect(g_skt_looking, addr);
+		printf("connected with userinfoapi to looking\n");
+		assert(rc == 0);
+	}
 	destroy_config_reader(config);
 }
 
-void destroy_connect(void)
-{
+void destroy_connect(void) {
 	if(g_skt_upstream) {
 		zmq_close(g_skt_upstream);
 	}
@@ -96,45 +102,80 @@ void destroy_connect(void)
 	}
 }
 
-#define RECV_UPSTREAM_AND_LOGIN     0x00000101
-int recv_msg(struct app_msg *msg, int* more, int flag) {
+int recv_msg(enum askt_type type, struct app_msg *msg) {
 	int rc = -1;
-	if((g_conn_types & RECV_UPSTREAM_AND_LOGIN) == RECV_UPSTREAM_AND_LOGIN) {
-		rc = recv_more_msg(msg, g_skt_upstream, g_skt_status, more, flag);	
-	}else if((g_conn_types & RECV_UPSTREAM) == RECV_UPSTREAM) {
-		rc = recv_gateway_msg(msg, g_skt_upstream, ZMQ_DONTWAIT);
-
-	}else if((g_conn_types & TYPE_STATUS) == TYPE_STATUS) {
-		rc = recv_login_msg(msg, g_skt_status, ZMQ_DONTWAIT);
-
+	msg->vector_size = MAX_SPILL_DEPTH;
+	switch(type) {
+		case TYPE_UPSTREAM:
+			rc = zmq_recviov(g_skt_upstream, msg->vector, 
+					&msg->vector_size, 0);
+			break;
+		case TYPE_STATUS:
+			rc = zmq_recviov(g_skt_status, msg->vector, 
+					&msg->vector_size, 0);
+			break;
+		case TYPE_LOOKING:
+			rc = zmq_recviov(g_skt_looking, msg->vector, 
+					&msg->vector_size, 0);
+		default:
+			break;
 	}
-#if 0
-	int i;
-	//TODO check connect type and connectors
-	for(i = 0; i < connectors -> count; i++) {
-		if(memcmp(connectors -> container[i], "g_skt_upstream", 
-					18) == 0) {
-			int rc = recv_gateway_msg(msg, flag);
-		}
-		if(memcmp(connectors -> container[i], "g_skt_status",
-					20) == 0) {
-			int rc = recv_login_msg(msg, flag);
-		}
-	}	
-#endif
+
 	return rc;
 }
 
-int send_msg(struct app_msg *msg) {
+int recv_more_msg(int types, struct app_msg *msg, int flag) {
 	int rc = -1;
-	if((g_conn_types & TYPE_SETTING) == TYPE_SETTING) {
-		printf("send to userinfoapi\n");
-		rc = send_to_api(msg, g_skt_setting);
+	zmq_pollitem_t items[3];
+	int i = 0;
+	if((types & TYPE_UPSTREAM) == TYPE_UPSTREAM) {
+		items[i].socket = g_skt_upstream;  
+		items[i].events = ZMQ_POLLIN;
+		i ++;
 	}
-	
-	if((g_conn_types & TYPE_DOWNSTREAM) == TYPE_DOWNSTREAM) {
-		printf("send to message_gateway(client)\n");
-		rc = send_to_gateway(msg, g_skt_downstream);
+	if((types & TYPE_STATUS) == TYPE_STATUS) {
+		items[i].socket = g_skt_status;
+		items[i].events = ZMQ_POLLIN;
+		i ++;
 	}
+	if((types & TYPE_LOOKING) == TYPE_LOOKING) {
+		items[i].socket = g_skt_looking;
+		items[i].events = ZMQ_POLLIN;
+		i ++;
+	}
+	rc = zmq_poll(items, i, flag);	// -1, block, 0,not block.
+	assert(rc >= 0);
+
+	msg->vector_size = MAX_SPILL_DEPTH;
+	int j;
+	for(j = 0; j <= i; j++) {
+		if(items[j].revents > 0) {
+		return zmq_recviov(items[j].socket, msg->vector, 
+				&msg->vector_size, 0);
+		}
+	}
+
+	return rc;
+}
+
+int send_msg(enum askt_type type, struct app_msg *msg) {
+	int rc = -1;
+
+	switch(type) {
+		case TYPE_DOWNSTREAM:
+			rc = zmq_sendiov(g_skt_downstream, msg->vector, msg->vector_size, 
+					ZMQ_SNDMORE | ZMQ_DONTWAIT);
+			break;
+		case TYPE_SETTING:
+			rc = zmq_sendiov(g_skt_setting, msg->vector, msg->vector_size, 
+					ZMQ_SNDMORE | ZMQ_DONTWAIT);
+			break;
+		case TYPE_LOOKING:
+			rc = zmq_sendiov(g_skt_looking, msg->vector, msg->vector_size, 
+					ZMQ_SNDMORE | ZMQ_DONTWAIT);
+		default:
+			break;
+	}
+
 	return rc;
 }

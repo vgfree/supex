@@ -78,10 +78,8 @@ prepare:
 
 #######以下是你需要修改添加的#######
 SOBJ = $(addprefix $(SOBJ_DIR)/, \
-        send_wraper.o \
-	recv_wraper.o \
 	appsrv.o \
-	connect_oper.o \
+	appsrv_handle.o \
 	)
 
 
