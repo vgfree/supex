@@ -81,6 +81,7 @@ SOBJ = $(addprefix $(SOBJ_DIR)/, \
         send_wraper.o \
 	recv_wraper.o \
 	appsrv.o \
+	connect_oper.o \
 	)
 
 

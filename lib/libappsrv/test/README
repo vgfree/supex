@@ -1,12 +1,5 @@
 configure illustration writed by lanjian 2016/07/07
 instruction about AppServer receive and send strategy:
 
-recv_strategy=all             appServer receive messages from the loginServer and messageGateway
-recv_strategy=onlyLogin       appserver receive messages from loginServer
-recv_strategy=onlyGateway     appServer receive messages from messageGateway
-
-send_strategy=all             appServer send messages to UserinfoApi and messageGateway
-send_strategy=onlyUserinfoApi appServer send messages to UserinfoApi
-send_strategy=onlyGateway     appServer send messages to messageGateway
 
 

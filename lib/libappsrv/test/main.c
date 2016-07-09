@@ -7,13 +7,14 @@
 
 int main(int argc, char *argv[])
 {
-	create_io();
-
+	ct_type connect_type = 0x00001111;
+	create_io(connect_type);
+	printf("create_io\n");
 	while (1) {
 		struct app_msg  msg = {};
 		int             more = 0;
 		size_t		i;
-		app_recv_all_msg(&msg, &more, -1);
+		app_recv_msg(&msg, &more, -1);
 		printf("msg size:%d, [0]iov_len:%d\n",
 			msg.vector_size, msg.vector[0].iov_len);
 		assert(msg.vector_size > 0);
@@ -22,10 +23,11 @@ int main(int argc, char *argv[])
 			if (memcmp(msg.vector[1].iov_base, "connected", 9) == 0) {
 				char            setting[] = "setting";
 				char            gidmap[] = "gidmap";
-				char            cid[20] = {}; memcpy(cid, msg.vector[2].iov_base, msg.vector[2].iov_len);
+				char            cid[20] = {}; 
 				char            gid[] = "gid0";
 				struct app_msg  send_msg = {};
 				send_msg.vector_size = 4;
+				memcpy(cid, msg.vector[2].iov_base, msg.vector[2].iov_len);
 				send_msg.vector[0].iov_base = setting;
 				send_msg.vector[0].iov_len = strlen(setting);
 				send_msg.vector[1].iov_base = gidmap;

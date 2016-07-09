@@ -4,7 +4,7 @@
 
 #include <assert.h>
 #include <memory.h>
-
+#if 0
 #define CONFIG                  "libappsrv.conf"
 #define PULL_LOGIN_IP           "PullLoginIP"
 #define PULL_LOGIN_PORT         "PullLoginPort"
@@ -14,7 +14,7 @@
 
 static void     *s_gateway = NULL;
 static void     *s_login = NULL;
-static void     *recv_strategy = NULL;
+static char     *recv_strategy = NULL;
 void init_recv(void *ctx)
 {
 	assert(!s_gateway && !s_login && !recv_strategy);
@@ -68,38 +68,40 @@ void destroy_recv()
 		zmq_close(s_gateway);
 	}
 }
+#endif
 
 /**
  * flag: 0 means block, ZMQ_DONTWAIT means not block
  */
-int recv_login_msg(struct app_msg *msg, int flag) {
+int recv_login_msg(struct app_msg *msg, void *ct_recv_login, int flag) {
 	assert(msg);
-	int rc = zmq_msg_recv(msg, s_login, flag);
-	assert (rc != -1);
+//	int rc = zmq_msg_recv(msg, ct_recv_login, flag);
+//	assert (rc != -1);
 
 	msg->vector_size = MAX_SPILL_DEPTH;
-	return zmq_recviov(s_login, msg->vector, &msg->vector_size, 0);
+	return zmq_recviov(ct_recv_login, msg->vector, &msg->vector_size, 0);
 }
 
 /**
  * flag: 0 means block, ZMQ_DONTWAIT means not block
  */
-int recv_gateway_msg(struct app_msg *msg, int flag) {
+int recv_gateway_msg(struct app_msg *msg, void *ct_upstream, int flag) {
 	assert(msg);
-	int rc = zmq_msg_recv(msg, s_gateway, flag);
-	assert (rc != -1);
+//	int rc = zmq_msg_recv(msg, ct_upstream, flag);
+//	assert (rc != -1);
 
 	msg->vector_size = MAX_SPILL_DEPTH;
-	return zmq_recviov(s_gateway, msg->vector, &msg->vector_size, 0);
+	return zmq_recviov(ct_upstream, msg->vector, &msg->vector_size, 0);
 }
 
-int recv_all_msg(struct app_msg *msg, int *more, int flag)
+int recv_more_msg(struct app_msg *msg, void *ct_upstream, void *ct_recv_login,
+		int *more, int flag)
 {
 	assert(msg && more);
 	zmq_pollitem_t items[2];
-	items[0].socket = s_login;
+	items[0].socket = ct_recv_login;
 	items[0].events = ZMQ_POLLIN;
-	items[1].socket = s_gateway;
+	items[1].socket = ct_upstream;
 	items[1].events = ZMQ_POLLIN;
 	int rc = zmq_poll(items, 2, flag);	// -1, block, 0,not block.
 	assert(rc >= 0);
@@ -113,9 +115,9 @@ int recv_all_msg(struct app_msg *msg, int *more, int flag)
 	msg->vector_size = MAX_SPILL_DEPTH;
 
 	if (items[0].revents > 0) {
-		return zmq_recviov(s_login, msg->vector, &msg->vector_size, 0);
+		return zmq_recviov(ct_recv_login, msg->vector, &msg->vector_size, 0);
 	} else if (items[1].revents > 0) {
-		return zmq_recviov(s_gateway, msg->vector, &msg->vector_size, 0);
+		return zmq_recviov(ct_upstream, msg->vector, &msg->vector_size, 0);
 	}
 
 	return rc;

@@ -4,6 +4,7 @@
 #include <assert.h>
 #include <memory.h>
 
+#if 0
 #define CONFIG                  "libappsrv.conf"
 #define PUSH_API_IP             "PushApiIP"
 #define PUSH_API_PORT           "PushApiPort"
@@ -72,16 +73,17 @@ void destroy_send()
 		zmq_close(s_gateway);
 	}
 }
+#endif
 
-int send_to_api(struct app_msg *msg)
+int send_to_api(struct app_msg *msg, void *ct)
 {
-	assert(msg && s_api);
-	return zmq_sendiov(s_api, msg->vector, msg->vector_size, ZMQ_SNDMORE | ZMQ_DONTWAIT);
+	assert(msg && ct);
+	return zmq_sendiov(ct, msg->vector, msg->vector_size, ZMQ_SNDMORE | ZMQ_DONTWAIT);
 }
 
-int send_to_gateway(struct app_msg *msg)
+int send_to_gateway(struct app_msg *msg, void *ct)
 {
-	assert(msg && s_gateway);
-	return zmq_sendiov(s_gateway, msg->vector, msg->vector_size, ZMQ_SNDMORE | ZMQ_DONTWAIT);
+	assert(msg && ct);
+	return zmq_sendiov(ct, msg->vector, msg->vector_size, ZMQ_SNDMORE | ZMQ_DONTWAIT);
 }
 

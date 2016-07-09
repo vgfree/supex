@@ -5,11 +5,14 @@
 
 #include <assert.h>
 #include <string.h>
+#include "connect_oper.h"
+#include "config_reader.h"
 
 static void *g_ctx = NULL;
 static AO_SpinLockT *g_send_lock = NULL;
 static AO_SpinLockT *g_recv_lock = NULL;
-void create_io()
+
+void create_io(ct_type connect_type)
 {
 	assert(!g_ctx);
 	g_ctx = zmq_ctx_new();
@@ -17,78 +20,29 @@ void create_io()
 	g_recv_lock = (AO_SpinLockT*)malloc(sizeof(AO_SpinLockT));
 	AO_SpinLockInit(g_send_lock, false);
 	AO_SpinLockInit(g_recv_lock, false);
-	init_send(g_ctx);
-	init_recv(g_ctx);
+	init_connect(g_ctx, connect_type);
 }
 
 void destroy_io()
 {
 	assert(g_ctx);
-	destroy_send();
-	destroy_recv();
+	destroy_connect();
 	zmq_ctx_destroy(g_ctx);
 }
 
-int app_send_msg(struct app_msg *msg)
-{
-	AO_SpinLock(g_send_lock);
+
+int app_recv_msg(struct app_msg *msg, int* more, int flag) {
+	assert(msg);
+	AO_SpinLock(g_recv_lock);
+	int rc = recv_msg(msg, more, flag);
+	AO_SpinUnlock(g_recv_lock);
+	return rc;
+}
+
+int app_send_msg(struct app_msg *msg) {
 	assert(msg && msg->vector_size > 0);
-	int rc = -1;
-//	printf("iov_len:%u\n", msg->vector[0].iov_len);
-
-	if ((msg->vector[0].iov_len == 7) &&
-		(memcmp("setting", msg->vector[0].iov_base, 7) == 0)) {
-		printf("send to _api.\n");
-		rc = send_to_api(msg);
-	} else {
-		rc = send_to_gateway(msg);
-	}
-	AO_SpinUnlock(g_send_lock);
-	return rc;
-}
-
-int app_send_to_api(struct app_msg *msg) {
-	AO_SpinLock(g_send_lock);
-	int rc = -1;
-	printf("send to api.\n");
-	rc = send_to_api(msg);
-	AO_SpinUnlock(g_send_lock);
-	return rc;
-}
-
-int app_send_to_gateway(struct app_msg *msg) {
-	AO_SpinLock(g_send_lock);
-	int rc = -1;
-	printf("send to messageGate.\n");
-	rc = send_to_gateway(msg);
-	AO_SpinUnlock(g_send_lock);
-	return rc;
-	
-}
-
-int app_recv_all_msg(struct app_msg *msg, int *more, int flag)
-{
 	AO_SpinLock(g_recv_lock);
-	assert(msg);
-	int rc = recv_all_msg(msg, more, flag);
-	AO_SpinUnlock(g_recv_lock);
-	return rc;
-}
-
-int app_recv_login_msg(struct app_msg *msg, int flag)
-{
-	AO_SpinLock(g_recv_lock);
-	assert(msg);
-	int rc = recv_login_msg(msg, flag);
-	AO_SpinUnlock(g_recv_lock);
-	return rc;
-}
-
-int app_recv_gateway_msg(struct app_msg *msg, int flag)
-{
-	AO_SpinLock(g_recv_lock);
-	assert(msg);
-	int rc = recv_gateway_msg(msg, flag);
+	int rc = send_msg(msg);
 	AO_SpinUnlock(g_recv_lock);
 	return rc;
 }
