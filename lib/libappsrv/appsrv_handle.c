@@ -70,7 +70,6 @@ void init_connect(void *ctx, int types) {
 		printf("connected with userinfoapi to setting\n");
 		assert(rc == 0);
 	}
-	//TODO: look interface
 	if((g_conn_types & TYPE_LOOKING) == TYPE_LOOKING) {
 		host = get_config_name(config, USERINFOAPI_REP_HOST);
 		port = get_config_name(config, USERINFOAPI_REP_PORT);
@@ -84,7 +83,8 @@ void init_connect(void *ctx, int types) {
 	destroy_config_reader(config);
 }
 
-void destroy_connect(void) {
+void destroy_connect(void)
+{
 	if(g_skt_upstream) {
 		zmq_close(g_skt_upstream);
 	}
@@ -128,11 +128,6 @@ int recv_more_msg(int types, struct app_msg *msg, int flag) {
 	int rc = -1;
 	zmq_pollitem_t items[3];
 	int i = 0;
-	if((types & TYPE_UPSTREAM) == TYPE_UPSTREAM) {
-		items[i].socket = g_skt_upstream;  
-		items[i].events = ZMQ_POLLIN;
-		i ++;
-	}
 	if((types & TYPE_STATUS) == TYPE_STATUS) {
 		items[i].socket = g_skt_status;
 		items[i].events = ZMQ_POLLIN;
@@ -143,15 +138,20 @@ int recv_more_msg(int types, struct app_msg *msg, int flag) {
 		items[i].events = ZMQ_POLLIN;
 		i ++;
 	}
+	if((types & TYPE_UPSTREAM) == TYPE_UPSTREAM) {
+		items[i].socket = g_skt_upstream;  
+		items[i].events = ZMQ_POLLIN;
+		i ++;
+	}
 	rc = zmq_poll(items, i, flag);	// -1, block, 0,not block.
 	assert(rc >= 0);
 
 	msg->vector_size = MAX_SPILL_DEPTH;
 	int j;
-	for(j = 0; j <= i; j++) {
+	for(j = 0; j < i; j++) {
 		if(items[j].revents > 0) {
-		return zmq_recviov(items[j].socket, msg->vector, 
-				&msg->vector_size, 0);
+			return zmq_recviov(items[j].socket, msg->vector, 
+					&msg->vector_size, 0);
 		}
 	}
 

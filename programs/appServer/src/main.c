@@ -188,7 +188,7 @@ int main(int argc, char **argv)
 	if (!kvpool_init()) {
 		exit(EXIT_FAILURE);
 	}
-	create_io();
+	create_io(TYPE_UPSTREAM | TYPE_STATUS);
 	// 1. 初始化线程池
 	tlpool_t *tlpool = tlpool_init(MAX_PTHREAD_COUNT, 100, sizeof(struct app_msg), NULL);
 	int idx;
@@ -199,7 +199,6 @@ int main(int argc, char **argv)
 
 	// 2. 循环接收数据
 	struct app_msg recv_msg = {};
-	int more = 0;
 
 	char *t1 = malloc(8);
 	memcpy(t1, "upstream", 8);
@@ -216,7 +215,7 @@ int main(int argc, char **argv)
 	recv_msg.vector[2].iov_len = 20;
 	task_report(tlpool, &recv_msg);
 	while (1) {
-		if (recv_app_msg(&recv_msg, &more, -1)) {
+		if (app_recv_more_msg(TYPE_UPSTREAM | TYPE_STATUS, &recv_msg, -1)) {
 			task_report(tlpool, &recv_msg);
 			printf("在这里\n");
 		}
