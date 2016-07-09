@@ -10,120 +10,113 @@
 #include <memory.h>
 #include "connect_oper.h"
 
-#define SRV_CONFIG                  "libappsrv.conf"
 
-#define RECV_UPSTREAM               0x00000001
-#define RECV_GATEWAY_IP             "recv_gateway_ip"
-#define RECV_GATEWAY_PORT           "recv_gateway_port"
+static int g_conn_types = 0x00000000;
 
+static void *g_skt_upstream     = NULL;
+static void *g_skt_downstream   = NULL;
+static void *g_skt_status	= NULL;
+static void *g_skt_setting	= NULL;
+static void *g_skt_looking	= NULL;
 
-#define SEND_DOWNSTREAM             0x00000010
-#define SEND_GATEWAY_IP             "send_gateway_ip"
-#define SEND_GATEWAY_PORT           "send_gateway_port"
-
-#define RECV_LOGIN                  0x00000100
-#define RECV_LOGIN_IP               "recv_login_ip"
-#define RECV_LOGIN_PORT             "recv_login_port"
-
-#define SEND_SETTING                0x00001000
-#define SEND_USERINFOAPI_IP         "send_userinfoapi_ip"
-#define SEND_USERINFOAPI_PORT       "send_userinfoapi_port"
-
-#define RECV_UPSTREAM_AND_LOGIN     0x00000101
-
-static void *ct_upstream     = NULL;
-static void *ct_downstream   = NULL;
-static void *ct_recv_login   = NULL;
-static void *ct_send_setting = NULL;
-static int conn_type = 0x00000000;
-
-void init_connect(void *ctx, ct_type connect_type) {
+void init_connect(void *ctx, int types) {
 	int rc = -1;
-	char *ip;
+	char *host;
 	char *port;
 	char addr[64] = {};
+	/*set types*/
+	g_conn_types = types;
+	printf("g_conn_types : %x\n", g_conn_types);
+	assert(g_conn_types > 0);
+	/*init socket*/
 	struct config_reader *config = init_config_reader(SRV_CONFIG);
-	conn_type = connect_type;
-	printf("conn_type : %x\n", conn_type);
-	assert(conn_type > 0);
+	if((g_conn_types & TYPE_UPSTREAM) == TYPE_UPSTREAM) {
+		host = get_config_name(config, GATEWAY_PUSH_HOST);
+		port = get_config_name(config, GATEWAY_PUSH_PORT);
+		snprintf(addr, 63, "tcp://%s:%s", host, port);
 
-	if((conn_type & RECV_UPSTREAM) == RECV_UPSTREAM) {
-		ip = get_config_name(config, RECV_GATEWAY_IP);
-		port = get_config_name(config, RECV_GATEWAY_PORT);
-		snprintf(addr, 63, "tcp://%s:%s", ip, port);
-		ct_upstream = zmq_socket(ctx, ZMQ_PULL);
-		rc = zmq_connect(ct_upstream, addr);
+		g_skt_upstream = zmq_socket(ctx, ZMQ_PULL);
+		rc = zmq_connect(g_skt_upstream, addr);
 		printf("connected with upstream\n");
 		assert(rc == 0);
 	}
 
-	if((conn_type & SEND_DOWNSTREAM) == SEND_DOWNSTREAM) {
-		ip = get_config_name(config, SEND_GATEWAY_IP);
-		port = get_config_name(config, SEND_GATEWAY_PORT);
-		snprintf(addr, 63, "tcp://%s:%s", ip, port);
-		ct_downstream = zmq_socket(ctx, ZMQ_PUSH);
-		rc = zmq_connect(ct_downstream, addr);
+	if((g_conn_types & TYPE_DOWNSTREAM) == TYPE_DOWNSTREAM) {
+		host = get_config_name(config, GATEWAY_PULL_HOST);
+		port = get_config_name(config, GATEWAY_PULL_PORT);
+		snprintf(addr, 63, "tcp://%s:%s", host, port);
+
+		g_skt_downstream = zmq_socket(ctx, ZMQ_PUSH);
+		rc = zmq_connect(g_skt_downstream, addr);
 		printf("connected with downstream\n");
 		assert(rc == 0);
 	}
 
-	if((conn_type & RECV_LOGIN) == RECV_LOGIN) {
-		ip = get_config_name(config, RECV_LOGIN_IP);
-		port = get_config_name(config, RECV_LOGIN_PORT);
-		snprintf(addr, 63, "tcp://%s:%s", ip, port);
-		ct_recv_login = zmq_socket(ctx, ZMQ_PULL);
-		rc = zmq_connect(ct_recv_login, addr);
+	if((g_conn_types & TYPE_STATUS) == TYPE_STATUS) {
+		host = get_config_name(config, LOGIN_PUSH_HOST);
+		port = get_config_name(config, LOGIN_PUSH_PORT);
+		snprintf(addr, 63, "tcp://%s:%s", host, port);
+
+		g_skt_status = zmq_socket(ctx, ZMQ_PULL);
+		rc = zmq_connect(g_skt_status, addr);
 		printf("connected with loginserver\n");
 		assert(rc == 0);
 	}
 
-	if((conn_type & SEND_SETTING) == SEND_SETTING) {
-		ip = get_config_name(config, SEND_USERINFOAPI_IP);
-		port = get_config_name(config, SEND_USERINFOAPI_PORT);
-		snprintf(addr, 63, "tcp://%s:%s", ip, port);
-		ct_send_setting = zmq_socket(ctx, ZMQ_PULL);
-		rc = zmq_connect(ct_send_setting, addr);
+	if((g_conn_types & TYPE_SETTING) == TYPE_SETTING) {
+		host = get_config_name(config, USERINFOAPI_PULL_HOST);
+		port = get_config_name(config, USERINFOAPI_PULL_PORT);
+		snprintf(addr, 63, "tcp://%s:%s", host, port);
+
+		g_skt_setting = zmq_socket(ctx, ZMQ_PUSH);
+		rc = zmq_connect(g_skt_setting, addr);
 		printf("connected with userinfoapi\n");
 		assert(rc == 0);
 	}
+	//TODO:
 	destroy_config_reader(config);
 }
 
-void destroy_connect() {
-	if(ct_upstream) {
-		zmq_close(ct_upstream);
+void destroy_connect(void)
+{
+	if(g_skt_upstream) {
+		zmq_close(g_skt_upstream);
 	}
-	if(ct_downstream) {
-		zmq_close(ct_downstream);
+	if(g_skt_downstream) {
+		zmq_close(g_skt_downstream);
 	}
-	if(ct_recv_login) {
-		zmq_close(ct_recv_login);
+	if(g_skt_status) {
+		zmq_close(g_skt_status);
 	}
-	if(ct_send_setting) {
-		zmq_close(ct_send_setting);
+	if(g_skt_setting) {
+		zmq_close(g_skt_setting);
+	}
+	if(g_skt_looking) {
+		zmq_close(g_skt_looking);
 	}
 }
 
+#define RECV_UPSTREAM_AND_LOGIN     0x00000101
 int recv_msg(struct app_msg *msg, int* more, int flag) {
 	int rc = -1;
-	if((conn_type & RECV_UPSTREAM_AND_LOGIN) == RECV_UPSTREAM_AND_LOGIN) {
-		rc = recv_more_msg(msg, ct_upstream, ct_recv_login, more, flag);	
-	}else if((conn_type & RECV_UPSTREAM) == RECV_UPSTREAM) {
-		rc = recv_gateway_msg(msg, ct_upstream, ZMQ_DONTWAIT);
+	if((g_conn_types & RECV_UPSTREAM_AND_LOGIN) == RECV_UPSTREAM_AND_LOGIN) {
+		rc = recv_more_msg(msg, g_skt_upstream, g_skt_status, more, flag);	
+	}else if((g_conn_types & RECV_UPSTREAM) == RECV_UPSTREAM) {
+		rc = recv_gateway_msg(msg, g_skt_upstream, ZMQ_DONTWAIT);
 
-	}else if((conn_type & RECV_LOGIN) == RECV_LOGIN) {
-		rc = recv_login_msg(msg, ct_recv_login, ZMQ_DONTWAIT);
+	}else if((g_conn_types & TYPE_STATUS) == TYPE_STATUS) {
+		rc = recv_login_msg(msg, g_skt_status, ZMQ_DONTWAIT);
 
 	}
 #if 0
 	int i;
 	//TODO check connect type and connectors
 	for(i = 0; i < connectors -> count; i++) {
-		if(memcmp(connectors -> container[i], "ct_upstream", 
+		if(memcmp(connectors -> container[i], "g_skt_upstream", 
 					18) == 0) {
 			int rc = recv_gateway_msg(msg, flag);
 		}
-		if(memcmp(connectors -> container[i], "ct_recv_login",
+		if(memcmp(connectors -> container[i], "g_skt_status",
 					20) == 0) {
 			int rc = recv_login_msg(msg, flag);
 		}
@@ -134,14 +127,14 @@ int recv_msg(struct app_msg *msg, int* more, int flag) {
 
 int send_msg(struct app_msg *msg) {
 	int rc = -1;
-	if((conn_type & SEND_SETTING) == SEND_SETTING) {
+	if((g_conn_types & TYPE_SETTING) == TYPE_SETTING) {
 		printf("send to userinfoapi\n");
-		rc = send_to_api(msg, ct_send_setting);
+		rc = send_to_api(msg, g_skt_setting);
 	}
 	
-	if((conn_type & SEND_DOWNSTREAM) == SEND_DOWNSTREAM) {
+	if((g_conn_types & TYPE_DOWNSTREAM) == TYPE_DOWNSTREAM) {
 		printf("send to message_gateway(client)\n");
-		rc = send_to_gateway(msg, ct_downstream);
+		rc = send_to_gateway(msg, g_skt_downstream);
 	}
 	return rc;
 }

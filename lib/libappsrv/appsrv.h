@@ -5,36 +5,49 @@
 
 #include <sys/uio.h>
 
+
+enum askt_type {
+	TYPE_UPSTREAM		= 0x00000001,
+	TYPE_DOWNSTREAM		= 0x00000010,
+	TYPE_STATUS		= 0x00000100,
+	TYPE_SETTING		= 0x00001000,
+	TYPE_LOOKING		= 0x00010000,
+};
+
+#define SRV_CONFIG                  "libappsrv.conf"
+
+#define GATEWAY_PUSH_HOST		"gateway_push_upstream_host"
+#define GATEWAY_PUSH_PORT		"gateway_push_upstream_port"
+
+
+#define GATEWAY_PULL_HOST		"gateway_pull_downstream_host"
+#define GATEWAY_PULL_PORT		"gateway_pull_downstream_port"
+
+#define LOGIN_PUSH_HOST              	"login_push_status_host"
+#define LOGIN_PUSH_PORT			"login_push_status_port"
+
+#define USERINFOAPI_PULL_HOST		"usrinfoapi_pull_setting_host"
+#define USERINFOAPI_PULL_PORT		"usrinfoapi_pull_setting_port"
+
+
+
 #define MAX_SPILL_DEPTH    32
 
-typedef unsigned int ct_type;
 struct app_msg
 {
 	size_t          vector_size;
 	struct iovec    vector[MAX_SPILL_DEPTH];
 };
 
-void create_io(ct_type connect_type);
+void create_io(int types);
 
-void destroy_io();
+void destroy_io(void);
 
-int app_recv_msg(struct app_msg *msg, int* more, int flag);
+int app_recv_msg(enum askt_type type, struct app_msg *msg);
 
-int app_send_msg(struct app_msg *msg);
+int app_send_msg(enum askt_type type, struct app_msg *msg);
 	
-#if 0
-int app_send_msg(struct app_msg *msg);
-
-int app_send_to_api(struct app_msg *msg);
-
-int app_send_to_gateway(struct app_msg *msg);
-
-int app_recv_all_msg(struct app_msg *msg, int *more, int flag);
-
-int app_recv_login_msg(struct app_msg *msg, int flag);
-
-int app_recv_gateway_msg(struct app_msg *msg, int flag);
-#endif
+int app_recv_more_msg(int types, struct app_msg *msg, int flag);
 
 #endif	/* ifndef _APP_SRV_H_ */
 

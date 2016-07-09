@@ -7,7 +7,7 @@
 
 int main(int argc, char *argv[])
 {
-	ct_type connect_type = 0x00001111;
+	enum askt_type connect_type = 0x00001111;
 	create_io(connect_type);
 	printf("create_io\n");
 	while (1) {

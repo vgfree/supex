@@ -95,27 +95,34 @@ int recv_gateway_msg(struct app_msg *msg, void *ct_upstream, int flag) {
 }
 
 int recv_more_msg(struct app_msg *msg, void *ct_upstream, void *ct_recv_login,
-		int *more, int flag)
+		int flag)
 {
 	assert(msg && more);
 	zmq_pollitem_t items[2];
-	items[0].socket = ct_recv_login;
-	items[0].events = ZMQ_POLLIN;
-	items[1].socket = ct_upstream;
-	items[1].events = ZMQ_POLLIN;
-	int rc = zmq_poll(items, 2, flag);	// -1, block, 0,not block.
+	int i = 0;
+	if((types & TYPE_UPSTREAM) == TYPE_UPSTREAM) {
+		items[i].socket = ct_upstream;
+		items[i].events = ZMQ_POLLIN;
+		i ++;
+	}
+	if((types & TYPE_STATUS) == TYPE_STATUS) {
+		items[i].socket = ct_recv_login;
+		items[i].events = ZMQ_POLLIN;
+		i ++;
+	}
+	if((types & TYPE_LOOKING) == TYPE_LOOKING) {
+		items[i].socket = ct_recv_login;
+		items[i].events = ZMQ_POLLIN;
+		i ++;
+	}
+	int rc = zmq_poll(items, i, flag);	// -1, block, 0,not block.
 	assert(rc >= 0);
 
-	if (rc == 2) {
-		*more = 1;
-	} else {
-		*more = 0;
-	}
 
 	msg->vector_size = MAX_SPILL_DEPTH;
 
 	if (items[0].revents > 0) {
-		return zmq_recviov(ct_recv_login, msg->vector, &msg->vector_size, 0);
+		return zmq_recviov(items[i].socket, msg->vector, &msg->vector_size, 0);
 	} else if (items[1].revents > 0) {
 		return zmq_recviov(ct_upstream, msg->vector, &msg->vector_size, 0);
 	}

@@ -6,7 +6,7 @@
  */
 
 #include "appsrv.h"
-void init_connect(void *ctx, ct_type connect_type);
+void init_connect(void *ctx, enum askt_type connect_type);
 
 void destroy_connect(); 
 

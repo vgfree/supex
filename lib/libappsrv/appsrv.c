@@ -12,7 +12,7 @@ static void *g_ctx = NULL;
 static AO_SpinLockT *g_send_lock = NULL;
 static AO_SpinLockT *g_recv_lock = NULL;
 
-void create_io(ct_type connect_type)
+void create_io(int types)
 {
 	assert(!g_ctx);
 	g_ctx = zmq_ctx_new();
@@ -20,10 +20,10 @@ void create_io(ct_type connect_type)
 	g_recv_lock = (AO_SpinLockT*)malloc(sizeof(AO_SpinLockT));
 	AO_SpinLockInit(g_send_lock, false);
 	AO_SpinLockInit(g_recv_lock, false);
-	init_connect(g_ctx, connect_type);
+	init_connect(g_ctx, types);
 }
 
-void destroy_io()
+void destroy_io(void)
 {
 	assert(g_ctx);
 	destroy_connect();
