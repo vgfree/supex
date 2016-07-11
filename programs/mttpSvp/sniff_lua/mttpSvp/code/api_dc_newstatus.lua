@@ -4,7 +4,8 @@ local redis_api = require('redis_pool_api')
 local supex     = require('supex')
 local scan      = require('scan')
 local cjson     = require('cjson')
-local utils     = require('utils')
+local cutils    = require('cutils')
+
 
 module('api_dc_newstatus', package.seeall)
 
@@ -22,7 +23,7 @@ local function parse_data(data)
         end
         return field_tab
 end
---解析GPS数据并且进行拼接
+
 local function parse_gpsdata(gpsdata, dot_list)
 	local k = 1 --dot_list的索引初始值
 	if not gpsdata then return nil end
@@ -81,7 +82,8 @@ local function compack_info_tab(trans_tab, data_tab, list)
 	trans_tab['B'] = data_tab[4]
 	trans_tab['G'] = list
 end	
-local function organize_data(org_table,gps_table,data_table)
+
+local function organize_data(org_table, gps_table, data_table)
 	local timestamp = utils.gmttime_to_timestamp(org_table['B'])
 	for i = 1,#gps_table do
 		table.insert(data_table["GPSTime"] , tonumber(gps_table[i][1]) + timestamp)
@@ -93,30 +95,30 @@ local function organize_data(org_table,gps_table,data_table)
 	end
 end
 
+function post_data_to_other(tab_jo)
+        only.log("D",scan.dump(tab_jo))
+	local ok, result = pcall(cjson.encode, tab_jo)
+	if ok then
+		local host_info = { host = "192.168.1.12" ,port = "9002" }
+
+		local request = utils.compose_http_json_request2( host_info ,'publicentry', nil, result)
+       		only.log("D", 'composed http json request = %s', request)
+
+		local ok, ret = redis_api.only_cmd("dcRedis","lpushx", "newstatus_http", request)
+		if ok then
+       			only.log("D", 'saved redis')
+		end
+	end
+end
+
 function handle(msg)
-	--变量定义
-	--req_field_tab:请求中各字段的value封装的table
-	--dot_list     :GPS数据中每个坐标点属性解析并进行字符串拼接后封装的table
-	--trans_tab    :请求数据完全解析后待转发的table
-	local req_field_tab  = {}
-	local dot_list       = {}
-	local trans_tab      = {}
 	only.log('S','msg = %s', msg)
 	local key_log = string.format('newstatuslog:%s',os.date('%Y%m%d',time))
 	local value =  string.format('%s  %s',os.date('%Y-%m-%d %H:%M:%S',time),msg)
 	redis_api.cmd('newstatusRedis','','LPUSH', key_log, value)
 	local isfind = string.find(msg,'TYPE=2')
 	local msg_str = string.gsub(msg,"&TYPE.+$","")
-	--解析请求中的msg数据并将各字段的value封装至table中
 	if isfind then
-		--[[local msg_tab = utils.str_split(msg_str, "&")
-		only.log('D', 'msg_tab = %s', scan.dump(msg_tab))
-		local req_field_tab = extract_val_from_msg(msg_tab)
-		only.log('D', 'req_field_tab = %s', scan.dump(req_field_tab))
-		
-		--提取GPS各属性数据，进行格式转换等数据解析
-		local gpsdata = req_field_tab[#req_field_tab]
-		]]
 		local org_table = utils.parse_url(msg_str)
 		only.log('D', 'org_tab = %s',scan.dump(org_table))
 
@@ -128,15 +130,11 @@ function handle(msg)
 		data_table["direction"] = {}
 		data_table["speed"]  = {}
 		data_table["altitude"] = {}
-		organize_data(org_table,gps_table, data_table)
+		organize_data(org_table, gps_table, data_table)
 		data_table['M'] = org_table['M'] 
 		data_table['collect'] = 'true'
 		
-		--parse_g:psdata(gpsdata, dot_list)
-		--only.log('D', 'dot_list = %s', scan.dump(dot_list))
 
-		--组装已经解析的信息待转发	
-		--compack_info_tab(trans_tab, req_field_tab, dot_list)
 		local ok,MAppKeyInfo = redis_api.cmd('dcRedis','','get', 'MAppKeyInfo:'..org_table['M'])
 		local ok,tokenCode = redis_api.cmd('dcRedis','','get', 'dcToken:'..org_table['M'])
 		
@@ -146,6 +144,7 @@ function handle(msg)
 		end
 		local data_str = cjson.encode(data_table)
 		only.log('D', 'trans_str =%s',data_str )
+ 		post_data_to_other(data_table, gps_table)
 	end
 end
 
