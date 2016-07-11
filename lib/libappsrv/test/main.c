@@ -7,14 +7,14 @@
 
 int main(int argc, char *argv[])
 {
-	enum askt_type connect_type = 0x00001111;
-	create_io(connect_type);
+	create_io(TYPE_UPSTREAM | TYPE_DOWNSTREAM | TYPE_STATUS | 
+			TYPE_SETTING);
 	printf("create_io\n");
 	while (1) {
 		struct app_msg  msg = {};
 		int             more = 0;
 		size_t		i;
-		app_recv_msg(&msg, &more, -1);
+		app_recv_more_msg(TYPE_UPSTREAM | TYPE_STATUS, &msg, -1);
 		printf("msg size:%d, [0]iov_len:%d\n",
 			msg.vector_size, msg.vector[0].iov_len);
 		assert(msg.vector_size > 0);
@@ -36,7 +36,7 @@ int main(int argc, char *argv[])
 				send_msg.vector[2].iov_len = strlen(cid);
 				send_msg.vector[3].iov_base = gid;
 				send_msg.vector[3].iov_len = strlen(gid);
-				app_send_msg(&send_msg);
+				app_send_msg(TYPE_SETTING, &send_msg);
 			}
 		} else {
 			struct app_msg send_msg = {};
@@ -56,7 +56,7 @@ int main(int argc, char *argv[])
 				send_msg.vector[i + 3].iov_len = msg.vector[i+2].iov_len;
 			}
 
-			app_send_msg(&send_msg);
+			app_send_msg(TYPE_DOWNSTREAM, &send_msg);
 		}
 
 		for (i = 0; i < msg.vector_size; i++) {
