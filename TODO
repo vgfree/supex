@@ -64,3 +64,4 @@ REMIND:
 	60)智能搜烁
 	60)智能查找
 	61)信息记录表来判断数据存在性
+	62)libkv支持set expaire   batch命令  lua scr命令
