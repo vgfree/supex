@@ -73,6 +73,9 @@ void hkey_del_fd(char *key)
 
 void hkey_insert_value(char *key, char *value)
 {
+	if (value == NULL) {
+		return;
+	}
 	char cmd[HKEY_SIZE] = "hset ";
 	strcat(cmd, key);
 	strcat(cmd, " value ");
@@ -178,9 +181,10 @@ char *hkey_find_key(int fd)
 	if (ans->errnum != ERR_NONE) {
 		error("find key error.");
 		kv_answer_release(ans);
-		return -1;
+		return NULL;
 	}
 	kv_answer_value_t *value = kv_answer_first_value(ans);
+	log("value->ptrlen:%d", value->ptrlen);
 	char *_value = (char *)malloc(value->ptrlen + 1);
 	int i = 0;
 	for (; i < value->ptrlen; i++) {

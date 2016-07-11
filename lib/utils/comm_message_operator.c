@@ -85,6 +85,11 @@ int remove_first_nframe(int nframe, struct comm_message *msg)
 	if (nframe > msg->package.frames) {
 		//    error("nframe:%d > msg->package.frames:%d.", nframe, msg->package.frames);
 	}
+	else if (nframe == msg->package.frames) {
+		memset(&msg->package, 0, sizeof(msg->package));
+		msg->package.packages = 1;
+		return 0;
+	}
 
 	int rmsz = msg->package.frame_offset[nframe];
 	msg->package.dsize -= rmsz;

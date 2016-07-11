@@ -25,6 +25,10 @@ void *client_thread_read(void *usr) {
 		int size = 0;
 		char *frame = get_msg_frame(0, &msg, &size);
 		char *buf = (char *)malloc((size + 1) * sizeof(char));
+		int i;
+		for (i = 0; i < size; i++) {
+			printf("%x,", frame[i]);
+		}
 		memcpy(buf, frame, size);
 		buf[size] = '\0';
 		printf("recv msg:");
@@ -57,11 +61,12 @@ int test_simulate_client(char *ip) {
 		printf("\n");
 		struct comm_message msg = {};
 		init_msg(&msg);
+		msg.socket_type = PAIR_METHOD;
 		set_msg_fd(&msg, connectfd);
 		set_msg_frame(0, &msg, strlen(str), str);
 		comm_send(g_ctx, &msg, true, -1);
 		destroy_msg(&msg);
-		sleep(5);
+//		sleep(5);
 	}
 	return 0;
 }

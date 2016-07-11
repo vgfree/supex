@@ -2,8 +2,6 @@
 #define _COMM_MESSAGE_OPERATOR_H_
 #include "comm_structure.h"
 
-#define _HKEY_ 1
-
 struct residue_package {
 	int fd;
 	int offset;

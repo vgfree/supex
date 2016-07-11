@@ -126,6 +126,7 @@ int find_gid_list(int fd, char *gid_list[], int *size)
 	if (ans->errnum != ERR_NONE) {
 		trace("find multi gid error, cmd:%s\n", cmd);
 		*size = 0;
+		kv_answer_release(ans);
 		return -1;
 	}
 

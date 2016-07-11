@@ -33,10 +33,16 @@ void client_event_notify(struct comm_context *commctx,
 			init_residue_package(&package, portinfo->fd, 0, NULL, 0);
 			pop_residue_package(&package);
 			char *key = hkey_find_key(portinfo->fd);
-			hkey_insert_value(key, package.serial_data);
-			hkey_insert_offset(key, package.offset);
+			if (package.serial_data) {
+				hkey_insert_value(key, package.serial_data);
+			}
+			if (package.offset) {
+				hkey_insert_offset(key, package.offset);
+			}
 			destroy_residue_package(&package);
-			free(key);
+			/*if (key) {
+				free(key);
+			}*/
 #endif
 		}
 		break;

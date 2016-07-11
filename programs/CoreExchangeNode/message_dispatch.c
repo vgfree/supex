@@ -289,19 +289,23 @@ static int _verified(struct comm_message *msg)
 			log("%d frame, data:%s", i, buf);
 			free(buf);
 		}
+		trace("msg type:%d.", msg->socket_type);
 #endif
-#ifdef _HKEY_
 	if (msg->socket_type == PAIR_METHOD) {
+#if _HKEY_
 		int frame_size = 0;
 		char    *frame = get_msg_frame(0, msg, &frame_size);
 		char *key = (char *)malloc((frame_size + 1)* sizeof(char));
 		memcpy(key, frame, frame_size);
 		key[frame_size] = '\0';
 		remove_first_nframe(1, msg);
+		log("send message msg type:%d, dsize:%d frame_size:%d frames_of_package:%d frames:%d packages:%d", msg->socket_type, msg->package.dsize, msg->package.frame_size[0],msg->package.frames_of_package[0], msg->package.frames, msg->package.packages);
 		int fd = hkey_get_fd(key);
 		char buf[21] = {};
-		buf[0] = 1;
+		buf[0] = 0x01;
+		log("PAIR_METHOD fd:%d.", fd);
 		if (fd == -1) { // first hkey.
+			log("first insert hkey");
 			set_msg_frame(0, msg, 21, buf);
 		}
 		else {
@@ -323,10 +327,17 @@ static int _verified(struct comm_message *msg)
 		}
 		hkey_insert_fd(key, msg->fd);
 		free(key);
+#else
+		remove_first_nframe(1, msg);
+		char buf[21] = {};
+		buf[0] = 0x01;
+		set_msg_frame(0, msg, 21, buf);
+
+#endif
+		log("send message msg type:%d, dsize:%d frame_size:%d frames_of_package:%d frames:%d packages:%d", msg->socket_type, msg->package.dsize, msg->package.frame_size[0],msg->package.frames_of_package[0], msg->package.frames, msg->package.packages);
 		comm_send(g_serv_info.commctx, msg, true, -1);
 		return 1;
 	}
-#endif
 	return 0;
 }
 

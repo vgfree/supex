@@ -3,7 +3,7 @@
 
 #include "router.h"
 
-#define FD_CAPACITY             1024 * 20
+#define FD_CAPACITY             1024 * 100
 #define FD_MAX_CLASSIFICATION   5
 #define SUCCESS                 0
 #define FAILED                  -1
