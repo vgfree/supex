@@ -11,11 +11,6 @@
 extern "C" {
 #endif
 
-/* 加密和解密的回调函数原型 返回值为加密/解密之后数据的字节数 */
-typedef int (*Compression_CallBack)(char *dest, const char *src, int d_len, int s_len);
-typedef int (*Encryption_CallBack)(char *dest, const char *src, int d_len, int s_len);
-
-
 /* MFPTP打包器的状态 */
 struct mfptp_pack_stat
 {
@@ -31,8 +26,6 @@ struct mfptp_packager
 	bool                            init;		/* 判断此结构体是否被正确初始化 */
 	struct mfptp_header_info        header;		/* MFPTP协议head相关信息 */
 	struct mfptp_bodyer_info        bodyer;		/* MFPTP协议body相关信息 */
-	Encryption_CallBack             encryptcb;	/* MFPTP协议加密的回调函数 */
-	Compression_CallBack            compresscb;	/* MFPTP协议压缩的回调函数 */
 	struct mfptp_pack_stat          ms;		/* 打包器的状态 */
 };
 
@@ -49,10 +42,10 @@ void mfptp_package_destroy(struct mfptp_packager *packager);
 
 /***********************************************************************************
  * 功能：开始打包数据
- * @data:待打包的数据首地址 @flag:压缩和加密的标志位  @method:socket的type
+ * @data:待打包的数据首地址  @method:socket的type
  * @返回值: -1:失败, 否则代表打包之后的数据的大小
  ************************************************************************************/
-int mfptp_package(struct mfptp_packager *packager, const char *data, unsigned char flag, int method);
+int mfptp_package(struct mfptp_packager *packager, const char *data, int method);
 
 /***********************************************************************************
 * 功能：检测保存已打包数据的内存大小是否足够
@@ -68,9 +61,8 @@ int mfptp_check_memory(int memsize, int frames, int dsize);
 * @frame_size:待打包数据的每帧大小
 * @frames_of_pack:待打包数据每个单包中帧的总数
 * @packages:待打包数据的总包数
-* @datasize:待打包数据的总大小
 ***********************************************************************************/
-bool mfptp_fill_package(struct mfptp_packager *packager, const int *frame_offset, const int *frame_size, const int *frames_of_pack, int packages, int datasize);
+void mfptp_fill_package(struct mfptp_packager *packager, const int *frame_offset, const int *frame_size, const int *frames_of_pack, int packages);
 
 #ifdef __cplusplus
 }

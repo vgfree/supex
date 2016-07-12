@@ -12,9 +12,6 @@
 extern "C" {
 #endif
 
-/* 解压和解密回调函数 返回值为解压/解密之后的数据的字节数 */
-typedef int (*Decompression_CallBack)(char *dest, const char *src, int d_len, int s_len);
-typedef int (*Decryption_CallBack)(char *dest, const char *src, int d_len, int s_len);
 
 /* MFPTP协议的状态码[当前解析或打包正在处理协议的哪部分] */
 enum mfptp_status
@@ -36,9 +33,7 @@ enum mfptp_status
 	MFPTP_F_SIZE_3,			/* 15 MFPTP协议F_size字段的第三位 */
 	MFPTP_F_SIZE_4,			/* 16 MFPTP协议F_size字段的第四位 */
 	MFPTP_FRAME_START,		/* 17 MFPTP协议的帧 */
-	MFPTP_FRAME_DECOMPRESS,		/* 18 MFPTP协议解压数据 */
-	MFPTP_FRAME_DECRYPT,		/* 19 MFPTP协议解密数据 */
-	MFPTP_FRAME_COPYDATA,		/* 20 MFPTP协议将数据拷贝到保存解析后数据的缓冲区 */
+	MFPTP_FRAME_SETTING,		/* 20 MFPTP协议设置帧的大小,偏移，帧数计数 */
 	MFPTP_FRAME_OVER,		/* 21 MFPTP协议解析完一包的数据 */
 	MFPTP_PARSE_OVER		/* 22 MFPTP协议解析完*/
 };
@@ -49,10 +44,9 @@ struct mfptp_parser_stat
 	bool                    over;		/* 是否完成解析*/
 	bool                    resume;		/* 是否断点续传 */
 	int                     dosize;		/* 当前已解析的长度 */
-	int			frame_offset;	/* 记录目前最后解析的帧偏移[已解析数据在cache里面的偏移]*/
+//	int			frame_offset;	/* 记录目前最后解析的帧偏移[已解析数据在cache里面的偏移]*/
 	char *const             *data;		/* 待解析数据起始地址指针*/
 	int const               *dsize;		/* 待解析数据的总长度地址*/
-	struct comm_cache       cache;		/* 保存解压解密之后的数据 */
 	enum mfptp_status       step;		/* 当前解析的步进 */
 	enum mfptp_error        error;		/* MFPTP解析错误码 */
 };
@@ -63,8 +57,6 @@ struct mfptp_parser
 	bool                            init;			/* 此结构体是否被正确的初始化 */
 	struct mfptp_header_info        header;			/* MFPTP协议head的相关信息 */
 	struct mfptp_bodyer_info        bodyer;			/* MFPTP协议body的相关信息 */
-	Decompression_CallBack          decompresscb;		/* 解压的回调函数 */
-	Decryption_CallBack             decryptcb;		/* 解密的回调函数 */
 	struct mfptp_parser_stat        ms;			/* MFPTP协议数据解析器状态 */
 };
 

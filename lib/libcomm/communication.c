@@ -15,6 +15,7 @@ static void *_start_new_pthread(void *usr);
 
 static void  _set_remainfd(struct comm_timer *commtimer, struct comm_list *timerhead, void *usr);
 
+static bool _check_packageinfo(const struct comm_message *message);
 
 struct comm_context *comm_ctx_create(int epollsize)
 {
@@ -65,6 +66,7 @@ struct comm_context *comm_ctx_create(int epollsize)
 
 	commlist_init(&commctx->recvlist, free_commmsg);
 	commlist_init(&commctx->timerhead, NULL);
+	commcache_init(&commctx->cache);
 	commctx->stat = COMM_STAT_INIT;
 
 	return commctx;
@@ -85,6 +87,7 @@ error:
 		commevent_destroy(commctx->commevent);
 		commepoll_destroy(&commctx->commepoll);
 		commlist_destroy(&commctx->recvlist, COMMMSG_OFFSET);
+		commcache_free(&commctx->cache);
 		Free(commctx);
 	}
 
@@ -169,15 +172,15 @@ int comm_send(struct comm_context *commctx, const struct comm_message *message, 
 	struct connfd_info      *connfd = NULL;
 	struct comm_message     *commmsg = NULL;
 
-//	log("message fd:%d socket_type:%d\n", message->fd, message->socket_type);
 	if ((connfd = commctx->commevent->connfd[message->fd])) {
+		if (unlikely(!_check_packageinfo(message))) {
+			return -1;
+		}
 		if (new_commmsg(&commmsg, message->package.dsize)) {
 			copy_commmsg(commmsg, message);
-//			log("commmsg fd:%d socket_type:%d\n", commmsg->fd, commmsg->socket_type);
 
 			commlock_lock(&connfd->sendlock);
 
-			// commlist_push(&connfd->send_list, &commmsg->list);
 			if (unlikely(!commqueue_push(&connfd->send_queue, (void *)&commmsg))) {
 				/* 队列已满，则存放到链表中 */
 				commlist_push(&connfd->send_list, &commmsg->list);
@@ -187,7 +190,6 @@ int comm_send(struct comm_context *commctx, const struct comm_message *message, 
 
 			/* 发送给对发以触发写事件 如果数据写满则一直堵塞到对方读取数据 */
 			commpipe_write(&commctx->commpipe, (void *)&message->fd, sizeof(message->fd));
-			//log("write pipe fd:%d\n", message->fd);
 			return message->package.dsize;
 		}
 	}
@@ -358,4 +360,48 @@ static void  _set_remainfd(struct comm_timer *commtimer, struct comm_list *timer
 	//		log("read pipe fd:%d\n", fda[i]);
 		}
 	}
+}
+
+/* 检测包的信息是否设置正确 */
+static bool _check_packageinfo(const struct comm_message *message)
+{
+	assert(message);
+	int     index = 0;
+	int     dsize = 0;	/* 数据的总大小 */
+	int     pckidx = 0;	/* 包的索引 */
+	int     frmidx = 0;	/* 帧的索引 */
+	int	frames = 0;
+
+	if (unlikely(message->package.packages < 1)) {
+		log("wrong packages in comm_message structure, packages:%d", message->package.packages);
+		return false;
+	}
+	for (pckidx = 0; pckidx < message->package.packages; pckidx++) {
+		if (message->package.frames_of_package[pckidx] < 1 || message->package.frames_of_package[pckidx] > message->package.frames) { 
+			log("wrong sum of frames in frames_of_pack of comm_message structure, frames:%d, index:%d\n", message->package.frames_of_package[pckidx], pckidx);
+			return false;
+		}
+		for (frmidx = 0 ; frmidx < message->package.frames_of_package[pckidx]; frmidx++, index++) {
+			if (unlikely(dsize > message->package.dsize || message->package.frame_size[index] > message->package.dsize)) {
+				log("wrong frame_size in comm_message structure, frame_size:%d index:%d\n", message->package.frame_size[index], index);
+				return false;
+			}
+			if (unlikely(message->package.frame_offset[index] != dsize)) {
+				log("wrong frame_offset in comm_package, frame_offset:%d index:%d\n", message->package.frame_offset[index], index);
+				return false;
+			}
+			dsize += message->package.frame_size[index];
+			frames++;
+		}
+	}
+
+	if (unlikely(frames != message->package.frames)) {
+		log("wrong sum of frames in comm_message structure, frames:%d\n",message->package.frames);
+		return false;
+	}
+	if (unlikely(dsize != message->package.dsize)) {
+		log("wrong sum of datasize in comm_message structure, datasize:%d\n", message->package.dsize);
+		return false;
+	}
+	return true;
 }

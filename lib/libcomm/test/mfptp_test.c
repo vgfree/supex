@@ -12,6 +12,8 @@ void parser(struct comm_cache *pack_cache, struct comm_cache *parse_cache);
 
 static void _fill_message_package(struct comm_message *message, const struct mfptp_parser *parser);
 
+static bool _check_packageinfo(const struct comm_message *message);
+
 int main()
 {
 	int                     pckbuff_size = 0;
@@ -65,11 +67,11 @@ bool packager(struct comm_cache *cache)
 	// message.fd = fd;
 	message.content = buff;
 //	message.config = IDEA_ENCRYPTION | GZIP_COMPRESSION;
-	message.config = IDEA_ENCRYPTION | NO_COMPRESSION;
+	message.config = NO_ENCRYPTION | NO_COMPRESSION;
 	message.socket_type = REQ_METHOD;
-	//message.package.dsize = strlen(buff);
-	message.package.dsize =	10245;
-	message.package.frames = 8;
+	message.package.dsize = strlen(buff);
+	//message.package.dsize =	0x1110245;
+	message.package.frames = 9;
 	message.package.packages = 1;
 
 	for (pckidx = 0, index = 0; pckidx < message.package.packages; pckidx++) {
@@ -79,6 +81,7 @@ bool packager(struct comm_cache *cache)
 		}
 	}
 
+	message.package.frame_offset[7] = message.package.frame_offset[7] + 1;
 	memcpy(message.package.frames_of_package, frames_of_package, (sizeof(int)) * message.package.packages);
 	size = mfptp_check_memory(cache->capacity - cache->size, message.package.frames, message.package.dsize);
 
@@ -91,11 +94,13 @@ bool packager(struct comm_cache *cache)
 
 		log("expend commcache successed\n");
 	}
-	message.package.frame_size[7] = 0x11121314 - (strlen(buff)-3);
-	printf("frame_size[7] 0x%x strlen(buff):%d", message.package.frame_size[7], strlen(buff));
+	message.package.frame_size[7] = 12;
+	//message.package.frame_size[7] = 0x1110245 - (strlen(buff)-3);
+	//printf("frame_size[7] 0x%x strlen(buff):%d\n", message.package.frame_size[7], strlen(buff));
 
-	if (mfptp_fill_package(&packager, message.package.frame_offset, message.package.frame_size, message.package.frames_of_package, message.package.packages, message.package.dsize)) {
-		size = mfptp_package(&packager, message.content, message.config, message.socket_type);
+	if (_check_packageinfo(&message)) {
+		mfptp_fill_package(&packager, message.package.frame_offset, message.package.frame_size, message.package.frames_of_package, message.package.packages);
+		size = mfptp_package(&packager, message.content, message.socket_type);
 
 		if ((size > 0) && (packager.ms.error == MFPTP_OK)) {
 			printf("packager successed\n");
@@ -108,7 +113,7 @@ bool packager(struct comm_cache *cache)
 			return false;
 		}
 	}
-	
+	log("check packageinfo failed\n");
 	return false;
 }
 
@@ -133,7 +138,6 @@ void parser(struct comm_cache *pack_cache, struct comm_cache *parse_cache)
 	while (1) {
 		size = mfptp_parse(&parser);
 		if ((size > 0) && (parser.ms.error == MFPTP_OK) && (parser.ms.step == MFPTP_PARSE_OVER)) {	/* 成功解析了一个连续的包 */
-			memcpy(message.content, &parser.ms.cache.buffer[parser.ms.cache.start], parser.bodyer.dsize);
 			_fill_message_package(&message, &parser);
 			for (pckidx = 0, index = 0; pckidx < message.package.packages; pckidx++) {
 #if 0
@@ -170,28 +174,71 @@ void parser(struct comm_cache *pack_cache, struct comm_cache *parse_cache)
 static void _fill_message_package(struct comm_message *message, const struct mfptp_parser *parser)
 {
 	assert(message && parser);
-	int                             k = 0;
+	int				index = 0;
 	int                             pckidx = 0;	/* 包的索引 */
 	int                             frmidx = 0;	/* 帧的索引 */
 	int                             frames = 0;	/* 总帧数 */
+	const char                      *data = *parser->ms.data;	/* 待解析的数据缓冲区 */
 	const struct mfptp_bodyer_info  *bodyer = &parser->bodyer;
 	const struct mfptp_header_info  *header = &parser->header;
 
-	for (pckidx = 0; pckidx < bodyer->packages; pckidx++) {
-		for (frmidx = 0; frmidx < bodyer->package[pckidx].frames; frmidx++, k++) {
-			message->package.frame_size[k] = bodyer->package[pckidx].frame[frmidx].frame_size;
-			message->package.frame_offset[k] = bodyer->package[pckidx].frame[frmidx].frame_offset - parser->ms.cache.start;
+	for (pckidx = 0, index = 0; pckidx < bodyer->packages; pckidx++) {
+		for (frmidx = 0; frmidx < bodyer->package[pckidx].frames; frmidx++, index++) {
+			message->package.frame_offset[index] += message->package.dsize;
+			message->package.frame_size[index] = bodyer->package[pckidx].frame[frmidx].frame_size;
+			memcpy(&message->content[message->package.dsize], &data[bodyer->package[pckidx].frame[frmidx].frame_offset], bodyer->package[pckidx].frame[frmidx].frame_size);
+			message->package.dsize += bodyer->package[pckidx].frame[frmidx].frame_size;
 		}
-
 		message->package.frames_of_package[pckidx] = bodyer->package[pckidx].frames;
 		frames += bodyer->package[pckidx].frames;
 	}
-
 	message->package.packages = bodyer->packages;
 	message->package.frames = frames;
-	message->package.dsize = bodyer->dsize;
 
 	message->config = header->compression | header->encryption;
 	message->socket_type = header->socket_type;
 }
 
+/* 检测包的信息是否设置正确 */
+static bool _check_packageinfo(const struct comm_message *message)
+{
+	assert(message);
+	int     index = 0;
+	int     dsize = 0;	/* 数据的总大小 */
+	int     pckidx = 0;	/* 包的索引 */
+	int     frmidx = 0;	/* 帧的索引 */
+	int	frames = 0;
+
+	if (unlikely(message->package.packages < 1)) {
+		log("wrong packages in comm_message structure, packages:%d", message->package.packages);
+		return false;
+	}
+	for (pckidx = 0; pckidx < message->package.packages; pckidx++) {
+		if (message->package.frames_of_package[pckidx] < 1 || message->package.frames_of_package[pckidx] > message->package.frames) { 
+			log("wrong sum of frames in frames_of_pack of comm_message structure, frames:%d, index:%d\n", message->package.frames_of_package[pckidx], pckidx);
+			return false;
+		}
+		for (frmidx = 0 ; frmidx < message->package.frames_of_package[pckidx]; frmidx++, index++) {
+			if (unlikely(dsize > message->package.dsize || message->package.frame_size[index] > message->package.dsize)) {
+				log("wrong frame_size in comm_message structure, frame_size:%d index:%d\n", message->package.frame_size[index], index);
+				return false;
+			}
+			if (unlikely(message->package.frame_offset[index] != dsize)) {
+				log("wrong frame_offset in comm_package, frame_offset:%d index:%d\n", message->package.frame_offset[index], index);
+				return false;
+			}
+			dsize += message->package.frame_size[index];
+			frames++;
+		}
+	}
+
+	if (unlikely(frames != message->package.frames)) {
+		log("wrong sum of frames in comm_message structure, frames:%d\n",message->package.frames);
+		return false;
+	}
+	if (unlikely(dsize != message->package.dsize)) {
+		log("wrong sum of datasize in comm_message structure, datasize:%d\n", message->package.dsize);
+		return false;
+	}
+	return true;
+}

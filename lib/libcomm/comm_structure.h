@@ -74,6 +74,7 @@ struct comm_context
 	struct comm_list	timerhead;		/* 计时器事件链表 */
 	struct comm_timer*	pipetimer;		/* 定时读取管道信息的计时器 */
 	struct comm_queue       recvqueue;		/* 存放接收并解析好的数据 */
+	struct comm_cache	cache;			/* 所有数据进行加密压缩解密解压的过渡缓冲区 */
 	struct comm_list        recvlist;		/* 当recvqueue已满时放入此链表中 */
 	struct comm_pipe        commpipe;		/* 关于管道的相关信息 */
 	struct comm_lock        recvlock;		/* 用来同步接收队列的锁*/

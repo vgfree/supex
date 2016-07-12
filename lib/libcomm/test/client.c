@@ -12,7 +12,7 @@ int main(int argc, char *argv[])
 	int     pckidx = 0, frmidx = 0;
 	int     retval = -1, port = 0;
 	char    str_port[64] = { 0 };
-	int	datasize = 1024*1024*2;
+	int	datasize = 1024*1024*100;
 	char*	content = NULL;
 	char*	buff = NULL;
 
@@ -47,7 +47,7 @@ int main(int argc, char *argv[])
 	for (n = 0; n < atoi(argv[3]); n++) {
 		sprintf(str_port, "%d", (port + n));
 
-		if (unlikely((fd[n] = comm_socket(commctx, argv[1], argv[2], &finishedcb, COMM_CONNECT)) == -1)) {
+		if (unlikely((fd[n] = comm_socket(commctx, argv[1], argv[2], &finishedcb, COMM_CONNECT | CONNECT_ANYWAY)) == -1)) {
 			comm_ctx_destroy(commctx);
 			log("client comm_socket failed\n");
 			return retval;
@@ -65,18 +65,21 @@ int main(int argc, char *argv[])
 			if (send_data(commctx, &sendmsg, fd[n]) > -1) {
 				log("\x1B[1;34m""fd:%d send data successed\n""\x1B[m", fd[n]);
 				if (comm_recv(commctx, &recvmsg, true, -1) > -1) {
-#if 0
+#if 1
 					for (pckidx = 0, k = 0; pckidx < recvmsg.package.packages; pckidx++) {
 						int     size = 0;
+						memset(buff, 0, datasize);
 						for (frmidx = 0; frmidx < recvmsg.package.frames_of_package[pckidx]; frmidx++, k++) {
 							memcpy(&buff[size], &recvmsg.content[recvmsg.package.frame_offset[k]], recvmsg.package.frame_size[k]);
 							size += recvmsg.package.frame_size[k];
 						}
 
-						//log("\x1B[1;31m""message fd:%d message body:%.*s socket_type:%d\n""\x1B[m",recvmsg.fd, recvmsg.package.dsize, recvmsg.content, recvmsg.socket_type);
+						log("\x1B[1;31m""message fd:%d message body:%.*s socket_type:%d\n""\x1B[m",recvmsg.fd, recvmsg.package.dsize, recvmsg.content, recvmsg.socket_type);
 					}
-#endif
+#else
 					log("\x1B[1;31m""recv successed\n""\x1B[m");
+					sleep(2);
+#endif
 				} else {
 					log("comm_recv failed\n");
 				}
@@ -152,7 +155,7 @@ static void event_fun(struct comm_context *commctx, struct comm_tcp *commtcp, vo
 
 static int send_data(struct comm_context *commctx, struct comm_message *message, int fd)
 {
-#if 0
+#if 1
 	int     i = 0, j = 0, k = 0;
 	int     pckidx = 0, frmidx = 0;
 	int     retval = -1;
@@ -221,7 +224,7 @@ static int send_data(struct comm_context *commctx, struct comm_message *message,
 #else 
 	char* buff = NULL;
 	int i = 0, ret = 0;
-	//int datasize = 1024*1024*2;
+	//int datasize = 1024*1024*100;
 	int datasize = 10;
 	NewArray(buff, datasize);
 	for (i = 0; i < datasize; i++) {

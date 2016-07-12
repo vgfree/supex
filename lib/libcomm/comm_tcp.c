@@ -54,15 +54,20 @@ bool socket_connect(struct comm_tcp *commtcp, const char *host, const char *serv
 	assert(commtcp && host && service);
 
 	struct addrinfo *ai = NULL;
-	bool flag = true;
-	int trys = 0;
-	int counter = 1000;
-	long timeout = 0; /* @timeout: -1 一直尝试连接对方直到成功 0 只连接一次 >0 一直尝试连接直到超时 */
+	bool flag = false;
+	long timeout = CONNECTTIMEOUT * 1000; /* @timeout: -1 一直尝试连接对方直到成功 0 只连接一次 >0 一直尝试连接直到超时 */
+	struct timeval  start = {};
+	struct timeval  end = {};
+	long            diffms = 0;
 
 	if (commtcp->stat == FD_CLOSE) {
 		/* 属于已关闭的端口尝试再次去连接服务器 */
 		flag = true;
 	}
+	if (!flag && connattr == CONNECT_ANYWAY) {
+		gettimeofday(&start, NULL);
+	}
+
 	memset(commtcp, 0, sizeof(*commtcp));
 	commtcp->peerport = atoi(service);
 	memcpy(commtcp->peeraddr, host, strlen(host));
@@ -72,14 +77,16 @@ bool socket_connect(struct comm_tcp *commtcp, const char *host, const char *serv
 		while (!_start_connect(commtcp, ai, CONNECTTIMEOUT)) {
 			if (connattr == CONNECT_ONCE || flag) {
 				/* fd属性为CONNECT_ONCE和关闭端口再次连接服务器时只尝试连接一次 */
-				CLOSEFD(commtcp->fd);
-				log("connecnt once and failed\n");
+				log("connect fatal error fd: %d errno:%d\n", commtcp->fd, errno);
 				return false;
 			}
 			/* 属性为CONNECT_ANYWAY并且是新端口请求连接 */
-			trys ++;
-			if (trys == counter) {
+			gettimeofday(&end, NULL);
+			diffms = (end.tv_sec - start.tv_sec) * 1000;
+			diffms += (end.tv_usec - start.tv_usec) / 1000;
+			if (timeout - diffms < 1) {
 				/* 尝试次数超过counter则表示服务器不可达 */
+				log("connect many times and failed\n");
 				return false;
 			}
 		}
@@ -281,7 +288,7 @@ static bool _start_connect(struct comm_tcp *commtcp, struct addrinfo *ai, int ti
 				while (connect(commtcp->fd, aiptr->ai_addr, aiptr->ai_addrlen) == -1) {
 					/* 连接失败 连接产生致命错误 */
 					if (errno != EINPROGRESS && errno != EALREADY) {
-						log("connect fatal error fd: %d errno:%d\n", commtcp->fd, errno);
+						CLOSEFD(commtcp->fd);
 						return false;
 					}
 
@@ -291,7 +298,6 @@ static bool _start_connect(struct comm_tcp *commtcp, struct addrinfo *ai, int ti
 					if (timeout - diffms < 1) {
 						log("try connect to peer failed because of timeout\n");
 						CLOSEFD(commtcp->fd);
-						log("connect many times and failed\n");
 						return false;
 					}
 #if 0

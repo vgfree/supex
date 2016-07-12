@@ -11,16 +11,16 @@
 extern "C" {
 #endif
 
-#define MFPTP_MAJOR_VERSION     1	/* MFPTP协议的主版本号 */
-#define MFPTP_MINOR_VERSION     0	/* MFPTP协议的副版本号 */
-#define MFPTP_MAX_FRAMES        13	/* MFPTP协议单包支持最大的帧的数量 */
-#define MFPTP_MAX_FRAMESIZE   1024*1024*100	/* MFPTP协议一个帧携带数据的最大值 */
-#define MFPTP_MAX_PACKAGES      8	/* MFPTP协议支持携带的最大包数 */
+#define MFPTP_MAJOR_VERSION		1	/* MFPTP协议的主版本号 */
+#define MFPTP_MINOR_VERSION		0	/* MFPTP协议的副版本号 */
+#define MFPTP_MAX_FRAMES_OF_PACK	13	/* MFPTP协议单包支持最大的帧的数量 */
+#define MFPTP_MAX_FRAMESIZE	1024*1024*100	/* MFPTP协议一个帧携带数据的最大值 */
+#define MFPTP_MAX_PACKAGES		8	/* MFPTP协议支持携带的最大包数 */
 
-#define MFPTP_HEADER_LEN        10	/* MFPTP协议头的所占的字节数 */
-#define MFPTP_FP_CONTROL_LEN    1	/* MFPTP协议FP_control的所占的字节数 */
-#define MFPTP_F_SIZE_MINLEN     1	/* MFPTP协议F_size所占的最小字节数 */
-#define MFPTP_F_SIZE_MAXLEN     4	/* MFPTP协议F_size所占的最大字节数 */
+#define MFPTP_HEADER_LEN		10	/* MFPTP协议头的所占的字节数 */
+#define MFPTP_FP_CONTROL_LEN		1	/* MFPTP协议FP_control的所占的字节数 */
+#define MFPTP_F_SIZE_MINLEN		1	/* MFPTP协议F_size所占的最小字节数 */
+#define MFPTP_F_SIZE_MAXLEN		4	/* MFPTP协议F_size所占的最大字节数 */
 
 /* 检测MFPTP协议头的6个字节是否正确 */
 #define CHECK_HEADER(parser) (!strncmp(&(((*parser->ms.data)[parser->ms.dosize])), "#MFPTP", 6))
@@ -96,7 +96,9 @@ enum mfptp_error
 	MFPTP_DECOMPRESS_NO_SPACE,	/*  8 MFPTP协议解压数据时分配解压缓冲区失败 */
 	MFPTP_DECRYPT_NO_SPACE,		/*  9 MFPTP协议解密数据时分配解密缓冲区失败 */
 	MFPTP_ENCRYPT_NO_SPACE,		/* 10 MFPTP协议加密数据时分配解密缓冲区失败 */
-	MFPTP_ENCOMPRESS_NO_SPACE	/* 11 MFPTP协议压缩数据时分配解压缓冲区失败 */
+	MFPTP_ENCOMPRESS_NO_SPACE,	/* 11 MFPTP协议压缩数据时分配解压缓冲区失败 */
+	MFPTP_FRAMES_TOOMUCH		/* 12 MFPTP协议一个包包含的帧数太多 */
+
 };
 
 /* MFPTP协议帧的相关信息 */
@@ -109,8 +111,8 @@ struct mfptp_frame_info
 /* MFPTP协议包的相关信息 */
 struct mfptp_package_info
 {
-	int                     frames;				/* 此包帧的总数 */
-	struct mfptp_frame_info frame[MFPTP_MAX_FRAMES];	/* 每帧的相关信息 */
+	int                     frames;					/* 此包帧的总数 */
+	struct mfptp_frame_info frame[MFPTP_MAX_FRAMES_OF_PACK];	/* 每帧的相关信息 */
 };
 
 /* MFPTP协议消息的相关信息 */

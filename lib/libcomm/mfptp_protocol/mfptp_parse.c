@@ -16,7 +16,6 @@ void mfptp_parse_init(struct mfptp_parser *parser, char *const *data, const int 
 	parser->ms.data = data;
 	parser->ms.dsize = size;
 	parser->ms.step = MFPTP_PARSE_INIT;
-	commcache_init(&parser->ms.cache);
 	parser->init = true;
 	return ;
 }
@@ -24,7 +23,6 @@ void mfptp_parse_init(struct mfptp_parser *parser, char *const *data, const int 
 void mfptp_parse_destroy(struct mfptp_parser *parser)
 {
 	if (parser && parser->init) {
-		commcache_free(&parser->ms.cache);
 		parser->init = false;
 	}
 }
@@ -35,14 +33,8 @@ int mfptp_parse(struct mfptp_parser *parser)
 
 	int                             size_f_size = 0;		/* f_size字段所占字节数 */
 	int                             frame_size = 0;			/* 解压解密之后的帧数据大小 */
-	int				decomprsize = DECOMPRESSSIZE;	/* 解压缓冲区的大小 */
-	int				decryptsize = DECRYPTSIZE;	/* 解密缓冲区的大小 */
 	int                             dsize = *(parser->ms.dsize);	/* 待解析数据的大小 */
 	const char                      *data = *parser->ms.data;	/* 待解析的数据缓冲区 */
-	char				decryptbuff[DECRYPTSIZE] = {};		/* 保存解密之后的数据 */
-	char				decompressbuff[DECOMPRESSSIZE] = {};	/* 保存解压之后的数据 */
-	char*				decrypt = decryptbuff;		
-	char*				decompress = decompressbuff;
 	struct mfptp_package_info       *package = NULL;		/* 包的相关信息 */
 
 	if (parser->ms.step == MFPTP_PARSE_OVER) {
@@ -53,11 +45,7 @@ int mfptp_parse(struct mfptp_parser *parser)
 		/* 从头开始解析的时候就要恢复一下变量的初始化值 */
 		parser->ms.error = MFPTP_OK;
 		parser->ms.dosize = 0;
-		parser->ms.frame_offset = 0;
-		/* 只要解析完成一次就需要立即去提取解析完的数据，然后将bodyer和cache清零 */
-		parser->ms.cache.start += parser->bodyer.dsize;
-		parser->ms.cache.size -= parser->bodyer.dsize;
-		commcache_clean(&parser->ms.cache);
+		/* 只要解析完成一次就需要立即去提取解析完的数据，然后将bodyer清零 */
 		memset(&parser->bodyer, 0, sizeof(parser->bodyer));
 	}
 
@@ -148,7 +136,6 @@ int mfptp_parse(struct mfptp_parser *parser)
 				parser->header.compression = data[parser->ms.dosize] & 0xF0;
 				parser->header.encryption = data[parser->ms.dosize] & 0x0F;
 				if (CHECK_CONFIG(parser)) {
-					_set_callback(parser);
 					parser->ms.step = MFPTP_SOCKET_TYPE;
 				} else {
 					log("bad mfptp protocol compression or encryption setting\n");
@@ -193,34 +180,7 @@ int mfptp_parse(struct mfptp_parser *parser)
 				parser->ms.dosize += 1;
 				parser->ms.step = MFPTP_F_SIZE_1;
 				break;
-#if 0
-			case MFPTP_F_SIZE:
-				if (dsize >= parser->header.size_f_size) {
-					if (CHECK_F_SIZE(parser)) {
-						parser->header.f_size = 0;
-						for (size_f_size = parser->header.size_f_size-1; size_f_size > -1; size_f_size--) {
-							parser->header.f_size = parser->header.f_size | ((unsigned char)data[parser->ms.dosize] << size_f_size * 8);
-							parser->ms.dosize += 1;
-						}
 
-						dsize -= parser->header.size_f_size;
-						if (parser->header.f_size < 1 || parser->header.f_size > MFPTP_MAX_DATASIZE) {
-							/* 数据size大于帧允许的携带的数据大小 */
-							parser->ms.error = MFPTP_DATASIZE_INVAILD;
-							log("illegal datasize mfptp protocol frame carried\n");
-						} else {
-							parser->ms.step = MFPTP_FRAME_START;
-						}
-					} else {
-						parser->ms.dosize += parser->header.size_f_size;
-						log("illegal datasize mfptp protocol frame carried\n");
-						parser->ms.error = MFPTP_DATASIZE_INVAILD;
-					}
-				} else {
-					parser->ms.error = MFPTP_DATA_TOOFEW;
-				}
-				break;
-#endif
 			case MFPTP_F_SIZE_1:
 				parser->header.f_size = 0;
 				if (CHECK_F_SIZE(parser)) {
@@ -269,16 +229,8 @@ int mfptp_parse(struct mfptp_parser *parser)
 
 			case MFPTP_FRAME_START:
 				if (CHECK_DATASIZE(parser)) {		/* 检测剩下的待解析数据是否大于等于f_size，检测返回false代表数据没有接收完毕 */
-					if (parser->header.f_size > 1 && parser->header.f_size < MFPTP_MAX_FRAMESIZE) {
-						/* 先解压 后解密 */
-						if (parser->decompresscb) {
-							parser->ms.step = MFPTP_FRAME_DECOMPRESS;
-						} else if (parser->decryptcb){
-							parser->ms.step = MFPTP_FRAME_DECRYPT;
-						} else {
-							parser->ms.step = MFPTP_FRAME_COPYDATA;
-						}
-						frame_size = parser->header.f_size;
+					if (parser->header.f_size > 0 && parser->header.f_size < MFPTP_MAX_FRAMESIZE) {
+						parser->ms.step = MFPTP_FRAME_SETTING;
 					} else {
 						/* 数据size大于帧允许的携带的数据大小 */
 						parser->ms.error = MFPTP_DATASIZE_INVAILD;
@@ -289,58 +241,13 @@ int mfptp_parse(struct mfptp_parser *parser)
 				}
 				break ;
 
-			case MFPTP_FRAME_DECOMPRESS:
-				if (frame_size > DECOMPRESSSIZE) {
-					decomprsize = frame_size;		/* 分配的空间大小待确定，实现了解压函数之后，根据相应算法重新赋值此变量 */
-					NewArray(decompress, decomprsize);
-					if (decompress == NULL) {
-						parser->ms.error = MFPTP_DECOMPRESS_NO_SPACE;
-						break ;
-					}
-				}
-				frame_size = parser->decompresscb(decompress, &((*parser->ms.data)[parser->ms.dosize]), decomprsize, frame_size);
-				if (parser->decryptcb) {
-					parser->ms.step = MFPTP_FRAME_DECRYPT;
-				} else {
-					parser->ms.step = MFPTP_FRAME_COPYDATA;
-				}
-				break ;
-
-			case MFPTP_FRAME_DECRYPT:
-				if (frame_size > DECRYPTSIZE) {
-					decryptsize = frame_size;		/* 分配的空间大小待确定，实现了解密函数之后，根据相应算法重新赋值此变量 */
-					NewArray(decrypt, decryptsize);
-					if (decrypt == NULL) {
-						parser->ms.error = MFPTP_DECRYPT_NO_SPACE;
-						break ;
-					}
-				}
-				if (parser->decompresscb) {	
-					/* 如果有解压，则源数据在解压缓冲区 */
-					frame_size = parser->decryptcb(decrypt, decompress, decryptsize, frame_size);
-				} else {
-					frame_size = parser->decryptcb(decrypt, &((*parser->ms.data)[parser->ms.dosize]), decryptsize, frame_size);
-				}
-				parser->ms.step = MFPTP_FRAME_COPYDATA;
-				break ;
-
-			case MFPTP_FRAME_COPYDATA:
-				if (parser->decryptcb == NULL && parser->decryptcb == NULL) {
-					/* 未进行解压 解密 */
-					commcache_append(&parser->ms.cache, &((*parser->ms.data)[parser->ms.dosize]), frame_size);
-				} else if (parser->decompresscb && parser->decryptcb == NULL) {
-					/* 只进行了解压 */
-					commcache_append(&parser->ms.cache, decompress, frame_size);
-				} else {
-					commcache_append(&parser->ms.cache, decrypt, frame_size);
-				}
+			case MFPTP_FRAME_SETTING:
 				package = &parser->bodyer.package[parser->bodyer.packages];
-				package->frame[package->frames].frame_size = frame_size;
-				package->frame[package->frames].frame_offset = parser->ms.frame_offset;
+				package->frame[package->frames].frame_size = parser->header.f_size;
+				package->frame[package->frames].frame_offset = parser->ms.dosize;
 				package->frames++;
 
-				parser->ms.frame_offset += frame_size;
-				parser->bodyer.dsize += frame_size;
+				parser->bodyer.dsize += parser->header.f_size;
 				parser->ms.dosize += parser->header.f_size;
 
 				if (parser->header.not_end) {
@@ -378,67 +285,5 @@ int mfptp_parse(struct mfptp_parser *parser)
 			break;
 		}
 	}
-
-	if (decrypt != decryptbuff) {
-		Free(decrypt);
-	}
-	if (decompress != decompressbuff) {
-		Free(decompress);
-	}
 	return parser->ms.dosize;
-}
-
-static int _decryptcb(char *destbuff, const char *srcbuff, int dest_len, int src_len)
-{
-	memcpy(destbuff, srcbuff, src_len);
-	log("\x1B[1;32m""decrypt over\n""\x1B[m");
-	return src_len;
-}
-
-static int _decompresscb(char *destbuff, const char *srcbuff, int dest_len, int src_len)
-{
-	memcpy(destbuff, srcbuff, src_len);
-	log("\x1B[1;32m""decompress over\n""\x1B[m");
-	return src_len;
-}
-
-static inline void _set_callback(struct mfptp_parser *parser)
-{
-	switch (parser->header.encryption)
-	{
-		case NO_ENCRYPTION:
-			parser->decryptcb = NULL;
-			break;
-
-		case IDEA_ENCRYPTION:
-			parser->decryptcb = _decryptcb;
-			break;
-
-		case AES_ENCRYPTION:
-			parser->decryptcb = NULL;
-			break;
-
-		default:
-			parser->decryptcb = NULL;
-			break;
-	}
-
-	switch (parser->header.compression)
-	{
-		case NO_COMPRESSION:
-			parser->decompresscb = NULL;
-			break;
-
-		case ZIP_COMPRESSION:
-			parser->decompresscb = _decompresscb;
-			break;
-
-		case GZIP_COMPRESSION:
-			parser->decompresscb = NULL;
-			break;
-
-		default:
-			parser->decompresscb = NULL;
-			break;
-	}
 }

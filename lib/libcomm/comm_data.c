@@ -260,18 +260,17 @@ bool commdata_package(struct connfd_info *connfd, struct comm_event *commevent, 
 			}
 		}
 
-		if (mfptp_fill_package(&connfd->packager, message->package.frame_offset, message->package.frame_size, message->package.frames_of_package, message->package.packages, message->package.dsize)) {
-			size = mfptp_package(&connfd->packager, message->content, message->config, message->socket_type);
+		mfptp_fill_package(&connfd->packager, message->package.frame_offset, message->package.frame_size, message->package.frames_of_package, message->package.packages);
+		size = mfptp_package(&connfd->packager, message->content, message->socket_type);
 
-			if ((size > 0) && (connfd->packager.ms.error == MFPTP_OK)) {
-				connfd->send_cache.end += size;
-				log("after packager socket_type:%d\n", connfd->send_cache.buffer[8]);
-				add_remainfd(&commevent->remainfd, connfd->commtcp.fd, REMAINFD_WRITE);
-				log("package successed\n");
-			} else {
-				log("package failed\n");
-				connfd->packager.ms.error = MFPTP_OK;
-			}
+		if ((size > 0) && (connfd->packager.ms.error == MFPTP_OK)) {
+			connfd->send_cache.end += size;
+			log("after packager socket_type:%d\n", connfd->send_cache.buffer[8]);
+			add_remainfd(&commevent->remainfd, connfd->commtcp.fd, REMAINFD_WRITE);
+			log("package successed\n");
+		} else {
+			log("package failed\n");
+			connfd->packager.ms.error = MFPTP_OK;
 		}
 
 		free_commmsg(message);	/* 包的信息设置错误或者打包失败也会直接放弃这个有问题的包 */
@@ -306,7 +305,7 @@ bool commdata_parse(struct connfd_info *connfd, struct comm_event *commevent, in
 					default:
 						if (new_commmsg(&message, connfd->parser.bodyer.dsize)) {
 							message->fd = connfd->commtcp.fd;
-							memcpy(message->content, &connfd->parser.ms.cache.buffer[connfd->parser.ms.cache.start], connfd->parser.bodyer.dsize);
+							//memcpy(message->content, &connfd->parser.ms.cache.buffer[connfd->parser.ms.cache.start], connfd->parser.bodyer.dsize);
 							_fill_message_package(message, &connfd->parser);
 							connfd->recv_cache.start += size;
 							connfd->recv_cache.size -= size;
@@ -415,26 +414,26 @@ void commdata_del(struct comm_event *commevent, int fd)
 static void _fill_message_package(struct comm_message *message, const struct mfptp_parser *parser)
 {
 	assert(message && parser);
-	int                             k = 0;
+	int				index = 0;
 	int                             pckidx = 0;	/* 包的索引 */
 	int                             frmidx = 0;	/* 帧的索引 */
 	int                             frames = 0;	/* 总帧数 */
+	const char                      *data = *parser->ms.data;	/* 待解析的数据缓冲区 */
 	const struct mfptp_bodyer_info  *bodyer = &parser->bodyer;
 	const struct mfptp_header_info  *header = &parser->header;
 
-	for (pckidx = 0; pckidx < bodyer->packages; pckidx++) {
-		for (frmidx = 0; frmidx < bodyer->package[pckidx].frames; frmidx++, k++) {
-			message->package.frame_size[k] = bodyer->package[pckidx].frame[frmidx].frame_size;
-			message->package.frame_offset[k] = bodyer->package[pckidx].frame[frmidx].frame_offset - parser->ms.cache.start;
+	for (pckidx = 0, index = 0; pckidx < bodyer->packages; pckidx++) {
+		for (frmidx = 0; frmidx < bodyer->package[pckidx].frames; frmidx++, index++) {
+			message->package.frame_offset[index] += message->package.dsize;
+			message->package.frame_size[index] = bodyer->package[pckidx].frame[frmidx].frame_size;
+			memcpy(&message->content[message->package.dsize], &data[bodyer->package[pckidx].frame[frmidx].frame_offset], bodyer->package[pckidx].frame[frmidx].frame_size);
+			message->package.dsize += bodyer->package[pckidx].frame[frmidx].frame_size;
 		}
-
 		message->package.frames_of_package[pckidx] = bodyer->package[pckidx].frames;
 		frames += bodyer->package[pckidx].frames;
 	}
-
 	message->package.packages = bodyer->packages;
 	message->package.frames = frames;
-	message->package.dsize = bodyer->dsize;
 
 	message->config = header->compression | header->encryption;
 	message->socket_type = header->socket_type;

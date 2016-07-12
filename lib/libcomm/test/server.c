@@ -9,7 +9,7 @@ int main(int argc, char *argv[])
 	int     i = 0, k = 0, fd = 0;
 	int     pckidx = 0, frmidx = 0;
 	int     retval = -1, port = 0;
-	int	datasize = 1024*1024*2;
+	int	datasize = 1024*1024*100;
 	char    str_port[64] = { 0 };
 	char*	content = NULL;
 	char*	buff = NULL;
@@ -55,26 +55,29 @@ int main(int argc, char *argv[])
 	/* 循环接收 发送数据 */
 	while (1) {
 		if (comm_recv(commctx, &message, true, -1) > -1) {
-#if 0
+#if 1
 			for (pckidx = 0, k = 0; pckidx < message.package.packages; pckidx++) {
 				int     size = 0;
+				memset(buff, 0, datasize);
 				for (frmidx = 0; frmidx < message.package.frames_of_package[pckidx]; frmidx++, k++) {
 					memcpy(&buff[size], &message.content[message.package.frame_offset[k]], message.package.frame_size[k]);
 					size += message.package.frame_size[k];
-					//	buff[size++] = ' ';
 				}
-
 				log("messag fd: %d message body: %s\n", message.fd, buff);
 			}
+#else
+			//log("\x1B[1;32m""message fd: %d message body:%.*s\n""\x1B[m", message.fd, message.package.dsize, message.content);
+			log("\x1B[1;32m""message fd: %d successed\n""\x1B[m", message.fd);
 #endif
-			log("\x1B[1;32m""message fd: %d message body:%.*s\n""\x1B[m", message.fd, message.package.dsize, message.content);
-
 			/* 接收成功之后将此消息体再返回给用户 */
 			if (message.fd > 0) {
 				comm_send(commctx, &message, false, -1);
+				log("\x1B[1;32m""message send out\n""\x1B[m");
 			}
+			sleep(1);
 		} else {
 			log("comm_recv failed\n");
+			sleep(1);
 		}
 	}
 
