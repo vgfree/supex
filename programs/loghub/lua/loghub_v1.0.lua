@@ -65,18 +65,14 @@ local function sms_send(msg)
 	ok,val = redis_api.cmd("logs", "get", keyct)
 	if not ok then return end
 	if not val then
-		redis_api.cmd("logs", "set", keyct, 1)
-		redis_api.cmd("logs", "expire", keyct, cfg["cli_info"]["LOG_HUB_SMS_SPACE"])
-		redis_api.cmd("logs", "set", keyid, msg_main)
-		redis_api.cmd("logs", "expire", keyid, cfg["cli_info"]["LOG_HUB_SMS_SPACE"])
+		redis_api.cmd("logs", "setex", keyct, cfg["cli_info"]["LOG_HUB_SMS_SPACE"],1)
+		redis_api.cmd("logs", "setex", keyid, cfg["cli_info"]["LOG_HUB_SMS_SPACE"],keyid, msg_main)
 	else
 		if tonumber(val) >= cfg["cli_info"]["LOG_HUB_MAXSMS"] then return end
 
 		local ok,ttl = redis_api.cmd("logs", "ttl", keyct) -->FIXME
-		redis_api.cmd("logs", "set", keyct, tonumber(val) + 1)
-		redis_api.cmd("logs", "expire", keyct, ttl)
-		redis_api.cmd("logs", "set", keyid, msg_main)
-		redis_api.cmd("logs", "expire", keyid, cfg["cli_info"]["LOG_HUB_SMS_SPACE"])
+		redis_api.cmd("logs", "setex", keyct, ttl,tonumber(val) + 1)
+		redis_api.cmd("logs", "setex", keyid, cfg["cli_info"]["LOG_HUB_SMS_SPACE"],msg_main)
 	end
 
 

@@ -119,10 +119,8 @@ function save_amr_to_redis(amr_buffer,txt)
 	local uuid = cutils.uuid()
 	keyamr = uuid .. ".amr"
 	keytxt = uuid .. ":" .. "keytxt"
-	redis_api.cmd("tmpvoice","set",keytxt,txt)
-	redis_api.cmd("tmpvoice","expire",keytxt,24*60*60)
-	redis_api.cmd("tmpvoice","set",keyamr,amr_buffer)
-	redis_api.cmd("tmpvoice","expire",keyamr,300)
+	redis_api.cmd("tmpvoice","setex",keytxt,24*60*60,txt)
+	redis_api.cmd("tmpvoice","setex",keyamr,300,amr_buffer)
 
 	ret_url = "redis://" .. keyamr
 	return ret_url
