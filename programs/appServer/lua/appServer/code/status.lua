@@ -33,7 +33,7 @@ function handle()
 
 		print("frame = ", scan.dump(frame))
 
-		local ok = zmq_api.cmd("LoginServer", "send_table", frame)
+		local ok = zmq_api.cmd("downstream", "send_table", frame)
 		print('下发完成')
 
 	elseif supex["_DATA_"][2] == 'closed' then
@@ -49,7 +49,7 @@ function handle()
 
 		print("frame = ", scan.dump(frame))
 
-		local ok = zmq_api.cmd("LoginServer", "send_table", frame)
+		local ok = zmq_api.cmd("setting", "send_table", frame)
 		print('下发完成')
 	end
 end

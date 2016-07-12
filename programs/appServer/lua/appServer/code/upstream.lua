@@ -23,7 +23,7 @@ function handle()
 
 	print("frame = ", scan.dump(frame))
 
-	local ok = zmq_api.cmd("MessageGateway", "send_table", frame)
+	local ok = zmq_api.cmd("downstream", "send_table", frame)
 	print("downstream下发完成")
 
 	--[[
@@ -40,7 +40,7 @@ function handle()
 
 	print("frame = ", scan.dump(frame))
 
-	local ok = zmq_api.cmd("MessageGateway", "send_table", frame)
+	local ok = zmq_api.cmd("downstream", "send_table", frame)
 	print("downstream下发完成")
 
 	elseif recv_tab['opt'] == 'bind' then
@@ -52,7 +52,7 @@ function handle()
 
 	print("frame = %s", scan.dump(frame))
 
-	local ok = zmq_api.cmd("LoginServer", "send_table", frame)
+	local ok = zmq_api.cmd("setting", "send_table", frame)
 	print('绑定操作完成')
 
 	elseif recv_tab['opt'] == 'chatGroup' then
@@ -64,11 +64,11 @@ function handle()
 
 	print("frame = ", scan.dump(frame))
 
-	local ok = zmq_api.cmd("MessageGateway", "send_table", frame)
+	local ok = zmq_api.cmd("downstream", "send_table", frame)
 	print("downstream下发完成")
 
 
 	end
-
-	end
+	--]]
+end
 

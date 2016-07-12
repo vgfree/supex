@@ -4,13 +4,13 @@ OWN_POOL = {
 	lhttp = {},
 	redis = {},
 	mysql = {},
-	MessageGateway = {
+	downstream = {
 		host = '192.168.71.141',
-		port = 8081,
+		port = 8092,
 	},
-	LoginServer = {
-		host = '192.168.71.141',
-		port = 8110,
+	setting = {
+		host = '192.168.71.143',
+		port = 8102,
 	},
 }
 
