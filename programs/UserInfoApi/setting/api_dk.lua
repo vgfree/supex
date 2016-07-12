@@ -23,6 +23,7 @@ local function parseFirstFrame(table)
 end
 
 local function sendToSettingServer(table)
+	print(table[1])
 	if table[1] == 'setting' then
 		s:send_table(table)
 	end
