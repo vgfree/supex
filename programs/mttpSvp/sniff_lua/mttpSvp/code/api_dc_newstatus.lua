@@ -144,7 +144,7 @@ function handle(msg)
 		end
 		local data_str = cjson.encode(data_table)
 		only.log('D', 'trans_str =%s',data_str )
- 		post_data_to_other(data_table, gps_table)
+ 		post_data_to_other(data_table)
 	end
 end
 
