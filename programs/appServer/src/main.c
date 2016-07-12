@@ -200,20 +200,6 @@ int main(int argc, char **argv)
 	// 2. 循环接收数据
 	struct app_msg recv_msg = {};
 
-	char *t1 = malloc(8);
-	memcpy(t1, "upstream", 8);
-	char *t2 = malloc(10);
-	memcpy(t2, "cid 5", 6);
-	char *t3 = malloc(20);
-	memcpy(t3, "{opt:567}", 10);
-	recv_msg.vector_size = 3;
-	recv_msg.vector[0].iov_base = t1;
-	recv_msg.vector[0].iov_len = 8;
-	recv_msg.vector[1].iov_base = t2;
-	recv_msg.vector[1].iov_len = 10;
-	recv_msg.vector[2].iov_base = t3;
-	recv_msg.vector[2].iov_len = 20;
-	task_report(tlpool, &recv_msg);
 	while (1) {
 		if (app_recv_more_msg(TYPE_UPSTREAM | TYPE_STATUS, &recv_msg, -1)) {
 			task_report(tlpool, &recv_msg);
