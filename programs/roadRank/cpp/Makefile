@@ -5,6 +5,11 @@ INC_DIR=-I/usr/local/include/luajit-2.0 -I../../../lib/libev \
 	-I../../../lib/libucmq/src -I../../../engine -I../../../engine/major \
 	-I../../../lib/libkv/release/ \
 	-I../../../engine/minor  \
+        -I../../../lib/libevcoro/include \
+	-I../../../lib/libevcs/include/engine \
+	-I../../../lib/libevcs/include/frame/major \
+	-I../../../lib/libevcs/include/frame/minor \
+	-I../....//lib/libevcs/include/frame \
 	-I../../../lib/cJSON \
 	-I../../../lib/libmini/include \
 	-I../src -I./single -I./subsection -I./
@@ -40,8 +45,8 @@ BASE_OBJ = $(addprefix $(BIN)/, \
 	   kv_imei.o \
 	   kv_road_v2.o \
 	   kv_cache.o \
-       forward_imei.o \
-       kv_speed.o \
+	   forward_imei.o \
+	   kv_speed.o \
 	   )
 
 SIN_OBJ = $(addprefix $(BIN)/, \

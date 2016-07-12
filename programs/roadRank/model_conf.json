@@ -1,7 +1,7 @@
 {
         "default": "single",
-        "highway": "single",
-        "lowway" : "single",
+        "highway": "subsec",
+        "lowway" : "subsec",
 
         "model": {
                 "single_mod": {
@@ -11,7 +11,7 @@
                 },
                 "subsec_mod": {
                         "road_match_limit"      : 2,
-                        "replace_limit_l"       : 190,
+                        "replace_limit_l"       : 100,
                         "replace_limit_h"       : 500,
                         "kv_cache_count"        : 8,
                         "expire_time"           : 1200,

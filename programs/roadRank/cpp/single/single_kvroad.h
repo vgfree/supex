@@ -10,15 +10,15 @@
 
 typedef struct kv_roadID
 {
-	char            shift;
-	int             max_speed;
-	int             avg_speed;
-	int             citycode;
-	int             countycode;
-	long long       IMEI;
-	long            end_time;
-	long            used_time;
-	long            old_roadID;
+        char            shift;
+        int             max_speed;
+        int             avg_speed;
+        int             citycode;
+        int             countycode;
+        char            *IMEI;
+        long            end_time;
+        long            used_time;
+        long            old_roadID;
 } KV_ROADID;
 
 int set_roadID_to_kv(KV_ROADID *kv_roadID);

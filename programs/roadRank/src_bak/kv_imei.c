@@ -18,7 +18,7 @@ int get_IMEI_from_kv(char* IMEI, KV_IMEI *kv_IMEI)
 
 	if (ans->errnum != ERR_NONE) {
 		if (ans->errnum == ERR_NIL) {
-			x_printf(E, "this IMEI has not data!\n");
+			x_printf(D, "this IMEI has not data!\n");
 			flag = NIL_IMEI;
 			goto end;
 		}

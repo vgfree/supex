@@ -1,4 +1,4 @@
-package.cpath = "../../open/lib/?.so;" .. package.cpath
+package.cpath = "../../../open/lib/?.so;" .. package.cpath
 local socket = require('socket')
 local	MAX = 1
 for i=1, MAX do
@@ -7,7 +7,7 @@ for i=1, MAX do
 	tcp:setoption('keepalive', true)
 	tcp:settimeout(1, 'b')  -- five second timeout
 
-	local ret = tcp:connect("127.0.0.1", 8222)
+	local ret = tcp:connect("127.0.0.1", 8080)
 	if ret == nil then
 		return false
 	end
@@ -47,10 +47,12 @@ for i=1, MAX do
 -- rt 
         body = '{"longitude":[121.3636712,121.3636587,121.3636298,121.3635805,121.3635205],"latitude":[31.2234047,31.2233522,31.2233123,31.2232905,31.2232852],"IMEI":"598420613826906","model":"YJDK2","collect":true,"speed":[18,17,16,15,12],"tokenCode":"JoEywH3pRd","accountID":"pQvEPywNzY","GPSTime":[1456886210,1456886209,1456886208,1456886207,1456886206],"altitude":[15,16,16,17,17],"direction":[9,29,60,82,93]}'
         body = '{"longitude":[121.3636767,121.3636753,121.3636757,121.3636778,121.3636772],"latitude":[31.2237758,31.2237007,31.2236227,31.2235428,31.2234657],"IMEI":"598420613826906","model":"YJDK2","collect":true,"speed":[31,0,32,19,18],"tokenCode":"JoEywH3pRd","accountID":"pQvEPywNzY","GPSTime":[1456886215,1456886214,1456886213,1456886212,1456886211],"altitude":[12,13,14,14,15],"direction":[3,2,1,3,6]}'
-        body = '{"longitude":[121.3606572,121.3606572,121.3606572,121.3606572,121.3606572],"latitude":[31.2242413,31.2242413,31.2242413,31.2242413,31.2242413],"IMEI":"598420613826906","model":"YJDK2","collect":true,"speed":[0,0,0,0,0],"tokenCode":"JoEywH3pRd","accountID":"pQvEPywNzY","GPSTime":[1456890062,1456890061,1456890060,1456890059,1456890058],"altitude":[18,18,18,18,18],"direction":[73,73,73,73,73]}'
+        --body = '{"longitude":[121.3606572,121.3606572,121.3606572,121.3606572,121.3606572],"latitude":[31.2242413,31.2242413,31.2242413,31.2242413,31.2242413],"IMEI":"598420613826906","IMSI":"123456789876543","model":"YJDK2","collect":true,"speed":[0,0,0,0,0],"tokenCode":"JoEywH3pRd","accountID":"pQvEPywNzY","GPSTime":[1456890062,1456890061,1456890060,1456890059,1456890058],"altitude":[18,18,18,18,18],"direction":[73,73,73,73,73]}'
+        body = '{"longitude":[121.3606572,121.3606572,121.3606572,121.3606572,121.3606572],"latitude":[31.2242413,31.2242413,31.2242413,31.2242413,31.2242413],"IMEI":"598420613899996","IMSI":"123456789876543","model":"YJDK2","collect":true,"speed":[0,0,0,0,0],"tokenCode":"JoEywH3pRd","accountID":"pQvEPywNzY","GPSTime":[1456971934,1456971933,1456971932,1456971931,1456971930],"altitude":[18,18,18,18,18],"direction":[73,73,73,73,73]}'
 
         --body = '{"longitude":[121.332396,121.3322278,121.3320562,121.3318777,121.3317037],"latitude":[31.220089,31.2200553,31.220021,31.2199888,31.2199582],"IMEI":"598420613826906","model":"YJDK2","collect":true,"speed":[59,60,61,62,61],"tokenCode":"JoEywH3pRd","accountID":"pQvEPywNzY","GPSTime":[1456889413,1456889412,1456889411,1456889410,1456889409],"altitude":[16,16,17,17,17],"direction":[77,77,78,78,79]}'
 
+        body = '{"longitude":[127.3405357,127.3405073,127.3404813,127.3404482,127.3404177],"latitude":[43.7227393,43.7226935,43.7226432,43.722578,43.7225062],"M":"409101916615134","model":"SG900","collect":true,"speed":[21,22,27,29,27],"tokenCode":"mFlhuu2UlY","accountID":"AmukwhmvmU","GPSTime":[1435988723,1435988722,1435988721,1435988720,1435988719],"altitude":[283,283,284,284,284],"direction":[24,22,18,16,14]}'
 	local data = "POST /publicentry HTTP/1.0\r\n" ..
 	"User-Agent: curl/7.33.0\r\n" ..
 	"Host: 127.0.0.1:8222\r\n" ..

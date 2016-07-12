@@ -12,7 +12,7 @@ int set_roadID_to_kv(KV_ROADID *kv_roadID)
 
 	memset(buff, '\0', sizeof(buff));
 	sprintf(buff,
-		"hmset %ld IMEI %lld max_speed %d avg_speed %d end_time %ld used_time %ld old_roadID %ld citycode %d countycode %d",
+        "hmset %ld IMEI %s max_speed %d avg_speed %d end_time %ld used_time %ld old_roadID %ld citycode %d countycode %d",
 		kv_roadID->old_roadID, kv_roadID->IMEI, kv_roadID->max_speed,
 		kv_roadID->avg_speed, kv_roadID->end_time,
 		kv_roadID->used_time, kv_roadID->old_roadID, kv_roadID->citycode,

@@ -1,9 +1,8 @@
 #pragma once
 
 #include "utils.h"
-
-#define MAX_TEST_IMEI   32
-#define MAX_LINK_INDEX  32
+#include "base/utils.h"
+#include "rr_def.h"
 
 typedef struct rr_link
 {
@@ -27,7 +26,7 @@ struct rr_cfg_file
 	int             save_time;
 	int             kv_cache_count;
 	int             redis_conn;
-	long            imei_buff[MAX_TEST_IMEI];
+        char            imei_buff[MAX_TEST_IMEI][IMEI_LEN];
 	int             imei_count;
 };
 

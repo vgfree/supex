@@ -206,7 +206,7 @@ bool read_rr_cfg(struct rr_cfg_file *p_cfg, char *name)
 	for (i = 0; i < add; i++) {
 		struct json_object *tmp = NULL;
 		tmp = json_object_array_get_idx(ary, i);
-		p_cfg->imei_buff[i] = (long long)json_object_get_int64(tmp);
+                strcpy(p_cfg->imei_buff[i],json_object_get_string(tmp));
 	}
 
 	free_rr_cfg(&oldcfg);

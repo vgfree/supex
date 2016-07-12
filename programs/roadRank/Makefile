@@ -1,10 +1,23 @@
 BASE_SRC=./src
-INC_DIR=-I/usr/local/include/luajit-2.0 -I../../lib/libev \
-	-I../../lib/json-c -I../../lib/http-parser -I../../lib/libscco \
-	-I../../lib/libucmq/src -I../../engine -I../../engine/major \
+INC_DIR=-I/usr/local/include/luajit-2.0 \
+	-I../../lib/libev \
+	-I../../lib/json-c \
+	-I../../programs \
+	-I../../lib/http-parser \
+	-I../../lib/libscco/include\
+	-I../../lib/libucmq/src \
+	-I../../lib/libevcoro/include \
+	-I../../lib/libevcs/include/engine \
+	-I../../lib/libevcs/include/frame/major \
+	-I../../lib/libevcs/include/frame/minor \
+	-I../../lib/libevcs/include/frame \
 	-I../../lib/libkv/release/ \
-	-I../../engine/minor -I./src \
-	-I../../lib/cJSON -I./cpp -I./cpp/single -I./cpp/subsection
+	-I../../lib/libmini/include \
+	-I./src \
+	-I../../lib/cJSON \
+	-I./cpp \
+	-I./cpp/single \
+	-I./cpp/subsection
 
 LIB_DIR=-L/usr/local/lib -L../../lib -L../../engine/ -L./cpp
 LIBS=-lluajit-5.1 -lpthread -lrt -lm 
@@ -18,14 +31,14 @@ MAIN_APP_SERV ?= roadRank
 CFLAGS +=-DSTORE_USE_UCMQ_AND_QUEUE
 
 ifeq ($(MAIN_APP_SERV), roadRank)
-HANDLE_MODEL = EVUV
+HANDLE_MODEL = EVCORO
 endif
 #<------------------------>#
 -include $(HOME_PATH)/programs/link.mk
 -include $(HOME_PATH)/share.mk
 #<------------------------>#
 
-ADD_OBJ += sniff_evuv_cpp_api.o
+ADD_OBJ += sniff_evcoro_cpp_api.o
 
 #<--------------------------->#
 
@@ -37,7 +50,8 @@ BASE_OBJ = $(addprefix $(BIN)/, \
 	   load_sniff_cfg.o \
 	   load_swift_cfg.o \
 	   swift_cpp_api.o \
-	   add_session_cmd.o \
+	   redis_parse.o \
+	   app_queue.o \
 	   )
 
 OBJ ?= $(BASE_OBJ)
@@ -62,6 +76,11 @@ $(SRV):$(OBJ)
 $(BIN)/%.o : $(BASE_SRC)/%.c
 	@-if [ ! -d $(BIN) ];then mkdir $(BIN); fi
 	gcc $(CFLAGS) $(INC_DIR) $(LIB_DIR) $(LIBS) -c $< -o $@
+
+$(BIN)/app_queue.o : ../app_queue.c
+	@-if [ ! -d $(BIN) ];then mkdir $(BIN); fi
+	gcc $(CFLAGS) $(INC_DIR) $(LIB_DIR) $(LIBS) -c $< -o $@
+
 
 push:
 	git push origin HEAD:refs/for/master

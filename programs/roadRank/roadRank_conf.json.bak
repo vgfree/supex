@@ -53,10 +53,9 @@
 		713351887826068
 	],
 
-	"save_time": 31536000,
+	"save_time": 600,
 	"min_speed_limit": 5,
 	"road_match_limit": 2,
 	"kv_cache_count": 8,
-	"redis_conn": 2000,
-        "model_cfg_file": "model_conf.json"
+	"redis_conn": 2000
 }
