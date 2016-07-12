@@ -255,10 +255,6 @@ weibo-G:
 	$(MAKE) -C ./programs/weibo-G MAIN_APP_SERV=weibo-G
 	@echo -e $(GREEN)"【"$(YELLOW) $@ $(GREEN)"】"$(RED)"\n-->OK!\n"$(NONE)
 
-useroptapi:
-	$(MAKE) -C ./programs/useroptapi MAIN_APP_SERV=useroptapi
-	@echo -e $(GREEN)"【"$(YELLOW) $@ $(GREEN)"】"$(RED)"\n-->OK!\n"$(NONE)
-
 
 adcube_v2:
 	$(MAKE) -C ./programs/adtalk_v2 MAIN_APP_SERV=adcube_v2
@@ -356,7 +352,6 @@ clean:
 	$(MAKE) -C ./programs/mttpServer clean
 	$(MAKE) -C ./programs/mttpSvp clean
 	$(MAKE) -C ./programs/RRDemo/topo clean
-	$(MAKE) -C ./programs/useroptapi clean
 	$(MAKE) -C ./programs/releaseServer clean
 	$(MAKE) -C ./programs/TSDB clean
 	$(MAKE) -C ./programs/timport clean
@@ -394,7 +389,6 @@ distclean:
 	$(MAKE) -C ./programs/mttpServer distclean
 	$(MAKE) -C ./programs/mttpSvp distclean
 	$(MAKE) -C ./programs/RRDemo/topo distclean
-	$(MAKE) -C ./programs/useroptapi distclean
 	$(MAKE) -C ./programs/UserInfoApi distclean
 	$(MAKE) -C ./programs/CoreExchangeNode distclean
 	$(MAKE) -C ./programs/messageGateway distclean
