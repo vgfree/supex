@@ -34,10 +34,11 @@ static int send_data(struct comm_context *commctx, int fd) {
 }
 
 void *read_message(void *arg) {
+	struct comm_message recvmsg = {};
+	init_msg(&recvmsg);
 	while(1) {
-		struct comm_message recvmsg = {};
-		init_msg(&recvmsg);
 		printf("start recv msg.\n");
+		remove_first_nframe(get_max_msg_frame(&recvmsg), &recvmsg);	
 		comm_recv(comm_ctx, &recvmsg, true, -1);
 		size_t size = 0;
 		char *frame = get_msg_frame(0, &recvmsg, &size);
@@ -45,12 +46,13 @@ void *read_message(void *arg) {
 		memcpy(buf, frame, size);
 		buf[size] = '\0';
 	//	printf("recv_data:%*.s\n", recvmsg.package.dsize, recvmsg.content);
+		printf("\x1B[1;32m""recv data successed fd:%d\n""\x1B[m", recvmsg.fd);
 		printf("recv msg:");
 		print_current_time();
 		printf("%s\n", buf);
 		free(buf);
-		destroy_msg(&recvmsg);
 	}
+	destroy_msg(&recvmsg);
 	return NULL;
 }
 
@@ -86,6 +88,8 @@ int main(int argc, char *argv[]) {
 	while(1){
 		for(i = 0; i < atoi(argv[3]); i++) {
 			send_data(comm_ctx, fd[i]);
+			printf("\x1B[1;34m""send data successed fd:%d\n""\x1B[m", fd[i]);
+			//sleep(2);
 		}
 	}
 	comm_ctx_destroy(comm_ctx);
