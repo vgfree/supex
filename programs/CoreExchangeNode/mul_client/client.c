@@ -17,7 +17,7 @@ static int send_data(struct comm_context *commctx, int fd) {
 	char *str = (char *)malloc(datasize);
 	memset(str, 0, datasize);
 	//fgets(str, 1024, stdin);
-	for(i = 0; i < 1024; i++) {
+	for(i = 0; i < 10; i++) {
 		str[i] = 's';
 	}
 	str[i] = '\0';
@@ -82,10 +82,12 @@ int main(int argc, char *argv[]) {
 	pthread_t tid;
 	assert(pthread_create(&tid, NULL, read_message, NULL) == 0);
 	sleep(1);
-	for(i = 0; i < atoi(argv[3]); i++) {
-		send_data(comm_ctx, fd[i]);
+
+	while(1){
+		for(i = 0; i < atoi(argv[3]); i++) {
+			send_data(comm_ctx, fd[i]);
+		}
 	}
-	while(1){};
 	comm_ctx_destroy(comm_ctx);
 	return 0;
 }
