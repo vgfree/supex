@@ -147,9 +147,14 @@ int bufHandle(char *buf, kv_handler_t *handler, char Alignment)
 		memcpy(key, buf + i, keyCursor);
 
 		memcpy(code, buf + i + keyCursor, CtCursor);
-		// if(!binary_search(code)){
-		set_cmd(handler, key, code);
-		// }
+                if(g_rr_cfg_file.city_size > 0) {
+                        if(!binary_search(code)){
+                                set_cmd(handler, key, code);
+                        }
+                }
+                else {
+                        set_cmd(handler, key, code);
+                }
 		i += Cursor;
 	}
 

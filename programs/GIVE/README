@@ -1,0 +1,14 @@
+配置文件中选项
+
+        "synctime": 180, #统计时间,多少S统计一次GPS流量，用户等，需为60*n
+        "citycode":[370100,370600,130400,130200,341500], #发送的城市列表，为空表示全国数据
+        "gaode_host":"127.0.0.1", #对接IP
+        "gaode_port":6000,        #端口
+
+	"sqlhost":"192.168.1.16", #统计数据库信息
+        "sqluser":"mttp",
+        "sqlpass":"pmttp",
+        "sqldb":"countDB",
+        "sqlstr":"",
+        "sqltab":"bd_dataCountInfo",
+        "sqlport":"3306"

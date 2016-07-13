@@ -1,5 +1,5 @@
-INC_DIR = -I/data/supex/lib/cJSON -I/data/supex/lib/libmini/include/ -I/data/supex/lib/hiredis/ -I/data/supex/lib/libkv/release
-LIB_DIR = -L/data/supex/lib -L/data/supex/lib/cJSON -L/data/supex/lib/hiredis/ -L./
+INC_DIR = -I../../..//lib/cJSON -I../../..//lib/libmini/include/ -I../../..//lib/hiredis/ -I../../..//lib/libkv/release
+LIB_DIR = -L../../..//lib -L../../..//lib/cJSON -L../../..//lib/hiredis/ -L./
 LIB_OBJECT=libcjtopbinterface.a
 OBJECT=mirrtalk-transfer-data.pb.o cjson_topb.o
 LIBS = -lrt -lm -lcjson -fPIC
@@ -36,8 +36,8 @@ test: test.c
 	gcc $^ -o $@ $(CFLAGS) $(LIB_DIR) $(INC_DIR) -lcjtopbinterface $(Llibs) `pkg-config --cflags --libs protobuf`
 
 #kvtest: loadredis.c redis_tomem.c
-#Generationfile: redisfile.c redis_interface.c
-filetokv: loadfile_tomem.c redis_kv.c
+#filetokv: loadfile_tomem.c redis_kv.c
+generationfile: redisfile.c redis_interface.c
 	gcc $^ -o $@ $(CFLAGS) $(LIB_DIR) $(INC_DIR) $(Llibs)
 
 mysql: mysql_ops.c filter.c
