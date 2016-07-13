@@ -33,14 +33,11 @@ void *client_thread_read(void *usr)
 		buf[size] = '\0';
 		printf("recv msg:");
 		print_current_time();
-		printf("recev_data_len:%d\n", strlen(buf));
-		printf("buf : %s\n", buf);
+		printf("recv_data_len:%d\n", strlen(buf));
 		if(memcmp(buf, "bind", 4) == 0) {
 			printf("recv frames : %d\n", get_max_msg_frame(&msg));
-			remove_first_nframe( get_max_msg_frame(&msg), &msg);
-			printf("is recv bind :%s\n", buf);
+			remove_first_nframe(get_max_msg_frame(&msg), &msg);
                         set_msg_frame(0, &msg, strlen(buf), buf);
-			printf("frames after set bind: %d\n", msg.package.frames);
 			struct json_object *my_json = NULL;
                         my_json = json_object_new_object();
 			if(my_json == NULL) {
@@ -56,10 +53,12 @@ void *client_thread_read(void *usr)
                         memset(buf, 0, sizeof(buf));
 			buf = json_object_to_json_string(my_json);
                         set_msg_frame(1, &msg, strlen(buf), buf);
-			printf("frames after set json: %d\n", msg.package.frames);
-                        comm_send(g_ctx, &msg, true, -1);
-			printf("send json successfull!\n");
+			printf("dsize:%d frame_size1:%d frame_size2:%d\n",msg.package.dsize, msg.package.frame_size[0],msg.package.frame_size[1]);
+                        if(comm_send(g_ctx, &msg, true, -1) > 0) {
+				printf("send json successfull!\n");
+			}
 			free(buf);
+			remove_first_nframe(get_max_msg_frame(&msg), &msg);
 			destroy_msg(&msg);
                 }
 	}

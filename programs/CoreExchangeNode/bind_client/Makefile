@@ -12,6 +12,8 @@ INCLUDE_PATH = -I. -I../ -I/usr/include/ \
 	-I../../../lib/json-c 
 LIBA_PATH = -L../../../lib/libkv/src \
 	-L../../../lib/ \
+	-L../../../lib/libcomm/lib \
+	-L../../../lib/utils/lib \
 	-L/usr/local/lib/ \
 	-L /root/work/supex/lib/liblog/slog/lib/
 LIBA = -lm -ldl -lpthread -luuid  -lcomm -lutils -lkv -ljson-c -lslog 
