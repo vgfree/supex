@@ -36,21 +36,6 @@ function handle()
 		local ok = zmq_api.cmd("downstream", "send_table", frame)
 		print('下发完成')
 
-	elseif supex["_DATA_"][2] == 'closed' then
-		print("下发数据,执行closed操作")
-		-- 第一帧 setting
-		frame[1] = 'setting'
-		-- 第二帧 status/uidmap/gidmap, 暂时写死
-		frame[2] = 'status'
-		-- 第三帧 CID
-		frame[3] = CID
-		-- 第四帧 bind
-		frame[4] = 'closed'
-
-		print("frame = ", scan.dump(frame))
-
-		local ok = zmq_api.cmd("setting", "send_table", frame)
-		print('下发完成')
 	end
 end
 
