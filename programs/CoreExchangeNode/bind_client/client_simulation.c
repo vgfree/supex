@@ -72,7 +72,7 @@ int test_simulate_client(char *ip)
 	g_ctx = comm_ctx_create(EPOLL_SIZE);
 	struct cbinfo callback_info = {};
 	callback_info.callback = NULL;
-	printf("\033[1;31;40m ip:%s\n \033[0m", ip);
+	printf("\033[1;38m" "ip:%s\n" "\033[0m", ip);
 	connectfd = comm_socket(g_ctx, ip, "8082", &callback_info, COMM_CONNECT);
 	printf("connectfd:%d\n", connectfd);
 

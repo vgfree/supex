@@ -45,11 +45,11 @@ void *read_message(void *arg) {
 		char *buf = (char *)malloc((size + 1) * sizeof(char));
 		memcpy(buf, frame, size);
 		buf[size] = '\0';
-	//	printf("recv_data:%*.s\n", recvmsg.package.dsize, recvmsg.content);
-		printf("\x1B[1;32m""recv data successed fd:%d\n""\x1B[m", recvmsg.fd);
-		printf("recv msg:");
+		printf("\x1Bp1;32m" "recv_data:%*.s\n" "\x1B[m", recvmsg.package.dsize, recvmsg.content);
+		printf("\x1B[1;32m" "recv data successed fd:%d\n""\x1B[m", recvmsg.fd);
+		printf("\x1B[1;32m" "recv msg:""\x1B[m");
 		print_current_time();
-		printf("%s\n", buf);
+		printf("\x1B[1;32m" "%s\n" "\x1B[m", buf);
 		free(buf);
 	}
 	destroy_msg(&recvmsg);
