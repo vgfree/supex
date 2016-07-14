@@ -6,6 +6,18 @@ local scan = require('scan')
 
 module('upstream', package.seeall)
 
+local function set_gidmap(cid, uid)
+	local frame = {}
+	print('下发数据, 绑定gid')
+	frame[1] = 'setting'
+	frame[2] = 'gidmap'
+	frame[3] = cid
+	frame[4] = 'gid0'
+	print("frame = ", scan.dump(frame))
+	local ok = zmq_api.cmd("setting", "send_table", frame)
+	print('***** 绑定gidmap,下发完成 *****')
+end
+
 function handle()
 	-- 打印上行数据
 	print("调用upstream")
@@ -27,6 +39,7 @@ function handle()
 		local ok = zmq_api.cmd("setting", "send_table", frame)
 		print("uidmap绑定完成")
 
+		set_gidmap(supex["_DATA_"][2], uid_tab['uid'])
 	else
 		-- 测试时第三帧只有字符串, 接收到的数据直接下发
 		print("downstream 下发个人消息数据")
