@@ -33,7 +33,8 @@ void *client_thread_read(void *usr)
 		buf[size] = '\0';
 		printf("recv msg:");
 		print_current_time();
-		printf("recv_data_len:%d\n", strlen(buf));
+		printf("\033[1;31m" "\nrecv_data:%s\n" "\033[0m", buf);
+		printf("\033[1;31m" "recv_data_len:%d\n" "\033[0m", strlen(buf));
 		if(memcmp(buf, "bind", 4) == 0) {
 			printf("recv frames : %d\n", get_max_msg_frame(&msg));
 			remove_first_nframe(get_max_msg_frame(&msg), &msg);
@@ -48,14 +49,14 @@ void *client_thread_read(void *usr)
 			uuid_t uu;
                         uuid_generate(uu);
 			uuid_unparse(uu, uuid);
-                        printf("start send uuid: %s\n", uuid);
+                        printf("\033[1;31m" "send uuid: %s\n" "\033[0m", uuid);
 			json_object_object_add(my_json, "uid", json_object_new_string(uuid));
                         memset(buf, 0, sizeof(buf));
 			buf = json_object_to_json_string(my_json);
                         set_msg_frame(1, &msg, strlen(buf), buf);
 			printf("dsize:%d frame_size1:%d frame_size2:%d\n",msg.package.dsize, msg.package.frame_size[0],msg.package.frame_size[1]);
                         if(comm_send(g_ctx, &msg, true, -1) > 0) {
-				printf("send json successfull!\n");
+				printf("\033[1;31m" "send json successfull!\n" "\033[0m");
 			}
 			free(buf);
 			remove_first_nframe(get_max_msg_frame(&msg), &msg);
@@ -71,12 +72,12 @@ int test_simulate_client(char *ip)
 	g_ctx = comm_ctx_create(EPOLL_SIZE);
 	struct cbinfo callback_info = {};
 	callback_info.callback = NULL;
-	printf("ip:%s\n", ip);
+	printf("\033[1;31;40m ip:%s\n \033[0m", ip);
 	connectfd = comm_socket(g_ctx, ip, "8082", &callback_info, COMM_CONNECT);
 	printf("connectfd:%d\n", connectfd);
 
 	if (connectfd == -1) {
-		printf("connect error.");
+		printf("\033[1;31;40m connect error.\n \033[0m");
 		return -1;
 	}
 
@@ -96,17 +97,16 @@ int test_simulate_client(char *ip)
 		}
 		str[i] = '\0';
 #endif
-		printf("str_size:%d\n", sizeof(str));
 
-		printf("data_length:%d\n", strlen(str));
-		printf("send msg:");
+		printf("\033[1;32;32m" "data_length:%d\n" "\033[0m", strlen(str));
+		printf("\033[1;32;32m" "send msg:");
 		print_current_time();
-		printf("\n");
+		printf("\n" "\033[0m");
 		struct comm_message msg = {};
 		init_msg(&msg);
 		set_msg_fd(&msg, connectfd);
 		set_msg_frame(0, &msg, strlen(str), str);
-		printf("fgets input frames: %d\n", msg.package.frames);
+		printf("\033[1;32;32m" "fgets input frames: %d\n" "\033[0m", msg.package.frames);
 		comm_send(g_ctx, &msg, true, -1);
 		destroy_msg(&msg);
 //		sleep(10);

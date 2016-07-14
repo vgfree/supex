@@ -27,13 +27,15 @@ void *client_thread_read(void *usr) {
 		char *buf = (char *)malloc((size + 1) * sizeof(char));
 		int i;
 		for (i = 0; i < size; i++) {
-			printf("%x,", frame[i]);
+			printf("\033[1;33m" "%x," "\033[0m", frame[i]);
 		}
+		printf("\n");
 		memcpy(buf, frame, size);
 		buf[size] = '\0';
 		printf("recv msg:");
 		print_current_time();
-		printf("%s\n", buf);
+		printf("\n");
+	//	printf("%s\n", buf);
 		free(buf);
 		destroy_msg(&msg);
 	}
