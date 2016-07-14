@@ -78,12 +78,12 @@ int main(int argc, char *argv[]) {
 			comm_ctx_destroy(comm_ctx);
 			return -1;
 		}
-		printf("client[%d]-fd[%d] establish connection successful!\n", i + 1, fd[i]);
+		printf("\x1B[1;31m" "client[%d]-fd[%d] establish connection successful!\n" "\x1B[m", i + 1, fd[i]);
 
 	}	
 	pthread_t tid;
 	assert(pthread_create(&tid, NULL, read_message, NULL) == 0);
-	sleep(1);
+//	sleep(1);
 
 	while(1){
 		for(i = 0; i < atoi(argv[3]); i++) {
