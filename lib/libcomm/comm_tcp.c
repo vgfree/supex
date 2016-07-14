@@ -55,7 +55,7 @@ bool socket_connect(struct comm_tcp *commtcp, const char *host, const char *serv
 
 	struct addrinfo *ai = NULL;
 	bool flag = false;
-	long timeout = CONNECTTIMEOUT * 1000; /* @timeout: -1 一直尝试连接对方直到成功 0 只连接一次 >0 一直尝试连接直到超时 */
+	long timeout = CONNECTTIMEOUT * 100; /* @timeout: -1 一直尝试连接对方直到成功 0 只连接一次 >0 一直尝试连接直到超时 */
 	struct timeval  start = {};
 	struct timeval  end = {};
 	long            diffms = 0;

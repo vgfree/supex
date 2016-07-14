@@ -370,7 +370,7 @@ static bool _check_packageinfo(const struct comm_message *message)
 	int     dsize = 0;	/* 数据的总大小 */
 	int     pckidx = 0;	/* 包的索引 */
 	int     frmidx = 0;	/* 帧的索引 */
-	int	frames = 0;
+	int	frames = 0;	/* 帧的总数 */
 
 	if (unlikely(message->package.packages < 1)) {
 		log("wrong packages in comm_message structure, packages:%d", message->package.packages);

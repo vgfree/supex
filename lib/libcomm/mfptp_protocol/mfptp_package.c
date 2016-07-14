@@ -28,12 +28,14 @@ void mfptp_package_destroy(struct mfptp_packager *packager)
 	}
 }
 
-int mfptp_package(struct mfptp_packager *packager, const char *data, int method)
+int mfptp_package(struct mfptp_packager *packager, const char *data, unsigned char flag, int method)
 {
 	assert(packager && packager->init && data);
 
 	packager->header.packages = packager->bodyer.packages;
 	packager->header.socket_type = method;
+	packager->header.compression = flag & 0xF0;
+	packager->header.encryption = flag & 0x0F;
 	packager->ms.dosize = 0;
 
 	/* 检测一下所有的配置是否合法 */
@@ -126,7 +128,7 @@ static void _make_package(struct mfptp_packager *packager, struct mfptp_package_
 		if (package->frame[frmidx].frame_size < 1 || package->frame[frmidx].frame_size > MFPTP_MAX_FRAMESIZE) {
 			/* 数据size大于允许帧所携带的数据大小或小于零 */
 			packager->ms.error = MFPTP_DATASIZE_INVAILD;
-			log("illegal datasize mfptp protocol frame carried\n");
+			log("illegal datasize mfptp protocol frames of one package carried\n");
 			return ;
 		}
 		frame_size = package->frame[frmidx].frame_size;

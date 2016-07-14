@@ -4,6 +4,7 @@
 /*********************************************************************************************/
 
 #include "comm_data.h"
+#include "comm_disposedata.h"
 
 #define NODESIZE        sizeof(intptr_t)	/* 队列里面保存的一个节点的大小 */
 #define QUEUENODES      100			/* 队列里面保存的节点总个数 */
@@ -244,8 +245,20 @@ bool commdata_package(struct connfd_info *connfd, struct comm_event *commevent, 
 
 		commlock_unlock(&connfd->sendlock);
 
-		size = mfptp_check_memory(connfd->send_cache.capacity - connfd->send_cache.size, message->package.frames, message->package.dsize);
+		if (message->config > 0) {
+			if (!encrypt_compress_data(&commevent->commctx->cache, message)) {
+				/* 加密 压缩失败 则放弃此包 */
+				free_commmsg(message);	/* 包的信息设置错误或者打包失败也会直接放弃这个有问题的包 */
+				if ((connfd->send_queue.nodes == 0) && (connfd->send_list.nodes == 0)) {
+					del_remainfd(&commevent->remainfd, connfd->commtcp.fd, REMAINFD_PACKAGE);	/* 节点数等于0 说明没有数据需要进行打包 打包事件处理完毕 */
+					return true;
+				} else {
+					return false;
+				}
+			}
+		}
 
+		size = mfptp_check_memory(connfd->send_cache.capacity - connfd->send_cache.size, message->package.frames, message->package.dsize);
 		if (size > 0) {
 			/* 检测到内存不够 则增加内存*/
 			if (unlikely(!commcache_expend(&connfd->send_cache, size))) {
@@ -259,13 +272,11 @@ bool commdata_package(struct connfd_info *connfd, struct comm_event *commevent, 
 				return false;
 			}
 		}
-
 		mfptp_fill_package(&connfd->packager, message->package.frame_offset, message->package.frame_size, message->package.frames_of_package, message->package.packages);
-		size = mfptp_package(&connfd->packager, message->content, message->socket_type);
+		size = mfptp_package(&connfd->packager, message->content, message->config, message->socket_type);
 
 		if ((size > 0) && (connfd->packager.ms.error == MFPTP_OK)) {
 			connfd->send_cache.end += size;
-			log("after packager socket_type:%d\n", connfd->send_cache.buffer[8]);
 			add_remainfd(&commevent->remainfd, connfd->commtcp.fd, REMAINFD_WRITE);
 			log("package successed\n");
 		} else {
@@ -305,15 +316,23 @@ bool commdata_parse(struct connfd_info *connfd, struct comm_event *commevent, in
 					default:
 						if (new_commmsg(&message, connfd->parser.bodyer.dsize)) {
 							message->fd = connfd->commtcp.fd;
-							//memcpy(message->content, &connfd->parser.ms.cache.buffer[connfd->parser.ms.cache.start], connfd->parser.bodyer.dsize);
 							_fill_message_package(message, &connfd->parser);
 							connfd->recv_cache.start += size;
 							connfd->recv_cache.size -= size;
 							commcache_clean(&connfd->recv_cache);
-
+							if (message->config > 0) {
+								if (!decrypt_decompress_data(&commevent->commctx->cache, message)) {
+									free_commmsg(message);
+									if (connfd->recv_cache.size != 0) {
+										return false;
+									} else {
+										del_remainfd(&commevent->remainfd, connfd->commtcp.fd, REMAINFD_PARSE);
+										return true;
+									}
+								}
+							}
 							commlock_lock(&commevent->commctx->recvlock);
 
-							// commlist_push(&commevent->commctx->recvlist, &message->list);
 							if (unlikely(!commqueue_push(&commevent->commctx->recvqueue, (void *)&message))) {
 								/* 队列已满，则放入链表中 */
 								if (unlikely(!commlist_push(&commevent->commctx->recvlist, &message->list))) {

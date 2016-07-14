@@ -42,10 +42,10 @@ void mfptp_package_destroy(struct mfptp_packager *packager);
 
 /***********************************************************************************
  * 功能：开始打包数据
- * @data:待打包的数据首地址  @method:socket的type
+ * @data:待打包的数据首地址 @flag 加密压缩的标志位  @method:socket的type
  * @返回值: -1:失败, 否则代表打包之后的数据的大小
  ************************************************************************************/
-int mfptp_package(struct mfptp_packager *packager, const char *data, int method);
+int mfptp_package(struct mfptp_packager *packager, const char *data, unsigned char flag, int method);
 
 /***********************************************************************************
 * 功能：检测保存已打包数据的内存大小是否足够

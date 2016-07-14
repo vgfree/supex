@@ -3,6 +3,7 @@
 #include "../mfptp_protocol/mfptp_package.h"
 #include "../mfptp_protocol/mfptp_parse.h"
 #include "../comm_structure.h"
+#include "../comm_disposedata.h"
 
 #define MAXDATASIZE 0x22222222
 
@@ -67,13 +68,14 @@ bool packager(struct comm_cache *cache)
 	// message.fd = fd;
 	message.content = buff;
 //	message.config = IDEA_ENCRYPTION | GZIP_COMPRESSION;
-	message.config = NO_ENCRYPTION | NO_COMPRESSION;
+	message.config = NO_ENCRYPTION | ZIP_COMPRESSION;
 	message.socket_type = REQ_METHOD;
 	message.package.dsize = strlen(buff);
 	//message.package.dsize =	0x1110245;
-	message.package.frames = 9;
+	message.package.frames = 8;
 	message.package.packages = 1;
 
+	printf("compression:%d encryption:%d\n", message.config & 0xF0, message.config & 0x0F);
 	for (pckidx = 0, index = 0; pckidx < message.package.packages; pckidx++) {
 		for (frmidx = 0; frmidx < frames_of_package[pckidx]; frmidx++, index++) {
 			message.package.frame_offset[index] = frame_offset[index];
@@ -81,8 +83,11 @@ bool packager(struct comm_cache *cache)
 		}
 	}
 
-	message.package.frame_offset[7] = message.package.frame_offset[7] + 1;
+	//message.package.frame_offset[7] = message.package.frame_offset[7] + 1;
 	memcpy(message.package.frames_of_package, frames_of_package, (sizeof(int)) * message.package.packages);
+	if (!encrypt_compress_data(&temp_cache, &message)) {
+		return false;
+	}
 	size = mfptp_check_memory(cache->capacity - cache->size, message.package.frames, message.package.dsize);
 
 	if (size > 0) {
@@ -94,13 +99,15 @@ bool packager(struct comm_cache *cache)
 
 		log("expend commcache successed\n");
 	}
-	message.package.frame_size[7] = 12;
+	//message.package.frame_size[7] = 12;
 	//message.package.frame_size[7] = 0x1110245 - (strlen(buff)-3);
 	//printf("frame_size[7] 0x%x strlen(buff):%d\n", message.package.frame_size[7], strlen(buff));
+	struct comm_cache temp_cache = {};
+	commcache_init(&temp_cache);
 
 	if (_check_packageinfo(&message)) {
 		mfptp_fill_package(&packager, message.package.frame_offset, message.package.frame_size, message.package.frames_of_package, message.package.packages);
-		size = mfptp_package(&packager, message.content, message.socket_type);
+		size = mfptp_package(&packager, message.content, message.config, message.socket_type);
 
 		if ((size > 0) && (packager.ms.error == MFPTP_OK)) {
 			printf("packager successed\n");
@@ -129,6 +136,8 @@ void parser(struct comm_cache *pack_cache, struct comm_cache *parse_cache)
 
 	struct mfptp_parser     parser = {};
 	struct comm_message     message = {};
+	struct comm_cache	temp_cache = {};
+	commcache_init(&temp_cache);
 
 	message.content = malloc(MAXDATASIZE);
 	memset(message.content, 0, MAXDATASIZE);
@@ -149,11 +158,14 @@ void parser(struct comm_cache *pack_cache, struct comm_cache *parse_cache)
 				}
 #endif
 
-				log("message body: %s datasize:0x%x\n", message.content, message.package.dsize);
+				log("before message body: %s datasize:0x%x\n", message.content, message.package.dsize);
 			}
-			free(buff);
-			free(message.content);
-			printf("parse success\n");
+			if (decrypt_decompress_data(&temp_cache, &message) ) {
+				log("after message body: %s datasize:0x%x\n", message.content, message.package.dsize);
+				free(buff);
+				free(message.content);
+				printf("parse success\n");
+			}
 			return ;
 		} else if (parser.ms.error == MFPTP_DATA_TOOFEW) {
 			printf("data too few\n");
@@ -196,6 +208,7 @@ static void _fill_message_package(struct comm_message *message, const struct mfp
 	message->package.frames = frames;
 
 	message->config = header->compression | header->encryption;
+	printf("compression:%d encryption:%d\n", header->compression, header->encryption);
 	message->socket_type = header->socket_type;
 }
 
