@@ -12,19 +12,35 @@ function handle()
 	print(supex["_DATA_"][1])
 	print(supex["_DATA_"][2])
 	print(supex["_DATA_"][3])
+	print(supex["_DATA_"][4])
 
-	-- 测试时第三帧只有字符串, 接收到的数据直接下发
 	local frame = {}
-	print("downstream下发个人消息数据")
-	frame[1] = 'downstream'
-	frame[2] = 'cid'
-	frame[3] = supex["_DATA_"][2]
-	frame[4] = supex["_DATA_"][3]
 
-	print("frame = ", scan.dump(frame))
+	if supex["_DATA_"][3] == 'bind' then
+		print("数据下发, 绑定uidmap")
+		local uid_tab = cjson.decode(supex["_DATA_"][4])
+		frame[1] = 'setting'
+		frame[2] = 'uidmap'
+		frame[3] = supex["_DATA_"][2]
+		frame[4] = uid_tab['uid']
 
-	local ok = zmq_api.cmd("downstream", "send_table", frame)
-	print("downstream下发完成")
+		local ok = zmq_api.cmd("setting", "send_table", frame)
+		print("uidmap绑定完成")
+
+	else
+		-- 测试时第三帧只有字符串, 接收到的数据直接下发
+		print("downstream 下发个人消息数据")
+		frame[1] = 'downstream'
+		frame[2] = 'cid'
+		frame[3] = supex["_DATA_"][2]
+		frame[4] = supex["_DATA_"][3]
+
+		print("frame = ", scan.dump(frame))
+
+		local ok = zmq_api.cmd("downstream", "send_table", frame)
+		print("downstream下发完成")
+	end
+
 
 	--[[
 	local recv_tab = cjson.decode(supex["_DATA_"][3])
