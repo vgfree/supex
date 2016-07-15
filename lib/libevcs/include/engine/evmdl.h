@@ -2,7 +2,7 @@
 #include <ev.h>
 #include "base/qlist.h"
 #include "cache/cache.h"
-#include "async_comm.h"
+#include "proto_comm.h"
 
 struct pipe_module
 {
@@ -196,6 +196,7 @@ struct upstream_module
 		struct http_parse_info  http_info;
 		struct redis_parse_info redis_info;
 		struct mttp_parse_info  mttp_info;
+		struct mfptp_parse_info  mfptp_info;
 	}               parse;
 	enum
 	{
@@ -240,7 +241,8 @@ enum major_proto_type
 {
 	USE_HTTP_PROTO = 0,
 	USE_REDIS_PROTO,
-	USE_MTTP_PROTO
+	USE_MTTP_PROTO,
+	USE_MFPTP_PROTO
 };
 
 struct data_node

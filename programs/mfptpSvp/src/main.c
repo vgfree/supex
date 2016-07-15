@@ -4,8 +4,6 @@
 #include <unistd.h>
 #include <assert.h>
 
-#include "mfptpSvp_libkv.h"
-#include "mfptpSvp_redis.h"
 
 #include "major/alive_api.h"
 #include "alive_cpp_api.h"
@@ -15,8 +13,6 @@
 #include "load_sniff_cfg.h"
 
 #include "sniff_evcoro_lua_api.h"
-
-#include "json.h"
 
 struct alive_cfg_list   g_alive_cfg_list = {};
 struct sniff_cfg_list   g_sniff_cfg_list = {};
@@ -61,7 +57,6 @@ static void alive_pthrd_init(void *user)
  */
 static void alive_entry_init(void)
 {
-	mfptpSvp_libkv_init();
 	
 	if (!kvpool_init()) {
 		exit(EXIT_FAILURE);

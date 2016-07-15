@@ -1,7 +1,7 @@
 #pragma once
 #include "evmdl.h"
 
-#include "async_comm.h"
+#include "proto_comm.h"
 #include "supex.h"
 #include "adopt_tasks/adopt_task.h"
 #include "spx_evcs.h"

@@ -91,6 +91,13 @@ struct mcb_list
 	TASK_VMS_FCB    func;
 };
 
+/* USE MFPTP PROTOCOL */
+struct ptp_list
+{
+	char            type;
+	TASK_VMS_FCB    func;
+};
+
 bool check_finish(int ptype, int sfd);
 
 #define MAX_LISTEN_COUNTS 10240

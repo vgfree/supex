@@ -71,7 +71,7 @@ SRV := $(openIMX) $(openHLS) $(openPMS) $(openLOG) \
 	topology crzptX crzptY ACB damS  roadRank \
 	gdgive bdgive gopath gomile ashman adcube_v2\
 	spark releaseServer dfsdb tsdb \
-	timport msgimport rtimport simimport PMR tagpick trafficapi mttpServer mttpSvp rrtopo damR BRM mfptpServer pmrhttp weibo-S weibo-G
+	timport msgimport rtimport simimport PMR tagpick trafficapi mttpServer mfptpSvp mttpSvp rrtopo damR BRM mfptpServer pmrhttp weibo-S weibo-G
 # club
 
 help:
@@ -230,6 +230,10 @@ mttpSvp:
 	$(MAKE) -C ./programs/mttpSvp MAIN_APP_SERV=mttpSvp
 	@echo -e $(GREEN)"【"$(YELLOW) $@ $(GREEN)"】"$(RED)"\n-->OK!\n"$(NONE)
 
+mfptpSvp:
+	$(MAKE) -C ./programs/mfptpSvp MAIN_APP_SERV=mfptpSvp
+	@echo -e $(GREEN)"【"$(YELLOW) $@ $(GREEN)"】"$(RED)"\n-->OK!\n"$(NONE)
+
 
 rrtopo:
 	$(MAKE) -C ./programs/RRDemo/topo MAIN_APP_SERV=rrtopo
@@ -351,6 +355,7 @@ clean:
 	$(MAKE) -C ./programs/GIVE clean
 	$(MAKE) -C ./programs/mttpServer clean
 	$(MAKE) -C ./programs/mttpSvp clean
+	$(MAKE) -C ./programs/mfptpSvp clean
 	$(MAKE) -C ./programs/RRDemo/topo clean
 	$(MAKE) -C ./programs/releaseServer clean
 	$(MAKE) -C ./programs/TSDB clean
@@ -388,6 +393,7 @@ distclean:
 	$(MAKE) -C ./programs/GIVE distclean
 	$(MAKE) -C ./programs/mttpServer distclean
 	$(MAKE) -C ./programs/mttpSvp distclean
+	$(MAKE) -C ./programs/mfptpSvp distclean
 	$(MAKE) -C ./programs/RRDemo/topo distclean
 	$(MAKE) -C ./programs/UserInfoApi distclean
 	$(MAKE) -C ./programs/CoreExchangeNode distclean
@@ -416,6 +422,7 @@ install:
 other:
 	yum install autoconf
 	yum install automake.noarch
+	yum install gperf
 	yum install libtool.x86_64
 	yum install libuuid-devel
 	#yum install gcc-c++.x86_64

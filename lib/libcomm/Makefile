@@ -25,7 +25,7 @@ BUILD_LIB_DIR =		-L/usr/local/lib -L/usr/lib -L/usr/libexec -L$(BUILD_PWD)/lib
 #######
 CC_COMPILER ?=		gcc
 LN = 			@$(CC_COMPILER) $(BUILD_CFLAGS) $(CFLAGS) $(DYLIB_CFLAGS)
-CC =			$(CC_COMPILER) $(BUILD_CFLAGS) $(CFLAGS) $(BUILD_OPTIMIZE) $(BUILD_INC_DIR) $(BUILD_LIB_DIR) $(BUILD_LIBS)
+CC =			$(CC_COMPILER) $(BUILD_CFLAGS) $(CFLAGS) $(BUILD_OPTIMIZE) $(BUILD_INC_DIR) $(BUILD_LIB_DIR)
 AR = 			@ar -rcs
 
 #######
@@ -78,11 +78,11 @@ endef
 
 #######
 ALL:
-	#$(CC) $(BUILD_PWD)/test/timer_test.c -o $(BUILD_PWD)/test/timer_test
-	$(CC) $(BUILD_PWD)/test/mfptp_test.c -o $(BUILD_PWD)/test/mfptp_test
-	$(CC) $(BUILD_PWD)/test/list_test.c -o $(BUILD_PWD)/test/list_test
-	$(CC) $(BUILD_PWD)/test/server.c -o $(BUILD_PWD)/test/server
-	$(CC) $(BUILD_PWD)/test/client.c -o $(BUILD_PWD)/test/client
+	#$(CC) $(BUILD_PWD)/test/timer_test.c -o $(BUILD_PWD)/test/timer_test $(BUILD_LIBS)
+	$(CC) $(BUILD_PWD)/test/mfptp_test.c -o $(BUILD_PWD)/test/mfptp_test $(BUILD_LIBS)
+	$(CC) $(BUILD_PWD)/test/list_test.c -o $(BUILD_PWD)/test/list_test $(BUILD_LIBS)
+	$(CC) $(BUILD_PWD)/test/server.c -o $(BUILD_PWD)/test/server $(BUILD_LIBS)
+	$(CC) $(BUILD_PWD)/test/client.c -o $(BUILD_PWD)/test/client $(BUILD_LIBS)
 
 lib: prepare  $(TARGET)
 

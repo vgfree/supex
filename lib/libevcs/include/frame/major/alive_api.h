@@ -9,7 +9,7 @@
 #include "scco.h"
 #include "adopt_tasks/adopt_task.h"
 #include "alive_cfg.h"
-#include "async_comm.h"
+#include "proto_comm.h"
 #include "supex.h"
 #include "../listen_pthread.h"
 #include "base/free_queue.h"
@@ -26,6 +26,8 @@ struct alive_settings
 		struct cmd_list cmds[MAX_CMD_COUNTS + 1];		/*all cmd counts can't big then MAX_API_COUNTS*/
 		/* mttp */
 		struct mcb_list mcbs[MAX_MCB_COUNTS + 1];		/*all mcb counts can't big then MAX_API_COUNTS*/
+		/* mfptp */
+		struct ptp_list ptps[MAX_MCB_COUNTS + 1];		/*all ptp counts can't big then MAX_API_COUNTS*/
 	};
 };
 

@@ -3,6 +3,7 @@
 #include "http_api/http_status.h"
 #include "redis_api/redis_status.h"
 #include "mttp_api/mttp_status.h"
+#include "mfptp_api/mfptp_parse.h"
 
 /** async protocol callback prototype */
 typedef int (PROTO_CALL_BACK)(void *parse, ...);
@@ -35,4 +36,12 @@ int mttp_proto_free(struct mttp_parse_info *info);
 int mttp_proto_reqt(struct mttp_parse_info *info);
 
 #define mttp_proto_resp mttp_proto_reqt
+
+int mfptp_proto_init(struct mfptp_parse_info *info, char *const *data, unsigned const *size);
+
+int mfptp_proto_free(struct mfptp_parse_info *info);
+
+int mfptp_proto_reqt(struct mfptp_parse_info *info);
+
+#define mfptp_proto_resp mfptp_proto_reqt
 

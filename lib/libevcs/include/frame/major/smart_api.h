@@ -6,7 +6,7 @@
 
 #include "cache/cache.h"
 #include "base/utils.h"
-#include "async_comm.h"
+#include "proto_comm.h"
 #include "scco.h"
 #include "adopt_tasks/adopt_task.h"
 #include "smart_cfg.h"

@@ -40,7 +40,6 @@ BASE_OBJ = $(addprefix $(BIN)/, \
 	   load_sniff_cfg.o \
 	   sniff_evcoro_lua_api.o \
 	   lj_sniff_util.o \
-		 mfptpSvp_libkv.o \
 	   )
 
 OBJ ?= $(BASE_OBJ)

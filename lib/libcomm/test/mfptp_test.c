@@ -27,6 +27,19 @@ int main()
 	if (pckbuff != buff) {
 		free(pckbuff);
 	}
+
+	/*****************************************************/
+#include <assert.h>
+#define DO_FILE "data"
+	int     fd = open(DO_FILE, O_WRONLY | O_CREAT, S_IRUSR | S_IWUSR);
+	if (fd == -1) {
+		fprintf(stderr, "Open %s\n", DO_FILE);
+		return -1;
+	}
+	int     bytes = write(fd, pckbuff, pckbuff_size);
+	assert(bytes == pckbuff_size);
+	close(fd);
+	/*****************************************************/
 	return 0;
 }
 

@@ -12,7 +12,8 @@
 
 #define BIT8_TASK_ORIGIN_HTTP   'p'
 #define BIT8_TASK_ORIGIN_REDIS  'r'
-#define BIT8_TASK_ORIGIN_MTTP   'm'
+#define BIT8_TASK_ORIGIN_MTTP   't'
+#define BIT8_TASK_ORIGIN_MFPTP  'f'
 #define BIT8_TASK_ORIGIN_MSMQ   'q'
 #define BIT8_TASK_ORIGIN_TIME   'e'
 #define BIT8_TASK_ORIGIN_INIT   'i'

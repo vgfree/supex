@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../async_comm.h"
+#include "../proto_comm.h"
 #include "../cache/cache.h"
 
 enum proto_type
