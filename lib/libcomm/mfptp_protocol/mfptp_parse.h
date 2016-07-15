@@ -6,7 +6,6 @@
 #define __MFPTP_PARSE_H__
 
 #include "mfptp_utils.h"
-#include "../comm_cache.h"
 
 #ifdef __cplusplus
 extern "C" {

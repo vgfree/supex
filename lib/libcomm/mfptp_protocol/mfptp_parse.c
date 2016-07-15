@@ -237,7 +237,8 @@ int mfptp_parse(struct mfptp_parser *parser)
 						log("illegal datasize mfptp protocol frame carried\n");
 					}
 				} else {
-					parser->ms.error = MFPTP_DATA_TOOFEW;
+					/* 数据未接收完毕 */
+					return 0;
 				}
 				break ;
 
@@ -274,14 +275,10 @@ int mfptp_parse(struct mfptp_parser *parser)
 			break;
 		} else if ((dsize == 0) && (parser->ms.error == MFPTP_OK)) {
 			/* 没有解析完毕 但待解析数据字节数已为0 */
-			parser->ms.error = MFPTP_DATA_TOOFEW;
-			break;
+			return 0;
 		} else if (parser->ms.error != MFPTP_OK) {
-			/* 解析出错 直接退出 */
-			if (parser->ms.error != MFPTP_DATA_TOOFEW) {
-				/* 如果错误不属于数据不足 其他错误则直接将数据清零 并从头开始解析 */
-				parser->ms.step = MFPTP_HEAD_FIRST;
-			}
+			/* 解析出错 直接将数据清零 并从头开始解析 */
+			parser->ms.step = MFPTP_HEAD_FIRST;
 			break;
 		}
 	}

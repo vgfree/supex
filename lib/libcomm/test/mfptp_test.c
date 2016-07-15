@@ -5,11 +5,10 @@
 #include "../comm_structure.h"
 #include "../comm_disposedata.h"
 
-#define MAXDATASIZE 0x22222222
 
-bool packager(struct comm_cache *cache);
+bool packager(char **pckbuff, int *pckbuff_size);
 
-void parser(struct comm_cache *pack_cache, struct comm_cache *parse_cache);
+void parser(const char *pckbuff, int pckbuff_size);
 
 static void _fill_message_package(struct comm_message *message, const struct mfptp_parser *parser);
 
@@ -17,169 +16,107 @@ static bool _check_packageinfo(const struct comm_message *message);
 
 int main()
 {
-	int                     pckbuff_size = 0;
-	struct comm_cache       pack_cache = {};
-	struct comm_cache       parse_cache = {};
+	char	buff[1024] = {};		/* 保存打包成功的数据缓冲区 */
+	char*	pckbuff = buff;
+	int	pckbuff_size = 1024;		/* 保存打包成功数据缓冲区大小 */
 
-	commcache_init(&pack_cache);
-	commcache_append(&pack_cache, "#ihi", 4);
-	commcache_init(&parse_cache);
-
-	if (packager(&pack_cache)) {
-		parser(&pack_cache, &parse_cache);
+	if (packager(&pckbuff, &pckbuff_size)) {
+		parser(pckbuff, pckbuff_size);
 	}
+
+	if (pckbuff != buff) {
+		free(pckbuff);
+	}
+	return 0;
 }
 
-bool packager(struct comm_cache *cache)
+/* @pckbuff_size: 值-结果参数，传进来时代表的是保存打包成功数据的缓冲区大小 出去时代表的是缓冲去已有数据的大小 */
+bool packager(char **pckbuff, int *pckbuff_size)
 {
-//	char    buff[MAXDATASIZE] = "you never know what's gonna happen to you";
-	char*	buff = malloc(MAXDATASIZE);
-	memcpy(buff, "you never know what's gonna happen to you", strlen("you never know what's gonna happen to you"));
-	int     dsize = strlen(buff);
-	int     packages = 1;
-	int     pckidx = 0;
-	int     frmidx = 0;
-	int     index = 0;
-	int     size = 0;
+	char    data[1024] = "you never know what's gonna happen to you";	/* 待打包的数据 */
+	int     dsize = strlen(data);						/* 待打包数据的总大小 */
+	int     packages = 1;							/* 待打包的总包数 */
+	int	frames = 8;							/* 待打包的总帧数 */
+	int	size = 0;							/* 用来检测缓冲区大小是否足够 */
+	int	frames_of_package[10] = {8};					/* 每个单包中的总帧数 */
+	int	frame_size[64] = {						/* 每帧的数据大小 */
+			strlen("you "),
+			strlen("never "),
+			strlen("know "),
+			strlen("what's "),
+			strlen("gonna "),
+			strlen("happen "),
+			strlen("to "),
+			strlen("you")
+		};
+	int	frame_offset[46] = { 0,		/* 每帧的数据偏移 */
+			strlen("you "),
+			strlen("you never "),
+			strlen("you never know "),
+			strlen("you never know what's "),
+			strlen("you never know what's gonna "),
+			strlen("you never know what's gonna happen "),
+			strlen("you never know what's gonna happen to ") 
+		};
+	struct mfptp_packager   packager = {};	/* 打包器结构体 */
 
-	struct mfptp_packager   packager = {};
-	struct comm_message     message = {};
-	int                     frames_of_package[10] = {8};
-	int                     frame_size[64] = {
-		strlen("you "),
-		strlen("never "),
-		strlen("know "),
-		strlen("what's "),
-		strlen("gonna "),
-		strlen("happen "),
-		strlen("to "),
-		strlen("you")
-	};
-	int                     frame_offset[46] = { 0,
-						     strlen("you "),
-						     strlen("you never "),
-						     strlen("you never know "),
-						     strlen("you never know what's "),
-						     strlen("you never know what's gonna "),
-						     strlen("you never know what's gonna happen "),
-						     strlen("you never know what's gonna happen to ") };
-
-	mfptp_package_init(&packager, &cache->buffer, &cache->size);
-	// message.fd = fd;
-	message.content = buff;
-//	message.config = IDEA_ENCRYPTION | GZIP_COMPRESSION;
-	message.config = NO_ENCRYPTION | ZIP_COMPRESSION;
-	message.socket_type = REQ_METHOD;
-	message.package.dsize = strlen(buff);
-	//message.package.dsize =	0x1110245;
-	message.package.frames = 8;
-	message.package.packages = 1;
-
-	printf("compression:%d encryption:%d\n", message.config & 0xF0, message.config & 0x0F);
-	for (pckidx = 0, index = 0; pckidx < message.package.packages; pckidx++) {
-		for (frmidx = 0; frmidx < frames_of_package[pckidx]; frmidx++, index++) {
-			message.package.frame_offset[index] = frame_offset[index];
-			message.package.frame_size[index] = frame_size[index];
+	mfptp_package_init(&packager, pckbuff, pckbuff_size);
+	size = mfptp_check_memory(*pckbuff_size, frames, dsize);
+	if (size > 0) {
+		/* 检测到内存不够 则增加内存 size为欠缺的内存的大小 */
+		*pckbuff = malloc(*pckbuff_size + size);
+		if (*pckbuff != NULL) {
+			*pckbuff_size += size;
+			memset(*pckbuff, 0, *pckbuff_size + size);
+		} else {
+			return false;
 		}
 	}
-
-	//message.package.frame_offset[7] = message.package.frame_offset[7] + 1;
-	memcpy(message.package.frames_of_package, frames_of_package, (sizeof(int)) * message.package.packages);
-	if (!encrypt_compress_data(&temp_cache, &message)) {
+	*pckbuff_size = 0;	/* 从此刻起代表的就是缓冲区已有数据的大小 */
+	mfptp_fill_package(&packager, frame_offset, frame_size, frames_of_package, packages);
+	size = mfptp_package(&packager, data, NO_ENCRYPTION|NO_COMPRESSION, REQ_METHOD);
+	if ((size > 0) && (packager.ms.error == MFPTP_OK)) {
+		printf("packager successed\n");
+		return true;
+	} else {
+		printf("packager failed\n");
+		packager.ms.error = MFPTP_OK;
 		return false;
 	}
-	size = mfptp_check_memory(cache->capacity - cache->size, message.package.frames, message.package.dsize);
-
-	if (size > 0) {
-		/* 检测到内存不够 则增加内存*/
-		if (commcache_expend(cache, size) == false) {
-			printf("expend commcache failed\n");
-			return false;
-		}
-
-		log("expend commcache successed\n");
-	}
-	//message.package.frame_size[7] = 12;
-	//message.package.frame_size[7] = 0x1110245 - (strlen(buff)-3);
-	//printf("frame_size[7] 0x%x strlen(buff):%d\n", message.package.frame_size[7], strlen(buff));
-	struct comm_cache temp_cache = {};
-	commcache_init(&temp_cache);
-
-	if (_check_packageinfo(&message)) {
-		mfptp_fill_package(&packager, message.package.frame_offset, message.package.frame_size, message.package.frames_of_package, message.package.packages);
-		size = mfptp_package(&packager, message.content, message.config, message.socket_type);
-
-		if ((size > 0) && (packager.ms.error == MFPTP_OK)) {
-			printf("packager successed\n");
-			cache->end += size;
-			free(buff);
-			return true;
-		} else {
-			printf("packager failed\n");
-			packager.ms.error = MFPTP_OK;
-			return false;
-		}
-	}
-	log("check packageinfo failed\n");
-	return false;
 }
 
-void parser(struct comm_cache *pack_cache, struct comm_cache *parse_cache)
+void parser(const char *pckbuff, int pckbuff_size)
 {
-	//char    buff[MAXDATASIZE] = {};
-	char*	buff = malloc(MAXDATASIZE);
-	int     len = pack_cache->size / 2;
-	int     pckidx = 0;
-	int     frmidx = 0;
-	int     index = 0;
-	int     size = 0;
+	int	size = 0;
+	char	buff[1024] = {};		/* 保存解析之后的数据 */
+	struct comm_cache	cache = {};
+	struct mfptp_parser	parser = {};
+	struct comm_message	message = {};
 
-	struct mfptp_parser     parser = {};
-	struct comm_message     message = {};
-	struct comm_cache	temp_cache = {};
-	commcache_init(&temp_cache);
-
-	message.content = malloc(MAXDATASIZE);
-	memset(message.content, 0, MAXDATASIZE);
-
-	mfptp_parse_init(&parser, &parse_cache->buffer, &parse_cache->size);
-	commcache_append(parse_cache, pack_cache->buffer, len);
+	message.content = buff;
+	commcache_init(&cache);
+	commcache_append(&cache, pckbuff, pckbuff_size);
+	mfptp_parse_init(&parser, &cache.buffer, &cache.size);
 	while (1) {
 		size = mfptp_parse(&parser);
-		if ((size > 0) && (parser.ms.error == MFPTP_OK) && (parser.ms.step == MFPTP_PARSE_OVER)) {	/* 成功解析了一个连续的包 */
-			_fill_message_package(&message, &parser);
-			for (pckidx = 0, index = 0; pckidx < message.package.packages; pckidx++) {
-#if 0
-				size = 0;
-				for (frmidx = 0; frmidx < message.package.frames_of_package[pckidx]; frmidx++, index++) {
-					memcpy(&buff[size], &message.content[message.package.frame_offset[index]], message.package.frame_size[index]);
-					size += message.package.frame_size[index];
-					log("message frame body: %*.s\n", size, buff);
-				}
-#endif
-
-				log("before message body: %s datasize:0x%x\n", message.content, message.package.dsize);
-			}
-			if (decrypt_decompress_data(&temp_cache, &message) ) {
-				log("after message body: %s datasize:0x%x\n", message.content, message.package.dsize);
-				free(buff);
-				free(message.content);
-				printf("parse success\n");
-			}
-			return ;
-		} else if (parser.ms.error == MFPTP_DATA_TOOFEW) {
-			printf("data too few\n");
-			parser.ms.error = MFPTP_OK;	/* 重新恢复正常值 */
-			commcache_append(parse_cache, &pack_cache->buffer[len], pack_cache->size - len);
-		} else if (parser.ms.error != MFPTP_DATA_TOOFEW) {
-			/* 解析出错 抛弃已解析的错误数据 继续解析后面的数据 */
-			parse_cache->start += size;
-			parse_cache->size -= size;
-			commcache_clean(parse_cache);
-			parser.ms.error = MFPTP_OK;	/* 重新恢复正常值 */
-			printf("parse failed\n");
+		if (unlikely(size == 0)) {
+			/* 数据未接收完毕 */
+			continue ;
 		}
+		if (unlikely(parser.ms.error != MFPTP_OK)) {
+			printf("parser failed\n");
+			return ;
+		}
+		_fill_message_package(&message, &parser);
+		cache.size -= size;
+		cache.start += size;
+		commcache_clean(&cache);
+		printf("parse success\n");
+		log(" message body: %.*s \n datasize:%d\n", message.package.dsize, message.content, message.package.dsize);
+		break ;
 	}
+	commcache_free(&cache);
+	return ;
 }
 
 /* 填充message结构体 */
