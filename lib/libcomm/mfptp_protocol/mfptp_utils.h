@@ -91,12 +91,12 @@ enum mfptp_error
 	MFPTP_CONFIG_INVAILD,		/*  3 MFPTP压缩解密格式设置错误 */
 	MFPTP_SOCKTYPE_INVAILD,		/*  4 MFPTP协议socket_type设置错误 */
 	MFPTP_PACKAGES_INVAILD,		/*  5 MFPTP协议包数不合法[小于零或大于允许携带的最大包数] */
-	MFPTP_DATASIZE_INVAILD,		/*  7 MFPTP协议帧携带的数据长度无效[携带的数据小于零或者大于允许帧携带最大数] */
-	MFPTP_DECOMPRESS_NO_SPACE,	/*  8 MFPTP协议解压数据时分配解压缓冲区失败 */
-	MFPTP_DECRYPT_NO_SPACE,		/*  9 MFPTP协议解密数据时分配解密缓冲区失败 */
-	MFPTP_ENCRYPT_NO_SPACE,		/* 10 MFPTP协议加密数据时分配解密缓冲区失败 */
-	MFPTP_ENCOMPRESS_NO_SPACE,	/* 11 MFPTP协议压缩数据时分配解压缓冲区失败 */
-	MFPTP_FRAMES_TOOMUCH		/* 12 MFPTP协议一个包包含的帧数太多 */
+	MFPTP_DATASIZE_INVAILD,		/*  6 MFPTP协议帧携带的数据长度无效[携带的数据小于零或者大于允许帧携带最大数] */
+	MFPTP_DECOMPRESS_NO_SPACE,	/*  7 MFPTP协议解压数据时分配解压缓冲区失败 */
+	MFPTP_DECRYPT_NO_SPACE,		/*  8 MFPTP协议解密数据时分配解密缓冲区失败 */
+	MFPTP_ENCRYPT_NO_SPACE,		/*  9 MFPTP协议加密数据时分配解密缓冲区失败 */
+	MFPTP_ENCOMPRESS_NO_SPACE,	/* 10 MFPTP协议压缩数据时分配解压缓冲区失败 */
+	MFPTP_FRAMES_TOOMUCH		/* 11 MFPTP协议一个包包含的帧数太多 */
 
 };
 
