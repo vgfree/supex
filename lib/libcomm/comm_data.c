@@ -343,13 +343,14 @@ bool commdata_parse(struct connfd_info *connfd, struct comm_event *commevent, in
 		commlock_lock(&commevent->commctx->recvlock);
 		if (unlikely(!commqueue_push(&commevent->commctx->recvqueue, (void *)&message))) {
 			/* 队列已满，则放入链表中 */
+			bool flag = false;
 			if (unlikely(!commlist_push(&commevent->commctx->recvlist, &message->list))) {
-				if (connfd->recv_cache.size != 0) {
-					return false;
-				} else {
+				if (connfd->recv_cache.size == 0) {
+					flag = true;
 					del_remainfd(&commevent->remainfd, connfd->commtcp.fd, REMAINFD_PARSE);
-					return true;
 				}
+				commlock_unlock(&commevent->commctx->recvlock);
+				return flag;
 			}
 		}
 		if (commevent->commctx->recvqueue.readable == 0) {		/* 为0不可读，代表有线程在等待可读 */
