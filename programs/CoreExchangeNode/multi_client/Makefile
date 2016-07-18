@@ -1,7 +1,7 @@
 CC = gcc
 AR = ar
 
-CFLAG = -O2 -W -Wall -std=c99
+CFLAG = -g -O2 -W -Wall -std=c99
 
 INCLUDE_PATH = -I. -I../ -I/usr/include/ \
 	-I../../../lib/libcomm \

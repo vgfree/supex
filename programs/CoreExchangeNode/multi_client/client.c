@@ -1,6 +1,10 @@
 #include "comm_message_operator.h"
 #include "sys/time.h"
 #include "communication.h"  
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include "loger.h"
 
 static struct comm_context  *comm_ctx = NULL;
 
@@ -11,68 +15,72 @@ void print_current_time() {
 	printf("tv_usec:%d--", tv.tv_usec);
 }
 
+static void event_fun(struct comm_context *commctx, struct comm_tcp *commtcp, void *usr);
+
 static int send_data(struct comm_context *commctx, int fd) {
-	int i;
-	int datasize = 1024;
-	char *str = (char *)malloc(datasize);
-	memset(str, 0, datasize);
-	//fgets(str, 1024, stdin);
-	for(i = 0; i < 10; i++) {
-		str[i] = 's';
-	}
-	str[i] = '\0';
+	int i = 0;
+	int datasize = 10;
+	char content[1024] = {};
 	struct comm_message sendmsg = {};
-	init_msg(&sendmsg);
-	set_msg_fd(&sendmsg, fd);
-	set_msg_frame(0, &sendmsg, strlen(str), str); 
-	//printf("data(send):%s, data size:%d\n", sendmsg.content, sendmsg.package.dsize);
+	sendmsg.fd = fd;
+	sendmsg.config = 0;
+	sendmsg.socket_type = -1;
+	sendmsg.content = content;
+	sendmsg.package.packages = 1;
+	sendmsg.package.frames = 1;
+	sendmsg.package.dsize = datasize;
+	sendmsg.package.frame_size[0] = datasize;
+	sendmsg.package.frame_offset[0] = 0;
+	sendmsg.package.frames_of_package[0] = 1;
+	for (i = 0; i < datasize; i++) {
+		sendmsg.content[i]= 'a';
+	}
 	comm_send(commctx, &sendmsg, false, -1);
-	destroy_msg(&sendmsg);
-	free(str);
-	str = NULL;
 	return 0;
 }
 
 void *read_message(void *arg) {
+	char content[1024] = {};
+	int datasize = 1024;
 	struct comm_message recvmsg = {};
-	init_msg(&recvmsg);
+
 	while(1) {
-		printf("start recv msg.\n");
-		remove_first_nframe(get_max_msg_frame(&recvmsg), &recvmsg);	
+		memset(&recvmsg, 0, sizeof(recvmsg));
+		recvmsg.content = content;
+		printf("\x1B[1;32m" "start recv msg.\n" "\x1B[m");
 		comm_recv(comm_ctx, &recvmsg, true, -1);
-		size_t size = 0;
-		char *frame = get_msg_frame(0, &recvmsg, &size);
-		char *buf = (char *)malloc((size + 1) * sizeof(char));
-		memcpy(buf, frame, size);
-		buf[size] = '\0';
-		printf("\x1Bp1;32m" "recv_data:%*.s\n" "\x1B[m", recvmsg.package.dsize, recvmsg.content);
 		printf("\x1B[1;32m" "recv data successed fd:%d\n""\x1B[m", recvmsg.fd);
-		printf("\x1B[1;32m" "recv msg:""\x1B[m");
-		print_current_time();
-		printf("\x1B[1;32m" "%s\n" "\x1B[m", buf);
-		free(buf);
+		printf("\x1Bp1;32m" "recv_data:%.*s\n" "\x1B[m", recvmsg.package.dsize, recvmsg.content);
 	}
-	destroy_msg(&recvmsg);
 	return NULL;
 }
 
-int main(int argc, char *argv[]) {
-	int fd[10000] = {};
-	int i;
 
-	struct cbinfo        cb = {};
+struct CSLog *g_imlog = NULL;
+
+int main(int argc, char *argv[]) {
+	g_imlog = CSLog_create("fdaf", 1);
+	int i = 0, datasize = 10;
+	int fd[10000] = {};
+	char content[1024] = {};
+	struct cbinfo finishedcb = { 0 };
+	struct comm_message sendmsg = {};
+
+	sendmsg.content = content;
+	finishedcb.callback = event_fun;
+	finishedcb.usr = &sendmsg;
 
 	if(argc < 3) {
 		printf("usge:%s <ip> <port> <client_count>\n", argv[0]);
 		return -1;
 	}
-	comm_ctx = comm_ctx_create(EPOLL_SIZE);
+	comm_ctx = comm_ctx_create(-1);
 	if(unlikely(!comm_ctx)) {
-		printf("send context create failed\n");
+		printf("context create failed\n");
 		return -1;
 	}
 	for(i = 0; i < atoi(argv[3]); i++) {
-		fd[i] = comm_socket(comm_ctx, argv[1], argv[2], &cb, COMM_CONNECT);
+		fd[i] = comm_socket(comm_ctx, argv[1], argv[2], NULL, COMM_CONNECT);
 		if(fd[i] == -1) {
 			printf("establish connection failed\n");
 			comm_ctx_destroy(comm_ctx);
@@ -83,15 +91,95 @@ int main(int argc, char *argv[]) {
 	}	
 	pthread_t tid;
 	assert(pthread_create(&tid, NULL, read_message, NULL) == 0);
-//	sleep(1);
+	sleep(1);
+
+	sendmsg.config = 0;
+	sendmsg.socket_type = -1;
+	sendmsg.content = content;
+	sendmsg.package.packages = 1;
+	sendmsg.package.frames = 1;
+	sendmsg.package.dsize = datasize;
+	sendmsg.package.frame_size[0] = datasize;
+	sendmsg.package.frame_offset[0] = 0;
+	sendmsg.package.frames_of_package[0] = 1;
+	for (i = 0; i < datasize; i++) {
+		sendmsg.content[i]= 'a';
+	}
 
 	while(1){
 		for(i = 0; i < atoi(argv[3]); i++) {
-			send_data(comm_ctx, fd[i]);
+			sendmsg.fd = fd[i];
+			if (comm_send(comm_ctx, &sendmsg, false, -1) == -1 ) {
+				comm_ctx_destroy(comm_ctx);
+				CSLog_destroy(g_imlog);
+				return 0;
+			}
 			printf("\x1B[1;34m""send data successed fd:%d\n""\x1B[m", fd[i]);
-			//sleep(2);
+//			sleep(1);
 		}
 	}
 	comm_ctx_destroy(comm_ctx);
+	CSLog_destroy(g_imlog);
 	return 0;
+}
+
+void close_fun(void *usr)
+{
+	struct comm_message *message = (struct comm_message*)usr;
+
+	printf("client here is close_fun():%d\n", message->fd);
+	message->fd = -1;
+}
+
+void write_fun(void *usr)
+{
+	struct comm_tcp *commtcp = (struct comm_tcp *)usr;
+
+	printf("client here is write_fun(): %d\n", commtcp->fd);
+}
+
+void read_fun(void *usr)
+{
+	struct comm_tcp *commtcp = (struct comm_tcp *)usr;
+
+	printf("client here is read_fun(): %d\n", commtcp->fd);
+}
+
+void accept_fun(void *usr)
+{
+	struct comm_tcp *commtcp = (struct comm_tcp *)usr;
+
+	printf("client here is accept_fun(): %d\n", commtcp->fd);
+}
+
+void timeout_fun(void *usr)
+{
+	printf("client here is timeout_fun()\n");
+}
+
+static void event_fun(struct comm_context *commctx, struct comm_tcp *commtcp, void *usr)
+{
+	switch (commtcp->stat)
+	{
+		case FD_CLOSE:
+			close_fun(usr);
+			break;
+
+		case FD_WRITE:
+			write_fun(commtcp);
+			break;
+
+		case FD_READ:
+			read_fun(commtcp);
+			break;
+
+		case FD_INIT:
+			if (commtcp->type == COMM_ACCEPT) {
+				accept_fun(commtcp);
+			}
+
+		default:
+			timeout_fun(commtcp);
+			break;
+	}
 }
