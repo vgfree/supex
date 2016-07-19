@@ -5,6 +5,7 @@
 
 #include "comm_disposedata.h"
 
+#if 0
 static int _encryptcb(char *destbuff, const char *srcbuff, int dest_len, int src_len)
 {
 	memcpy(destbuff, srcbuff, src_len);
@@ -51,6 +52,7 @@ static int _decompresscb(char *destbuff, const char *srcbuff, int dest_len, int 
 	log("\x1B[1;32m""decompress over\n""\x1B[m");
 	return src_len + k;
 }
+#endif
 
 /* 设置加密压缩的回调函数 @flag:true 代表的是加密压缩， false代表的是解密解压 */
 static inline DisposeData_CallBack  _set_callback(bool flag, unsigned char config)
@@ -68,18 +70,34 @@ static inline DisposeData_CallBack  _set_callback(bool flag, unsigned char confi
 			}
 
 		case AES_ENCRYPTION:
+#if 0
 			if (flag) {
 				return  _encryptcb;	/* 待完善，指向AES算法加密函数 */
 			} else {
 				return  _decryptcb;	/* 待完善，指向AES算法的解密函数 */
 			}
+#else
+			if (flag) {
+				return  NULL;	/* 待完善，指向AES算法加密函数 */
+			} else {
+				return  NULL;	/* 待完善，指向AES算法的解密函数 */
+			}
+#endif
 
 		case ZIP_COMPRESSION:
+#if 0
 			if (flag) {
 				return  _compresscb;		/* 待完善，指向ZIP算法压缩函数 */
 			} else {
 				return  _decompresscb;	/* 待完善，指向ZIP算法解压函数 */
 			}
+#else
+			if (flag) {
+				return  NULL;		/* 待完善，指向ZIP算法压缩函数 */
+			} else {
+				return  NULL;	/* 待完善，指向ZIP算法解压函数 */
+			}
+#endif
 
 		case GZIP_COMPRESSION:
 			if (flag) {

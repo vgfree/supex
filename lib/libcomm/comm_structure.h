@@ -64,6 +64,7 @@ struct comm_message
 	char                    *content;		/* 消息的内容首地址 */
 	struct comm_package     package;		/* 消息包的设置 */
 	struct comm_list        list;			/* 链表节点 */
+	struct connfd_info	*connfd;		/* 此消息属于哪个fd对应的结构体 */
 };
 
 /* 通信模块的上下文环境结构体 */
@@ -121,6 +122,7 @@ struct bindfd_info
 /* 主动链接或被动连接的fd相关信息[fd的类型为COMM_CONNECT, COMM_ACCEPT] */
 struct connfd_info
 {
+	int			msgcounter;	/* 此fd有多少数据保存在接收队列里面 */
 	struct comm_queue       send_queue;	/* 存放用户传递进来未打包的原始数据 */
 	struct comm_list        send_list;	/* 当send_queue队列已满时放入此链表中 */
 	struct comm_cache       recv_cache;	/* 存放read函数接收但并未解析的数据 */

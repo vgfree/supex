@@ -206,29 +206,13 @@ int comm_recv(struct comm_context *commctx, struct comm_message *message, bool b
 
 	commlock_lock(&commctx->recvlock);
 	do {
-#if 0
-		struct comm_list *list = NULL;
-
-		if (commlist_pull(&commctx->recvlist, (void *)&list)) {
-			commmsg = (struct comm_message *)get_container_addr(list, COMMMSG_OFFSET);
-			break;
-		} else if (block) {
-			commctx->recvqueue.readable = 0;
-
-			if (commlock_wait(&commctx->recvlock, &commctx->recvqueue.readable, 1, timeout, true)) {
-				flag = true;			/* 返回值为真说明有数据可读 */
-			}
-		} else {
-			commctx->recvqueue.readable = 1;	/* 不进行堵塞就设置为1不需要唤醒 */
-		}
-#endif
-
 		if (unlikely(!commqueue_pull(&commctx->recvqueue, (void *)&commmsg))) {
 			struct comm_list *list = NULL;
 
 			if (commlist_pull(&commctx->recvlist, (void *)&list)) {
 				commmsg = (struct comm_message *)get_container_addr(list, COMMMSG_OFFSET);
-				break;
+				flag = false;
+			//	break;
 			} else if (block) {
 				commctx->recvqueue.readable = 0;
 
@@ -239,15 +223,34 @@ int comm_recv(struct comm_context *commctx, struct comm_message *message, bool b
 				commctx->recvqueue.readable = 1;	/* 不进行堵塞就设置为1不需要唤醒 */
 			}
 		} else {
-			break;
+			flag = false;
+		//	break;
 		}
+		if (commmsg) {
+			commmsg->connfd->msgcounter --;
+			if (commmsg->connfd->commtcp.stat == FD_CLOSE) {
+				if (block) {
+					flag = true;	/* 此条消息直接丢弃 */
+				} else {
+					flag = false;
+				}
+				log("fd closed comm_recv:%d\n",commmsg->fd);
+				if (commmsg->connfd->msgcounter == 0 && commmsg->connfd->commtcp.connattr != CONNECT_ANYWAY) {
+					//commdata_del(commctx->commevent, commmsg->fd);
+					commdata_destroy(commmsg->connfd);
+				}
+				free_commmsg(commmsg);
+				commmsg = NULL;
+			}
+			commmsg->connfd = NULL;	/* 此变量只是用来判断此fd是否已经被关闭 */
+		}
+		log("queue nodes:%d list nodes:%d\n", commctx->recvqueue.nodes, commctx->recvlist.nodes);
 	} while (flag);								/* flag为true说明成功等待到数据 尝试再去取一次数据 */
 	commlock_unlock(&commctx->recvlock);
 
 	if (commmsg) {					/* 取到数据 */
-		//log("commmsg socket_type:%d\n", commmsg->socket_type);
 		copy_commmsg(message, commmsg);
-		//log("message socket_type:%d\n", message->socket_type);
+		//log("\x1B[1;32m""message socket_type:%d\n""\x1B[m", message->socket_type);
 		free_commmsg(commmsg);			/* 释放掉comm_message结构体 */
 		return message->package.dsize;
 	}

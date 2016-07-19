@@ -14,10 +14,18 @@
 #define	CONNECTINTERVAL 1000*10			/* 当服务器断开之后，每间隔多长时间去尝试连接直到连接上服务器[单位 ms]*/
 
 /* 删除一个fd的相关信息以及关闭一个fd */
-#define DELETEFD(commevent, fd, flag)				\
-	do {    close(fd);					\
-		del_remainfd(&commevent->remainfd, fd, flag);   \
-		commdata_del(commevent, fd);			\
+#define DELETEFD(commevent, connfd, fd, flag)					\
+	do {									\
+		close(fd);							\
+		del_remainfd(&commevent->remainfd, fd, flag);			\
+		if (connfd->msgcounter > 0) {					\
+			commepoll_del(&commevent->commctx->commepoll, fd, 0);	\
+			commevent->connfd[fd] = 0;		\
+			commevent->connfdcnt--;					\
+			close(fd);						\
+		} else {							\
+			commdata_del(commevent, fd);				\
+		}								\
 	 } while(0)
 
 static void _fill_message_package(struct comm_message *message, const struct mfptp_parser *packager);
@@ -89,6 +97,7 @@ void commdata_destroy(struct connfd_info *connfd)
 		close(connfd->commtcp.fd);
 		connfd->commtcp.fd = -1;
 		Free(connfd);
+		connfd = NULL;
 	}
 }
 
@@ -115,7 +124,7 @@ bool commdata_recv(struct connfd_info *connfd, struct comm_event *commevent, int
 			if (errno == EINTR) {						/* 读操作被中断，则返回false，下次轮询接着处理此fd */
 				return false;
 			} else if ((errno != EAGAIN) || (errno != EWOULDBLOCK)) {	/* 发生致命错误，则删除此fd的相关信息 */
-				DELETEFD(commevent, connfd->commtcp.fd, REMAINFD_READ);
+				DELETEFD(commevent, connfd, connfd->commtcp.fd, REMAINFD_READ);
 				return true;
 			}
 		}
@@ -138,12 +147,7 @@ bool commdata_recv(struct connfd_info *connfd, struct comm_event *commevent, int
 				log("%d closed and start commtimer\n", connfd->commtcp.fd);
 			} else {
 				log("%d closed\n", connfd->commtcp.fd);
-				DELETEFD(commevent, connfd->commtcp.fd, REMAINFD_READ);
-#if 0
-				commdata_del(commevent, connfd->commtcp.fd);
-				del_remainfd(&commevent->remainfd, fd, REMAINFD_READ);
-				close(fd);
-#endif
+				DELETEFD(commevent, connfd, connfd->commtcp.fd, REMAINFD_READ);
 			}
 		} else {
 			/* 读事件成功处理完毕，则添加解析事件并将此fd从读事件数组里移除 */
@@ -188,7 +192,7 @@ bool commdata_send(struct connfd_info *connfd, struct comm_event *commevent, int
 				} else {
 					/* 出现其他的致命错误，返回true，将此fd的相关信息删除 */
 					log("write dead wrong\n");
-					DELETEFD(commevent, connfd->commtcp.fd, REMAINFD_WRITE);
+					DELETEFD(commevent, connfd, connfd->commtcp.fd, REMAINFD_WRITE);
 					return true;
 				}
 			}
@@ -325,6 +329,7 @@ bool commdata_parse(struct connfd_info *connfd, struct comm_event *commevent, in
 			return false;
 		}
 		message->fd = connfd->commtcp.fd;
+		message->connfd = connfd;
 		_fill_message_package(message, &connfd->parser);
 		connfd->recv_cache.start += size;
 		connfd->recv_cache.size -= size;
@@ -357,6 +362,7 @@ bool commdata_parse(struct connfd_info *connfd, struct comm_event *commevent, in
 			/* 唤醒在commctx->recv_queue.readable上等待的线程并设置其为1 */
 			commlock_wake(&commevent->commctx->recvlock, &commevent->commctx->recvqueue.readable, 1, true);
 		}
+		connfd->msgcounter ++;
 		commlock_unlock(&commevent->commctx->recvlock);
 		log("parse successed\n");
 		if (connfd->recv_cache.size != 0) {
