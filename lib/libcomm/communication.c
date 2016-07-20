@@ -183,7 +183,8 @@ int comm_send(struct comm_context *commctx, const struct comm_message *message, 
 
 			if (unlikely(!commqueue_push(&connfd->send_queue, (void *)&commmsg))) {
 				/* 队列已满，则存放到链表中 */
-				commlist_push(&connfd->send_list, &commmsg->list);
+				commlist_push(&connfd->send_list, &commmsg->node);
+
 			}
 
 			commlock_unlock(&connfd->sendlock);
@@ -244,7 +245,7 @@ int comm_recv(struct comm_context *commctx, struct comm_message *message, bool b
 			}
 			commmsg->connfd = NULL;	/* 此变量只是用来判断此fd是否已经被关闭 */
 		}
-		log("queue nodes:%d list nodes:%d\n", commctx->recvqueue.nodes, commctx->recvlist.nodes);
+		log("queue nodes:%d list nodes:%ld\n", commctx->recvqueue.nodes, commctx->recvlist.nodes);
 	} while (flag);								/* flag为true说明成功等待到数据 尝试再去取一次数据 */
 	commlock_unlock(&commctx->recvlock);
 

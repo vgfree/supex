@@ -27,7 +27,7 @@ extern "C" {
 /* 获取struct comm_message结构体中成员变量list的偏移大小 */
 #define COMMMSG_OFFSET			\
 	({ struct comm_message message;	\
-	   get_member_offset(&message, &message.list); })
+	   get_member_offset(&message, &message.node); })
 
 struct comm_event;
 struct comm_context;
@@ -63,7 +63,7 @@ struct comm_message
 	int                     socket_type;		/* 消息套接字的类型[要使用默认值的时候必须将此值设置为-1] */
 	char                    *content;		/* 消息的内容首地址 */
 	struct comm_package     package;		/* 消息包的设置 */
-	struct comm_list        list;			/* 链表节点 */
+	struct list_node        node;			/* 链表节点 */
 	struct connfd_info	*connfd;		/* 此消息属于哪个fd对应的结构体 */
 };
 

@@ -25,7 +25,7 @@ struct comm_timer {
 	struct timeval start;		/* 开始计时器时的事件记录*/
 	struct timeval interval;	/* 每间隔多长时间再次触发事件,为0则只触发一次 */
 	struct timeval value;		/* 从开始timer起到下一次触发事件的时间长度 */
-	struct comm_list ntimer;	/* 链表结构体,指向下一个timer[用户无需设置此值] */
+	struct list_node ntimer;	/* 链表节点结构体,指向下一个timer[用户无需设置此值] */
 };
 
 

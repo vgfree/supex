@@ -2,7 +2,7 @@
 
 struct list_test {
 	int	a ;
-	struct comm_list list;
+	struct list_node list;
 };
 
 void destroy(void *usr)
@@ -29,7 +29,7 @@ int main()
 		}
 	}
 
-	struct comm_list *data = NULL;
+	struct list_node *data = NULL;
 	struct list_test *container = NULL;
 	int offset = get_member_offset(&list[0], &list[0].list);
 

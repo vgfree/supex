@@ -36,87 +36,100 @@ extern "C" {
 /* 链表节点所保存的数据销毁回调函数 */
 typedef void (*DestroyCB)(void *data);
 
-/* 链表结构体 */
-struct comm_list
-{
-	DestroyCB               destroy;	/* 销毁数据的回调函数 */
-	int                     nodes;		/* 链表中有效数据的节点数[只有头节点会被设置] */
-	struct comm_list        *next;		/* 指向链表中的下一个节点 */
-	struct comm_list        *tail;		/* 指向链表的尾节点[只有头节点会被设置] */
-	struct comm_list	*cur;		/* 指向当前的节点数[用于依次获取链表节点而不删除节点数据只有头节点会被设置]*/
+/* 链表节点结构点 */
+struct list_node {
+	struct list_node* next;		/* 后置节点 */
+	struct list_node* prev;		/* 前置节点[保留值未使用] */
+	void* value;			/* 节点所保存的值[保留未使用目前将此结构体嵌套到别的结构体而不是将别的结构体保存在此变量中] */
 };
+
+/* 链表的结构体 */
+struct comm_list {
+	struct list_node* head;		/* 链表的头节点 */
+	struct list_node* tail;		/* 链表的尾节点 */
+	struct list_node* cur;		/* 指向当前的节点[用于依次获取链表节点数据而不删除节点数据] */
+	unsigned long nodes;		/* 链表中节点总数 */
+	DestroyCB     destroy;		/* 销毁数据的回调函数 */
+	//void (*free)(void* data);	/* 节点值的销毁函数 */
+
+};
+
 
 /* 初始化链表，设置链表的头节点 */
 static inline void commlist_init(struct comm_list *list, DestroyCB destroy)
 {
 	assert(list);
-	list->cur = list;
-	list->tail = list;
-	list->next = list;
+	list->cur = NULL;
+	list->tail = NULL;
+	list->head = NULL;
 	list->nodes = 0;
 	list->destroy = destroy;
 }
 
-/* 从尾部插入一个新节点 @head:头节点 @list:要插入的节点 */
-static inline bool commlist_push(struct comm_list *head, struct comm_list *list)
+/* 从尾部插入一个新节点 @list:链表结构体 @node:要插入的节点 */
+static inline bool commlist_push(struct comm_list *list, struct list_node *node)
 {
-	assert(head && list);
-	head->tail->next = list;
-	head->tail = list;
-	head->tail->next = head;
-	head->nodes += 1;
+	assert(list && node);
+	node->next = NULL;
+	if (list->head != NULL) {
+		list->tail->next = node;
+		list->tail = node;
+	} else {
+		list->head = node;
+		list->tail = node;
+		list->cur = node;
+	}
+	list->nodes ++;
 	return true;
 }
 
-/* 取出链表第一个节点的数据 @head:头节点 @list:存放取到的节点地址 */
-static inline bool commlist_pull(struct comm_list *head, struct comm_list **list)
+/* 取出链表第一个节点的数据 @list:链表结构体  @node:存放取到的节点地址 */
+static inline bool commlist_pull(struct comm_list *list, struct list_node **node)
 {
-	assert(head && list);
-	struct comm_list *temp = head->next;
-
-	head->next = head->next->next;
-
-	if (temp != head) {
-		if (temp == head->tail) {
-			head->tail = head;
+	assert(list && node);
+	if (list->nodes > 0) {
+		*node = list->head;
+		if (list->head == list->tail) {
+			/* 取的是最后一个节点数据 */
+			list->tail = NULL;
 		}
-
-		*list = temp;
-		head->nodes -= 1;
+		list->head = list->head->next;
+		list->nodes --;
 		return true;
-	} else {
-		*list = NULL;
-		return false;
 	}
+	*node = NULL;
+	return false;
 }
 
 /* 依次获得链表的数据 但并不将节点从链表删除 */
-static inline bool commlist_get(struct comm_list *head, struct comm_list **list)
+static inline bool commlist_get(struct comm_list *list, struct list_node **node)
 {
-	assert(head && list);
-	head->cur = head->cur->next;
-	if (head->cur != head) {
-		*list = head->cur;
+	assert(list && node);
+	if (list->cur != NULL) {
+		*node = list->cur;
+		list->cur = list->cur->next;
 		return true;
-	} else {
-		*list = NULL;
-		return false;
 	}
+	*node = NULL;
+	return false;
 }
 
-/* 删除链表中指定的节点 @head:链表头节点 @list:需要删除的节点地址 */
-static inline bool commlist_delete(struct comm_list *head, struct comm_list *list)
+/* 删除链表中指定的节点 @list:链表结构体  @node:需要删除的节点地址 */
+static inline bool commlist_delete(struct comm_list *list, struct list_node *node)
 {
-	assert(head && list);
-	struct comm_list *cur = head->next;
-	struct comm_list *pre = head;
-	while (cur != head) {
-		if (cur == list) {
-			if (cur == head->tail) {
-				head->tail = pre;
+	assert(list && node);
+	struct list_node *cur = list->head;
+	struct list_node *pre = list->head;
+	while (cur != NULL) {
+		if (cur == node) {
+			if (cur == list->head) {
+				list->head = list->head->next;
+			}
+			if (cur == list->tail) {
+				list->tail = pre;
 			}
 			pre->next = cur->next;
-			head->nodes -= 1;
+			list->nodes --;
 			return true;
 		}
 		pre = cur;
@@ -125,21 +138,20 @@ static inline bool commlist_delete(struct comm_list *head, struct comm_list *lis
 	return false;
 }
 
-/* 销毁嵌套链表的结构体数据： @head：链表的头节点 @offset：链表在嵌套其结构体中的偏移 */
-static inline void commlist_destroy(struct comm_list *head, int offset)
+/* 销毁嵌套链表的结构体数据： @list：链表的结构体 @offset：链表在嵌套其结构体中的偏移 */
+static inline void commlist_destroy(struct comm_list *list, int offset)
 {
-	struct comm_list *list = NULL;
-
-	if (head->destroy && head && (offset > 0)) {
-		while (commlist_pull(head, &list)) {
-			head->destroy((void *)get_container_addr(list, offset));
+	struct list_node *node = NULL;
+	if (list && list->destroy && (offset > 0)) {
+		while(commlist_pull(list, &node)) {
+			list->destroy((void*)get_container_addr(node, offset));
 		}
 	}
 }
+
 
 #ifdef __cplusplus
 }
 #endif
 
 #endif	/* ifndef __COMM_LIST_H__ */
-

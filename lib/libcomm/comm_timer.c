@@ -59,10 +59,10 @@ void commtimer_scheduler(struct comm_list *timerhead)
 	struct timeval		end = {};
 	struct timeval		diff = {};
 	struct comm_timer*	commtimer = NULL;
-	struct comm_list*	list = NULL;
+	struct list_node*	node = NULL;
 
-	while (commlist_get(timerhead, &list)) {
-		commtimer = (struct comm_timer*)get_container_addr(list, COMMTIMER_OFFSET);
+	while (commlist_get(timerhead, &node)) {
+		commtimer = (struct comm_timer*)get_container_addr(node, COMMTIMER_OFFSET);
 		gettimeofday(&end, NULL);
 		diff.tv_sec = end.tv_sec - commtimer->start.tv_sec;
 		diff.tv_usec = end.tv_usec - commtimer->start.tv_usec;

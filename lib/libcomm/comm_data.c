@@ -226,9 +226,9 @@ bool commdata_package(struct connfd_info *connfd, struct comm_event *commevent, 
 
 	commlock_lock(&connfd->sendlock);
 	if (unlikely(!commqueue_pull(&connfd->send_queue, (void *)&message))) {
-		struct comm_list *list = NULL;
-		if (commlist_pull(&connfd->send_list, &list)) {
-			message = (struct comm_message *)get_container_addr(list, COMMMSG_OFFSET);
+		struct list_node *node = NULL;
+		if (commlist_pull(&connfd->send_list, &node)) {
+			message = (struct comm_message *)get_container_addr(node, COMMMSG_OFFSET);
 		} else {
 			/* 没有数据 则直接返回 */
 			commlock_unlock(&connfd->sendlock);
@@ -257,7 +257,7 @@ bool commdata_package(struct connfd_info *connfd, struct comm_event *commevent, 
 			commlock_lock(&connfd->sendlock);
 
 			if (unlikely(!commqueue_push(&connfd->send_queue, (void *)&message))) {
-				commlist_push(&connfd->send_list, &message->list);
+				commlist_push(&connfd->send_list, &message->node);
 			}
 			commlock_unlock(&connfd->sendlock);
 			return false;
@@ -349,7 +349,7 @@ bool commdata_parse(struct connfd_info *connfd, struct comm_event *commevent, in
 		if (unlikely(!commqueue_push(&commevent->commctx->recvqueue, (void *)&message))) {
 			/* 队列已满，则放入链表中 */
 			bool flag = false;
-			if (unlikely(!commlist_push(&commevent->commctx->recvlist, &message->list))) {
+			if (unlikely(!commlist_push(&commevent->commctx->recvlist, &message->node))) {
 				if (connfd->recv_cache.size == 0) {
 					flag = true;
 					del_remainfd(&commevent->remainfd, connfd->commtcp.fd, REMAINFD_PARSE);
