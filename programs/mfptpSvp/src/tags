@@ -1,0 +1,38 @@
+!_TAG_FILE_FORMAT	2	/extended format; --format=1 will not append ;" to lines/
+!_TAG_FILE_SORTED	1	/0=unsorted, 1=sorted, 2=foldcase/
+!_TAG_PROGRAM_AUTHOR	Darren Hiebert	/dhiebert@users.sourceforge.net/
+!_TAG_PROGRAM_NAME	Exuberant Ctags	//
+!_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
+!_TAG_PROGRAM_VERSION	5.8	//
+HKEY_SIZE	hkey.c	5;"	d	file:
+_HKEY_H_	hkey.h	2;"	d
+_int2string	hkey.c	/^static void _int2string(int value, char *buf)$/;"	f	file:
+_vms_new	sniff_evcoro_lua_api.c	/^static lua_State *_vms_new(void)$/;"	f	file:
+alive_entry_init	main.c	/^static void alive_entry_init(void)$/;"	f	file:
+alive_pthrd_init	main.c	/^static void alive_pthrd_init(void *user)$/;"	f	file:
+alive_vms_call	alive_cpp_api.c	/^int alive_vms_call(void *user, union virtual_system **VMS, struct adopt_task_node *task)$/;"	f
+alive_vms_offline	alive_cpp_api.c	/^int alive_vms_offline(void *user, union virtual_system **VMS, struct adopt_task_node *task)$/;"	f
+alive_vms_online	alive_cpp_api.c	/^int alive_vms_online(void *user, union virtual_system **VMS, struct adopt_task_node *task)$/;"	f
+g_alive_cfg_list	main.c	/^struct alive_cfg_list   g_alive_cfg_list = {};$/;"	v	typeref:struct:alive_cfg_list
+g_hkey	hkey.c	/^static kv_handler_t *g_hkey = NULL;$/;"	v	file:
+g_sniff_cfg_list	main.c	/^struct sniff_cfg_list   g_sniff_cfg_list = {};$/;"	v	typeref:struct:sniff_cfg_list
+hkey_del_fd	hkey.c	/^void hkey_del_fd(char *key)$/;"	f
+hkey_del_fd_key	hkey.c	/^void hkey_del_fd_key(int fd)$/;"	f
+hkey_del_offset	hkey.c	/^void hkey_del_offset(char *key)$/;"	f
+hkey_del_value	hkey.c	/^void hkey_del_value(char *key)$/;"	f
+hkey_destroy	hkey.c	/^void hkey_destroy()$/;"	f
+hkey_find_key	hkey.c	/^char *hkey_find_key(int fd)$/;"	f
+hkey_get_fd	hkey.c	/^int hkey_get_fd(char *key)$/;"	f
+hkey_get_offset	hkey.c	/^int hkey_get_offset(char *key)$/;"	f
+hkey_get_value	hkey.c	/^char *hkey_get_value(char *key)$/;"	f
+hkey_init	hkey.c	/^void hkey_init()$/;"	f
+hkey_insert_fd	hkey.c	/^void hkey_insert_fd(char *key, int fd)$/;"	f
+hkey_insert_offset	hkey.c	/^void hkey_insert_offset(char *key, int offset)$/;"	f
+hkey_insert_value	hkey.c	/^void hkey_insert_value(char *key, char *value)$/;"	f
+init_alive_cfg	load_alive_cfg.c	/^static void init_alive_cfg(struct alive_cfg_file *p_cfg)$/;"	f	file:
+load_alive_cfg_file	load_alive_cfg.c	/^bool load_alive_cfg_file(struct alive_cfg_file *p_cfg, char *name)$/;"	f
+load_sniff_cfg_file	load_sniff_cfg.c	/^void load_sniff_cfg_file(struct sniff_cfg_file *p_cfg, char *name)$/;"	f
+main	main.c	/^int main(int argc, char **argv)$/;"	f
+sniff_task_lookup	main.c	/^bool sniff_task_lookup(void *user, void *task)$/;"	f
+sniff_task_report	main.c	/^bool sniff_task_report(void *user, void *task)$/;"	f
+sniff_vms_init	sniff_evcoro_lua_api.c	/^int sniff_vms_init(void *user, union virtual_system **VMS, struct sniff_task_node *task)$/;"	f

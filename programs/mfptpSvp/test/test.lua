@@ -28,6 +28,8 @@ fd:close()
 for i =1 , 1000 do
 tcp:send(data)
 end
+local result = tcp:receive("*a")
+print(result)
 
 
 --[[

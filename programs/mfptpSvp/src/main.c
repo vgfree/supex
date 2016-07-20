@@ -58,6 +58,7 @@ static void alive_pthrd_init(void *user)
 static void alive_entry_init(void)
 {
 	
+	keyval_init();
 	if (!kvpool_init()) {
 		exit(EXIT_FAILURE);
 	}
