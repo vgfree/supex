@@ -9,10 +9,41 @@
 
 #include "sniff_evcoro_lua_api.h"
 
+#include "mfptp_protocol/mfptp_package.h"
+#include "comm_structure.h"
+#include "comm_disposedata.h"
 
 
 extern struct sniff_cfg_list g_sniff_cfg_list;
 
+/* @pckbuff_size: 值-结果参数，传进来时代表的是保存打包成功数据的缓冲区大小 出去时代表的是缓冲去已有数据的大小 */
+bool pair_packager(char **pckbuff, int *pckbuff_size, int pair_size)
+{
+	struct mfptp_packager   packager = {};	/* 打包器结构体 */
+	mfptp_package_init(&packager, pckbuff, pckbuff_size);
+	
+	char    data[] = {0x12, 0x14, 0x15};		/* 待打包的数据 */
+	int     dsize = sizeof(data);			/* 待打包数据的总大小 */
+	int     packages = 1;				/* 待打包的总包数 */
+	int	frames[1] = {1};			/* 待打包的总帧数 */
+	int	frame_size[64] = { sizeof(data) };	/* 每帧的数据大小 */
+	int	frame_offset[46] = { 0 };		/* 每帧的数据偏移 */
+	
+	/*检查空间是否足够*/
+	int size = mfptp_check_memory(*pckbuff_size, frames[0], dsize);
+	assert(size == 0);
+	
+	*pckbuff_size = 0;	/* 从此刻起代表的就是缓冲区已有数据的大小 */
+	mfptp_fill_package(&packager, frame_offset, frame_size, frames, packages);
+	size = mfptp_package(&packager, data, NO_ENCRYPTION|NO_COMPRESSION, PAIR_METHOD);
+	if ((size > 0) && (packager.ms.error == MFPTP_OK)) {
+		printf("packager successed\n");
+		return true;
+	} else {
+		printf("packager failed\n");
+		return false;
+	}
+}
 
 /*
  * key:DATA  ------>   val
@@ -63,10 +94,26 @@ int alive_vms_call(void *user, union virtual_system **VMS, struct adopt_task_nod
 			cache_append(&p_node->mdl_up.cache, val, size);
 			key_del_val(key);
 
-			//alive_send_data(true, task->cid, task->sfd, "good", size);
+			// 组装pair返回数据
+			char	buff[1024] = {};		/* 保存打包成功的数据缓冲区 */
+			char*	pckbuff = buff;
+			int	pckbuff_size = 1024;		/* 保存打包成功数据缓冲区大小 */
+
+			bool ok = pair_packager(&pckbuff, &pckbuff_size, size);
+			assert(ok);
+			alive_send_data(true, task->cid, task->sfd, pckbuff, pckbuff_size);
+			
+
 			free(val);
 		} else {
-			//alive_send_data(true, task->cid, task->sfd, "good", 0);
+			// 组装pair返回数据
+			char	buff[1024] = {};		/* 保存打包成功的数据缓冲区 */
+			char*	pckbuff = buff;
+			int	pckbuff_size = 1024;		/* 保存打包成功数据缓冲区大小 */
+
+			bool ok = pair_packager(&pckbuff, &pckbuff_size, 0);
+			assert(ok);
+			alive_send_data(true, task->cid, task->sfd, pckbuff, pckbuff_size);
 		}
 		sfd_del_key(task->sfd);
 		sfd_set_key(task->sfd, key);

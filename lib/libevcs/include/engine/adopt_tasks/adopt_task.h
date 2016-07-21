@@ -1,5 +1,6 @@
 #pragma once
 #include "../base/utils.h"
+#include "proto_comm.h"
 
 #define MAX_ADOPT_HTTP_NUMBER   MAX_LIMIT_FD
 #define MAX_ADOPT_MSMQ_NUMBER   MAX_CONNECT
@@ -42,6 +43,14 @@ struct share_task_view
 *==============================================================================================*/
 typedef int (*TASK_VMS_FCB)(void *user, union virtual_system **VMS, struct adopt_task_node *task);
 
+union parse_info
+{
+	void			*base;
+	struct http_parse_info  *http_info;
+	struct redis_parse_info *redis_info;
+	struct mttp_parse_info  *mttp_info;
+	struct mfptp_parse_info *mfptp_info;
+};
 /**
  * 任务模型
  */
@@ -63,6 +72,9 @@ struct adopt_task_node
 	void            *data;		/**< 任务内部资源*/
 	long            size;		/**< 任务内部资源*/
 	bool            freeable;
+
+	union parse_info parse;
+	PROTO_CALL_BACK *proto_free;
 };
 
 /*---------------------------------------------------------*/
