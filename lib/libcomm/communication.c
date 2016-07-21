@@ -167,7 +167,7 @@ int comm_socket(struct comm_context *commctx, const char *host, const char *serv
 int comm_send(struct comm_context *commctx, const struct comm_message *message, bool block, int timeout)
 {
 	assert(commctx && message && message->content);
-	assert(message->fd > 0 && message->fd < EPOLL_SIZE);	/* 保证描述符在范围内 */
+	assert(message->fd >= 0 && message->fd < EPOLL_SIZE);	/* 保证描述符在范围内 */
 
 	struct connfd_info      *connfd = NULL;
 	struct comm_message     *commmsg = NULL;
