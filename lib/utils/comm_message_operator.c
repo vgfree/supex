@@ -96,9 +96,10 @@ int remove_first_nframe(int nframe, struct comm_message *msg)
 	memmove(msg->content, msg->content + rmsz,
 		msg->package.dsize);
 
-	for (int i = nframe; i < msg->package.frames; i++) {
-		msg->package.frame_size[i - nframe] = msg->package.frame_size[nframe];
-		msg->package.frame_offset[i - nframe] = msg->package.frame_offset[i] - rmsz;
+	int i = 0;
+	for (i = 0; (i+nframe) < msg->package.frames; i++) {
+		msg->package.frame_size[i] = msg->package.frame_size[nframe+i];
+		msg->package.frame_offset[i] = msg->package.frame_offset[nframe+i] - rmsz;
 	}
 
 	msg->package.frames -= nframe;
