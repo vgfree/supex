@@ -4,16 +4,16 @@
 #include <arpa/inet.h>
 #include <mqueue.h>
 
-#include "cache/cache.h"
-#include "base/utils.h"
+#include "engine/cache/cache.h"
+#include "engine/base/utils.h"
 #include "scco.h"
-#include "adopt_tasks/adopt_task.h"
+#include "engine/adopt_tasks/adopt_task.h"
 #include "swift_cfg.h"
-#include "proto_comm.h"
-#include "supex.h"
+#include "engine/proto_comm.h"
+#include "engine/supex.h"
 #include "../listen_pthread.h"
 #include "../hander_pthread.h"
-#include "thread_pool_loop/tlpool.h"
+#include "engine/thread_pool_loop/tlpool.h"
 
 struct swift_settings
 {

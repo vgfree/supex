@@ -33,6 +33,7 @@ ADD_INC_DIR = 		-I$(BUILD_PWD)/../../lib/libmini/include \
 			-I$(BUILD_PWD)/../../lib/libscco/include \
 			-I$(BUILD_PWD)/../../lib/libcoro/include \
 			-I$(BUILD_PWD)/../../lib/libevcoro/include \
+			-I$(BUILD_PWD)/../../lib/libevcs/include \
 			-I$(BUILD_PWD)/../../lib/libevcs/include/engine \
 			-I$(BUILD_PWD)/../../lib/libevcs/include/frame \
 			-I$(BUILD_PWD)/../

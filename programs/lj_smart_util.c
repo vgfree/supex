@@ -1,6 +1,5 @@
 #include <assert.h>
 #include "lj_smart_util.h"
-#include "major/smart_api.h"
 
 int smart_vms_cntl(void *user, union virtual_system **VMS, struct adopt_task_node *task)
 {

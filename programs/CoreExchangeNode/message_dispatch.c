@@ -7,9 +7,6 @@
 #include "status.h"
 #include "uid_map.h"
 
-#ifdef _HKEY_
-#include "hkey.h"
-#endif
 
 #include <assert.h>
 #include <stdint.h>
@@ -292,48 +289,11 @@ static int _verified(struct comm_message *msg)
 		trace("msg type:%d.", msg->socket_type);
 #endif
 	if (msg->socket_type == PAIR_METHOD) {
-#if _HKEY_
-		int frame_size = 0;
-		char    *frame = get_msg_frame(0, msg, &frame_size);
-		char *key = (char *)malloc((frame_size + 1)* sizeof(char));
-		memcpy(key, frame, frame_size);
-		key[frame_size] = '\0';
-		remove_first_nframe(1, msg);
-		log("send message msg type:%d, dsize:%d frame_size:%d frames_of_package:%d frames:%d packages:%d", msg->socket_type, msg->package.dsize, msg->package.frame_size[0],msg->package.frames_of_package[0], msg->package.frames, msg->package.packages);
-		int fd = hkey_get_fd(key);
-		char buf[21] = {};
-		buf[0] = 0x01;
-		log("PAIR_METHOD fd:%d.", fd);
-		if (fd == -1) { // first hkey.
-			log("first insert hkey");
-			set_msg_frame(0, msg, 21, buf);
-		}
-		else {
-			struct residue_package package;
-			char *value = hkey_get_value(key);
-			int offset = hkey_get_offset(key);
-			init_residue_package(&package, msg->fd, offset, value, strlen(value));
-			push_residue_package(&package);
-			int i = 4;
-			for (; i >= 1; i--) {
-				buf[i] = offset % 256;
-				offset = offset / 256;
-			}
-			set_msg_frame(0, msg, 21, buf); // 接收大小。
-			hkey_del_fd(key);
-			hkey_del_fd_key(fd);
-			hkey_del_value(key);
-			destroy_residue_package(&package);
-		}
-		hkey_insert_fd(key, msg->fd);
-		free(key);
-#else
 		remove_first_nframe(1, msg);
 		char buf[21] = {};
 		buf[0] = 0x01;
 		set_msg_frame(0, msg, 21, buf);
 
-#endif
 		log("send message msg type:%d, dsize:%d frame_size:%d frames_of_package:%d frames:%d packages:%d", msg->socket_type, msg->package.dsize, msg->package.frame_size[0],msg->package.frames_of_package[0], msg->package.frames, msg->package.packages);
 		comm_send(g_serv_info.commctx, msg, true, -1);
 		return 1;

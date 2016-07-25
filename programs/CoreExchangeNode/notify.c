@@ -14,7 +14,7 @@ void client_event_notify(struct comm_context *commctx,
 	{
 		case FD_INIT:
 		{
-			struct fd_descriptor des = {};
+			struct fd_descriptor des = {};//TODO bug
 			des.status = 1;
 			des.obj = CLIENT;
 			array_fill_fd(portinfo->fd, &des);
@@ -28,22 +28,6 @@ void client_event_notify(struct comm_context *commctx,
 			erase_client(portinfo->fd);
 			send_status_msg(portinfo->fd, FD_CLOSE);
 			log("errase client fd:%d.", portinfo->fd);
-#ifdef _HKEY_
-			struct residue_package package;
-			init_residue_package(&package, portinfo->fd, 0, NULL, 0);
-			pop_residue_package(&package);
-			char *key = hkey_find_key(portinfo->fd);
-			if (package.serial_data) {
-				hkey_insert_value(key, package.serial_data);
-			}
-			if (package.offset) {
-				hkey_insert_offset(key, package.offset);
-			}
-			destroy_residue_package(&package);
-			/*if (key) {
-				free(key);
-			}*/
-#endif
 		}
 		break;
 

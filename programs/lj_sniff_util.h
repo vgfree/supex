@@ -12,8 +12,7 @@
 #include <lauxlib.h>
 #include <lualib.h>
 
-#include "base/utils.h"
-#include "minor/sniff_api.h"
+#include "libevcs.h"
 
 #define OVERLOOK_DELAY_LIMIT 3
 

@@ -2,8 +2,8 @@
 
 #include <ev.h>
 
-#include "adopt_tasks/adopt_task.h"
-#include "evmdl.h"
+#include "engine/adopt_tasks/adopt_task.h"
+#include "engine/evmdl.h"
 
 void alive_all_task_hit(struct adopt_task_node *task);
 

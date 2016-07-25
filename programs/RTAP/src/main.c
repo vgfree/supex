@@ -15,7 +15,7 @@ extern char     *ZK_RNODE;
 #endif
 
 #include "load_cfg.h"
-#include "major/smart_api.h"
+#include "libevcs.h"
 #include "smart_evcoro_lua_api.h"
 static void session_dispatch_task(struct session_task *service)
 {
@@ -44,7 +44,7 @@ static void session_dispatch_task(struct session_task *service)
 	if (type == BIT8_TASK_TYPE_WHOLE) {
 		smart_all_task_hit(&task, false, service->fd);
 	} else {
-		smart_one_task_hit(&task, false, service->fd);
+		smart_one_task_hit(&task, false, service->fd, 0);
 	}
 }
 

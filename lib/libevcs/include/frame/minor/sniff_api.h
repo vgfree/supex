@@ -5,11 +5,11 @@
 #include <mqueue.h>
 
 #include "utils.h"
-#include "supex.h"
+#include "engine/supex.h"
 #include "sniff_cfg.h"
 #include "sniff_task.h"
-#include "base/free_queue.h"
-#include "thread_pool_loop/tlpool.h"
+#include "engine/base/free_queue.h"
+#include "engine/thread_pool_loop/tlpool.h"
 
 struct sniff_settings
 {

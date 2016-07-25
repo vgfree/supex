@@ -6,6 +6,7 @@ INC_DIR=-I/usr/local/include/luajit-2.0 -I../../lib/libev -I../../lib/json-c \
 	-I../../lib/libscco/include \
 	-I../../lib/libcoro/include \
 	-I../../lib/libevcoro/include \
+	-I../../lib/libevcs/include \
 	-I../../lib/libevcs/include/engine \
 	-I../../lib/libevcs/include/frame \
 	-I./src -I../

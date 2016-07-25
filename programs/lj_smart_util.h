@@ -12,8 +12,7 @@
 #include <lauxlib.h>
 #include <lualib.h>
 
-#include "base/utils.h"
-#include "adopt_tasks/adopt_task.h"
+#include "libevcs.h"
 
 int smart_vms_exit(void *user, union virtual_system **VMS, struct adopt_task_node *task);
 

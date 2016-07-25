@@ -12,7 +12,7 @@ int erase_client(int fd)
 	find_uid(uid, &size, fd);
 	remove_fd(uid);
 	remove_uid(fd);
-	char *gid_list[20] = {};
+	char *gid_list[20] = {};//TODO
 
 	if (find_gid_list(fd, gid_list, &size) > 0) {
 		remove_gid_list(fd, gid_list, size);
@@ -30,15 +30,15 @@ int erase_client(int fd)
 
 void send_status_msg(int clientfd, int status)
 {
-	struct comm_message msg = {};
-
-	init_msg(&msg);
 	char cid[30] = {};
 	strcpy(cid, g_serv_info.ip);
 	strcat(cid, ":");
 	char buf[10] = {};
 	snprintf(buf, 10, "%d", clientfd);
 	strcat(cid, buf);
+	
+	struct comm_message msg = {};
+	init_msg(&msg);
 	set_msg_frame(0, &msg, strlen(cid), cid);
 	log("send status:%d", status);
 
@@ -49,6 +49,7 @@ void send_status_msg(int clientfd, int status)
 	}
 
 	set_msg_frame(0, &msg, 6, "status");
+	
 	set_msg_fd(&msg, g_serv_info.login_server_fd);
 	comm_send(g_serv_info.commctx, &msg, true, -1);
 	destroy_msg(&msg);

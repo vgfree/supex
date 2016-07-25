@@ -2,9 +2,9 @@
 
 #include <ev.h>
 
-#include "adopt_tasks/adopt_task.h"
-#include "proto_comm.h"
-#include "evmdl.h"
+#include "engine/adopt_tasks/adopt_task.h"
+#include "engine/proto_comm.h"
+#include "engine/evmdl.h"
 
 void smart_dispatch_task(int type, int sfd);
 

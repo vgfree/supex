@@ -9,7 +9,7 @@
 #ifndef http_reqresp_h
 #define http_reqresp_h
 
-#include "tcp_api/tcp_io.h"
+#include "../tcp_api/tcp_io.h"
 #include "http_status.h"
 
 __BEGIN_DECLS

@@ -34,8 +34,8 @@
 
 #include <libmini.h>
 
-#include "spx_common.h"
-#include "errors.h"
+#include "../spx_common.h"
+#include "../errors.h"
 
 /*
  *  if dst = NULL, then free dst

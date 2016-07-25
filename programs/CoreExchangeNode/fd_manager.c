@@ -6,7 +6,7 @@
 static struct fd_list   g_list;
 static struct fd_array  g_array;
 
-int list_init()
+int fd_list_init(void)
 {
 	for (int i = 0; i < FD_MAX_CLASSIFICATION; i++) {
 		g_list.head[i].size = 0;
@@ -16,7 +16,7 @@ int list_init()
 	return SUCCESS;
 }
 
-int list_destroy()
+int fd_list_destroy(void)
 {
 	for (int i = 0; i < FD_MAX_CLASSIFICATION; i++) {
 		struct fd_node  *curr;

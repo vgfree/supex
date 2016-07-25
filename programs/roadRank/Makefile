@@ -7,6 +7,7 @@ INC_DIR=-I/usr/local/include/luajit-2.0 \
 	-I../../lib/libscco/include\
 	-I../../lib/libucmq/src \
 	-I../../lib/libevcoro/include \
+	-I../../lib/libevcs/include \
 	-I../../lib/libevcs/include/engine \
 	-I../../lib/libevcs/include/frame/major \
 	-I../../lib/libevcs/include/frame/minor \

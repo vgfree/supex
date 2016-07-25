@@ -9,7 +9,7 @@
 #ifndef redis_reqresp_h
 #define redis_reqresp_h
 
-#include "../tcp_io.h"
+#include "../tcp_api/tcp_io.h"
 #include "redis_status.h"
 
 __BEGIN_DECLS
@@ -33,10 +33,10 @@ static inline
 void redis_init(struct redis_socket *redis)
 {
 	assert(redis);
-	cache_clean(&redis->tcp->cache);
+	cache_clean(&redis->tcp->readcache);
 	redis_parse_init(&redis->parse,
-		&redis->tcp->cache.buff,
-		&redis->tcp->cache.end);
+		&redis->tcp->readcache.buff,
+		&redis->tcp->readcache.end);
 }
 
 /**

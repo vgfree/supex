@@ -1,7 +1,7 @@
 #pragma once
 
 #include "lj_base.h"
-#include "evmdl.h"
+#include "../evmdl.h"
 
 int app_lua_get_head_data(lua_State *L);
 

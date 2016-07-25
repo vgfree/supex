@@ -1,7 +1,7 @@
 #pragma once
 
 #include "utils.h"
-#include "supex.h"
+#include "engine/supex.h"
 #include "../major_def.h"
 
 /* JSON格式配置文件 */

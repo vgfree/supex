@@ -1,6 +1,6 @@
 #pragma once
 #include "../base/utils.h"
-#include "proto_comm.h"
+#include "../proto_comm.h"
 
 #define MAX_ADOPT_HTTP_NUMBER   MAX_LIMIT_FD
 #define MAX_ADOPT_MSMQ_NUMBER   MAX_CONNECT

@@ -40,7 +40,7 @@ static int init()
 	//  char *package_sz = get_config_name(config, PACKAGE_SIZE);
 	log("ListenClientIp = %s, ListenClientPort = %s", clientIP, clientPort);
 	//  log("MGsrvIp = %s, MGsrvPort = %s", MGsrvIP, MGsrvPort);
-	list_init();
+	fd_list_init();
 	array_init();
 	struct comm_context *commctx = NULL;
 	commctx = comm_ctx_create(EPOLL_SIZE);
@@ -155,9 +155,6 @@ static int init()
 	destroy_config_reader(config);
 	init_uid_map();
 	init_gid_map();
-#ifdef _HKEY_
-	hkey_init();
-#endif
 	return 0;
 }
 
@@ -180,12 +177,9 @@ int main(int argc, char *argv[])
 	}
 
 	array_destroy();
-	list_destroy();
+	fd_list_destroy();
 	destroy_uid_map();
 	destroy_gid_map();
-#ifdef _HKEY_
-	hkey_destroy();
-#endif
 	CSLog_destroy(g_imlog);
 	daemon_exit(SERVER_FILE);
 	return 0;

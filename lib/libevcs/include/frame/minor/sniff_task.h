@@ -1,6 +1,6 @@
 #pragma once
 #include "utils.h"
-#include "supex.h"
+#include "engine/supex.h"
 
 #define MAX_SNIFF_QUEUE_NUMBER          (MAX_CONNECT + 1)	// must > 2
 #define MAX_SNIFF_SHARE_QUEUE_NUMBER    (MAX_CONNECT + 1)

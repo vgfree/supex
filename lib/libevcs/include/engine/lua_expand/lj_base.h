@@ -14,7 +14,7 @@
 #include <lauxlib.h>
 #include <lualib.h>
 
-#include "base/utils.h"
+#include "../base/utils.h"
 
 __BEGIN_DECLS
 

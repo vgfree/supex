@@ -44,9 +44,9 @@ struct fd_list
 	struct fd_head head[FD_MAX_CLASSIFICATION];
 };
 
-int list_init();
+int fd_list_init(void);
 
-int list_destroy();
+int fd_list_destroy(void);
 
 int list_remove(const enum router_object obj, const int fd);
 

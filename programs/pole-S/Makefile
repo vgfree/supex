@@ -13,6 +13,7 @@ INC_PATH=\
 	 -I../../lib/libnetmod/include/ \
 	 -I../../lib/libcoro/include \
 	 -I../../lib/libevcoro/include \
+	 -I../../lib/libevcs/include \
 	 -I../../lib/libevcs/include/engine \
 	 -I../../lib/libevcs/include/frame \
 	 -I./src -I../

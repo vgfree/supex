@@ -1,11 +1,6 @@
 #include <assert.h>
 
-#include "major/smart_api.h"
-#include "lua_expand/lj_c_coro.h"
-#include "lua_expand/lua_link.h"
-#include "lua_expand/lj_http_info.h"
-#include "lua_expand/lj_cache.h"
-#include "luakv/luakv.h"
+#include "libevcs.h"
 // #include "luakvcore.h"
 #include "smart_evcoro_lua_api.h"
 

@@ -8,6 +8,7 @@ INC_DIR=-I/usr/local/include/luajit-2.0 \
 	-I../../lib/libmemhook/src \
 	-I../../lib/libscco/include \
 	-I../../lib/libcoro/include \
+	-I../../lib/libevcs/include \
 	-I../../lib/libevcoro/include \
 	-I../../lib/libevcs/include/engine \
 	-I../../lib/libevcs/include/frame \
