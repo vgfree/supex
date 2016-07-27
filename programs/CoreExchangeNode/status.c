@@ -3,6 +3,7 @@
 #include "message_dispatch.h"
 #include "status.h"
 #include "uid_map.h"
+#include "libmini.h"
 
 int erase_client(int fd)
 {
@@ -12,7 +13,7 @@ int erase_client(int fd)
 	find_uid(uid, &size, fd);
 	remove_fd(uid);
 	remove_uid(fd);
-	char *gid_list[20] = {};//TODO
+	char *gid_list[20] = {};// TODO
 
 	if (find_gid_list(fd, gid_list, &size) > 0) {
 		remove_gid_list(fd, gid_list, size);
@@ -22,7 +23,7 @@ int erase_client(int fd)
 			free(gid_list[i]);
 		}
 	} else {
-		error("no fd:%d map , is impossible?", fd);
+		x_printf(E, "no fd:%d map , is impossible?", fd);
 	}
 
 	return size;
@@ -31,16 +32,17 @@ int erase_client(int fd)
 void send_status_msg(int clientfd, int status)
 {
 	char cid[30] = {};
-	strcpy(cid, g_serv_info.ip);
+
+	strcpy(cid, g_serv_info.host);
 	strcat(cid, ":");
 	char buf[10] = {};
 	snprintf(buf, 10, "%d", clientfd);
 	strcat(cid, buf);
-	
+
 	struct comm_message msg = {};
 	init_msg(&msg);
 	set_msg_frame(0, &msg, strlen(cid), cid);
-	log("send status:%d", status);
+	x_printf(D, "send status:%d", status);
 
 	if (status == FD_INIT) {
 		set_msg_frame(0, &msg, 9, "connected");
@@ -49,7 +51,7 @@ void send_status_msg(int clientfd, int status)
 	}
 
 	set_msg_frame(0, &msg, 6, "status");
-	
+
 	set_msg_fd(&msg, g_serv_info.login_server_fd);
 	comm_send(g_serv_info.commctx, &msg, true, -1);
 	destroy_msg(&msg);

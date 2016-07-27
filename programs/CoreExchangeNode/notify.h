@@ -13,5 +13,6 @@ void setting_server_event_notify(struct comm_context *commctx,
 
 void login_server_event_notify(struct comm_context *commctx,
 	struct comm_tcp *portinfo, void *usr);
+
 #endif
 

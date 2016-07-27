@@ -9,9 +9,10 @@
 
 void print_current_time()
 {
-	struct timeval  tv;
-//	struct timezone tz;
-//	freopen("out.txt", "w", stdout);
+	struct timeval tv;
+
+	//	struct timezone tz;
+	//	freopen("out.txt", "w", stdout);
 	gettimeofday(&tv, NULL);
 	printf("tv_sec:%d", tv.tv_sec);
 	printf("tv_usec:%d--", tv.tv_usec);
@@ -35,33 +36,38 @@ void *client_thread_read(void *usr)
 		print_current_time();
 		printf("\033[1;31m" "\nrecv_data:%s\n" "\033[0m", buf);
 		printf("\033[1;31m" "recv_data_len:%d\n" "\033[0m", strlen(buf));
-		if(memcmp(buf, "bind", 4) == 0) {
+
+		if (memcmp(buf, "bind", 4) == 0) {
 			printf("recv frames : %d\n", get_max_msg_frame(&msg));
 			remove_first_nframe(get_max_msg_frame(&msg), &msg);
-                        set_msg_frame(0, &msg, strlen(buf), buf);
+			set_msg_frame(0, &msg, strlen(buf), buf);
 			struct json_object *my_json = NULL;
-                        my_json = json_object_new_object();
-			if(my_json == NULL) {
-				printf("new json object failed.\n"); 
+			my_json = json_object_new_object();
+
+			if (my_json == NULL) {
+				printf("new json object failed.\n");
 				return;
 			}
-                        char uuid[36];
-			uuid_t uu;
-                        uuid_generate(uu);
+
+			char    uuid[36];
+			uuid_t  uu;
+			uuid_generate(uu);
 			uuid_unparse(uu, uuid);
-                        printf("\033[1;31m" "send uuid: %s\n" "\033[0m", uuid);
+			printf("\033[1;31m" "send uuid: %s\n" "\033[0m", uuid);
 			json_object_object_add(my_json, "uid", json_object_new_string(uuid));
-                        memset(buf, 0, sizeof(buf));
+			memset(buf, 0, sizeof(buf));
 			buf = json_object_to_json_string(my_json);
-                        set_msg_frame(1, &msg, strlen(buf), buf);
-			printf("dsize:%d frame_size1:%d frame_size2:%d\n",msg.package.dsize, msg.package.frame_size[0],msg.package.frame_size[1]);
-                        if(comm_send(g_ctx, &msg, true, -1) > 0) {
+			set_msg_frame(1, &msg, strlen(buf), buf);
+			printf("dsize:%d frame_size1:%d frame_size2:%d\n", msg.package.dsize, msg.package.frame_size[0], msg.package.frame_size[1]);
+
+			if (comm_send(g_ctx, &msg, true, -1) > 0) {
 				printf("\033[1;31m" "send json successfull!\n" "\033[0m");
 			}
+
 			free(buf);
 			remove_first_nframe(get_max_msg_frame(&msg), &msg);
 			destroy_msg(&msg);
-                }
+		}
 	}
 
 	return NULL;
@@ -83,16 +89,17 @@ int test_simulate_client(char *ip)
 
 	pthread_t tid;
 	assert(pthread_create(&tid, NULL, client_thread_read, NULL) == 0);
-	int datasize = (1024*1024*2+1);
-	char *str = (char*)malloc(datasize);
+	int     datasize = (1024 * 1024 * 2 + 1);
+	char    *str = (char *)malloc(datasize);
 	memset(str, 0, datasize);
 	snprintf(str, 10, "tid:%u", tid);
-	char temp[1024] = {0};
+	char temp[1024] = { 0 };
 
 	while (fgets(str, 1024, stdin) != NULL) {
 #if 0
 		int i;
-		for(i = 0; i < 2*1024*1024; i++) {
+
+		for (i = 0; i < 2 * 1024 * 1024; i++) {
 			str[i] = 'a';
 		}
 		str[i] = '\0';
@@ -109,8 +116,9 @@ int test_simulate_client(char *ip)
 		printf("\033[1;32;32m" "fgets input frames: %d\n" "\033[0m", msg.package.frames);
 		comm_send(g_ctx, &msg, true, -1);
 		destroy_msg(&msg);
-//		sleep(10);
+		//		sleep(10);
 	}
+
 	return 0;
 }
 

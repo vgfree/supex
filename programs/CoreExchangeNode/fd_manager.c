@@ -1,22 +1,22 @@
-#include "fd_manager.h"
-#include "loger.h"
-
 #include <assert.h>
+
+#include "fd_manager.h"
+#include "libmini.h"
 
 static struct fd_list   g_list;
 static struct fd_array  g_array;
 
-int fd_list_init(void)
+int fdman_list_init(void)
 {
 	for (int i = 0; i < FD_MAX_CLASSIFICATION; i++) {
 		g_list.head[i].size = 0;
 		g_list.head[i].next = NULL;
 	}
 
-	return SUCCESS;
+	return 0;
 }
 
-int fd_list_destroy(void)
+int fdman_list_destroy(void)
 {
 	for (int i = 0; i < FD_MAX_CLASSIFICATION; i++) {
 		struct fd_node  *curr;
@@ -32,10 +32,10 @@ int fd_list_destroy(void)
 		g_list.head[i].next = NULL;
 	}
 
-	return SUCCESS;
+	return 0;
 }
 
-int list_remove(const enum router_object        obj,
+int fdman_list_remove(const enum router_object        obj,
 	const int                               fd)
 {
 	struct fd_node **curr = &g_list.head[obj].next;
@@ -46,51 +46,47 @@ int list_remove(const enum router_object        obj,
 		if (entry->fd == fd) {
 			*curr = entry->next;
 			free(entry);
-			return SUCCESS;
+			return 0;
 		} else {
 			curr = &entry->next;
 		}
 	}
 
-	return FAILED;
+	return -1;
 }
 
-int list_push_back(const enum router_object     obj,
-	const struct fd_node                    *node)
+int fdman_list_push_back(const enum router_object obj, const struct fd_node *node)
 {
-	if (g_list.head[obj].next == NULL) {
+	struct fd_node *curr = g_list.head[obj].next;
+	if (curr == NULL) {
 		g_list.head[obj].next = (struct fd_node *)malloc(sizeof(struct fd_node));
 		g_list.head[obj].next->fd = node->fd;
 		g_list.head[obj].next->status = node->status;
 		g_list.head[obj].next->next = NULL;
-		return SUCCESS;
+	} else {
+		while (curr->next) {
+			curr = curr->next;
+		}
+		curr->next = (struct fd_node *)malloc(sizeof(struct fd_node));
+		curr->next->fd = node->fd;
+		curr->next->status = node->status;
+		curr->next->next = NULL;
 	}
-
-	struct fd_node *curr = g_list.head[obj].next;
-
-	while (curr->next) {
-		curr = curr->next;
-	}
-
-	curr->next = (struct fd_node *)malloc(sizeof(struct fd_node));
-	curr->next->fd = node->fd;
-	curr->next->status = node->status;
-	curr->next->next = NULL;
-	return SUCCESS;
+	return 0;
 }
 
-int list_front(const enum router_object obj,
+int fdman_list_front(const enum router_object obj,
 	struct fd_node                  *node)
 {
 	if (g_list.head[obj].next) {
 		*node = *g_list.head[obj].next;
-		return SUCCESS;
+		return 0;
 	}
 
-	return FAILED;
+	return -1;
 }
 
-int array_init()
+int fdman_array_init(void)
 {
 	g_array.dsp_array = (struct fd_descriptor *)
 		calloc(FD_CAPACITY, sizeof(struct fd_descriptor));
@@ -98,59 +94,59 @@ int array_init()
 	g_array.max_fd = 0;
 	g_array.cap = FD_CAPACITY;
 
-	return SUCCESS;
+	return 0;
 }
 
-int array_destroy()
+int fdman_array_destroy()
 {
 	if (g_array.dsp_array == NULL) {
-		return FAILED;
+		return -1;
 	}
 
 	free(g_array.dsp_array);
 	g_array.max_fd = 0;
 	g_array.cap = 0;
-	return FAILED;
+	return 0;
 }
 
-int array_fill_fd(const int fd, const struct fd_descriptor *des)
+int fdman_array_fill_fd(const int fd, const struct fd_descriptor *des)
 {
 	if (fd > g_array.cap) {
-		error("fd array not enough capacity.");
-		// to do.
+		x_printf(E, "fd array not enough capacity.");
+		assert(0);
 	}
 
 	assert(g_array.dsp_array);
 
-	g_array.dsp_array[fd] = *des;
+	memcpy(&(g_array.dsp_array[fd]), des, sizeof(struct fd_descriptor));
 
 	if (g_array.max_fd < fd) {
 		g_array.max_fd = fd;
 	} else {
-		warn("max_fd >fd");
+		x_printf(W, "max_fd >fd");
 	}
 
-	return SUCCESS;
+	return 0;
 }
 
-int array_remove_fd(const int fd)
+int fdman_array_remove_fd(const int fd)
 {
 	g_array.dsp_array[fd].status = 2;
-	return SUCCESS;
+	return 0;
 }
 
-int array_at_fd(const int fd, struct fd_descriptor *des)
+int fdman_array_at_fd(const int fd, struct fd_descriptor *des)
 {
 	assert(des);
-	des->ip = g_array.dsp_array[fd].ip;
+	des->host = g_array.dsp_array[fd].host;
 	des->port = g_array.dsp_array[fd].port;
 	des->status = g_array.dsp_array[fd].status;
 	des->obj = g_array.dsp_array[fd].obj;
 
-	return SUCCESS;
+	return 0;
 }
 
-uint32_t statistic_object(const enum router_object obj)
+uint32_t fdman_statistic_object(const enum router_object obj)
 {
 	uint32_t count = 0;
 
@@ -191,7 +187,7 @@ uint32_t statistic_object(const enum router_object obj)
 	return count;
 }
 
-uint32_t poll_client_fd(int *arr[], uint32_t *size)
+uint32_t fdman_poll_client_fd(int *arr[], uint32_t *size)
 {
 	uint32_t count = 0;
 

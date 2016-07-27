@@ -1,9 +1,9 @@
-#include "loger.h"
-#include "uid_map.h"
-
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
+
+#include "uid_map.h"
+#include "libmini.h"
 
 static kv_handler_t *g_uid_map = NULL;
 
@@ -21,7 +21,7 @@ int find_fd(char *uid)
 	ans = kv_ask(g_uid_map, cmd, strlen(cmd));
 
 	if (ans->errnum != ERR_NONE) {
-		error("errnum:%d\terr:%s\n", ans->errnum, ans->err);
+		x_printf(E, "errnum:%d\terr:%s\n", ans->errnum, ans->err);
 		kv_answer_release(ans);
 		return -1;
 	}
@@ -43,7 +43,7 @@ int find_uid(char *uid, int *size, int fd)
 	ans = kv_ask(g_uid_map, cmd, strlen(cmd));
 
 	if (ans->errnum != ERR_NONE) {
-		error("errnum:%d\terr:%s\n", ans->errnum, ans->err);
+		x_printf(E, "errnum:%d\terr:%s\n", ans->errnum, ans->err);
 		kv_answer_release(ans);
 		return -1;
 	}
@@ -72,7 +72,7 @@ int insert_fd(char *uid, int fd)
 	kv_answer_t *ans = kv_ask(g_uid_map, cmd, strlen(cmd));
 
 	if (ans->errnum != ERR_NONE) {
-		error("failed:%s.\n", cmd);
+		x_printf(E, "failed:%s.\n", cmd);
 		kv_answer_release(ans);
 		return -1;
 	}
@@ -84,10 +84,11 @@ int insert_fd(char *uid, int fd)
 	kv_answer_t *uid_ans = kv_ask(g_uid_map, uid_cmd, strlen(uid_cmd));
 
 	if (uid_ans->errnum != ERR_NONE) {
-		error("insert fd:%s, uid:%s error.\n", buf, uid);
+		x_printf(E, "insert fd:%s, uid:%s error.\n", buf, uid);
 		kv_answer_release(uid_ans);
 		return -1;
 	}
+
 	kv_answer_release(ans);
 	kv_answer_release(uid_ans);
 
@@ -102,10 +103,11 @@ int remove_fd(char *uid)
 	kv_answer_t *ans = kv_ask(g_uid_map, cmd, strlen(cmd));
 
 	if (ans->errnum != ERR_NONE) {
-		error("removed uid:%s error.\n", uid);
+		x_printf(E, "removed uid:%s error.\n", uid);
 		kv_answer_release(ans);
 		return -1;
 	}
+
 	kv_answer_release(ans);
 
 	return 0;
@@ -121,7 +123,7 @@ int remove_uid(int fd)
 	kv_answer_t *ans = kv_ask(g_uid_map, cmd, strlen(cmd));
 
 	if (ans->errnum != ERR_NONE) {
-		error("removed fd:%d error.\n", fd);
+		x_printf(E, "removed fd:%d error.\n", fd);
 		kv_answer_release(ans);
 		return -1;
 	}

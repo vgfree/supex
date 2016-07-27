@@ -5,8 +5,6 @@
 
 #define FD_CAPACITY             1024 * 100
 #define FD_MAX_CLASSIFICATION   5
-#define SUCCESS                 0
-#define FAILED                  -1
 
 /*    fd_head
  *    ---------         ---------         ---------
@@ -44,21 +42,21 @@ struct fd_list
 	struct fd_head head[FD_MAX_CLASSIFICATION];
 };
 
-int fd_list_init(void);
+int fdman_list_init(void);
 
-int fd_list_destroy(void);
+int fdman_list_destroy(void);
 
-int list_remove(const enum router_object obj, const int fd);
+int fdman_list_remove(const enum router_object obj, const int fd);
 
-int list_push_back(const enum router_object     obj,
+int fdman_list_push_back(const enum router_object     obj,
 	const struct fd_node                    *node);
 
-int list_front(const enum router_object obj,
+int fdman_list_front(const enum router_object obj,
 	struct fd_node                  *node);
 
 struct fd_descriptor
 {
-	uint32_t                ip;
+	uint32_t                host;
 	uint16_t                port;
 	uint8_t                 status;	// 0 未使用， 1 连接正常， 2 已经closed掉。
 	enum router_object      obj;
@@ -71,18 +69,19 @@ struct fd_array
 	int                     cap;
 };
 
-int array_init();
+int fdman_array_init(void);
 
-int array_destroy();
+int fdman_array_destroy();
 
-int array_fill_fd(const int fd, const struct fd_descriptor *des);
+int fdman_array_fill_fd(const int fd, const struct fd_descriptor *des);
 
-int array_remove_fd(const int fd);
+int fdman_array_remove_fd(const int fd);
 
-int array_at_fd(const int fd, struct fd_descriptor *des);
+int fdman_array_at_fd(const int fd, struct fd_descriptor *des);
 
-uint32_t statistic_object(const enum router_object obj);
+uint32_t fdman_statistic_object(const enum router_object obj);
 
-uint32_t poll_client_fd(int *arr[], uint32_t *size);
+uint32_t fdman_poll_client_fd(int *arr[], uint32_t *size);
+
 #endif	/* ifndef _FD_MANAGER_H_ */
 

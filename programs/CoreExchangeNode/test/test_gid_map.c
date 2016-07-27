@@ -18,6 +18,7 @@ int test_gid_map()
 	char    *tested_gid[20] = {};
 	find_gid_list(fd, tested_gid, &size);
 	int i;
+
 	for (i = 0; i < size; i++) {
 		printf("find_gid_list fd:%d, gid:%s.\n", fd, tested_gid[i]);
 	}

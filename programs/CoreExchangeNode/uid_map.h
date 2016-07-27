@@ -17,5 +17,6 @@ int remove_fd(char *uid);
 int remove_uid(int fd);
 
 void destroy_uid_map();
+
 #endif
 
