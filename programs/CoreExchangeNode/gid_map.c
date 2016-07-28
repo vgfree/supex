@@ -12,42 +12,44 @@ void init_gid_map()
 	g_gid_map = kv_create(NULL);
 }
 
-int find_fd_list(char *gid, int *fd_list)//TODO size
+int find_fd_list(char *gid, int fd_list[], int *size)
 {
-	char cmd[30] = "lrange ";
+	char cmd[30 + MAX_GID_SIZE] = {};
+	snprintf(cmd, 30 + MAX_GID_SIZE, "lrange %s 0 -1", gid);
 
-	strcat(cmd, gid);
-	strcat(cmd, " 0 -1");
 	kv_answer_t *ans = kv_ask(g_gid_map, cmd, strlen(cmd));
 
 	if (ans->errnum != ERR_NONE) {
 		x_printf(E, "find multi fd error, cmd:%s", cmd);
+		*size = 0;
 		kv_answer_release(ans);
 		return -1;
 	}
 
-	int                     i = 0;
+	int                     idx = 0;
 	kv_answer_value_t       *value;
 	kv_answer_iter_t        *iter;
 
 	iter = kv_answer_get_iter(ans, ANSWER_HEAD);
 	kv_answer_rewind_iter(ans, iter);
 
-	while ((value = kv_answer_next(iter)) != NULL) {
+	while (((value = kv_answer_next(iter)) != NULL) && (idx < *size)) {
 		char buf[20] = {};
 		strncpy(buf, (char *)value->ptr, value->ptrlen);
-		fd_list[i] = atoi(buf);
-		i++;
+		fd_list[idx] = atoi(buf);
+		idx++;
 	}
 
 	kv_answer_release_iter(iter);
 	kv_answer_release(ans);
-	return i;
+	*size = idx;
+	return 0;
 }
 
 int insert_fd_list(char *gid, int fd_list[], int size)
 {
-	char cmd[GROUP_SIZE * 10 + 20] = "lpush ";
+	assert(size <= MAX_ONE_GID_HAVE_CID);
+	char cmd[MAX_ONE_GID_HAVE_CID * 10 + 20] = "lpush ";//FIXME:to fill not fd by of cid
 
 	strcat(cmd, gid);
 
@@ -73,10 +75,10 @@ int insert_fd_list(char *gid, int fd_list[], int size)
 
 int remove_fd_list(char *gid, int fd_list[], int size)
 {
-	char cmd[50] = {};
+	char cmd[50 + MAX_GID_SIZE] = {};
 	for (int i = 0; i < size; i++) {
-		memset(cmd, 0, 50);
-		snprintf(cmd, 50, "lrem %s 0 %d", gid, fd_list[i]);
+		memset(cmd, 0, 50 + MAX_GID_SIZE);
+		snprintf(cmd, 50 + MAX_GID_SIZE, "lrem %s 0 %d", gid, fd_list[i]);
 		x_printf(D, "%s", cmd);
 
 		kv_answer_t *ans = kv_ask(g_gid_map, cmd, strlen(cmd));
@@ -95,13 +97,9 @@ int remove_fd_list(char *gid, int fd_list[], int size)
 
 int insert_gid_list(int fd, char *gid)
 {
-	char    cmd[20 + 20] = "lpush ";
-	char    buf[10] = {};
+	char    cmd[20 + MAX_GID_SIZE] = {};
+	snprintf(cmd, 20 + MAX_GID_SIZE, "lpush %d %s", fd, gid);
 
-	snprintf(buf, 10, "%d", fd);
-	strcat(cmd, buf);
-	strcat(cmd, " ");
-	strcat(cmd, gid);
 	kv_answer_t *ans = kv_ask(g_gid_map, cmd, strlen(cmd));
 
 	if (ans->errnum != ERR_NONE) {
@@ -142,15 +140,15 @@ int find_gid_list(int fd, char *gid_list[], int *size)
 	kv_answer_release_iter(iter);
 	kv_answer_release(ans);
 	*size = idx;
-	return idx;
+	return 0;
 }
 
 int remove_gid_list(int fd, char *gid[], int size)
 {
-	char cmd[60] = {};
+	char cmd[60 + MAX_GID_SIZE] = {};
 	for (int i = 0; i < size; i++) {
-		memset(cmd, 0, 60);
-		snprintf(cmd, 60, "lrem %d 0 %s", fd, gid[i]);
+		memset(cmd, 0, 60 + MAX_GID_SIZE);
+		snprintf(cmd, 60 + MAX_GID_SIZE, "lrem %d 0 %s", fd, gid[i]);
 		
 		kv_answer_t *ans = kv_ask(g_gid_map, cmd, strlen(cmd));
 		if (ans->errnum != ERR_NONE) {

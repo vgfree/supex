@@ -4,6 +4,7 @@
 
 #include "uid_map.h"
 #include "libmini.h"
+#include "comm_def.h"
 
 static kv_handler_t *g_uid_map = NULL;
 
@@ -14,9 +15,9 @@ void init_uid_map()
 
 int find_fd(char *uid)
 {
-	char cmd[20] = "get ";
-
+	char cmd[20 + MAX_UID_SIZE] = "get ";
 	strcat(cmd, uid);
+
 	kv_answer_t *ans;
 	ans = kv_ask(g_uid_map, cmd, strlen(cmd));
 
@@ -34,11 +35,9 @@ int find_fd(char *uid)
 
 int find_uid(char *uid, int *size, int fd)
 {
-	char    cmd[20] = "get ";
-	char    buf[10] = {};
+	char    cmd[20] = {};
+	snprintf(cmd, 20, "get %d", fd);
 
-	snprintf(buf, 10, "%d", fd);
-	strcat(cmd, buf);
 	kv_answer_t *ans;
 	ans = kv_ask(g_uid_map, cmd, strlen(cmd));
 
@@ -62,8 +61,8 @@ int find_uid(char *uid, int *size, int fd)
 
 int insert_fd(char *uid, int fd)
 {
-	char cmd[60] = {};
-	snprintf(cmd, 60, "set %s %d", uid, fd);
+	char cmd[60 + MAX_UID_SIZE] = {};
+	snprintf(cmd, 60 + MAX_UID_SIZE, "set %s %d", uid, fd);
 
 	kv_answer_t *ans = kv_ask(g_uid_map, cmd, strlen(cmd));
 
@@ -73,8 +72,9 @@ int insert_fd(char *uid, int fd)
 		return -1;
 	}
 
-	char uid_cmd[50] = {};
-	snprintf(uid_cmd, 50, "set %d %s", fd, uid);
+	char uid_cmd[50 + MAX_UID_SIZE] = {};
+	snprintf(uid_cmd, 50 + MAX_UID_SIZE, "set %d %s", fd, uid);
+
 	kv_answer_t *uid_ans = kv_ask(g_uid_map, uid_cmd, strlen(uid_cmd));
 
 	if (uid_ans->errnum != ERR_NONE) {
@@ -91,9 +91,9 @@ int insert_fd(char *uid, int fd)
 
 int remove_fd(char *uid)
 {
-	char cmd[20] = "del ";
-
+	char cmd[20 + MAX_UID_SIZE] = "del ";
 	strcat(cmd, uid);
+
 	kv_answer_t *ans = kv_ask(g_uid_map, cmd, strlen(cmd));
 
 	if (ans->errnum != ERR_NONE) {
@@ -109,11 +109,9 @@ int remove_fd(char *uid)
 
 int remove_uid(int fd)
 {
-	char    cmd[20] = "del ";
-	char    buf[10] = {};
+	char    cmd[20] = {};
+	snprintf(cmd, 20, "del %d", fd);
 
-	snprintf(buf, 10, "%d", fd);
-	strcat(cmd, buf);
 	kv_answer_t *ans = kv_ask(g_uid_map, cmd, strlen(cmd));
 
 	if (ans->errnum != ERR_NONE) {

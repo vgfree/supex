@@ -1,9 +1,9 @@
 #ifndef _FD_MANAGER_H_
 #define _FD_MANAGER_H_
 
+#include "comm_def.h"
 #include "router.h"
 
-#define FD_CAPACITY             1024 * 100
 #define FD_MAX_CLASSIFICATION   5
 
 /*    fd_head
@@ -76,7 +76,7 @@ int fdman_array_destroy();
 
 int fdman_array_fill_fd(const int fd, const struct fd_descriptor *des);
 
-int fdman_array_remove_fd(const int fd, const struct fd_descriptor *des);
+int fdman_array_remove_fd(const int fd, struct fd_descriptor *des);
 
 int fdman_array_at_fd(const int fd, struct fd_descriptor *des);
 

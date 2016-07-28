@@ -10,21 +10,8 @@
 #include "uid_map.h"
 #include "gid_map.h"
 #include "libmini.h"
+#include "comm_def.h"
 
-#define CONFIG                          "core_exchange_node.conf"
-#define LISTEN_MESSAGEGATEWAY_HOST      "ListenMessageGatewayHost"
-#define LISTEN_MESSAGEGATEWAY_PORT      "ListenMessageGatewayPort"
-#define LISTEN_CLIENT_HOST              "ListenClientHost"
-#define LISTEN_CLIENT_PORT              "ListenClientPort"
-#define SERVER_FILE                     "CoreExchangeNode.pid"
-#define PACKAGE_SIZE                    "PackageSize"
-#define MODULE_NAME                     "CoreExchangeNode"
-#define CONNECT_MESSAGEGATEWAY_HOST     "ConnectMessageGatewayHost"
-#define CONNECT_MESSAGEGATEWAY_PORT     "ConnectMessageGatewayPort"
-#define CONNECT_SETTINGSERVER_HOST      "ConnectSettingServerHost"
-#define CONNECT_SETTINGSERVER_PORT      "ConnectSettingServerPort"
-#define CONNECT_LOGINSERVER_HOST        "ConnectLoginServerHost"
-#define CONNECT_LOGINSERVER_PORT        "ConnectLoginServerPort"
 
 static int work_init(void)
 {

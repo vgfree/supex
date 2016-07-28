@@ -9,7 +9,7 @@
 
 int erase_client(int fd)
 {
-	char    uid[30] = {};
+	char    uid[MAX_UID_SIZE] = {};
 	int     size = 0;
 
 	find_uid(uid, &size, fd);
@@ -18,7 +18,7 @@ int erase_client(int fd)
 
 	char *gid_list[MAX_ONE_CID_HAVE_GID] = {};
 	size = MAX_ONE_CID_HAVE_GID;
-	if (find_gid_list(fd, gid_list, &size) > 0) {
+	if (find_gid_list(fd, gid_list, &size) == 0) {
 		remove_gid_list(fd, gid_list, size);
 
 		for (int i = 0; i < size; i++) {

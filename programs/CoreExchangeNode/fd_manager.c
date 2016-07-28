@@ -129,7 +129,7 @@ int fdman_array_fill_fd(const int fd, const struct fd_descriptor *des)
 	return 0;
 }
 
-int fdman_array_remove_fd(const int fd, const struct fd_descriptor *des)
+int fdman_array_remove_fd(const int fd, struct fd_descriptor *des)
 {
 	memcpy(des, &(g_array.dsp_array[fd]), sizeof(struct fd_descriptor));
 	g_array.dsp_array[fd].status = 2;

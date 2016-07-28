@@ -7,7 +7,6 @@
 #include "fd_manager.h"
 #include "gid_map.h"
 #include "message_dispatch.h"
-#include "router.h"
 #include "status.h"
 #include "uid_map.h"
 #include "libmini.h"
@@ -64,11 +63,17 @@ static int _handle_gid_message(struct comm_message *msg)
 {
 	int     fsz = 0;
 	char    *frame = get_msg_frame(2, msg, &fsz);
-	char    gid[20] = {};
 
+	char    gid[MAX_GID_SIZE] = {};
 	memcpy(gid, frame, fsz);
-	int     fd_list[GROUP_SIZE] = {};//TODO
-	int     size = find_fd_list(gid, fd_list);
+	
+	int     fd_list[MAX_ONE_GID_HAVE_CID] = {};
+	int	size = MAX_ONE_GID_HAVE_CID;
+	int ok = find_fd_list(gid, fd_list, &size);
+	if (ok != 0) {
+		return 0;
+	}
+
 	remove_first_nframe(3, msg);
 	x_printf(D, "get_max_msg_frame:%d, fd size:%d", get_max_msg_frame(msg), size);
 
@@ -85,8 +90,9 @@ static int _handle_uid_message(struct comm_message *msg)
 {
 	int     fsz = 0;
 	char    *frame = get_msg_frame(2, msg, &fsz);
-	char    uid[20] = {};//TODO
+	assert(fsz >= MAX_UID_SIZE);
 
+	char    uid[MAX_UID_SIZE] = {};
 	memcpy(uid, frame, fsz);
 	int fd = find_fd(uid);
 
@@ -117,7 +123,9 @@ static int _handle_uid_map(struct comm_message *msg)
 	char    *cfd = strtok(NULL, ":");
 	int     fd = atoi(cfd);
 	char    *uid = get_msg_frame(3, msg, &fsz);
-	char    uid_buf[20] = {};//TODO size
+	assert(fsz >= MAX_UID_SIZE);
+
+	char    uid_buf[MAX_UID_SIZE] = {};
 	memcpy(uid_buf, uid, fsz);
 	insert_fd(uid_buf, fd);
 	return 0;
@@ -145,7 +153,7 @@ static int _handle_gid_map(struct comm_message *msg)
 	char    *gid_list[MAX_ONE_CID_HAVE_GID] = {};
 	int     size = MAX_ONE_CID_HAVE_GID;
 
-	if (find_gid_list(fd, gid_list, &size) > 0) {
+	if (find_gid_list(fd, gid_list, &size) == 0) {
 		remove_gid_list(fd, gid_list, size);
 
 		for (int i = 0; i < size; i++) {
@@ -158,14 +166,14 @@ static int _handle_gid_map(struct comm_message *msg)
 #endif
 
 	char    *gid_frame = get_msg_frame(3, msg, &fsz);
-	char    gid[20] = {};
+	char    gid[MAX_GID_SIZE] = {};
 	int     gid_index = 0;
 
 	for (int i = 0; i < fsz; i++) {
 		if (gid_frame[i] == ',') {
 			insert_fd_list(gid, &fd, 1);
 			insert_gid_list(fd, gid);
-			memset(gid, 0, 20);
+			memset(gid, 0, MAX_GID_SIZE);
 			gid_index = 0;
 		} else {
 			gid[gid_index++] = gid_frame[i];
