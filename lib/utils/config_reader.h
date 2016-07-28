@@ -41,5 +41,6 @@ char *get_config_name(struct config_reader *config, const char *name);
 
 int set_config_value(struct config_reader *config,
 	const char *name, const char *value);
+
 #endif	/* _CONFIG_READER_H_ */
 

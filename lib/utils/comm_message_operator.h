@@ -2,14 +2,15 @@
 #define _COMM_MESSAGE_OPERATOR_H_
 #include "comm_structure.h"
 
-struct residue_package {
-	int fd;
-	int offset;
-	char *serial_data;
-	int serial_size;
+struct residue_package
+{
+	int     fd;
+	int     offset;
+	char    *serial_data;
+	int     serial_size;
 };
 
-inline int init_residue_package(struct residue_package *package, int fd, int offset, char *_serial_data, int  _serial_size)
+inline int init_residue_package(struct residue_package *package, int fd, int offset, char *_serial_data, int _serial_size)
 {
 	package->fd = fd;
 	package->offset = offset;
@@ -19,20 +20,18 @@ inline int init_residue_package(struct residue_package *package, int fd, int off
 
 inline int push_residue_package(struct residue_package *package)
 {
-	//to do;
+	// to do;
 	return 0;
 }
 
-
 inline int pop_residue_package(struct residue_package *package)
 {
-	//to do:
+	// to do:
 	return 0;
 }
 
 inline void destroy_residue_package(struct residue_package *package)
 {
-
 	if (package->serial_data) {
 		free(package->serial_data);
 	}
@@ -55,5 +54,6 @@ int remove_first_nframe(int nframe, struct comm_message *msg);
 int get_max_msg_frame(struct comm_message *msg);
 
 int get_frame_size(int index, struct comm_message *msg);
+
 #endif	/* ifndef _COMM_MESSAGE_OPERATOR_H_ */
 

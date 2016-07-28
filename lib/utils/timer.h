@@ -30,5 +30,6 @@ int add_timer(struct timer_list *list, struct timer_item *timer);
 int remove_timer(struct timer_list *list, uint8_t id);
 
 void schedule_timer(struct timer_list *list);
+
 #endif	/* ifndef _TIMER_H_ */
 
