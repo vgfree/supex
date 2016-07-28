@@ -14,7 +14,7 @@ int test_gid_map()
 	insert_fd_list(gid1, &fd, 1);
 	insert_fd_list(gid2, &fd, 1);
 
-	int     size = 0;
+	int     size = 20;
 	char    *tested_gid[20] = {};
 	find_gid_list(fd, tested_gid, &size);
 	int i;
@@ -49,6 +49,7 @@ int test_gid_map()
 		tested_gid[i] = NULL;
 	}
 
+	size = 20;
 	find_gid_list(fd, tested_gid, &size);
 
 	for (i = 0; i < size; i++) {

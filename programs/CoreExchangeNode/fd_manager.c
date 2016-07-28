@@ -129,8 +129,9 @@ int fdman_array_fill_fd(const int fd, const struct fd_descriptor *des)
 	return 0;
 }
 
-int fdman_array_remove_fd(const int fd)
+int fdman_array_remove_fd(const int fd, const struct fd_descriptor *des)
 {
+	memcpy(des, &(g_array.dsp_array[fd]), sizeof(struct fd_descriptor));
 	g_array.dsp_array[fd].status = 2;
 	return 0;
 }
@@ -138,11 +139,7 @@ int fdman_array_remove_fd(const int fd)
 int fdman_array_at_fd(const int fd, struct fd_descriptor *des)
 {
 	assert(des);
-	des->host = g_array.dsp_array[fd].host;
-	des->port = g_array.dsp_array[fd].port;
-	des->status = g_array.dsp_array[fd].status;
-	des->obj = g_array.dsp_array[fd].obj;
-
+	memcpy(des, &(g_array.dsp_array[fd]), sizeof(struct fd_descriptor));
 	return 0;
 }
 
@@ -202,4 +199,3 @@ uint32_t fdman_poll_client_fd(int *arr[], uint32_t *size)
 	*size = count;
 	return count;
 }
-

@@ -60,6 +60,7 @@ struct fd_descriptor
 	uint16_t                port;
 	uint8_t                 status;	// 0 未使用， 1 连接正常， 2 已经closed掉。
 	enum router_object      obj;
+	char    		uuid[37];
 };
 
 struct fd_array
@@ -75,7 +76,7 @@ int fdman_array_destroy();
 
 int fdman_array_fill_fd(const int fd, const struct fd_descriptor *des);
 
-int fdman_array_remove_fd(const int fd);
+int fdman_array_remove_fd(const int fd, const struct fd_descriptor *des);
 
 int fdman_array_at_fd(const int fd, struct fd_descriptor *des);
 

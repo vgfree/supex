@@ -4,6 +4,8 @@
 #include "status.h"
 #include "uid_map.h"
 #include "libmini.h"
+#include "comm_def.h"
+
 
 int erase_client(int fd)
 {
@@ -13,8 +15,9 @@ int erase_client(int fd)
 	find_uid(uid, &size, fd);
 	remove_fd(uid);
 	remove_uid(fd);
-	char *gid_list[20] = {};// TODO
 
+	char *gid_list[MAX_ONE_CID_HAVE_GID] = {};
+	size = MAX_ONE_CID_HAVE_GID;
 	if (find_gid_list(fd, gid_list, &size) > 0) {
 		remove_gid_list(fd, gid_list, size);
 
@@ -31,13 +34,8 @@ int erase_client(int fd)
 
 void send_status_msg(int clientfd, int status)
 {
-	char cid[30] = {};
-
-	strcpy(cid, g_serv_info.host);
-	strcat(cid, ":");
-	char buf[10] = {};
-	snprintf(buf, 10, "%d", clientfd);
-	strcat(cid, buf);
+	char cid[MAX_CID_SIZE] = {};
+	get_cid(cid, clientfd);
 
 	struct comm_message msg = {};
 	init_msg(&msg);

@@ -81,6 +81,7 @@ static int work_init(void)
 		struct fd_descriptor des = {};
 		des.status = 1;
 		des.obj = MESSAGE_GATEWAY;
+		make_uuid(des.uuid);
 		fdman_array_fill_fd(msg_fd, &des);
 
 		struct fd_node node = {};
@@ -103,6 +104,7 @@ static int work_init(void)
 		struct fd_descriptor des = {};
 		des.status = 1;
 		des.obj = SETTING_SERVER;
+		make_uuid(des.uuid);
 		fdman_array_fill_fd(set_fd, &des);
 
 		struct fd_node node = {};
@@ -125,6 +127,7 @@ static int work_init(void)
 		struct fd_descriptor des = {};
 		des.status = 1;
 		des.obj = LOGIN_SERVER;
+		make_uuid(des.uuid);
 		fdman_array_fill_fd(gin_fd, &des);
 
 		struct fd_node node = {};

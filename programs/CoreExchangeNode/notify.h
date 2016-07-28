@@ -2,6 +2,8 @@
 #define _NOTIFY_H_
 #include "communication.h"
 
+void make_uuid(char *dst);
+
 void client_event_notify(struct comm_context *commctx,
 	struct comm_tcp *portinfo, void *usr);
 

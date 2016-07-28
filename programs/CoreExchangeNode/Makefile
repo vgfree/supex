@@ -14,7 +14,7 @@ $(OBJ): $(SRC)
 	$(CC) $(CFLAG) $(INCLUDE_PATH) -c $(SRC)
 
 $(TARGET) : $(OBJ)
-	$(CC) $(OBJ) -L../../lib ../../lib/libcomm/lib/libcomm.a ../../lib/utils/lib/libutils.a -lpthread -lkv -lmini -ldl -o $(TARGET)
+	$(CC) $(OBJ) -L../../lib ../../lib/libcomm/lib/libcomm.a ../../lib/utils/lib/libutils.a -lpthread -luuid -lkv -lmini -ldl -o $(TARGET)
 
 clean:
 	rm -f *.o $(TARGET)
