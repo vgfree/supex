@@ -90,7 +90,7 @@ static int _handle_uid_message(struct comm_message *msg)
 {
 	int     fsz = 0;
 	char    *frame = get_msg_frame(2, msg, &fsz);
-	assert(fsz >= MAX_UID_SIZE);
+	assert(fsz < MAX_UID_SIZE);
 
 	char    uid[MAX_UID_SIZE] = {};
 	memcpy(uid, frame, fsz);
@@ -123,7 +123,7 @@ static int _handle_uid_map(struct comm_message *msg)
 	char    *cfd = strtok(NULL, ":");
 	int     fd = atoi(cfd);
 	char    *uid = get_msg_frame(3, msg, &fsz);
-	assert(fsz >= MAX_UID_SIZE);
+	assert(fsz < MAX_UID_SIZE);
 
 	char    uid_buf[MAX_UID_SIZE] = {};
 	memcpy(uid_buf, uid, fsz);
