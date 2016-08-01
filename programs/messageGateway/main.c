@@ -1,5 +1,5 @@
 #include "daemon.h"
-#include "loger.h"
+#include "libmini.h"
 #include "message_concentrator.h"
 
 #include <pthread.h>
@@ -8,8 +8,7 @@
 #define SERVER_FILE     "messageGateway.pid"
 #define MODULE_NAME     "messageGateway"
 
-struct CSLog *g_imlog = NULL;
-int main(int argc, char *argv[])
+int main(void)
 {
 	signal(SIGPIPE, SIG_IGN);
 
@@ -18,20 +17,14 @@ int main(int argc, char *argv[])
 		return -1;
 	}
 
-	g_imlog = CSLog_create(MODULE_NAME, WATCH_DELAY_TIME);
-	pthread_t tid;
+	/*init log*/
+	SLogOpen(MODULE_NAME ".log", SLogIntegerToLevel(1));
+	
+	concentrator_work();
 
-	if (concentrator_init(&tid) != 0) {
-		printf("concentrator not init.");
-		return -1;
-	}
-
-	void *status;
-	pthread_join(tid, &status);
-	log("exit main thread.");
+	x_printf(W, "exit main thread.");
 	concentrator_destroy();
 	daemon_exit(SERVER_FILE);
-	CSLog_destroy(g_imlog);
 	return 0;
 }
 

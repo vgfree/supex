@@ -1,28 +1,27 @@
 #include "comm_io_wraper.h"
 #include "config_reader.h"
-#include "loger.h"
+#include "libmini.h"
 
 #define CONFIG                  "messageGateway.conf"
-#define NODE_CONNECT_IP         "CoreExchangeNodeIP"
+#define NODE_CONNECT_HOST         "CoreExchangeNodeHost"
 #define NODE_CONNECT_PORT       "CoreExchangeNodePort"
-#define NODE_SERVER_IP          "NodeServer"
+#define NODE_SERVER_HOST          "NodeServer"
 #define NODE_SERVER_PORT        "NodePort"
 
 static void core_exchange_node_cb(struct comm_context   *commctx,
 	struct comm_tcp                                 *portinfo,
 	void                                            *usr)
 {
-	log("callback, fd:%d, status:%d.", portinfo->fd, portinfo->stat);
+	x_printf(D, "callback, fd:%d, status:%d.", portinfo->fd, portinfo->stat);
 
 	if (portinfo->stat == FD_INIT) {
 		if (g_node_ptr->max_size > NODE_SIZE) {
-			error("core exchange node:%d > max size:%d.", g_node_ptr->max_size, NODE_SIZE);
+			x_printf(E, "core exchange node:%d > max size:%d.", g_node_ptr->max_size, NODE_SIZE);
 		}
 
 		g_node_ptr->fd_array[g_node_ptr->max_size++] = portinfo->fd;
 	} else if (portinfo->stat == FD_CLOSE) {
 		int i = 0;
-
 		for (; i < g_node_ptr->max_size; i++) {
 			if (g_node_ptr->fd_array[i] == portinfo->fd) {
 				break;
@@ -34,7 +33,7 @@ static void core_exchange_node_cb(struct comm_context   *commctx,
 		}
 
 		if (g_node_ptr->max_size == i) {
-			error("not g_node fd_array no include this fd:%d.", portinfo->fd);
+			x_printf(E, "not g_node fd_array no include this fd:%d.", portinfo->fd);
 		} else {
 			g_node_ptr->max_size--;
 		}
@@ -42,17 +41,15 @@ static void core_exchange_node_cb(struct comm_context   *commctx,
 }
 
 static struct comm_context *g_commctx = NULL;
-int init_comm_io()
-{
-	g_node_ptr = (struct core_exchange_node *)malloc(sizeof(struct core_exchange_node));
-	g_node_ptr->max_size = 0;
-	struct config_reader *config =
-		init_config_reader(CONFIG);
-	char    *ip = get_config_name(config, NODE_CONNECT_IP);
-	char    *port = get_config_name(config, NODE_CONNECT_PORT);
-	log("ip:%s. port:%s.", ip, port);
-	g_commctx = comm_ctx_create(EPOLL_SIZE);
 
+int init_comm_io(void)
+{
+	struct config_reader *config = init_config_reader(CONFIG);
+	char    *host = get_config_name(config, NODE_CONNECT_HOST);
+	char    *port = get_config_name(config, NODE_CONNECT_PORT);
+
+	x_printf(D, "host:%s. port:%s.", host, port);
+	g_commctx = comm_ctx_create(EPOLL_SIZE);
 	if (!g_commctx) {
 		return -1;
 	}
@@ -60,9 +57,9 @@ int init_comm_io()
 	struct cbinfo callback_info = {};
 	callback_info.callback = core_exchange_node_cb;
 
-	char    *nodeServer = get_config_name(config, NODE_SERVER_IP);
+	char    *nodeServer = get_config_name(config, NODE_SERVER_HOST);
 	char    *nodePort = get_config_name(config, NODE_SERVER_PORT);
-	log("nodeServer:%s, nodePort:%s.", nodeServer, nodePort);
+	x_printf(D, "nodeServer:%s, nodePort:%s.", nodeServer, nodePort);
 	comm_socket(g_commctx, nodeServer, nodePort, &callback_info, COMM_BIND);
 	destroy_config_reader(config);
 	return 0;
