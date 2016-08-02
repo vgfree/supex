@@ -77,13 +77,14 @@ static void *_pull_thread(void *usr)
 
 int upstream_msg(void)
 {
+	int i = 0;
 	struct comm_message msg = {};
 
 	init_msg(&msg);
 	recv_msg(&msg);
-	x_printf(D, "get_max_msg_frame.");
+	x_printf(D, "get_max_msg_frame, :%d", get_max_msg_frame(&msg));
 
-	for (int i = 0; i < get_max_msg_frame(&msg); i++) {
+	for (i = 0; i < get_max_msg_frame(&msg); i++) {
 		zmq_msg_t       msg_frame;
 		int             fsz = 0;
 		char            *frame = get_msg_frame(i, &msg, &fsz);
@@ -144,7 +145,7 @@ void concentrator_work(void)
 
 void concentrator_destroy()
 {
-	destroy_comm_io();
-	zmq_exit();
+	exit_comm_io();
+	exit_zmq_io();
 }
 

@@ -65,7 +65,7 @@ int init_comm_io(void)
 	return 0;
 }
 
-void destroy_comm_io()
+void exit_comm_io(void)
 {
 	free(g_node_ptr);
 }

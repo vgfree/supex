@@ -5,16 +5,13 @@
 
 #include <stdlib.h>
 
-int init_zmq_io();
+int init_zmq_io(void);
 
-void zmq_exit();
+void exit_zmq_io(void);
 
-int zmq_io_send(zmq_msg_t *msg, int flags);
+int zmq_io_send_app(zmq_msg_t *msg, int flags);
 
 int zmq_io_send_api(zmq_msg_t *msg, int flags);
 
-int zmq_io_recv(zmq_msg_t *msg, int flags);
-
-int zmq_io_getsockopt(int option_name, void *option_value, size_t *option_len);
 #endif
 

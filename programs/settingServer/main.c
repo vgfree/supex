@@ -1,6 +1,9 @@
 #include "daemon.h"
-#include "loger.h"
-#include "fountain.h"
+#include "libmini.h"
+#include "comm_message_operator.h"
+#include "comm_io_wraper.h"
+#include "downstream.h"
+#include "zmq_io_wraper.h"
 
 #include <pthread.h>
 #include <signal.h>
@@ -8,7 +11,23 @@
 #define SERVER_FILE     "settingServer.pid"
 #define MODULE_NAME     "settingServer"
 
-struct CSLog *g_imlog = NULL;
+void message_work(void)
+{
+	assert(init_comm_io() == 0);
+	assert(init_zmq_io() == 0);
+	while (1) {
+		struct comm_message msg = {};
+		init_msg(&msg);
+		pull_msg(&msg);
+		downstream_msg(&msg);
+		destroy_msg(&msg);
+	}
+	exit_comm_io();
+	exit_zmq_io();
+}
+
+
+
 int main(int argc, char *argv[])
 {
 	signal(SIGPIPE, SIG_IGN);
@@ -18,12 +37,9 @@ int main(int argc, char *argv[])
 		return -1;
 	}
 
-	g_imlog = CSLog_create(MODULE_NAME, WATCH_DELAY_TIME);
-	fountain_init();
-	message_fountain();
-	fountain_destroy();
+	message_work();
+	
 	daemon_exit(SERVER_FILE);
-	CSLog_destroy(g_imlog);
 	return 0;
 }
 

@@ -1,11 +1,11 @@
 #include "zmq_io_wraper.h"
 #include "config_reader.h"
-#include "loger.h"
+#include "libmini.h"
 
 #include <assert.h>
 
 #define CONFIG          "settingServer.conf"
-#define CLIENT_IP       "APIIP"
+#define CLIENT_HOST       "APIHost"
 #define CLIENT_PORT     "APIPort"
 
 static void *g_ctx = NULL;
@@ -28,9 +28,9 @@ static int zmq_client_init(char *host, int port)
 	g_client = zmq_socket(g_ctx, ZMQ_PULL);
 	char addr[64] = {};
 	sprintf(addr, "tcp://%s:%d", host, port);
-	log("addr:%s.", addr);
+	x_printf(D, "addr:%s.", addr);
 	int rc = zmq_connect(g_client, addr);
-	log("rc:%d", rc);
+	x_printf(D, "rc:%d", rc);
 	return rc;
 }
 
@@ -43,16 +43,12 @@ static int zmq_client_init(char *host, int port)
  *    }
  *   }
  *   }*/
-static void zmq_client_exit()
+
+void exit_zmq_io(void)
 {
 	if (g_client) {
 		zmq_close(g_client);
 	}
-}
-
-void zmq_exit()
-{
-	zmq_client_exit();
 	//  zmq_srv_exit();
 	zmq_ctx_destroy(g_ctx);
 }
@@ -72,17 +68,18 @@ int zmq_io_recv(zmq_msg_t *msg, int flags)
 	return zmq_recvmsg(g_client, msg, flags);
 }
 
-int init_zmq_io()
+int init_zmq_io(void)
 {
-	struct config_reader *config =
-		init_config_reader(CONFIG);
-
 	assert(!g_ctx);
 	g_ctx = zmq_ctx_new();
-	char    *clientIp = get_config_name(config, CLIENT_IP);
-	char    *clientPort = get_config_name(config, CLIENT_PORT);
-	log("clientIp:%s, clientPort:%s", clientIp, clientPort);
-	zmq_client_init(clientIp, atoi(clientPort));
+	
+	struct config_reader *config = init_config_reader(CONFIG);
+	char    *host = get_config_name(config, CLIENT_HOST);
+	char    *port = get_config_name(config, CLIENT_PORT);
+	x_printf(D, "clientIp:%s, clientPort:%s", host, port);
+
+	zmq_client_init(host, atoi(port));
+
 	destroy_config_reader(config);
 	return 0;
 }

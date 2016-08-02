@@ -45,7 +45,7 @@ static void zmq_pull_exit()
 	zmq_close(g_pull);
 }
 
-void zmq_exit()
+void exit_zmq_io(void)
 {
 	zmq_pull_exit();
 	zmq_push_exit();

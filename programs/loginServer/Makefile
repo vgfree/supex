@@ -1,12 +1,12 @@
-INC_DIR=-I../../lib/libcomm/ -I../../lib/utils -I../../lib/zeromq-4.1.4/include/ -I../../lib/liblog
-LIB_DIR=-L/usr/local/lib -L../../lib  -L../../lib/liblog/slog/lib -llog4cxx -lslog -lstdc++
+INC_DIR=-I../../lib/libcomm/ -I../../lib/utils -I../../lib/zeromq-4.1.4/include/
+LIB_DIR=-L/usr/local/lib -L../../lib  -lstdc++
 
-INC_LIBS=../../lib/utils/lib/libutils.a ../../lib/libcomm/lib/libcomm.a ../../lib/libzmq.a
+INC_LIBS=-lutils -lcomm -lzmq -lmini
 
 #[=========>MARK<=========]#
 MAIN_APP_SERV ?= loginServer
 
-HANDLE_MODEL = LINE
+HANDLE_MODEL = EVCORO
 
 #<------------------------>#
 -include $(HOME_PATH)/programs/link.mk
@@ -19,12 +19,11 @@ BIN=./bin_$(MAIN_APP_SERV)
 
 SRV := $(MAIN_APP_SERV)
 JOB += $(SRV)
-CFLAGS += -g
+CFLAGS += -g -std=c99
 
 MAIN_OBJ = comm_io_wraper.c \
 	   zmq_io_wraper.c \
 	   upstream.c \
-	   fountain.c \
 	   main.c
 
 all:$(JOB)

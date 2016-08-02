@@ -1,18 +1,17 @@
 #include "comm_io_wraper.h"
 #include "comm_message_operator.h"
-#include "loger.h"
+#include "libmini.h"
 #include "upstream.h"
 #include "zmq_io_wraper.h"
 
-int upstream_msg()
+int upstream_msg(void)
 {
 	int i = 0;
 	struct comm_message msg = {};
 
 	init_msg(&msg);
-	log("start to recv msg");
 	recv_msg(&msg);
-	log("get_max_msg_frame, :%d", get_max_msg_frame(&msg));
+	x_printf(D, "get_max_msg_frame, :%d", get_max_msg_frame(&msg));
 
 	for (i = 0; i < get_max_msg_frame(&msg); i++) {
 		zmq_msg_t       msg_frame;
@@ -23,9 +22,9 @@ int upstream_msg()
 		memcpy(zmq_msg_data(&msg_frame), frame, fsz);
 
 		if (i < get_max_msg_frame(&msg) - 1) {
-			zmq_io_send(&msg_frame, ZMQ_SNDMORE);
+			zmq_io_send_app(&msg_frame, ZMQ_SNDMORE);
 		} else {
-			zmq_io_send(&msg_frame, 0);
+			zmq_io_send_app(&msg_frame, 0);
 		}
 	}
 

@@ -10,9 +10,9 @@ enum server
 	CID_SERVER = 3
 };
 
-int init_zmq_io();
+int init_zmq_io(void);
 
-void zmq_exit();
+void exit_zmq_io(void);
 
 int zmq_io_send(enum server srv, zmq_msg_t *msg, int flags);
 

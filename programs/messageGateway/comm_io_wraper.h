@@ -13,9 +13,9 @@ struct core_exchange_node
 
 struct core_exchange_node *g_node_ptr;
 
-int init_comm_io();
+int init_comm_io(void);
 
-void destroy_comm_io();
+void exit_comm_io(void);
 
 int recv_msg(struct comm_message *msg);
 
