@@ -2,9 +2,17 @@
 #define _FD_MANAGER_H_
 
 #include "comm_def.h"
-#include "router.h"
 
 #define FD_MAX_CLASSIFICATION   5
+enum router_object
+{
+        CLIENT = 1,
+        MESSAGE_GATEWAY,
+        ROUTER_SERVER,
+        SETTING_SERVER,
+        LOGIN_SERVER
+};
+
 
 /*    fd_head
  *    ---------         ---------         ---------
