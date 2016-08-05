@@ -17,17 +17,14 @@ bool commevent_init(struct comm_event **commevent, struct comm_context *commctx)
 	assert(commevent && commctx);
 
 	New(*commevent);
+	assert(*commevent);
 
-	if (*commevent) {
-		if (unlikely(!init_remainfd(&((*commevent)->remainfd)))) {
-			return false;
-		}
+	bool ok = init_remainfd(&((*commevent)->remainfd));
 
-		(*commevent)->init = true;
-		(*commevent)->commctx = commctx;
-	}
+	(*commevent)->init = ok;
+	(*commevent)->commctx = commctx;
 
-	return (*commevent)->init;
+	return ok;
 }
 
 void commevent_destroy(struct comm_event *commevent)

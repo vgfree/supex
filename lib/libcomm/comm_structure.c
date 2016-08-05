@@ -86,12 +86,13 @@ bool init_remainfd(struct remainfd *remainfd)
 {
 	assert(remainfd);
 
-	int i = 0, j = 0;
 	memset(remainfd, 0, sizeof(*remainfd));
-	remainfd->capacity[0] = LISTEN_SIZE;	/* REMAINFD_LISTEN类型的fd大小一定，不可以扩容 */
 
+	int i = 0, j = 0;
 	for (i = 0; i < 5; i++) {
-		if (i != 0) {
+		if (i == 0) {
+			remainfd->capacity[0] = LISTEN_SIZE;	/* REMAINFD_LISTEN类型的fd大小一定，不可以扩容 */
+		} else {
 			remainfd->capacity[i] = EPOLL_SIZE / 2;
 		}
 

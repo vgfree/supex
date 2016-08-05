@@ -23,6 +23,7 @@ bool commqueue_init(struct comm_queue *commqueue, int nodesize, int capacity, De
 		commqueue->init = true;
 		return true;
 	} else {
+		commqueue->init = false;
 		return false;
 	}
 }

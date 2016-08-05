@@ -10,20 +10,22 @@ bool commpipe_create(struct comm_pipe *commpipe)
 {
 	assert(commpipe);
 
-	int fda[2] = { 0 };
 	memset(commpipe, 0, sizeof(*commpipe));
 
+	int fda[2] = { 0 };
 	if (pipe(fda) == 0) {
-		/* 创建成功 */
-		commpipe->rfd = fda[0];
+		/* 写端口默认阻塞，直到写入数据返回为止 */
+		commpipe->wfd = fda[1];
 
 		/* 读端口设置为非阻塞，没有数据就立刻返回 */
+		commpipe->rfd = fda[0];
 		if (unlikely(!fd_setopt(commpipe->rfd, O_NONBLOCK))) {
 			close(commpipe->rfd);
+			close(commpipe->wfd);
 			return false;
 		}
 
-		commpipe->wfd = fda[1];	/* 写端口默认阻塞，直到写入数据返回为止 */
+		/* 创建成功 */
 		commpipe->init = true;
 		return true;
 	} else {
