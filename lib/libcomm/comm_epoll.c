@@ -11,6 +11,7 @@ bool commepoll_init(struct comm_epoll *commepoll, int epollsize)
 {
 	assert(commepoll);
 	memset(commepoll, 0, sizeof(*commepoll));
+
 	commepoll->epollsize = (epollsize <= 0 || epollsize > MAXEPOLLSIZE) ? MAXEPOLLSIZE : epollsize;
 	log("commepoll->epollsize:%d\n", commepoll->epollsize);
 	commepoll->epfd = epoll_create(commepoll->epollsize);

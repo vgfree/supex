@@ -18,7 +18,7 @@ local function parse_data(data)
         end
         local field_tab = {}
         local group_tab = utils.str_split(data, ';')
-        for k, v in pairs(group_tab) do
+        for k, v in ipairs(group_tab) do
                 field_tab[ k ] = utils.str_split(v, ',')
         end
         return field_tab
@@ -104,7 +104,7 @@ function post_data_to_other(tab_jo)
 		local request = utils.compose_http_json_request2( host_info ,'publicentry', nil, result)
        		only.log("D", 'composed http json request = %s', request)
 
-		local ok, ret = redis_api.only_cmd("dcRedis","lpushx", "newstatus_http", request)
+		local ok, ret = redis_api.only_cmd("dcRedis","lpushx", "0|1", request)
 		if ok then
        			only.log("D", 'saved redis')
 		end
@@ -113,14 +113,16 @@ end
 
 function handle(msg)
 	only.log('S','msg = %s', msg)
+
 	local key_log = string.format('newstatuslog:%s',os.date('%Y%m%d',time))
 	local value =  string.format('%s  %s',os.date('%Y-%m-%d %H:%M:%S',time),msg)
 	redis_api.cmd('newstatusRedis','','LPUSH', key_log, value)
+
 	local isfind = string.find(msg,'TYPE=2')
 	local msg_str = string.gsub(msg,"&TYPE.+$","")
 	if isfind then
 		local org_table = utils.parse_url(msg_str)
-		only.log('D', 'org_tab = %s',scan.dump(org_table))
+		only.log('D', 'org_tab = %s', scan.dump(org_table))
 
 		local gps_table = parse_data( org_table['G'] )
 		local data_table = {}
@@ -131,10 +133,11 @@ function handle(msg)
 		data_table["speed"]  = {}
 		data_table["altitude"] = {}
 		organize_data(org_table, gps_table, data_table)
-		data_table['M'] = org_table['M'] 
+		data_table['mirrtalkID'] = org_table['M'] 
+		data_table['accountID'] = org_table['A'] 
 		data_table['collect'] = 'true'
 		
-
+--[[
 		local ok,MAppKeyInfo = redis_api.cmd('dcRedis','','get', 'MAppKeyInfo:'..org_table['M'])
 		local ok,tokenCode = redis_api.cmd('dcRedis','','get', 'dcToken:'..org_table['M'])
 		
@@ -142,6 +145,7 @@ function handle(msg)
 			data_table['tokenCode'] = tokenCode
 			data_table['firmKey'] = MAppKeyInfo
 		end
+]]--
 		local data_str = cjson.encode(data_table)
 		only.log('D', 'trans_str =%s',data_str )
  		post_data_to_other(data_table)
