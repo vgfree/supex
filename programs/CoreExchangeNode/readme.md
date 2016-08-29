@@ -1,0 +1,8 @@
+buglsit
+
+1、CID 加上唯一标识UUID
+2、用户下线如CID和UID有绑定，需通知业务层下线用户的UID
+3、setting中少退出群组的操作
+4、setting加群组，core_exchange_node该群有这个人延时3秒（哪个环节问题未确认）
+5、客户端连core_exchange_node，客户端异常断开链接（3G网络断），core_exchange_node还是线上ESTABLISHED，会导致这个cid一直存在，陆续再给这个cid发消息会导致scoket发送队列堆积。可通过操作系统keepalive参数修复
+6、messageGate重启，core_exchange_node不会自动链接messageGate
