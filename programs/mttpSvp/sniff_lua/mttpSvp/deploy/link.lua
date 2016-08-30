@@ -6,7 +6,7 @@ OWN_POOL = {
                         host = '192.168.1.12', 
                         port = 9002
              	},
-                dcRedis = {
+                damS = {
                         host = '192.168.1.12',
                         port = 9002
                 } 

@@ -24,11 +24,11 @@ function app_line_init()
 	--> init redis
 	APP_REDIS_API.init( )
 	--> init lhttp
-	APP_LHTTP_API.init( )
+	--APP_LHTTP_API.init( )
 	--> init zmq
-	zmq_api.init( )
+	--zmq_api.init( )
 	--> init luakv
-	luakv_api.init()
+	--luakv_api.init()
 	--> init apply
 	APP_APPLY.apply_init( )
 	--> load apply

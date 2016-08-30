@@ -99,12 +99,12 @@ function post_data_to_other(tab_jo)
         only.log("D",scan.dump(tab_jo))
 	local ok, result = pcall(cjson.encode, tab_jo)
 	if ok then
-		local host_info = { host = "192.168.1.12" ,port = "9002" }
+		local host_info = { host = "127.0.0.1" ,port = "80" }
 
 		local request = utils.compose_http_json_request2( host_info ,'publicentry', nil, result)
        		only.log("D", 'composed http json request = %s', request)
 
-		local ok, ret = redis_api.only_cmd("dcRedis","lpushx", "0|1", request)
+		local ok, ret = redis_api.only_cmd("damS","lpushx", "0", request)
 		if ok then
        			only.log("D", 'saved redis')
 		end
@@ -113,6 +113,7 @@ end
 
 function handle(msg)
 	only.log('S','msg = %s', msg)
+	--msg = "M=dd832a886a5d11e6918c00a0d1eb3984&A=&C=vUAJk58ulblwzElx&T=1472537797&B=300816061633&G=0,112142970,32035900,43,16,58;1,112143010,32035930,44,17,58;2,112143060,32035970,42,19,58;3,112143100,32036020,39,21,58;4,112143160,32036060,41,24,58&TYPE=2&IP=172.16.82.1&PORT=44204"
 
 	local key_log = string.format('newstatuslog:%s',os.date('%Y%m%d',time))
 	local value =  string.format('%s  %s',os.date('%Y-%m-%d %H:%M:%S',time),msg)
@@ -133,8 +134,10 @@ function handle(msg)
 		data_table["speed"]  = {}
 		data_table["altitude"] = {}
 		organize_data(org_table, gps_table, data_table)
-		data_table['mirrtalkID'] = org_table['M'] 
-		data_table['accountID'] = org_table['A'] 
+		data_table['mirrtalkID'] = org_table['M']
+		data_table['accountID'] = org_table['A']
+		data_table['tokenCode'] = org_table['C']
+		data_table['timestamp'] = org_table['T']
 		data_table['collect'] = 'true'
 		
 --[[
