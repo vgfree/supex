@@ -129,26 +129,6 @@ int sniff_vms_init(void *user, union virtual_system **VMS, struct sniff_task_nod
 
 /******************************************************************************************/
 
-int sniff_vms_call1(void *user, union virtual_system **VMS, struct sniff_task_node *task)
-{
-	int             error = 0;
-	lua_State       **L = VMS;
-
-	x_printf(S, "task <thread> %d\t<shift> %d\t<come> %d\t<delay> %d\n",
-		task->thread_id, task->base.shift, task->stamp, time(NULL) - task->stamp);
-	lua_getglobal(*L, "app_call_1");
-	lua_pushboolean(*L, task->last);
-	lua_pushinteger(*L, task->sfd);
-	error = lua_pcall(*L, 2, 0, 0);
-
-	if (error) {
-		x_printf(E, "%s", lua_tostring(*L, -1));
-		lua_pop(*L, 1);
-	}
-
-	return error;
-}
-
 int sniff_vms_call_ext(void *user, union virtual_system **VMS, struct sniff_task_node *task)
 {
 	int             error = 0;
@@ -172,52 +152,6 @@ int sniff_vms_call_ext(void *user, union virtual_system **VMS, struct sniff_task
 		x_printf(E, "%s", lua_tostring(*L, -1));
 		lua_pop(*L, 1);
 	}
-
-	return error;
-}
-
-/******************************************************************************************/
-int sniff_vms_sync_ext(void *user, union virtual_system **VMS, struct sniff_task_node *task)
-{
-	int             error = 0;
-	lua_State       **L = VMS;
-	long            *addr = task->data;
-	int             *all = *addr;
-
-	AO_F_SUB(all, 1);
-
-	lua_getglobal(*L, "app_push");
-	lua_pushboolean(*L, task->last);
-	lua_pushinteger(*L, task->sfd);
-	error = lua_pcall(*L, 2, 0, 0);
-
-	if (error) {
-		x_printf(E, "%s", lua_tostring(*L, -1));
-		lua_pop(*L, 1);
-	}
-
-	return error;
-}
-
-/******************************************************************************************/
-int sniff_vms_gain_ext(void *user, union virtual_system **VMS, struct sniff_task_node *task)
-{
-	int             error = 0;
-	lua_State       **L = VMS;
-
-	lua_getglobal(*L, "app_pull");
-	lua_pushboolean(*L, task->last);
-	lua_pushinteger(*L, task->sfd);
-	error = lua_pcall(*L, 2, 0, 0);
-
-	if (error) {
-		x_printf(E, "%s", lua_tostring(*L, -1));
-		lua_pop(*L, 1);
-	}
-
-	long    *addr = task->data;
-	int     *all = *addr;
-	AO_F_SUB(all, 1);
 
 	return error;
 }

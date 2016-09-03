@@ -1,15 +1,9 @@
 {
-	"smart_port": 4120,
-	"smart_hander_counts": 1,
-	"smart_worker_counts": 12,
-	"smart_tasker_counts": 12,
-	"smart_protocol": "http",
-	"monitor_times": 60,
-	
 	"swift_port": 4070,
 	"swift_worker_counts": 1,
 	"swift_tasker_counts": 1,
 	"swift_protocol": "http",
+	"monitor_times": 60,
 	
 	"sniff_worker_counts": 10,
 	"sniff_tasker_counts": 64,

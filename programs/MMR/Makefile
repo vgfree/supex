@@ -102,13 +102,11 @@ BIN=./bin_$(MAIN_APP_SERV)
 ADD_OBJ += match.o
 #<--drisamp/drimode/rtmiles需要使用的.o文件 -->#
 ifeq ($(MAIN_APP_SERV), $(filter $(MAIN_APP_SERV),drisamp drimode rtmiles rta goby))
-ADD_OBJ += smart_evcoro_cpp_api.o
 ADD_OBJ += sniff_evcoro_lua_api.o
 BASE_OBJ = $(addprefix $(BIN)/, \
 	   $(ADD_OBJ) \
 	   app_main.o \
 	   entry.o \
-	   load_smart_cfg.o \
 	   load_sniff_cfg.o \
 	   load_swift_cfg.o \
 	   swift_cpp_api.o \

@@ -4,7 +4,6 @@
 #include <unistd.h>
 #include <assert.h>
 #include "mq_api.h"
-#include "load_smart_cfg.h"
 #include "entry.h"
 
 #ifdef OPEN_TOPO
@@ -21,12 +20,10 @@
 #include "base/switch_queue.h"
 #include "app_queue.h"
 
-#include "smart_evcoro_cpp_api.h"
 #include "sniff_evcoro_lua_api.h"
 
 #include "add_session_cmd.h"
 
-struct smart_cfg_list   g_smart_cfg_list = {};
 struct swift_cfg_list   g_swift_cfg_list = {};
 struct sniff_cfg_list   g_sniff_cfg_list = {};
 
@@ -76,49 +73,10 @@ static void swift_shut_down()
 	 */
 }
 
-static void *main_next_entry(void *arg)
-{
-	struct safe_init_step *info = arg;
-
-	SAFE_PTHREAD_INIT_COME(info);
-
-	SAFE_PTHREAD_INIT_OVER(info);
-
-	swift_start();
-
-	return NULL;
-}
-
 int main(int argc, char **argv)
 {
-	// ---> init smart
-	load_supex_args(&g_smart_cfg_list.argv_info, argc, argv, "t:", NULL, NULL);
-
-	load_smart_cfg_file(&g_smart_cfg_list.file_info, g_smart_cfg_list.argv_info.conf_name);
-
-	// g_smart_cfg_list.func_info[APPLY_FUNC_ORDER].type = BIT8_TASK_TYPE_ALONE;
-	// g_smart_cfg_list.func_info[APPLY_FUNC_ORDER].func = (TASK_VMS_FCB)smart_vms_call;
-	g_smart_cfg_list.func_info[FETCH_FUNC_ORDER].type = BIT8_TASK_TYPE_ALONE;
-	g_smart_cfg_list.func_info[FETCH_FUNC_ORDER].func = (TASK_VMS_FCB)smart_vms_gain_ext;
-	g_smart_cfg_list.func_info[MERGE_FUNC_ORDER].type = BIT8_TASK_TYPE_WHOLE;
-	g_smart_cfg_list.func_info[MERGE_FUNC_ORDER].func = (TASK_VMS_FCB)smart_vms_sync_ext;
-
-	g_smart_cfg_list.vmsys_monitor = smart_vms_monitor_ext;
-
-	smart_mount(&g_smart_cfg_list);
-
 	// ---> init swift
-	snprintf(g_swift_cfg_list.argv_info.conf_name,
-		sizeof(g_swift_cfg_list.argv_info.conf_name),
-		"%s", g_smart_cfg_list.argv_info.conf_name);
-
-	snprintf(g_swift_cfg_list.argv_info.serv_name,
-		sizeof(g_swift_cfg_list.argv_info.serv_name),
-		"%s", g_smart_cfg_list.argv_info.serv_name);
-
-	snprintf(g_swift_cfg_list.argv_info.msmq_name,
-		sizeof(g_swift_cfg_list.argv_info.msmq_name),
-		"%s", g_smart_cfg_list.argv_info.msmq_name);
+	load_supex_args(&g_swift_cfg_list.argv_info, argc, argv, "t:", NULL, NULL);
 
 	bool ok = load_swift_cfg_file(&g_swift_cfg_list.file_info, g_swift_cfg_list.argv_info.conf_name);
 
@@ -174,9 +132,8 @@ int main(int argc, char **argv)
 	// ---> all ok
 	main_entry_init();
 
-	safe_start_pthread((void *)main_next_entry, 1, NULL, NULL);
+	swift_start();
 
-	smart_start();
 	return 0;
 }
 
