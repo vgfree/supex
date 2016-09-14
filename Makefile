@@ -436,6 +436,9 @@ link:
 	#链接是用绝对路径
 	@echo "     >OK<"
 
+wc:
+	find . "(" -name "*.c" -or -name "*.lua" -or -name "*.cpp" -or -name "*.h" ")" -print | xargs wc -l
+
 tag:
 	ctags -R
 
