@@ -1,0 +1,60 @@
+digraph G {
+	rankdir = LR;
+	compound = true;
+
+	subgraph cluster {
+		style = filled;
+		color = green;
+		label = "系统设计";
+	/******************************************************************************/
+		node [shape=box, style=filled, color=blue];
+		//node [shape=polygon, style=filled, color=cyan];
+		n1 [label="爬虫\nhttps://github.com/binux/pyspider.git"];
+		n2 [label="接口\n(go开发)"];
+		n3 [label="分流\n(go开发)"];
+	/******************************************************************************/
+		node [shape=ellipse, style=filled, color=red];
+		n1 -> n4;
+		n2 -> n4;
+		n3 -> n4;
+		n4 [label="分词\nhttps://github.com/Moonshile/ChineseWordSegmentation.git"];
+	/******************************************************************************/
+		node [shape=box, style=filled, color=blue];
+		n4 -> n5;
+		n5 [label="过滤\nhttps://github.com/tylertreat/BoomFilters.git"];
+	/******************************************************************************/
+		node [shape=box, style=filled, color=blue];
+		n5 -> n6;
+		n6 [label="标准化（时间,来源）\n(go开发)"];
+	/******************************************************************************/
+		node [shape=box, style=filled, color=blue];
+		n6 -> n7;
+		n7 [label="队列\n（kafka）"];
+	/******************************************************************************/
+		node [shape=record, style=filled, color=darkorange];
+		n7 -> n8;
+		n8 [label="{<0> 分类}|{<1> 政治}|{<2> 民生}|{<3> 经济}|{<4> ...}"];
+	/******************************************************************************/
+		node [shape=box, style=filled, color=blue];
+		n8:2 -> n9;
+		n9 [label="热度计算\ngo+redis-cluster"];
+		n9 -> n10;
+		n10 [label="关联计算\nhttps://github.com/wangdx/FP-Growth.git"];
+		n10 -> n11;
+		n11 [label="深度计算\nhttps://github.com/tensorflow/tensorflow.git"];
+		n9 -> n12 [label="原始数据"];
+		n10 -> n12 [label="预判数据"];
+		n11 -> n12 [label="诱导数据"];
+		n12 [label="hadoop集群"];
+	/******************************************************************************/
+		node [shape=box, style=filled, color=blue];
+		n12 -> n13;
+		n13 [label="订阅系统"];
+		n13 -> n14;
+		n14 [label="终端客户"];
+	/******************************************************************************/
+		node [shape=box, style=filled, color=blue];
+		n12 -> n15;
+		n15 [label="查询平台\nopenResty+nodejs"];
+	}
+}

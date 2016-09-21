@@ -19,6 +19,7 @@ git clone https://github.com/json-c/json-c.git
 git clone https://github.com/redis/hiredis.git
 git clone https://github.com/mverbert/libzdb.git
 git clone https://github.com/Neopallium/lua-http-message.git
+git clone https://github.com/luapower/libexif.git
 
 1)http://dist.schmorp.de/libev/
 2)cvs -z3 -d :pserver:anonymous@cvs.schmorp.de/schmorpforge co libev
