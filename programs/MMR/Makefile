@@ -29,32 +29,14 @@ LIBA=-ljson-c -lkv -lucmq -lmini
 MAIN_APP_SERV ?= drisamp
 
 #<--drisamp/drimode/rtmiles/rta需要连接lru库-->#
-#ifeq ($(MAIN_APP_SERV), $(filter $(MAIN_APP_SERV),drisamp drimode rtmiles rta))
+#ifeq ($(MAIN_APP_SERV), $(filter $(MAIN_APP_SERV),drisamp drimode rtmiles rta drirecord))
+HANDLE_MODEL = EVCORO
 #endif
 
 #CFLAGS +=-DSTORE_USE_UCMQ
 #CFLAGS +=-DSTORE_USE_QUEUE
 CFLAGS +=-DSTORE_USE_UCMQ_AND_QUEUE
 
-ifeq ($(MAIN_APP_SERV), drisamp)
-HANDLE_MODEL = EVCORO
-endif
-
-ifeq ($(MAIN_APP_SERV), drimode)
-HANDLE_MODEL = EVCORO
-endif
-
-ifeq ($(MAIN_APP_SERV), rtmiles)
-HANDLE_MODEL = EVCORO
-endif
-
-ifeq ($(MAIN_APP_SERV), rta)
-HANDLE_MODEL = EVCORO
-endif
-
-ifeq ($(MAIN_APP_SERV), goby)
-HANDLE_MODEL = EVCORO
-endif
 
 ifeq ($(MAIN_APP_SERV), drisampapi)
 HANDLE_MODEL = EVCORO
@@ -101,7 +83,7 @@ BIN=./bin_$(MAIN_APP_SERV)
 
 ADD_OBJ += match.o
 #<--drisamp/drimode/rtmiles需要使用的.o文件 -->#
-ifeq ($(MAIN_APP_SERV), $(filter $(MAIN_APP_SERV),drisamp drimode rtmiles rta goby))
+ifeq ($(MAIN_APP_SERV), $(filter $(MAIN_APP_SERV),drisamp drimode rtmiles rta goby drirecord))
 ADD_OBJ += sniff_evcoro_lua_api.o
 BASE_OBJ = $(addprefix $(BIN)/, \
 	   $(ADD_OBJ) \
@@ -195,7 +177,8 @@ clean:
 	rm -rf ./bin_goby
 	rm -rf ./bin_rtmiles
 	rm -rf ./bin_rta
-	rm -rf drisamp drimode goby rtmiles rta
+	rm -rf ./bin_drirecord
+	rm -rf drisamp drimode goby rtmiles rta drirecord
 	rm -rf ./bin_drisampapi
 	rm -rf ./bin_drimodeapi
 	rm -rf ./bin_gobyapi
@@ -213,4 +196,5 @@ distclean:
 	rm -rf ./lua/goby/data/
 	rm -rf ./lua/rtmiles/data/
 	rm -rf ./lua/rta/data/
+	rm -rf ./lua/drirecord/data/
 
