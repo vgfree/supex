@@ -65,7 +65,7 @@ openHLS := rmsapi hlsapi hlsldb
 openPMS := dtsync pole-M pole-S
 openLOG := loghit loghub
 SRV := $(openIMX) $(openHLS) $(openPMS) $(openLOG) \
-	drisamp drimode goby rtmiles rta \
+	drisamp drimode goby rtmiles rta drirecord \
 	drisampapi drimodeapi gobyapi rtmilesapi rtaapi \
 	msgsearchapi spxapi dfsapi appServer ptop robais tsearchapi driviewapi \
 	topology crzptX crzptY ACB damS  roadRank \
@@ -158,6 +158,9 @@ rta:
 	@echo -e $(GREEN)"【"$(YELLOW) $@ $(GREEN)"】"$(RED)"\n-->OK!\n"$(NONE)
 rtaapi:
 	$(MAKE) -C ./programs/MMR MAIN_APP_SERV=rtaapi
+	@echo -e $(GREEN)"【"$(YELLOW) $@ $(GREEN)"】"$(RED)"\n-->OK!\n"$(NONE)
+drirecord:
+	$(MAKE) -C ./programs/MMR MAIN_APP_SERV=drirecord
 	@echo -e $(GREEN)"【"$(YELLOW) $@ $(GREEN)"】"$(RED)"\n-->OK!\n"$(NONE)
 
 topology:

@@ -34,10 +34,8 @@ local function get_data( body )
 end
 
 local history = {
-	-->> drimode_user_init
-	'{"operate":"new_one_app","mode":"exact","tmpname":"_power_on_","appname":"drimode_user_init","nickname":"用户数据初始化","args":{"powerOn":["boolean",true],"accountID":[],"IMEI":[],"tokenCode":[],"model":[]},"func":["user_data_init"]}',
-	'{"operate":"fix_app_cfg","appname":"drimode_user_init","config":{"bool":{},"ways":{"cause":{"trigger_type":"every_time","fix_num":1,"delay":0}},"work":{}}}',
-	'{"operate":"ctl_one_app","status":"insmod","mode":"exact","appname":"drimode_user_init"}',
+	'{"operate":"ctl_one_app","status":"insmod","mode":"local","appname":"l_config"}',
+	'{"operate":"ctl_one_app","status":"insmod","mode":"local","appname":"l_drirecord"}',
 }
 
 

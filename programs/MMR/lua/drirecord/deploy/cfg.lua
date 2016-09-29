@@ -10,6 +10,8 @@ keywords = {
 	IMEI		= {{},{},{},{}},
 	model		= {{},{},{},{}},
 	tokenCode	= {{},{},{},{}},
+	timestamp	= {{},{},{},{}},
+	mirrtalkID	= {{},{},{},{}},
 
 	GSENSORTime	= {{},{},{},{}},
 	gx		= {{},{},{},{}},
@@ -42,6 +44,8 @@ slotlist = {
 	IMEI		= 21,
 	model		= 22,
 	tokenCode	= 23,
+	timestamp	= 24,
+	mirrtalkID	= 25,
 
 	GSENSORTime	= 31,
 	gx		= 32,
