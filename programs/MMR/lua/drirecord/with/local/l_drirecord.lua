@@ -224,7 +224,7 @@ function work()
 	local accountID         = supex.get_our_body_table()["accountID"]
 	local mirrtalkID         = supex.get_our_body_table()["mirrtalkID"]
 	local tokenCode         = supex.get_our_body_table()["tokenCode"]
-	local sql = string.format("UPDATE daoke_AccelerationInfo SET SAcceleration=SAcceleration + %d, RAcceleration=RAcceleration + %d, Sharpturn=Sharpturn + %d, miles=miles + %d, overspeed=overspeed + %d, tired=tired + %d WHERE mirrtalkid='%s' and accountid='%s' and tokenCode='%s'",
+	local sql = string.format("UPDATE daoke_AccelerationInfo SET SAcceleration=SAcceleration + %d, RAcceleration=RAcceleration + %d, Sharpturn=Sharpturn + %d, miles=miles + %d, overspeed=overspeed + %d, tired=tired + %d WHERE mirrtalkID='%s' AND accountID='%s' AND tokenCode='%s'",
 		add_shift["accelerate"], add_shift["decelerate"], add_turn, add_mile, add_over, add_tired, mirrtalkID, accountID, tokenCode)
-	local ok, ret = mysql_api.cmd('dataTest','UPDATE', sql)
+	local ok, ret = mysql_api.cmd('app_driving___dataTest','UPDATE', sql)
 end

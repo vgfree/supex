@@ -4,12 +4,12 @@ OWN_POOL = {
 	redis = {
 	},
 	mysql = {
-                dataTest___daoke_AccelerationInfo = {
+                app_driving___dataTest = {
                         host = '127.0.0.1',
                         port = 3307,
-                        database = 'config',
-                        user = 'observer',
-                        password ='abc123',
+                        database = 'dataTest',
+                        user = 'app_driving',
+                        password ='123456',
                 },
 	},
 

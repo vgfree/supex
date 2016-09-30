@@ -71,8 +71,8 @@ function work()
 	local accountID         = supex.get_our_body_table()["accountID"]
 	local timestamp         = supex.get_our_body_table()["timestamp"]
 	local tokenCode         = supex.get_our_body_table()["tokenCode"]
-	local sql = string.format("INSERT INTO daoke_AccelerationInfo SET mirrtalkid='%s', accountid='%s', powerOnTime=%d, powerOffTime=0, createTime=%d, SAcceleration=0, RAcceleration=0, Sharpturn=0, miles=0, overspeed=0, tired=0, tokenCode='%s', isValid=0",
+	local sql = string.format("INSERT INTO daoke_AccelerationInfo SET mirrtalkID='%s', accountID='%s', powerOnTime=%d, powerOffTime=0, createTime=%d, SAcceleration=0, RAcceleration=0, Sharpturn=0, miles=0, overspeed=0, tired=0, tokenCode='%s', isValid=0",
 		mirrtalkID, accountID, timestamp, os.time(), tokenCode )
-	local ok, ret = mysql_api.cmd('dataTest','INSERT', sql)
+	local ok, ret = mysql_api.cmd('app_driving___dataTest','INSERT', sql)
 end
 
