@@ -18,7 +18,7 @@ INC_PATH=\
 	 -I../../lib/libevcs/include/engine \
 	 -I../../lib/libevcs/include/frame \
 	 -I./src -I../ \
-	 -I../../lib/leveldb-1.18/include/ \
+	 -I../../lib/leveldb-1.19/include/ \
 	 -I../../lib/zeromq-4.1.4/include/ \
 	 -I../../lib/libmini/include/ \
 	 -I../../lib/libxmq/include/ \

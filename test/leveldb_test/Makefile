@@ -1,5 +1,5 @@
 build:
-	gcc -g -o Xldb-reader ldb.c -L./leveldb-1.18 -lleveldb -pthread -I ./leveldb-1.18/include \
+	gcc -g -o Xldb-reader ldb.c -L./leveldb-1.19 -lleveldb -pthread -I ./leveldb-1.19/include \
 		-DTEST_RANDOM_READ=0 \
 		-DTEST_ITER_READ=1 \
 		-DLONG_TIME_READ=1 \
@@ -15,7 +15,7 @@ push:
 	git push origin HEAD:refs/for/master
 
 r: ldb.c Makefile
-	gcc -g -o Xldb-reader ldb.c -L./leveldb-1.18 -lleveldb -pthread -I ./leveldb-1.18/include \
+	gcc -g -o Xldb-reader ldb.c -L./leveldb-1.19 -lleveldb -pthread -I ./leveldb-1.19/include \
 		-DTEST_RANDOM_READ=0 \
 		-DTEST_ITER_READ=1 \
 		-DLONG_TIME_READ=1 \
@@ -23,7 +23,7 @@ r: ldb.c Makefile
 	nohup ./Xldb-reader &
 
 w: ldb.c Makefile
-	gcc -g -o Xldb-writer ldb.c -L./leveldb-1.18 -lleveldb -pthread -I ./leveldb-1.18/include \
+	gcc -g -o Xldb-writer ldb.c -L./leveldb-1.19 -lleveldb -pthread -I ./leveldb-1.19/include \
 		-DSYNC_PUT=1 \
 		-DBATCH_PUT=1 \
 		-DDIRECT_PUT=0 \

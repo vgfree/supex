@@ -13,7 +13,7 @@ BASE_INC=-I$(INC) -I../libmini/include \
 BIN_TEST=./bin_test
 TEST_SRC=./test
 TEST_INC=$(BASE_INC) \
-	-I../leveldb-1.18/include/ \
+	-I../leveldb-1.19/include/ \
 	-I../zeromq-4.1.4/include
 
 LIB_INC=-L. -L../

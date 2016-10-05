@@ -11,7 +11,7 @@ BASE_INC=-I./include -I../libmini/include
 
 BIN_TEST=./bin_test
 TEST_SRC=./app_demo
-TEST_INC=-I./include -I../libmini/include -I../leveldb-1.18/include/ 
+TEST_INC=-I./include -I../libmini/include -I../leveldb-1.19/include/ 
 
 LIBS=-lpthread 
 LIBA=-lmini -lmixmq -lleveldb -lsnappy -ldl
