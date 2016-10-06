@@ -79,7 +79,7 @@ libsnappy.a:
 
 libleveldb.a:
 	$(MAKE) -j8 -C $(LIB_DIR)/leveldb-1.19
-	mv $(LIB_DIR)/leveldb-1.19/$@ $(LIB_DIR)
+	mv $(LIB_DIR)/leveldb-1.19/out-static/$@ $(LIB_DIR)
 
 libucmq.a:
 	$(MAKE) -C $(LIB_DIR)/libucmq

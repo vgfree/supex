@@ -111,22 +111,19 @@ void ldb_destroy(struct _leveldb_stuff *ldbs)
 	free(ldbs);
 }
 
-char *ldb_get(struct _leveldb_stuff *ldbs, const char *key, size_t klen, int *vlen)
+char *ldb_get(struct _leveldb_stuff *ldbs, const char *key, size_t klen, size_t *vlen)
 {
 	char    *err = NULL;
 	char    *val = NULL;
 
-	val = leveldb_get(ldbs->db, ldbs->roptions, key, klen, (size_t *)vlen, &err);
+	val = leveldb_get(ldbs->db, ldbs->roptions, key, klen, vlen, &err);
 
 	if (err) {
 		fprintf(stderr, "%s\n", err);
 		leveldb_free(err);
 		err = NULL;
-		*vlen = -1;
-		return NULL;
-	} else {
-		return val;
 	}
+	return val;
 }
 
 inline int ldb_put(struct _leveldb_stuff *ldbs, const char *key, size_t klen, const char *value, size_t vlen)

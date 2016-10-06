@@ -1,9 +1,9 @@
 /*
  *
  */
+#include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
-#include <unistd.h>
-#include <ftw.h>
 
 #include "ldb.h"
 
@@ -20,7 +20,7 @@ struct _leveldb_stuff *g_supex_ldbs = NULL;
  * Return:
  *      _leveldb_stuff: leveldb handler.
  */
-struct _leveldb_stuff *ldb_initialize(const char *name, size_t block_size, size_t wb_size, size_t lru_size, short bloom_size, int comp_speed)
+struct _leveldb_stuff *ldb_initialize(const char *name, size_t block_size, size_t wb_size, size_t lru_size, short bloom_size)
 {
 	struct _leveldb_stuff   *ldbs = NULL;
 	leveldb_cache_t         *cache;
@@ -41,7 +41,6 @@ struct _leveldb_stuff *ldb_initialize(const char *name, size_t block_size, size_
 	leveldb_options_set_cache(ldbs->options, cache);
 	leveldb_options_set_block_size(ldbs->options, block_size);
 	leveldb_options_set_write_buffer_size(ldbs->options, wb_size);
-	// leveldb_options_set_compaction_speed(ldbs->options, comp_speed);
 #if defined(OPEN_COMPRESSION)
 	leveldb_options_set_compression(ldbs->options, leveldb_snappy_compression);
 #else
@@ -112,24 +111,19 @@ void ldb_destroy(struct _leveldb_stuff *ldbs)
 	free(ldbs);
 }
 
-char *ldb_get(struct _leveldb_stuff *ldbs, const char *key, size_t klen, int *vlen)
+char *ldb_get(struct _leveldb_stuff *ldbs, const char *key, size_t klen, size_t *vlen)
 {
 	char    *err = NULL;
 	char    *val = NULL;
-	size_t  val_len = 0;
 
-	val = leveldb_get(ldbs->db, ldbs->roptions, key, klen, (size_t *)&val_len, &err);
+	val = leveldb_get(ldbs->db, ldbs->roptions, key, klen, vlen, &err);
 
 	if (err) {
 		fprintf(stderr, "%s\n", err);
 		leveldb_free(err);
 		err = NULL;
-		*vlen = -1;
-		return NULL;
-	} else {
-		*vlen = (int)val_len;
-		return val;
 	}
+	return val;
 }
 
 inline int ldb_put(struct _leveldb_stuff *ldbs, const char *key, size_t klen, const char *value, size_t vlen)
@@ -251,7 +245,6 @@ inline int ldb_exists(struct _leveldb_stuff *ldbs, const char *key, size_t klen)
 
 	if (err) {
 		fprintf(stderr, "%s\n", err);
-		// log_error("%s", err);
 		leveldb_free(err);
 		err = NULL;
 		return -1;
@@ -262,9 +255,8 @@ inline int ldb_exists(struct _leveldb_stuff *ldbs, const char *key, size_t klen)
 	return vlen ? 1 : 0;
 }
 
-inline int ldb_compact(struct _leveldb_stuff *ldbs)
+inline void ldb_compact(struct _leveldb_stuff *ldbs)
 {
 	leveldb_compact_range(ldbs->db, NULL, 0, NULL, 0);
-	return 0;
 }
 

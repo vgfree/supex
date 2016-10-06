@@ -42,7 +42,7 @@ int tsdb_ldb_init(char *db_name, struct tsdb_cfg_file *p_cfg)
 
 	snprintf(temp, sizeof(temp), "%s/%s", p_cfg->work_path, db_name);
 
-	s_ldb = ldb_initialize(temp, p_cfg->ldb_block_size, p_cfg->ldb_write_buffer_size, p_cfg->ldb_cache_lru_size, p_cfg->ldb_bloom_key_size, p_cfg->ldb_compaction_speed);
+	s_ldb = ldb_initialize(temp, p_cfg->ldb_block_size, p_cfg->ldb_write_buffer_size, p_cfg->ldb_cache_lru_size, p_cfg->ldb_bloom_key_size);
 
 	if (NULL == s_ldb) {
 		x_printf(F, "ldb_initialize failed!");
@@ -176,7 +176,7 @@ int tsdb_ldb_sadd(struct data_node *p_node)
         struct redis_status     *p_rst = &p_node->mdl_recv.parse.redis_info.rs;
 	//struct redis_status     *r_rst = (struct redis_status     *)malloc(sizeof(struct redis_status));
 	char                    *result = NULL;
-	int			size = 0;
+	size_t			size = 0;
 	char			*new_str = NULL;
 	int			idx;
 	bool			has_set_data = false;	
@@ -285,7 +285,7 @@ int tsdb_ldb_sadd(struct data_node *p_node)
 int tsdb_ldb_get(struct data_node *p_node)
 {
 	char                    *result = NULL;
-	int                     size = 0;
+	size_t                     size = 0;
 	int                     ret = 0;
 	char                    *p_buf = cache_data_address(&p_node->mdl_recv.cache);
 	struct redis_status     *p_rst = &p_node->mdl_recv.parse.redis_info.rs;

@@ -35,7 +35,7 @@ void ldb_destroy(struct _leveldb_stuff *ldbs);
 /*
  * Get key's value.
  */
-char *ldb_get(struct _leveldb_stuff *ldbs, const char *key, size_t klen, int *vlen);
+char *ldb_get(struct _leveldb_stuff *ldbs, const char *key, size_t klen, size_t *vlen);
 
 /*
  * Set record (key value).
@@ -79,7 +79,7 @@ int ldb_batch_commit(struct _leveldb_stuff *ldbs);
 int ldb_exists(struct _leveldb_stuff *ldbs, const char *key, size_t klen);
 
 /*
- * compact.
+ * Compact the database.
  */
 void ldb_compact(struct _leveldb_stuff *ldbs);
 

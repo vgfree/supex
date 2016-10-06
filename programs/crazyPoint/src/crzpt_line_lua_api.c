@@ -11,7 +11,7 @@ extern struct _leveldb_stuff *g_supex_ldbs;
 
 void crzpt_sys_ldb_run(const char *name, size_t block_size, size_t wb_size, size_t lru_size, short bloom_size)
 {
-	g_supex_ldbs = ldb_initialize(name, block_size, wb_size, lru_size, bloom_size, 1000);
+	g_supex_ldbs = ldb_initialize(name, block_size, wb_size, lru_size, bloom_size);
 	assert(g_supex_ldbs);
 }
 
@@ -41,7 +41,7 @@ int crzpt_lua_gain_plan(lua_State *L)
 {
 	unsigned int pidx = (unsigned int)lua_tointeger(L, 1);
 
-	int     size = 0;
+	size_t     size = 0;
 	char    temp[64] = { 0 };
 
 	sprintf(temp, "%d", pidx);

@@ -1,10 +1,9 @@
 #pragma once
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <strings.h>
+// #include <stdio.h>
+// #include <stdlib.h>
+// #include <sys/types.h>
 #include <limits.h>
-#include <sys/types.h>
 
 #include "leveldb/c.h"
 
@@ -14,14 +13,14 @@ struct _leveldb_stuff
 	leveldb_options_t       *options;
 	leveldb_readoptions_t   *roptions;
 	leveldb_writeoptions_t  *woptions;
-	leveldb_writebatch_t    *wbatch;	// not safe.
+	leveldb_writebatch_t    *wbatch;// not safe.
 	char                    dbname[PATH_MAX];
 };
 
 /*
  * Initial or create a level-db instance.
  */
-struct _leveldb_stuff   *ldb_initialize(const char *name, size_t block_size, size_t wb_size, size_t lru_size, short bloom_size, int comp_speed);
+struct _leveldb_stuff   *ldb_initialize(const char *name, size_t block_size, size_t wb_size, size_t lru_size, short bloom_size);
 
 /*
  * Close the level-db instance.
@@ -36,7 +35,7 @@ void ldb_destroy(struct _leveldb_stuff *ldbs);
 /*
  * Get key's value.
  */
-char *ldb_get(struct _leveldb_stuff *ldbs, const char *key, size_t klen, int *vlen);
+char *ldb_get(struct _leveldb_stuff *ldbs, const char *key, size_t klen, size_t *vlen);
 
 /*
  * Set record (key value).
@@ -82,5 +81,5 @@ int ldb_exists(struct _leveldb_stuff *ldbs, const char *key, size_t klen);
 /*
  * Compact the database.
  */
-int ldb_compact(struct _leveldb_stuff *ldbs);
+void ldb_compact(struct _leveldb_stuff *ldbs);
 
