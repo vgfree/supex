@@ -3,6 +3,7 @@
 #include <unistd.h>
 
 #include "entry.h"
+#include "libkv.h"
 #include "base/same_kill.h"
 #include "load_swift_cfg.h"
 // #include "luakvutils.h"
@@ -19,7 +20,7 @@ void entry_init(void)
 	}
 #endif
 
-	if (!kvpool_init()) {
+	if (!kvpool_init(kv_create)) {
 		exit(EXIT_FAILURE);
 	}
 }

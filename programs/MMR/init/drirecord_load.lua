@@ -24,7 +24,7 @@ local function http(cfg, data)
 end
 
 local function get_data( body )
-	return "POST /drimodeMerge.json HTTP/1.0\r\n" ..
+	return "POST /drirecordMerge.json HTTP/1.0\r\n" ..
 	"User-Agent: curl/7.33.0\r\n" ..
 	string.format("Host: %s:%d\r\n", host, port) ..
 	"Connection: close\r\n" ..
@@ -33,13 +33,10 @@ local function get_data( body )
 	body
 end
 
-local history = {
-	'{"operate":"ctl_one_app","status":"insmod","mode":"local","appname":"l_config"}',
-	'{"operate":"ctl_one_app","status":"insmod","mode":"local","appname":"l_drirecord"}',
-}
-
 
 local body = {
+	'{"operate":"ctl_one_app","status":"insmod","mode":"local","appname":"l_config"}',
+	'{"operate":"ctl_one_app","status":"insmod","mode":"local","appname":"l_drirecord"}',
 }
 
 --local body = {

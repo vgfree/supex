@@ -1,0 +1,18 @@
+{
+	"smart_port": 9999,
+	"smart_hander_counts": 1,
+	"smart_worker_counts": 1,
+	"smart_tasker_counts": 2,
+	"smart_protocol": "http",
+	"monitor_times": 30,
+	
+	"max_req_size": 32768,
+
+	"log_path": "./logs/",
+	"log_file": "drirecordapi",
+	"log_level": 0,
+
+	"api_apply": "/publicentry",
+	"api_fetch": "/drirecordapiFetch.json",
+	"api_merge": "/drirecordapiMerge.json"
+}

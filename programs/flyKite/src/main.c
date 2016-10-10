@@ -18,6 +18,7 @@
 #include "load_sniff_cfg.h"
 #include "base/switch_queue.h"
 #include "app_queue.h"
+#include "libkv.h"
 
 #include "sniff_evcoro_lua_api.h"
 
@@ -42,7 +43,7 @@ static void swift_entry_init(void)
 
 	// init_session_cmd();
 
-	if (!kvpool_init()) {
+	if (!kvpool_init(kv_create)) {
 		exit(EXIT_FAILURE);
 	}
 }

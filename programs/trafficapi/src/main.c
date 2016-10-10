@@ -4,6 +4,7 @@
 #include <unistd.h>
 #include <assert.h>
 
+#include "libkv.h"
 #include "load_cfg.h"
 #include "major/smart_api.h"
 #include "smart_evcoro_lua_api.h"
@@ -16,7 +17,7 @@ struct smart_cfg_list g_smart_cfg_list = {};
 
 void entry_init(void)
 {
-	if (!kvpool_init()) {
+	if (!kvpool_init(kv_create)) {
 		exit(EXIT_FAILURE);
 	}
 

@@ -8,7 +8,7 @@
 	"sniff_tasker_counts": 1,
 	"log_path": "./logs/",
 	"log_file": "damS",
-	"log_level": 5,
+	"log_level": 0,
 
 	"task_queue_mode": "shm",
 	"task_queue_name": "0xff",
@@ -27,7 +27,7 @@
 			"slot": 0,
 			"serv": "driView",
 			"host": "127.0.0.1",
-			"port": 6666
+			"port": 9999
 		},{
 			"slot": 1,
 			"serv": "goby",

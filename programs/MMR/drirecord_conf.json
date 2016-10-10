@@ -1,5 +1,5 @@
 {
-	"swift_port": 4070,
+	"swift_port": 9999,
 	"swift_worker_counts": 1,
 	"swift_tasker_counts": 1,
 	"swift_protocol": "http",

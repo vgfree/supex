@@ -1,0 +1,3 @@
+yum install gtk2-devel
+make install wxWidgets-3.1.0
+mv zenXml_2.3	FreeFileSync_8.5/zenXml

@@ -24,6 +24,7 @@ local path_list = {
 	"../../open/spxonly/?.lua;",
 	"../../open/linkup/?.lua;",
 	"../../open/public/?.lua;",
+	"../../open/lib/lua-coro/?.lua;",
 
 	"open/?.lua;",
 }

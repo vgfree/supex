@@ -4,6 +4,7 @@
 #include <unistd.h>
 #include <assert.h>
 
+#include "libkv.h"
 #include "load_swift_cfg.h"
 #include "major/swift_api.h"
 
@@ -13,7 +14,7 @@ struct swift_cfg_list g_swift_cfg_list = {};
 
 void entry_init(void)
 {
-	if (!kvpool_init()) {
+	if (!kvpool_init(kv_create)) {
 		exit(EXIT_FAILURE);
 	}
 }

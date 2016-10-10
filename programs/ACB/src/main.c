@@ -5,6 +5,7 @@
 #include <string.h>
 #include <time.h>
 
+#include "libkv.h"
 #include "major/swift_api.h"
 #include "swift_lua_api.h"
 #include "load_swift_cfg.h"
@@ -49,7 +50,7 @@ static void child_init(void)
 
 static void entry_init(void)
 {
-	if (!kvpool_init()) {
+	if (!kvpool_init(kv_create)) {
 		exit(EXIT_FAILURE);
 	}
 }

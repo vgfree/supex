@@ -17,11 +17,12 @@ struct kvpool_handle
 };
 
 extern SListT g_kvhandle_pool;
+typedef void *(*CREATE_HANDLE_FCB)(void);
 
 /**
  * 初始化
  */
-bool kvpool_init();
+bool kvpool_init(CREATE_HANDLE_FCB fcb);
 
 /**
  * 在lua层以句柄名称调用，查找或创建对应的句柄，并返回该句柄的libkv句柄的C指针

@@ -66,7 +66,7 @@ openPMS := dtsync pole-M pole-S
 openLOG := loghit loghub
 SRV := $(openIMX) $(openHLS) $(openPMS) $(openLOG) \
 	drisamp drimode goby rtmiles rta drirecord \
-	drisampapi drimodeapi gobyapi rtmilesapi rtaapi \
+	drisampapi drimodeapi gobyapi rtmilesapi rtaapi drirecordapi \
 	msgsearchapi spxapi dfsapi appServer ptop robais tsearchapi driviewapi \
 	topology crzptX crzptY ACB damS  roadRank \
 	gdgive bdgive gopath gomile ashman adcube_v2\
@@ -161,6 +161,9 @@ rtaapi:
 	@echo -e $(GREEN)"【"$(YELLOW) $@ $(GREEN)"】"$(RED)"\n-->OK!\n"$(NONE)
 drirecord:
 	$(MAKE) -C ./programs/MMR MAIN_APP_SERV=drirecord
+	@echo -e $(GREEN)"【"$(YELLOW) $@ $(GREEN)"】"$(RED)"\n-->OK!\n"$(NONE)
+drirecordapi:
+	$(MAKE) -C ./programs/MMR MAIN_APP_SERV=drirecordapi
 	@echo -e $(GREEN)"【"$(YELLOW) $@ $(GREEN)"】"$(RED)"\n-->OK!\n"$(NONE)
 
 topology:

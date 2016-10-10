@@ -14,6 +14,7 @@ extern char     *ZK_SERVERS;
 extern char     *ZK_RNODE;
 #endif
 
+#include "libkv.h"
 #include "load_cfg.h"
 #include "libevcs.h"
 #include "smart_evcoro_lua_api.h"
@@ -52,7 +53,7 @@ struct smart_cfg_list g_smart_cfg_list = {};
 
 static void entry_init(void)
 {
-	if (!kvpool_init()) {
+	if (!kvpool_init(kv_create)) {
 		exit(EXIT_FAILURE);
 	}
 

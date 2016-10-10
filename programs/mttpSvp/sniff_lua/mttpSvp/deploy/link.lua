@@ -7,8 +7,8 @@ OWN_POOL = {
                         port = 9002
              	},
                 damS = {
-                        host = '192.168.1.12',
-                        port = 9002
+                        host = '127.0.0.1',
+                        port = 4210
                 } 
 
 

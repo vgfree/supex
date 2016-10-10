@@ -394,6 +394,7 @@ local function execute_alone(coro,app_name)
 		local idle = coro.fastswitch
         redis_api.reg( idle, coro )
 		OWN_MAIN_RUNMODS[ OWN_ALONE_MODE ]( app_name, not app_name )
+		return true
 end
 local function execute_whole(coro,app_name)
 		-->>[whole]
@@ -403,6 +404,7 @@ local function execute_whole(coro,app_name)
 		local idle = coro.fastswitch
         redis_api.reg( idle, coro )
 		OWN_MAIN_RUNMODS[ OWN_WHOLE_MODE ]( app_name, not app_name  )
+		return true
 end
 local function execute_exact(coro,app_name)
 		-->>[exact]
@@ -412,6 +414,7 @@ local function execute_exact(coro,app_name)
 		local idle = coro.fastswitch
         redis_api.reg( idle, coro )
 		OWN_MAIN_RUNMODS[ OWN_EXACT_MODE ]( app_name, not app_name )
+		return true
 end
 local  function execute_local(coro,app_name)
 		-->>[local]
@@ -422,6 +425,7 @@ local  function execute_local(coro,app_name)
         redis_api.reg( idle, coro )
 		OWN_MAIN_RUNMODS[ OWN_LOCAL_MODE ]( app_name, not app_name )
 		print(scan.dump(OWN_MAIN_RUNMODS[OWN_LOCAL_MODE]))
+		return true
 end
 
 local four_mode_list = {

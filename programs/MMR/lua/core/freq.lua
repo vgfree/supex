@@ -32,7 +32,9 @@ function freq_init( uid )
 end
 
 function freq_filter( app_name, uid )
-	local cause = APP_CONFIG_LIST["OWN_LIST"][app_name]["ways"]["cause"]
+	local depot = APP_CONFIG_LIST["OWN_LIST"][app_name]
+	if not depot then return true end
+	local cause = depot["ways"]["cause"]
 	local class = cause["trigger_type"]
 	local num = cause["fix_num"]
 	local delay = cause["delay"]

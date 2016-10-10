@@ -26,6 +26,7 @@ fd:close()
 -------------------
 
 tcp:send(data)
-local result = tcp:receive("*a")
+--local result = tcp:receive("*a")
+os.execute("sleep 1")
 tcp:close()
 print(result)

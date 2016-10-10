@@ -48,10 +48,9 @@ https://github.com/ramonza/libcoro.git
 
 如何提高并发量:
 1)提升listen最大值.
-2)增加accept线程数.
-3)减少TIME_WAIT回收等待时间.
-4)不返回数据时,设置linger(quick)立即回收,避免TIME_WAIT.
-5)改用长连接.
+2)减少TIME_WAIT回收等待时间.
+3)不返回数据时,设置linger(quick)立即回收,避免TIME_WAIT.
+4)改用长连接.
 
 ps:返回数据时,设置linger(delay)是不对的,close会阻塞
 

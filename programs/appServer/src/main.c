@@ -34,6 +34,7 @@
 #include "lua_expand/lj_http_info.h"
 #include "lua_expand/lj_cache.h"
 #include "luakv/luakv.h"
+#include "libkv.h"
 
 EVCS_MODULE_SETUP(kernel, kernel_init, kernel_exit, &g_kernel_evts);
 EVCS_MODULE_SETUP(evcs, evcs_init, evcs_exit, &g_evcs_evts);
@@ -185,7 +186,7 @@ static bool task_report(void *user, void *task)
 
 int main(int argc, char **argv)
 {
-	if (!kvpool_init()) {
+	if (!kvpool_init(kv_create)) {
 		exit(EXIT_FAILURE);
 	}
 	create_io(TYPE_UPSTREAM | TYPE_STATUS);

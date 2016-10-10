@@ -11,6 +11,7 @@
 #include "skt.h"
 #include "load_cfg.h"
 #include "supex.h"
+#include "libkv.h"
 
 #define SERVER_NAME "AK47"
 
@@ -21,7 +22,7 @@ static lua_State *lua_vm_init(void)
 	int     error = 0;
 	bool    ok = false;
 
-	ok = kvpool_init();
+	ok = kvpool_init(kv_create);
 
 	if (!ok) {
 		exit(EXIT_FAILURE);

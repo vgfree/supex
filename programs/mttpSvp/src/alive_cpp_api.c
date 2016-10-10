@@ -241,6 +241,7 @@ int alive_vms_call(void *user, union virtual_system **VMS, struct adopt_task_nod
 	{
 		case 0x00:	// 握手
 
+#ifndef ONLY_FOR_TEST
 			// 已经握手，重复握手，非正常数据，断开连接
 			if (mttpsvp_libkv_check_handshake(task->cid, task->sfd, "1", 1) == 0) {
 				x_printf(D, "Handshake error: repeat handshake");
@@ -293,6 +294,7 @@ int alive_vms_call(void *user, union virtual_system **VMS, struct adopt_task_nod
 			free(mirrtalk_id);
 			free(gps_token);
 			/*return 0;*/
+#endif
 			break;
 
 		case 0x01:	// 心跳
@@ -303,11 +305,13 @@ int alive_vms_call(void *user, union virtual_system **VMS, struct adopt_task_nod
 
 		case 0x02:	// 传输
 
+#ifndef ONLY_FOR_TEST
 			// 未握手，直接传数据，非正常数据，断开连接
 			if (mttpsvp_libkv_check_handshake(task->cid, task->sfd, "1", 1) < 0) {
 				x_printf(D, "Should handshake first before transfer data");
 				goto ERROR;
 			}
+#endif
 
 			plus_size = sprintf(err, "&TYPE=%d&IP=%s&PORT=%d", 2, pnode->szAddr, pnode->port);
 			break;

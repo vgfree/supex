@@ -58,6 +58,10 @@ ifeq ($(MAIN_APP_SERV), gobyapi)
 HANDLE_MODEL = EVCORO
 endif
 
+ifeq ($(MAIN_APP_SERV), drirecordapi)
+HANDLE_MODEL = EVCORO
+endif
+
 #<------goby的宏--->#
 ifeq ($(MAIN_APP_SERV), goby)
 #<--goby需要使用mysql和topoi-->#
@@ -98,7 +102,7 @@ BASE_OBJ = $(addprefix $(BIN)/, \
 endif
 
 #<--drisampapi/drimodeapi/rtmilesapi需要使用的.o文件 -->#
-ifeq ($(MAIN_APP_SERV), $(filter $(MAIN_APP_SERV),drisampapi drimodeapi rtmilesapi rtaapi gobyapi))
+ifeq ($(MAIN_APP_SERV), $(filter $(MAIN_APP_SERV),drisampapi drimodeapi rtmilesapi rtaapi gobyapi drirecordapi))
 ADD_OBJ += smart_evcoro_lua_api.o
 BASE_OBJ = $(addprefix $(BIN)/, \
 	   $(ADD_OBJ) \
@@ -184,7 +188,8 @@ clean:
 	rm -rf ./bin_gobyapi
 	rm -rf ./bin_rtmilesapi
 	rm -rf ./bin_rtaapi
-	rm -rf drisampapi drimodeapi gobyapi rtmilesapi rtaapi
+	rm -rf ./bin_drirecordpi
+	rm -rf drisampapi drimodeapi gobyapi rtmilesapi rtaapi drirecordapi
 	rm -f $(CLEANFILES)
 	@-if [ ! -d ./logs ];then mkdir logs; fi
 
@@ -197,4 +202,5 @@ distclean:
 	rm -rf ./lua/rtmiles/data/
 	rm -rf ./lua/rta/data/
 	rm -rf ./lua/drirecord/data/
+	rm -rf ./lua/drirecordapi/data/
 

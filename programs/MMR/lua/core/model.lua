@@ -20,6 +20,7 @@ local print	= print
 local pairs	= pairs
 local pcall	= pcall
 local assert	= assert
+local tostring	= tostring
 
 local CFG_LIST	= require('cfg')
 local CLASSIFY	= CFG_LIST["OWN_INFO"]["OPEN_LOGS_CLASSIFY"]
@@ -57,15 +58,8 @@ local function self_cycle_idle( coro, idleable )
 	end
 end
 
-local function go_once_job(coro, args)
-	local idle = coro.fastswitch
-        redis_api.reg( idle, coro )
-	local name, insp, ifon, func = args[1],args[2],args[3],args[4]
-	one_app_job( name, insp, ifon, func)
-end
-
 local function one_app_job( name, insp, ifon, func)
-
+	print("------------------",name)
 	local t1 = socket.gettime()
 	local t2 = nil
 	local state = true	
@@ -101,12 +95,12 @@ local function one_app_job( name, insp, ifon, func)
 		if state then
 			monitor.mod_bef_work( name )
 			--> do task
-			if supex["__WORK_TYPE__"] then
+			--if supex["__WORK_TYPE__"] then
 				local ok,result = pcall(func.work)
 				if not ok then
 					only.log("E", result)
 				end
-			end
+			--end
 			monitor.mod_end_work( name )
 		end
 		--> reset app log
@@ -124,6 +118,15 @@ local function one_app_job( name, insp, ifon, func)
 		lualog.pool["."] = obj
         end
 end
+
+local function go_once_job(coro, args)
+	local idle = coro.fastswitch
+        redis_api.reg( idle, coro )
+	local name, insp, ifon, func = args[1],args[2],args[3],args[4]
+	one_app_job( name, insp, ifon, func)
+	return true
+end
+
 ----------------------------------------exact--------------------------------------------
 local OWN_EXACT_FUNC_POOL = {}
 local OWN_EXACT_IFON_POOL = {}
@@ -292,7 +295,7 @@ function local_runmods( name, insp )
 		      	        if ret  then
 		      		only.log('D',"Tasks execute success.")
 		     	        else  
-		      		only.log('E',"Tasks execute failure.ret = %s",tostring(ret))
+				only.log('E',"Tasks execute failure.ret = %s", tostring(ret))
 		     	        end
 			    	coro:close()
 			end

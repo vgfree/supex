@@ -9,7 +9,7 @@ OWN_POOL = {
                         port = 3307,
                         database = 'dataTest',
                         user = 'app_driving',
-                        password ='123456',
+                        password ='12345678',
                 },
 	},
 

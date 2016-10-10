@@ -1,0 +1,8 @@
+sudo yum install gtk+
+sudo yum install gtk+-devel
+sudo yum install gtk+-devel
+sudo yum install boost-devel
+sudo yum install gtk+extra-devel
+
+./configure --disable-shared --enable-unicode
+

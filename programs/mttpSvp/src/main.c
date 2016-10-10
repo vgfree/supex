@@ -17,6 +17,7 @@
 #include "sniff_evcoro_lua_api.h"
 
 #include "json.h"
+#include "libkv.h"
 
 struct alive_cfg_list   g_alive_cfg_list = {};
 struct sniff_cfg_list   g_sniff_cfg_list = {};
@@ -61,7 +62,7 @@ static void alive_pthrd_init(void *user)
  */
 static void alive_entry_init(void)
 {
-	if (!kvpool_init()) {
+	if (!kvpool_init(kv_create)) {
 		exit(EXIT_FAILURE);
 	}
 }
