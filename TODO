@@ -66,3 +66,4 @@ REMIND:
 	61)信息记录表来判断数据存在性
 	62)libkv支持set expaire   batch命令  lua scr命令
 	63)evcs在支持协议解析完就执行回调，不一定在队列处执行
+	supex 执行代码打开反向shell
