@@ -58,15 +58,21 @@ bool load_swift_cfg_file(struct swift_cfg_file *p_cfg, char *name)
 
 	if (json_object_object_get_ex(cfg, "swift_port", &obj)) {
 		p_cfg->srv_port = (short)json_object_get_int(obj);
-	} else { goto fail; }
+	} else {
+		goto fail;
+	}
 
 	if (json_object_object_get_ex(cfg, "swift_worker_counts", &obj)) {
 		p_cfg->worker_counts = (short)json_object_get_int(obj);
-	} else { goto fail; }
+	} else {
+		goto fail;
+	}
 
 	if (json_object_object_get_ex(cfg, "swift_tasker_counts", &obj)) {
 		p_cfg->tasker_counts = (short)json_object_get_int(obj);
-	} else { goto fail; }
+	} else {
+		goto fail;
+	}
 
 	if (json_object_object_get_ex(cfg, "swift_protocol", &obj)) {
 		str_val = json_object_get_string(obj);
@@ -76,25 +82,35 @@ bool load_swift_cfg_file(struct swift_cfg_file *p_cfg, char *name)
 		} else {
 			p_cfg->ptype = USE_REDIS_PROTO;
 		}
-	} else { goto fail; }
+	} else {
+		goto fail;
+	}
 
 	if (json_object_object_get_ex(cfg, "max_req_size", &obj)) {
 		p_cfg->max_req_size = json_object_get_int(obj);
-	} else { goto fail; }
+	} else {
+		goto fail;
+	}
 
 	if (json_object_object_get_ex(cfg, "log_path", &obj)) {
 		str_val = json_object_get_string(obj);
 		p_cfg->log_path = x_strdup(str_val);
-	} else { goto fail; }
+	} else {
+		goto fail;
+	}
 
 	if (json_object_object_get_ex(cfg, "log_file", &obj)) {
 		str_val = json_object_get_string(obj);
 		p_cfg->log_file = x_strdup(str_val);
-	} else { goto fail; }
+	} else {
+		goto fail;
+	}
 
 	if (json_object_object_get_ex(cfg, "log_level", &obj)) {
 		p_cfg->log_level = json_object_get_int(obj);
-	} else { goto fail; }
+	} else {
+		goto fail;
+	}
 
 	if (p_cfg->ptype == USE_HTTP_PROTO) {
 		if (json_object_object_get_ex(cfg, "api_apply", &obj)) {
@@ -175,16 +191,22 @@ bool reload_swift_cfg_file(struct swift_cfg_file *p_cfg, const char *filename)
 	if (json_object_object_get_ex(cfg, "log_path", &obj)) {
 		str_val = json_object_get_string(obj);
 		p_cfg->log_path = x_strdup(str_val);
-	} else { goto fail; }
+	} else {
+		goto fail;
+	}
 
 	if (json_object_object_get_ex(cfg, "log_file", &obj)) {
 		str_val = json_object_get_string(obj);
 		p_cfg->log_file = x_strdup(str_val);
-	} else { goto fail; }
+	} else {
+		goto fail;
+	}
 
 	if (json_object_object_get_ex(cfg, "log_level", &obj)) {
 		p_cfg->log_level = json_object_get_int(obj);
-	} else { goto fail; }
+	} else {
+		goto fail;
+	}
 
 	/*
 	 * do other something

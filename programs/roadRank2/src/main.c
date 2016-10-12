@@ -13,7 +13,7 @@
 #include "minor/sniff_api.h"
 #include "pool_api/conn_xpool_api.h"
 #include "load_sniff_cfg.h"
-//#include "apply_def.h"
+// #include "apply_def.h"
 #include "rr_cfg.h"
 #include "traffic_model.h"
 #include "kv_cache.h"
@@ -47,10 +47,10 @@ static void swift_entry_init(void)
 	/*
 	 * 初始化支持的命令
 	 */
-	//init_session_cmd();
+	// init_session_cmd();
 
 	// ---> init libkv
-        g_kv_cache = kv_cache_create(g_traffic_model_cfg.sin.single_cfg.kv_cache_count);
+	g_kv_cache = kv_cache_create(g_traffic_model_cfg.sin.single_cfg.kv_cache_count);
 
 	conn_xpool_init(g_rr_cfg_file.pmr_server.host, g_rr_cfg_file.pmr_server.port, g_rr_cfg_file.redis_conn, false);
 	conn_xpool_init(g_rr_cfg_file.trafficapi_server.host, g_rr_cfg_file.trafficapi_server.port, g_rr_cfg_file.redis_conn, false);
@@ -78,8 +78,8 @@ static void swift_shut_down(void)
 
 	/*通过每个swift_worker挂起sniff_worker的所有线程*/
 	for (i = 0; i < swift_worker_total; i++) {
-                thds++;
-                sniff_suspend_thread(swift_worker[i].mount, cond);
+		thds++;
+		sniff_suspend_thread(swift_worker[i].mount, cond);
 	}
 
 	/*
@@ -111,8 +111,8 @@ static void swift_reload_cfg(void)
 
 	/*通过每个swift_worker挂起sniff_worker的所有线程*/
 	for (i = 0; i < swift_worker_total; i++) {
-                thds++;
-                sniff_suspend_thread(swift_worker[i].mount, &cond);
+		thds++;
+		sniff_suspend_thread(swift_worker[i].mount, &cond);
 	}
 
 	/*
@@ -167,8 +167,6 @@ int main(int argc, char **argv)
 
 	g_swift_cfg_list.pthrd_init = swift_pthrd_init;
 
-	//g_swift_cfg_list.vmsys_init = swift_vms_init;
-
 	g_swift_cfg_list.reload_cfg = swift_reload_cfg;
 
 	g_swift_cfg_list.shut_down = swift_shut_down;
@@ -182,8 +180,8 @@ int main(int argc, char **argv)
 		exit(EXIT_FAILURE);
 	}
 
-        load_traffic_model_cfgfile(&g_traffic_model_cfg, g_rr_cfg_file.model_cfg_name);
-        mount_model(&g_traffic_model_cfg);
+	load_traffic_model_cfgfile(&g_traffic_model_cfg, g_rr_cfg_file.model_cfg_name);
+	mount_model(&g_traffic_model_cfg);
 
 	// ---> init sniff
 
@@ -204,7 +202,7 @@ int main(int argc, char **argv)
 	g_sniff_cfg_list.task_lookup = sniff_task_lookup;
 	g_sniff_cfg_list.task_report = sniff_task_report;
 
-	//g_sniff_cfg_list.vmsys_init = sniff_vms_init;
+	// g_sniff_cfg_list.vmsys_init = sniff_vms_init;
 
 	sniff_mount(&g_sniff_cfg_list);
 

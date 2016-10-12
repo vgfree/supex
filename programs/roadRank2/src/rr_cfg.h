@@ -26,7 +26,7 @@ struct rr_cfg_file
 	int             save_time;
 	int             kv_cache_count;
 	int             redis_conn;
-        char            imei_buff[MAX_TEST_IMEI][IMEI_LEN];
+	char            imei_buff[MAX_TEST_IMEI][IMEI_LEN];
 	int             imei_count;
 };
 

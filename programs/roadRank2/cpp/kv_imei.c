@@ -61,7 +61,7 @@ int get_IMEI_from_kv(char *IMEI, KV_IMEI *kv_IMEI)
 					kv_IMEI->roadID = atoll(value->ptr); break;
 
 				case 7:
-					strcpy(kv_IMEI->IMEI,value->ptr); break;
+					strcpy(kv_IMEI->IMEI, value->ptr); break;
 
 				case 8:
 					kv_IMEI->citycode = atoll(value->ptr); break;
@@ -112,64 +112,65 @@ int set_IMEI_to_kv(KV_IMEI *kv_IMEI)
 		kv_IMEI->str_time, kv_IMEI->end_time, kv_IMEI->roadID, kv_IMEI->IMEI,
 		kv_IMEI->citycode, kv_IMEI->countycode, kv_IMEI->direction, kv_IMEI->rt, kv_IMEI->start_lon, kv_IMEI->start_lat, kv_IMEI->end_lon, kv_IMEI->end_lat);
 	char kv_hash[128];
-        sprintf(kv_hash, "%s", kv_IMEI->IMEI);
-        ans = kv_cache_ask(g_kv_cache, kv_hash, buff);
+	sprintf(kv_hash, "%s", kv_IMEI->IMEI);
+	ans = kv_cache_ask(g_kv_cache, kv_hash, buff);
 
-        if (ans->errnum != ERR_NONE) {
-                x_printf(E, "Failed to hmset redis IMEI, errnum is %d, err is %s !\n", ans->errnum, ans->err);
-                flag = ERR_IMEI;
-                goto end;
-        }
+	if (ans->errnum != ERR_NONE) {
+		x_printf(E, "Failed to hmset redis IMEI, errnum is %d, err is %s !\n", ans->errnum, ans->err);
+		flag = ERR_IMEI;
+		goto end;
+	}
 
 end:
-        kv_answer_release(ans);
-        return flag;
+	kv_answer_release(ans);
+	return flag;
 }
 
 int delete_IMEI_from_kv(KV_IMEI *kv_IMEI)
 {
-        char buff[1240] = { 0 };
+	char buff[1240] = { 0 };
 
-        memset(buff, '\0', sizeof(buff));
-        int             flag = 0;
-        kv_answer_t     *ans = NULL;
-        sprintf(buff, "hdel %s count max_speed_num max_speed str_time end_time roadID IMEI citycode countycode direction rt", kv_IMEI->IMEI);
-        char kv_hash[128];
-        sprintf(kv_hash, "%s", kv_IMEI->IMEI);
-        ans = kv_cache_ask(g_kv_cache, kv_hash, buff);
+	memset(buff, '\0', sizeof(buff));
+	int             flag = 0;
+	kv_answer_t     *ans = NULL;
+	sprintf(buff, "hdel %s count max_speed_num max_speed str_time end_time roadID IMEI citycode countycode direction rt", kv_IMEI->IMEI);
+	char kv_hash[128];
+	sprintf(kv_hash, "%s", kv_IMEI->IMEI);
+	ans = kv_cache_ask(g_kv_cache, kv_hash, buff);
 
-        if (ans->errnum != ERR_NONE) {
-                x_printf(E, "Failed to hdel redis IMEI, errnum is %d, err is %s !\n", ans->errnum, ans->err);
-                flag = ERR_IMEI;
-                goto end;
-        }
+	if (ans->errnum != ERR_NONE) {
+		x_printf(E, "Failed to hdel redis IMEI, errnum is %d, err is %s !\n", ans->errnum, ans->err);
+		flag = ERR_IMEI;
+		goto end;
+	}
 
-end:    
-        kv_answer_release(ans);
-        return flag;
+end:
+	kv_answer_release(ans);
+	return flag;
 }
 
 /*
-int set_IMEI_expire(KV_IMEI *kv_IMEI, int time)
-{
-        char buff[1240] = { 0 };
+ *   int set_IMEI_expire(KV_IMEI *kv_IMEI, int time)
+ *   {
+ *        char buff[1240] = { 0 };
+ *
+ *        memset(buff, '\0', sizeof(buff));
+ *        int             flag = 0;
+ *        kv_answer_t     *ans = NULL;
+ *        sprintf(buff, "expire %ld ", kv_IMEI->IMEI, time);
+ *        char kv_hash[128];
+ *        sprintf(kv_hash, "%ld", kv_IMEI->IMEI);
+ *        ans = kv_cache_ask(g_kv_cache, kv_hash, buff);
+ *
+ *        if (ans->errnum != ERR_NONE) {
+ *                x_printf(E, "Failed to expire redis IMEI, errnum is %d, err is %s !\n", ans->errnum, ans->err);
+ *                flag = ERR_IMEI;
+ *                goto end;
+ *        }
+ *
+ *   end:
+ *        kv_answer_release(ans);
+ *        return flag;
+ *   }
+ */
 
-        memset(buff, '\0', sizeof(buff));
-        int             flag = 0;
-        kv_answer_t     *ans = NULL;
-        sprintf(buff, "expire %ld ", kv_IMEI->IMEI, time);
-        char kv_hash[128];
-        sprintf(kv_hash, "%ld", kv_IMEI->IMEI);
-        ans = kv_cache_ask(g_kv_cache, kv_hash, buff);
-
-        if (ans->errnum != ERR_NONE) {
-                x_printf(E, "Failed to expire redis IMEI, errnum is %d, err is %s !\n", ans->errnum, ans->err);
-                flag = ERR_IMEI;
-                goto end;
-        }
-
-end:    
-        kv_answer_release(ans);
-        return flag;
-}
-*/

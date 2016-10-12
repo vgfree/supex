@@ -17,30 +17,43 @@ void load_sniff_cfg_file(struct sniff_cfg_file *p_cfg, char *name)
 
 	if (json_object_object_get_ex(cfg, "sniff_worker_counts", &obj)) {
 		p_cfg->worker_counts = (short)json_object_get_int(obj);
-	} else { goto fail; }
+	} else {
+		goto fail;
+	}
+
 	if (json_object_object_get_ex(cfg, "sniff_tasker_counts", &obj)) {
 		p_cfg->tasker_counts = (short)json_object_get_int(obj);
-	} else { goto fail; }
+	} else {
+		goto fail;
+	}
 
 #ifdef OPEN_SCCO
 	if (json_object_object_get_ex(cfg, "sharer_counts", &obj)) {
 		p_cfg->sharer_counts = (short)json_object_get_int(obj);
-	} else { goto fail; }
+	} else {
+		goto fail;
+	}
 #endif
 
 	if (json_object_object_get_ex(cfg, "log_path", &obj)) {
 		str_val = json_object_get_string(obj);
 		p_cfg->log_path = x_strdup(str_val);
-	} else { goto fail; }
+	} else {
+		goto fail;
+	}
 
 	if (json_object_object_get_ex(cfg, "log_file", &obj)) {
 		str_val = json_object_get_string(obj);
 		p_cfg->log_file = x_strdup(str_val);
-	} else { goto fail; }
+	} else {
+		goto fail;
+	}
 
 	if (json_object_object_get_ex(cfg, "log_level", &obj)) {
 		p_cfg->log_level = json_object_get_int(obj);
-	} else { goto fail; }
+	} else {
+		goto fail;
+	}
 
 #if 0
 	if (p_cfg->ptype == USE_HTTP_PROTO) {
