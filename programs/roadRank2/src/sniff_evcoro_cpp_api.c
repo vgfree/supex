@@ -4,16 +4,7 @@
 #include "rr_cfg.h"
 #include "utils.h"
 
-#include "minor/sniff_api.h"
-#include "sniff_evcoro_cpp_api.h"
-#include "tcp_api/tcp_api.h"
-#include "async_tasks/async_api.h"
-#include "pool_api/conn_xpool_api.h"
-#include "base/utils.h"
-#include "redis_api/redis_status.h"
-
-#include "evcoro_async_tasks.h"
-#include "spx_evcs.h"
+#include "libevcs.h"
 
 #include "rr_handle.h"
 

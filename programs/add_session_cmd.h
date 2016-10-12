@@ -10,7 +10,7 @@
 #define __supex__add_session_cmd__
 
 #include "utils.h"
-#include "share_evcb.h"
+#include "libevcs.h"
 
 __BEGIN_DECLS
 

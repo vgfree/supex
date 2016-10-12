@@ -2,9 +2,7 @@
 #include <string.h>
 
 #include "redis_parse.h"
-#include "redis_api/redis_status.h"
-#include "evcoro_async_tasks.h"
-#include "spx_evcs.h"
+#include "libevcs.h"
 
 extern struct rr_cfg_file g_rr_cfg_file;
 

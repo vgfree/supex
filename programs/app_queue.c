@@ -1,7 +1,5 @@
-#include "base/switch_queue.h"
 #include "app_queue.h"
-#include "minor/sniff_api.h"
-#include "major/swift_api.h"
+#include "libevcs.h"
 
 extern struct swift_cfg_list    g_swift_cfg_list;
 extern struct sniff_cfg_list    g_sniff_cfg_list;

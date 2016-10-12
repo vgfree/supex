@@ -1,20 +1,22 @@
 SIN_SRC=./single
 SEC_SRC=./subsection
-INC_DIR=-I/usr/local/include/luajit-2.0 -I../../../lib/libev \
-	-I../../../lib/json-c -I../../../lib/http-parser -I../../../lib/libscco \
-	-I../../../lib/libucmq/src -I../../../engine -I../../../engine/major \
+INC_DIR=-I/usr/local/include/luajit-2.0 \
+	-I../../../lib/libev \
+	-I../../../lib/json-c \
+	-I../../../lib/http-parser \
+	-I../../../lib/libscco/include \
+	-I../../../lib/libucmq/src \
 	-I../../../lib/libkv/release/ \
-	-I../../../engine/minor  \
         -I../../../lib/libevcoro/include \
-	-I../../../lib/libevcs/include/engine \
-	-I../../../lib/libevcs/include/frame/major \
-	-I../../../lib/libevcs/include/frame/minor \
-	-I../....//lib/libevcs/include/frame \
+	-I../../../lib/libevcs/include \
 	-I../../../lib/cJSON \
 	-I../../../lib/libmini/include \
-	-I../src -I./single -I./subsection -I./
+	-I../src \
+	-I./single \
+	-I./subsection \
+	-I./
 
-LIB_DIR=-L/usr/local/lib -L../../../lib -L../../../engine/ 
+LIB_DIR=-L/usr/local/lib -L../../../lib
 LIBS=-lluajit-5.1 -lpthread -lrt -lm 
 LIBA=-ljson-c -lucmq -lcjson -lkv
 CPP_SERV ?= librrmodel.a
@@ -23,14 +25,12 @@ CPP_SERV ?= librrmodel.a
 #CFLAGS +=-DSTORE_USE_UCMQ_AND_QUEUE
 
 #ifeq ($(MAIN_APP_SERV), roadRank)
-#HANDLE_MODEL = EVUV
+HANDLE_MODEL = EVCORO
 #endif
 #<------------------------>#
 -include $(HOME_PATH)/programs/link.mk
 -include $(HOME_PATH)/share.mk
 #<------------------------>#
-
-#ADD_OBJ += sniff_evuv_cpp_api.o
 
 #<--------------------------->#
 

@@ -202,7 +202,7 @@ BRM:
 	@echo -e $(GREEN)"【"$(YELLOW) $@ $(GREEN)"】"$(RED)"\n-->OK!\n"$(NONE)
 
 roadRank:
-	$(MAKE) -C ./programs/roadRank MAIN_APP_SERV=roadRank
+	$(MAKE) -C ./programs/roadRank2 MAIN_APP_SERV=roadRank
 	@echo -e $(GREEN)"【"$(YELLOW) $@ $(GREEN)"】"$(RED)"\n-->OK!\n"$(NONE)
 
 dtsync:

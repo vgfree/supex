@@ -4,6 +4,10 @@ v1.0.7 (2015-11-04)
 	* Bug fixes:
 		- free queue have one slot can't use.(2015-11-04)
 		- Fix a function return address value was changed,because this function is not impl in this static library which will to be compile.
+		- Fix a bug about compile error, because log is a math function, so should't define to a writelog macro:
+../../../lib/libevcs/include/engine/adopt_tasks/../mfptp_api/comm_utils.h:27:41: error: expected ‘)’ before string constant
+  #define log(fmt, ...) fprintf(stdout, "FILENAME:%s | LINE:%d | FUNCTION:%s | MASSAGE: "  fmt, __FILE__, __LINE__, __FUNCTION__, ##__VA_ARGS__)
+                                        ^
 
 v1.0.6 (2015-09-22)
 	* New feature:

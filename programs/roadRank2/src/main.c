@@ -6,18 +6,14 @@
 
 #include "mq_api.h"
 
-#include "major/swift_api.h"
 #include "swift_cpp_api.h"
 #include "load_swift_cfg.h"
 
-#include "minor/sniff_api.h"
-#include "pool_api/conn_xpool_api.h"
+#include "libevcs.h"
 #include "load_sniff_cfg.h"
-// #include "apply_def.h"
 #include "rr_cfg.h"
 #include "traffic_model.h"
 #include "kv_cache.h"
-#include "base/switch_queue.h"
 #include "app_queue.h"
 
 #include "sniff_evcoro_cpp_api.h"

@@ -7,11 +7,7 @@ INC_DIR=-I/usr/local/include/luajit-2.0 \
 	-I../../lib/libscco/include\
 	-I../../lib/libucmq/src \
 	-I../../lib/libevcoro/include \
-	-I../../lib/libevcs/include \
-	-I../../lib/libevcs/include/engine \
-	-I../../lib/libevcs/include/frame/major \
-	-I../../lib/libevcs/include/frame/minor \
-	-I../../lib/libevcs/include/frame \
+	-I../../lib/libevcs/include/ \
 	-I../../lib/libkv/release/ \
 	-I../../lib/libmini/include \
 	-I./src \
@@ -27,9 +23,9 @@ LIBA=-ljson-c -lucmq  -lkv -lrrmodel -lcjson
 #[=========>MARK<=========]#
 MAIN_APP_SERV ?= roadRank
 
-#CFLAGS +=-DSTORE_USE_UCMQ
+CFLAGS +=-DSTORE_USE_UCMQ
 #CFLAGS +=-DSTORE_USE_QUEUE
-CFLAGS +=-DSTORE_USE_UCMQ_AND_QUEUE
+#CFLAGS +=-DSTORE_USE_UCMQ_AND_QUEUE
 
 ifeq ($(MAIN_APP_SERV), roadRank)
 HANDLE_MODEL = EVCORO
