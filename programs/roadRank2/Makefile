@@ -23,8 +23,8 @@ LIBA=-ljson-c -lucmq  -lkv -lrrmodel -lcjson
 #[=========>MARK<=========]#
 MAIN_APP_SERV ?= roadRank
 
-CFLAGS +=-DSTORE_USE_UCMQ
-#CFLAGS +=-DSTORE_USE_QUEUE
+#CFLAGS +=-DSTORE_USE_UCMQ
+CFLAGS +=-DSTORE_USE_QUEUE
 #CFLAGS +=-DSTORE_USE_UCMQ_AND_QUEUE
 
 ifeq ($(MAIN_APP_SERV), roadRank)

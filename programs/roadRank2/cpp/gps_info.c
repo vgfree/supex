@@ -23,7 +23,9 @@ int gps_decode(struct ev_loop *loop, const char *p_data, gps_info_t *p_gps, rr_l
 
 	/*parse IMEI*/
 	son = cJSON_GetObjectItem(obj, "IMEI");
-
+	if (son == NULL) {
+		son = cJSON_GetObjectItem(obj, "mirrtalkID");
+	}
 	if (NULL == son) {
 		x_printf(E, "data has no IMEI!");
 		goto fail;

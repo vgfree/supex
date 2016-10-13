@@ -192,10 +192,11 @@ void app_queue_init(void)
 			NULL, minor_push_call, minor_pull_call);
 	}
   #endif
-#else
+#elif defined(STORE_USE_SHMQ)
 	g_tasks_shmqueue = SHM_QueueInit(0x00000001, MAX_LIMIT_FD, sizeof(struct sniff_task_node));
 
 	assert(g_tasks_shmqueue);
+#else
 #endif	/* if defined(STORE_USE_UCMQ) || defined(STORE_USE_UCMQ_AND_QUEUE) */
 }
 
