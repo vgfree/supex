@@ -85,10 +85,27 @@ static int update_redis(SECKV_ROAD *kv_roadID, int limit, struct ev_loop *loop)
 
 	add_redis_task(redis_buff, &(g_rr_cfg_file.road_traffic_server), loop);
 
+#if 0//FIXME:baoxue
 	memset(redis_buff, 0, BUFF_USE_LEN);
 	sprintf(redis_buff,
 		"hset %d:cityinfo %ld %ld@%d:%d@%s",
 		kv_roadID->citycode, kv_roadID->old_roadID, kv_roadID->end_time, old_rr_id, old_sg_id, section);
+#else
+	/*删除过期城市道路路况*/
+	time_t now_time;
+	time(&now_time);
+	memset(redis_buff, 0, BUFF_USE_LEN);
+	sprintf(redis_buff,
+		"ZREMRANGEBYSCORE %d:cityinfo -inf %ld",
+		kv_roadID->citycode, now_time - save_time);
+	add_redis_task(redis_buff, &(g_rr_cfg_file.city_traffic_server), loop);
+
+	memset(redis_buff, 0, BUFF_USE_LEN);
+	sprintf(redis_buff,
+		"ZADD %d:cityinfo %ld %d:%d:%d:%d:%ld:%ld",
+		kv_roadID->citycode, kv_roadID->end_time, old_rr_id, old_sg_id, kv_roadID->max_speed,
+		kv_roadID->avg_speed, kv_roadID->used_time, kv_roadID->end_time);
+#endif
 	x_printf(D, "redis command: %s", redis_buff);
 	add_redis_task(redis_buff, &(g_rr_cfg_file.city_traffic_server), loop);
 

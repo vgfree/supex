@@ -21,5 +21,5 @@ int get_speed_from_kv(char *IMEI, kv_speed *kv_speed_ex);
 
 int set_speed_to_kv(char *IMEI, kv_speed *kv_speed_ex);
 
-#endif /* ifndef __KV_SPEED_H__ */
+#endif	/* ifndef __KV_SPEED_H__ */
 
