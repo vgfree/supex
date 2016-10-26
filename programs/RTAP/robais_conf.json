@@ -9,7 +9,7 @@
 
 	"log_path": "./logs/",
 	"log_file": "robais",
-	"log_level": 5,
+	"log_level": 0,
 	
 	"api_apply": "/robaisApply.json",
 	"api_fetch": "/robaisFetch.json",

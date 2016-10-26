@@ -2,5 +2,6 @@ module("STATUS_LIST")
 
 
 OWN_LIST = {
-	{"w_xxx", "open"},
+	--{"w_xxx", "open"},
+	{"ttt", "open"},
 }

@@ -152,7 +152,8 @@ void show_road_section(char *ret, SECKV_ROAD *road)
 	sprintf(sub, "%lf:%lf:%d:%ld;", road->road_sec[98].longitude, road->road_sec[98].latitude, road->road_sec[98].avg_speed, road->road_sec[98].endtime);
 	strcat(ret, sub);
 
-	for (i = 0; i < road->sec_num; i++) {
+	int less = road->sec_num > 30 ? 30 : road->sec_num;//FIXME:add by baoxue for bug stack overflow.
+	for (i = 0; i < less; i++) {
 		memset(sub, 0, sizeof(sub));
 		sprintf(sub, "%lf:%lf:%d:%ld;", road->road_sec[i].longitude, road->road_sec[i].latitude, road->road_sec[i].avg_speed, road->road_sec[i].endtime);
 		strcat(ret, sub);

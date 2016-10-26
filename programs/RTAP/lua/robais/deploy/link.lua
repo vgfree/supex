@@ -6,6 +6,10 @@ OWN_POOL = {
 		damServer = {
 			host = "127.0.0.1",
 			port = 4210,
+		},
+		tsdb = {
+			host = "192.168.1.16",
+			port = 7501,
 		}
 	},
 	mysql = {},

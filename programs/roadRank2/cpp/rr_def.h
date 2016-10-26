@@ -6,8 +6,8 @@
 
 #define ASYNC_LIBEV_THRESHOLD   10
 #define ASYNC_LUAKV_THRESHOLD   1
-#define BUFF_USE_LEN            6200
-#define BUFF_SEC_LEN            5660
+#define BUFF_USE_LEN            20480//6200
+#define BUFF_SEC_LEN            20480//5660
 #define ROADSECNUM              100
 #define REDIS_ERR               -1
 #define REDIS_OK                0
