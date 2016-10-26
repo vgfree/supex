@@ -1,7 +1,7 @@
 ffmpeg安装
 
 依赖:
-	yum install automake autoconf make gcc gcc-c++ libtool zlib zlib-devel curl curl-devel alsa-lib alsa-lib-devel gettext gettext-devel expat expat-devel
+	yum install automake autoconf make gcc gcc-c++ libtool zlib zlib-devel curl curl-devel alsa-lib alsa-lib-devel gettext gettext-devel expat expat-devel lame-devel opencore-amr-devel
 
 #########################################################################################
 #yasm(汇编编译器)可选择安装:									#
