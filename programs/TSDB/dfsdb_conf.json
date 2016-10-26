@@ -5,6 +5,7 @@
     "smart_monitor_times": 30,
     "smart_protocol": "redis",
     "swift_worker_counts": 1,
+    "swift_tasker_counts": 1,
     "swift_protocol": "redis",
     "max_req_size": 32768,
 
