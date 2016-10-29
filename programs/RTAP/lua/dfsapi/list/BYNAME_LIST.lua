@@ -12,4 +12,6 @@ OWN_LIST = {
 	["/dfsapi/v2/gainfile"]  = "api_gain_file",
 	["/dfsapi/v2/saveMultifile"]  = "api_save_multi_file",
 	["/dfsapi/v2/picAppendWatermark"] = "api_pic_append_watermark",
+
+	["/dfsapi/v2/redirectSound"] = "api_redirect_sound",
 }

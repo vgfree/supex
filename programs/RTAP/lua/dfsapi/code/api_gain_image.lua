@@ -1,4 +1,3 @@
-local APP_POOL	= require('pool')
 local utils     = require('utils')
 local supex	= require('supex')
 local only      = require('only')
@@ -11,7 +10,6 @@ module('api_gain_image', package.seeall)
 
 
 function handle()
-	--local args = APP_POOL["OUR_URI_TABLE"]
 	local args = supex.get_our_uri_table()
 	if not args then
 		only.log('E', 'args is nil')

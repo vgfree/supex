@@ -242,6 +242,7 @@ int alive_vms_call(void *user, union virtual_system **VMS, struct adopt_task_nod
 		case 0x00:	// 握手
 
 #ifndef ONLY_FOR_TEST
+	//TODO:have a bug about of read() is block.  --find by baoxue.
 			// 已经握手，重复握手，非正常数据，断开连接
 			if (mttpsvp_libkv_check_handshake(task->cid, task->sfd, "1", 1) == 0) {
 				x_printf(D, "Handshake error: repeat handshake");

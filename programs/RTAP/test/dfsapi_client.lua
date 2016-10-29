@@ -89,12 +89,14 @@ local function gen_data( path, body )
 	body
 end
 
-
 local body = {
 	["dfsapi/v2/saveSound"] = {
 		appKey = "864537339",
 		accountID = "8888888888",
 		text = "今天，天气不错",
+	},
+	["dfsapi/v2/redirectSound"] = {
+		url = "http://dkaudio.oss-cn-hangzhou.aliyuncs.com/0000d8845373404bb98f194b863ccee4.amr",
 	},
 }
 

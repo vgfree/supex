@@ -13,5 +13,5 @@
 	
 	"api_fetch": "/dfsapiFetch.json",
 	"api_merge": "/dfsapiMerge.json",
-	"api_custom": ["/dfsapi/v2/saveSound","/dfsapi/v2/gainSound","/dfsapi/v2/saveVideo","/dfsapi/v2/gainVideo","/dfsapi/v2/saveImage","/dfsapi/v2/gainImage","/dfsapi/v2/savefile","/dfsapi/v2/gainfile","/dfsapi/v2/saveMultifile","/dfsapi/v2/picAppendWatermark"]
+	"api_custom": ["/dfsapi/v2/saveSound","/dfsapi/v2/gainSound","/dfsapi/v2/saveVideo","/dfsapi/v2/gainVideo","/dfsapi/v2/saveImage","/dfsapi/v2/gainImage","/dfsapi/v2/savefile","/dfsapi/v2/gainfile","/dfsapi/v2/saveMultifile","/dfsapi/v2/picAppendWatermark","/dfsapi/v2/redirectSound"]
 }
