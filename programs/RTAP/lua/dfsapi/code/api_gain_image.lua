@@ -39,9 +39,10 @@ function handle()
 		local afp = supex.rgs(403)
 		return supex.over(afp)
 	end
-	
+	file = string.gsub(file, type_val .. "$", "jpg")	
 	local index = string.find(file, ':')
 	local tmp_jpgkey = string.sub(file, index+1, -1)
+	
 	--> get image
 	local ok,binary = nil ,nil
 	if isStorage == 'true' then
@@ -76,8 +77,15 @@ function handle()
 	local local_width = img:get_width()
 	local local_height = img:get_height()
 	only.log('D',string.format( "image is %d X %d,type is %s",local_width,local_height, img:get_format()))
-	img:set_format("jpeg")	
 	
+	ok = img:set_format(type_val)
+        if not ok then
+        	only.log('E', 'img type error')
+                local afp = supex.rgs(500)
+			return supex.over(afp)
+                end
+
+	local ret_type = string.format('image/%s',type_val)
 	
 	local jpg_binary = nil 
 	if scaling then
@@ -104,7 +112,7 @@ function handle()
 			jpg_binary = img:get_blob()
 			img:destroy()
 			supex.say(afp, jpg_binary)
-			return supex.over(afp, "image/jpeg")
+			return supex.over(afp, ret_type)
 		end
 		----------------------------------------------------------------------------------------
 		-->图片缩放
@@ -137,5 +145,5 @@ function handle()
 	else
 		supex.say(afp, binary)
 	end
-	return supex.over(afp, "image/jpeg")
+	return supex.over(afp, ret_type)
 end

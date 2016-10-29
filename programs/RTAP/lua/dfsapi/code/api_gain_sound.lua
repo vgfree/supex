@@ -98,7 +98,7 @@ function handle()
 		voice_binary ,tomcat_len, tom_err= ffmpeg.amr2tom(binary,#binary)
 	
 	else
-		return_type = 'application/octet-stream'
+		return_type = 'audio/amr'
                 tmp_voicekey = tmp_amrkey
         end
 	----------------------------------------------------------------------------------------

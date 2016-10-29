@@ -27,7 +27,7 @@ local function save_file_dfs(binary, cacheTime, type_val)
 	local tmp_amrkey = uuid .. ".amr"
 	--convert format
 	local amr_binary = binary
-	if tostring(type_val) == "mp3" then
+	if tostring(type_val) == "mp3" or tostring(type_val) == "wav" then
 		local fd = io.open(tmp_voicekey, "w+")
 		fd:write(binary)
 		fd:close()
@@ -36,16 +36,6 @@ local function save_file_dfs(binary, cacheTime, type_val)
 		amr_binary = fd:read("*a")
 		fd:close()
 	
-		os.execute(string.format("rm -f %s %s", tmp_voicekey, tmp_amrkey))
-	elseif tostring(type_val) == "wav" then
-		local fd = io.open(tmp_voicekey, "w+")
-		fd:write(binary)
-		fd:close()
-		os.execute(string.format("ffmpeg -i %s -y -ab 5.15k -ar 8000 -ac 1 %s", tmp_voicekey, tmp_amrkey))
-		local fd = io.open(tmp_amrkey, "r")
-		amr_binary = fd:read("*a")
-		fd:close()
-
 		os.execute(string.format("rm -f %s %s", tmp_voicekey, tmp_amrkey))
 	else
 		tmp_amrkey = tmp_voicekey
@@ -60,6 +50,7 @@ local function save_file_dfs(binary, cacheTime, type_val)
 	-->amr
 	local ok, result, memb = spx_utils.set_to_dfsdb(amrkey, amr_binary, cacheTime)	
 	if not ok then 
+		only.log('E', string.format("file is %s",amrkey))
 		ok, result, memb = spx_utils.set_to_dfsdb_spare(amrkey, amr_binary, cacheTime)
 		if not ok then return false, "save to tsdb failed" end
 	end
@@ -82,7 +73,7 @@ local function save_file_redis(binary, cacheTime, type_val)
 	local tmp_amrkey = uuid .. ".amr"
 	--convert format
 	local amr_binary = binary
-	if tostring(type_val) == "mp3" then
+	if tostring(type_val) == "mp3" or tostring(type_val) == "wav" then
 		local fd = io.open(tmp_voicekey, "w+")
 		fd:write(binary)
 		fd:close()
@@ -92,19 +83,10 @@ local function save_file_redis(binary, cacheTime, type_val)
 		fd:close()
 	
 		os.execute(string.format("rm -f %s %s", tmp_voicekey, tmp_amrkey))
-	elseif tostring(type_val) == "wav" then
-		local fd = io.open(tmp_voicekey, "w+")
-		fd:write(binary)
-		fd:close()
-		os.execute(string.format("ffmpeg -i %s -y -ab 5.15k -ar 8000 -ac 1 %s", tmp_voicekey, tmp_amrkey))
-		local fd = io.open(tmp_amrkey, "r")
-		amr_binary = fd:read("*a")
-		fd:close()
-
-		os.execute(string.format("rm -f %s %s", tmp_voicekey, tmp_amrkey))
 	else
 		tmp_amrkey = tmp_voicekey
 	end
+
 	----------------------------------------------------------------------------------------
 	--return infomation
 	local info_tab = {

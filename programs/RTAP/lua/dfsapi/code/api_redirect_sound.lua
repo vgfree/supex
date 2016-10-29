@@ -53,7 +53,7 @@ function handle()
 		data	  = file_data,
 		data_type = "application/octet-stream",
 	}
-do return end
+
 	-->save
 	local dfsserv = {
 		host = "127.0.0.1",
