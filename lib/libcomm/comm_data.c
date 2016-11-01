@@ -144,16 +144,16 @@ bool commdata_recv(struct connfd_info *connfd, struct comm_event *commevent, int
 				commevent->connfdcnt--;
 				close(connfd->commtcp.fd);
 				commtimer_start(connfd->commtimer, &commevent->commctx->timerhead);
-				log("%d closed and start commtimer\n", connfd->commtcp.fd);
+				loger("%d closed and start commtimer\n", connfd->commtcp.fd);
 			} else {
-				log("%d closed\n", connfd->commtcp.fd);
+				loger("%d closed\n", connfd->commtcp.fd);
 				DELETEFD(commevent, connfd, connfd->commtcp.fd, REMAINFD_READ);
 			}
 		} else {
 			/* 读事件成功处理完毕，则添加解析事件并将此fd从读事件数组里移除 */
 			add_remainfd(&commevent->remainfd, connfd->commtcp.fd, REMAINFD_PARSE);
 			del_remainfd(&commevent->remainfd, connfd->commtcp.fd, REMAINFD_READ);
-			log("read data successed:%d\n", connfd->commtcp.fd);
+			loger("read data successed:%d\n", connfd->commtcp.fd);
 		}
 
 		return true;
@@ -184,14 +184,14 @@ bool commdata_send(struct connfd_info *connfd, struct comm_event *commevent, int
 				commcache_clean(&connfd->send_cache);
 			} else {
 				if (errno == EINTR) {
-					log("write EINTR\n");
+					loger("write EINTR\n");
 					flag = false;	/* 被打断，则下次继续处理 */
 				} else if ((errno == EAGAIN) || (errno == EWOULDBLOCK)) {
-					log("write cache full\n");
+					loger("write cache full\n");
 					flag = true;	/* 缓冲区已满，则从remainfd里面删除此fd，等待此fd的epoll写事件被触发再继续发送数据 */
 				} else {
 					/* 出现其他的致命错误，返回true，将此fd的相关信息删除 */
-					log("write dead wrong\n");
+					loger("write dead wrong\n");
 					DELETEFD(commevent, connfd, connfd->commtcp.fd, REMAINFD_WRITE);
 					return true;
 				}
@@ -201,10 +201,10 @@ bool commdata_send(struct connfd_info *connfd, struct comm_event *commevent, int
 			}
 		}
 		if (flag) {
-			log("write deal over\n");
+			loger("write deal over\n");
 			del_remainfd(&commevent->remainfd, connfd->commtcp.fd, REMAINFD_WRITE);
 		} else {
-			log("write not over\n");
+			loger("write not over\n");
 		}
 		return flag;
 	}
@@ -269,9 +269,9 @@ bool commdata_package(struct connfd_info *connfd, struct comm_event *commevent, 
 	if ((size > 0) && (connfd->packager.ms.error == MFPTP_OK)) {
 		connfd->send_cache.end += size;
 		add_remainfd(&commevent->remainfd, connfd->commtcp.fd, REMAINFD_WRITE);
-		log("package successed\n");
+		loger("package successed\n");
 	} else {
-		log("package failed\n");
+		loger("package failed\n");
 		connfd->packager.ms.error = MFPTP_OK;
 	}
 
@@ -306,7 +306,7 @@ bool commdata_parse(struct connfd_info *connfd, struct comm_event *commevent, in
 		}
 		if (unlikely(connfd->parser.ms.error != MFPTP_OK)) {
 			/* 解析出错 抛弃已解析的错误数据 继续解析后面的数据 */
-			log("parse failed data:%*.s\n", connfd->recv_cache.size, &connfd->recv_cache.buffer[connfd->recv_cache.start]);
+			loger("parse failed data:%*.s\n", connfd->recv_cache.size, &connfd->recv_cache.buffer[connfd->recv_cache.start]);
 			connfd->recv_cache.start += size;
 			connfd->recv_cache.size -= size;
 			commcache_clean(&connfd->recv_cache);
@@ -364,7 +364,7 @@ bool commdata_parse(struct connfd_info *connfd, struct comm_event *commevent, in
 		}
 		connfd->msgcounter ++;
 		commlock_unlock(&commevent->commctx->recvlock);
-		log("parse successed\n");
+		loger("parse successed\n");
 		if (connfd->recv_cache.size != 0) {
 			return false;
 		} else {
@@ -474,7 +474,7 @@ static void  _timer_event(struct comm_timer *commtimer, struct comm_list *timerh
 	sprintf(service, "%d", connfd->commtcp.peerport);
 	memcpy(host, connfd->commtcp.peeraddr, strlen(connfd->commtcp.peeraddr));
 
-	log("deal with connect timer\n");
+	loger("deal with connect timer\n");
 	if (socket_connect(&connfd->commtcp, host, service, CONNECT_ANYWAY)) {
 		/* 连接成功， 则停止计时器 */
 		commtimer_stop(commtimer, timerhead);
@@ -484,7 +484,7 @@ static void  _timer_event(struct comm_timer *commtimer, struct comm_list *timerh
 			if (connfd->finishedcb.callback) {
 				connfd->finishedcb.callback(connfd->commevent->commctx, &connfd->commtcp, connfd->finishedcb.usr);
 			}
-			log("timer event connect fd :%d, stop timer\n", connfd->commtcp.fd);
+			loger("timer event connect fd :%d, stop timer\n", connfd->commtcp.fd);
 		} else {
 			close(connfd->commtcp.fd);
 			commdata_destroy(connfd);

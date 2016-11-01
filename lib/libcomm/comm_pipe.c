@@ -39,7 +39,7 @@ void commpipe_destroy(struct comm_pipe *commpipe)
 		close(commpipe->rfd);
 		close(commpipe->wfd);
 		commpipe->init = false;
-		log("destroy commpipe\n");
+		loger("destroy commpipe\n");
 	}
 }
 
@@ -54,7 +54,7 @@ inline int commpipe_read(struct comm_pipe *commpipe, void *buff, int size)
 	bytes = read(commpipe->rfd, buff, PIPE_READ_MIOU);
 	n = bytes / size;
 	commpipe->rcnt += n;
-	log("read one time:%d total read times:%d total write times:%d\n", n, commpipe->rcnt, commpipe->wcnt);
+	loger("read one time:%d total read times:%d total write times:%d\n", n, commpipe->rcnt, commpipe->wcnt);
 	return n > 0 ? n : -1;
 }
 
@@ -64,8 +64,8 @@ inline int commpipe_write(struct comm_pipe *commpipe, void *buff, int size)
 	assert(commpipe && commpipe->init);
 	int test = size / (sizeof(int));
 	commpipe->wcnt += test;
-	// log("commpipe write: %d\n",test);
-	// log("commpipe write total:%d\n", commpipe->wcnt);
+	// loger("commpipe write: %d\n",test);
+	// loger("commpipe write total:%d\n", commpipe->wcnt);
 	return write(commpipe->wfd, buff, size);
 }
 

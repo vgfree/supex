@@ -125,7 +125,7 @@ void parser(const char *pckbuff, int pckbuff_size)
 		cache.start += size;
 		commcache_clean(&cache);
 		printf("parse success\n");
-		log(" message body: %.*s \n datasize:%d\n", message.package.dsize, message.content, message.package.dsize);
+		loger(" message body: %.*s \n datasize:%d\n", message.package.dsize, message.content, message.package.dsize);
 		break ;
 	}
 	commcache_free(&cache);
@@ -173,21 +173,21 @@ static bool _check_packageinfo(const struct comm_message *message)
 	int	frames = 0;
 
 	if (unlikely(message->package.packages < 1)) {
-		log("wrong packages in comm_message structure, packages:%d", message->package.packages);
+		loger("wrong packages in comm_message structure, packages:%d", message->package.packages);
 		return false;
 	}
 	for (pckidx = 0; pckidx < message->package.packages; pckidx++) {
 		if (message->package.frames_of_package[pckidx] < 1 || message->package.frames_of_package[pckidx] > message->package.frames) { 
-			log("wrong sum of frames in frames_of_pack of comm_message structure, frames:%d, index:%d\n", message->package.frames_of_package[pckidx], pckidx);
+			loger("wrong sum of frames in frames_of_pack of comm_message structure, frames:%d, index:%d\n", message->package.frames_of_package[pckidx], pckidx);
 			return false;
 		}
 		for (frmidx = 0 ; frmidx < message->package.frames_of_package[pckidx]; frmidx++, index++) {
 			if (unlikely(dsize > message->package.dsize || message->package.frame_size[index] > message->package.dsize)) {
-				log("wrong frame_size in comm_message structure, frame_size:%d index:%d\n", message->package.frame_size[index], index);
+				loger("wrong frame_size in comm_message structure, frame_size:%d index:%d\n", message->package.frame_size[index], index);
 				return false;
 			}
 			if (unlikely(message->package.frame_offset[index] != dsize)) {
-				log("wrong frame_offset in comm_package, frame_offset:%d index:%d\n", message->package.frame_offset[index], index);
+				loger("wrong frame_offset in comm_package, frame_offset:%d index:%d\n", message->package.frame_offset[index], index);
 				return false;
 			}
 			dsize += message->package.frame_size[index];
@@ -196,11 +196,11 @@ static bool _check_packageinfo(const struct comm_message *message)
 	}
 
 	if (unlikely(frames != message->package.frames)) {
-		log("wrong sum of frames in comm_message structure, frames:%d\n",message->package.frames);
+		loger("wrong sum of frames in comm_message structure, frames:%d\n",message->package.frames);
 		return false;
 	}
 	if (unlikely(dsize != message->package.dsize)) {
-		log("wrong sum of datasize in comm_message structure, datasize:%d\n", message->package.dsize);
+		loger("wrong sum of datasize in comm_message structure, datasize:%d\n", message->package.dsize);
 		return false;
 	}
 	return true;

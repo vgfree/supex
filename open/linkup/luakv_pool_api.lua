@@ -7,18 +7,12 @@ local APP_LINK_LUAKV_LIST = link["OWN_POOL"]["redis"]
 local LOCAL_DEFAULT = '@default_local@'
 module('luakv_pool_api', package.seeall)
 
-function init( )
-        -- body
-        local OWN_LUAKV_POOLS = {};
+local OWN_LUAKV_POOLS = {}
 
+function init( )
+	luakv.init()
         for name in pairs(APP_LINK_LUAKV_LIST) do
-                -- OWN_LUAKV_POOLS[name] = luakv.create();
-                local hdlptr = _G.search_kvhandle(name);
-                if not hdlptr then
-                        log.writeall('E', "can't get handle of libkv by %s", name);
-                        break;
-                end
-                OWN_LUAKV_POOLS[name] = luakv.createbyptr(hdlptr);
+		OWN_LUAKV_POOLS[name] = luakv.new(name);
                 if not OWN_LUAKV_POOLS[name] then
                         log.writeall('E', "can't create handle of libkv by %s", name);
                         break;
@@ -26,41 +20,13 @@ function init( )
         end
 
         --创建本地默认
-        local hdlptr = _G.search_kvhandle(LOCAL_DEFAULT);
-        if not hdlptr then
-                log.writeall('E', "can't get handle of libkv by %s", LOCAL_DEFAULT);
-        end
-        
-        OWN_LUAKV_POOLS[LOCAL_DEFAULT] = luakv.createbyptr(hdlptr);
+        OWN_LUAKV_POOLS[LOCAL_DEFAULT] = luakv.new(LOCAL_DEFAULT);
         if not OWN_LUAKV_POOLS[LOCAL_DEFAULT] then
                 log.writeall('E', "can't create handle of libkv by %s", LOCAL_DEFAULT);
         end
-
-        _G["LUAKV_POOLS"] = OWN_LUAKV_POOLS;
 end
 
---[[
-@args 接受如下形式的参数
-1.run('cmd keyvalue1, keyvalue2, ...')
-2.run('cmd', 'keyvalue1', 'keyvalue2', ...)
-3.run({{ 'cmd1', 'keyvaluse1', 'keyvaluse2', ... }, { 'cmd2', 'keyvaluse1', 'keyvaluse2', ... }, ...})
-每个命令的操作子可以是字符串，也可以是数字。
-@return true / false, error or table(表的形式如: { {result, ...}, { result, ... }, ... })
-]]
-function cmd( redname, hashkey, ... )
-        local kvhdl = _G["LUAKV_POOLS"][redname];
-        local ok, result = nil, nil;
-
-        if not kvhdl then
-                kvhdl = _G["LUAKV_POOLS"][LOCAL_DEFAULT];
-        end
-
-        if not kvhdl then
-                log.writefull('E', "Can't get libkv-handler of %s", redname);
-                return false, "can't get libkv-handler";
-        end
-        -- collectgarbage()
-
+local function entry_cmd( kvhdl, ... )
         local transresult = {
                 _tonumber_ = function ( result )
                         return tonumber(result[1])
@@ -126,35 +92,25 @@ function cmd( redname, hashkey, ... )
 
         }, { __index = transresult });
 
-        --[[
-        runcmd('set key value');
-        or
-        runcmd('set', 'key', 'value');
-        ]]
-        local runcmd = function ( ... )
-                local ok, command = pcall(table.concat, {...}, ' ');
-
-                if not ok then
-                        return ok, command;
-                end
-
-                -- command = string.lower(command)
-                local _, _, oper = string.find(command, '^%s*(%S+)%s*');
-                -- oper = oper or '@'
+        --[[runcmd('set', 'key', 'value');]]--
+        local runcmd = function ( oper, ... )
                 oper = string.lower(oper)
                 
-                local ok, value = nil, nil;
-                local result = setmetatable({}, { __mode = 'kv' });
-                for value in luakv.ask(kvhdl, command) do
-                        result[#result + 1] = value;
-                end
-                --[[根据命令进行数据转换]]
-                result = (transresult[oper] or transresult._ontrans_)(result);
-
+                local ok, result = luakv.run(kvhdl, oper, ...)
+		if ok then
+			if type(result) == "table" then
+                		result = setmetatable(result, { __mode = 'kv' });
+			end
+        		--[[根据命令进行数据转换]]
+            		result = (transresult[oper] or transresult._ontrans_)(result);
+		else
+			assert(false, result)
+		end
                 return result;
         end
 
         
+        local ok, result = nil, nil;
         if type(...) == 'table' then
                 local results = setmetatable({}, { __mode = 'kv' });
                 for i, subtab in ipairs(...) do
@@ -182,3 +138,26 @@ function cmd( redname, hashkey, ... )
                 return ok, result;
         end
 end
+
+--[[
+@args 接受如下形式的参数
+1.run('cmd', 'keyvalue1', 'keyvalue2', ...)
+2.run({{ 'cmd1', 'keyvaluse1', 'keyvaluse2', ... }, { 'cmd2', 'keyvaluse1', 'keyvaluse2', ... }, ...})
+每个命令的操作子可以是字符串，也可以是数字。
+@return true / false, error or table(表的形式如: { {result, ...}, { result, ... }, ... })
+]]
+function cmd( redname, hashkey, ... )
+	local kvhdl = OWN_LUAKV_POOLS[redname];
+	if not kvhdl then
+		kvhdl = OWN_LUAKV_POOLS[LOCAL_DEFAULT];
+	end
+	if not kvhdl then
+		log.writefull('E', "Can't get libkv-handler of %s", redname);
+		return false, "can't get libkv-handler";
+	end
+        -- collectgarbage()
+
+        local ok, result = entry_cmd( kvhdl, ... );
+	return ok, result;
+end
+

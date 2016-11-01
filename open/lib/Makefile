@@ -87,8 +87,8 @@ lualog.so:
 	mv $(LIB_DIR)/lua-log/$@ $(LIB_DIR)
 
 luakv.so:
-	$(MAKE) -C $(LIB_DIR)/luakv CFLAGS="-g -O2"
-	mv $(LIB_DIR)/luakv/lib/$@ $(LIB_DIR)
+	#$(MAKE) -C $(LIB_DIR)/luakv CFLAGS="-g -O2"
+	cp $(LIB_DIR)/luakv/lib/$@ $(LIB_DIR)
 mfptppack.so:
 	$(MAKE) -C $(LIB_DIR)/lua-mfptp
 	mv $(LIB_DIR)/lua-mfptp/$@ $(LIB_DIR)
@@ -112,7 +112,7 @@ clean:
 	$(MAKE) -C $(LIB_DIR)/luafilesystem clean
 	$(MAKE) -C $(LIB_DIR)/decoder clean
 	$(MAKE) -C $(LIB_DIR)/lua-log clean
-	$(MAKE) -C $(LIB_DIR)/luakv clean
+	#$(MAKE) -C $(LIB_DIR)/luakv clean
 	$(MAKE) -C $(LIB_DIR)/lua-mfptp clean
 	$(MAKE) -C $(LIB_DIR)/lua-zmq clean
 	$(MAKE) -C $(LIB_DIR)/lua-http-message clean

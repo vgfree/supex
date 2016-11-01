@@ -23,7 +23,6 @@ static lua_State *_vms_new(void)
 	lua_register(L, "app_lua_convert", app_lua_convert);
 	lua_register(L, "app_lua_reverse", app_lua_reverse);
 	lua_register(L, "app_lua_ifmatch", app_lua_ifmatch);
-	lua_register(L, "search_kvhandle", search_kvhandle);
 	/*lua init*/
 	{
 		extern struct smart_cfg_list g_smart_cfg_list;

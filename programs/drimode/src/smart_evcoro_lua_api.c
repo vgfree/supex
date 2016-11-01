@@ -5,7 +5,6 @@
 #include "lua_expand/lua_link.h"
 #include "lua_expand/lj_http_info.h"
 #include "lua_expand/lj_cache.h"
-#include "luakv/luakv.h"
 // #include "luakvcore.h"
 #include "smart_evcoro_lua_api.h"
 
@@ -26,7 +25,6 @@ static lua_State *_vms_new(void)
 	lua_register(L, "app_lua_get_uri_args", app_lua_get_uri_args);
 	lua_register(L, "app_lua_get_recv_data", app_lua_get_recv_data);
 	lua_register(L, "app_lua_add_send_data", app_lua_add_send_data);
-	lua_register(L, "search_kvhandle", search_kvhandle);
 	/*lua init*/
 	{
 		extern struct smart_cfg_list g_smart_cfg_list;

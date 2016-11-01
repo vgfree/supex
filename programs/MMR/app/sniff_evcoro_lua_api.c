@@ -5,7 +5,6 @@
 #include "spx_evcs.h"
 #include "lua_expand/lj_c_coro.h"
 #include "lua_expand/lua_link.h"
-#include "luakv/luakv.h"
 #include "sniff_evcoro_lua_api.h"
 #include "lua_expand/lj_http_info.h"
 #include "lua_expand/lj_http.h"
@@ -47,7 +46,6 @@ static lua_State *_vms_new(void)
 	lua_register(L, "app_lua_get_uri_args", app_lua_get_uri_args);
 	lua_register(L, "app_lua_get_recv_data", app_lua_get_recv_data);
 	lua_register(L, "app_lua_add_send_data", app_lua_add_send_data);
-	lua_register(L, "search_kvhandle", search_kvhandle);
 	lua_register(L, "app_lua_mapinit", app_lua_mapinit);
 	lua_register(L, "app_lua_convert", app_lua_convert);
 	lua_register(L, "app_lua_reverse", app_lua_reverse);

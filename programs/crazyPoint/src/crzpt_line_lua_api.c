@@ -69,7 +69,6 @@ static lua_State *_vms_new(void)
 	luaL_openlibs(L);
 	/*reg func*/
 	lua_register(L, "crzpt_http", sync_http);
-	lua_register(L, "search_kvhandle", search_kvhandle);
 	/*lua init*/
 	{
 		extern struct crzpt_cfg_list g_crzpt_cfg_list;

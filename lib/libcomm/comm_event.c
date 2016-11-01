@@ -39,7 +39,7 @@ void commevent_destroy(struct comm_event *commevent)
 				commdata_destroy(connfd);
 				commevent->connfdcnt--;
 				commepoll_del(&commevent->commctx->commepoll, fd, -1);
-				log("close connfd:%d\n", fd);
+				loger("close connfd:%d\n", fd);
 			}
 
 			fd++;
@@ -52,7 +52,7 @@ void commevent_destroy(struct comm_event *commevent)
 			close(fd);
 			commevent->bindfd[commevent->bindfdcnt - 1].commtcp.fd = -1;
 			commevent->bindfdcnt -= 1;
-			log("close bindfd %d\n", fd);
+			loger("close bindfd %d\n", fd);
 		}
 
 		free_remainfd(&commevent->remainfd);
@@ -75,8 +75,8 @@ void commevent_accept(struct comm_event *commevent, int fdidx)
 
 		if (fd > 0) {
 			if (commdata_add(commevent, &commtcp, &commevent->bindfd[fdidx].finishedcb)) {
-				log("listen fd:%d accept fd:%d\n", commevent->bindfd[fdidx].commtcp.fd, commtcp.fd);
-				log("accept fd localport: %d local addr:%s peerport:%d peeraddr:%s\n", commtcp.localport, commtcp.localaddr, commtcp.peerport, commtcp.peeraddr);
+				loger("listen fd:%d accept fd:%d\n", commevent->bindfd[fdidx].commtcp.fd, commtcp.fd);
+				loger("accept fd localport: %d local addr:%s peerport:%d peeraddr:%s\n", commtcp.localport, commtcp.localaddr, commtcp.peerport, commtcp.peeraddr);
 
 				if (commevent->bindfd[fdidx].finishedcb.callback) {
 					commevent->bindfd[fdidx].finishedcb.callback(commevent->commctx, &commtcp, commevent->bindfd[fdidx].finishedcb.usr);
@@ -104,13 +104,13 @@ void commevent_remainfd(struct comm_event *commevent, bool timeout)
 	int     counter = 0;	/* 处理fd个数的计数 */
 
 	/* 先处理需要读取数据的fd */
-	log("commevent_remainfd start\n\n");
+	loger("commevent_remainfd start\n\n");
 	while (counter < MAX_DISPOSE_FDS && (commevent->remainfd.cnt[0] || commevent->remainfd.cnt[1] || commevent->remainfd.cnt[2] || commevent->remainfd.cnt[3] || commevent->remainfd.cnt[4])) {
 
 		if (commevent->remainfd.cnt[0]) {
 			/* 处理Accept事件 类型为REMAINFD_LISTEN类型的fd里面保存的是fd的索引 */
 			int fdidx = commevent->remainfd.fda[0][commevent->remainfd.circle[0]];
-			log("commevent_remainfd accept fd:%d, index:%d,cnt:%d\n", commevent->bindfd[fdidx].commtcp.fd, commevent->remainfd.circle[0], commevent->remainfd.cnt[0]);
+			loger("commevent_remainfd accept fd:%d, index:%d,cnt:%d\n", commevent->bindfd[fdidx].commtcp.fd, commevent->remainfd.circle[0], commevent->remainfd.cnt[0]);
 			commevent_accept(commevent, fdidx);
 			del_remainfd(&commevent->remainfd, fdidx, REMAINFD_LISTEN);
 #if 0
@@ -126,57 +126,57 @@ void commevent_remainfd(struct comm_event *commevent, bool timeout)
 			/* 处理读事件 */
 			fd = commevent->remainfd.fda[1][commevent->remainfd.circle[1]];
 
-			 log("commevent_remainfd before read fd:%d, index:%d,cnt:%d\n", fd, commevent->remainfd.circle[1], commevent->remainfd.cnt[1]);
+			 loger("commevent_remainfd before read fd:%d, index:%d,cnt:%d\n", fd, commevent->remainfd.circle[1], commevent->remainfd.cnt[1]);
 			if (unlikely(!commdata_recv(commevent->connfd[fd], commevent, fd))) {
 				/* 事件未处理完，则将下标增加1,下次轮询的时候执行下一个fd */
 				commevent->remainfd.circle[1] = (commevent->remainfd.circle[1] + 1) % commevent->remainfd.cnt[1];
 			} else if (commevent->remainfd.cnt[1] > 0 && commevent->remainfd.cnt[1] == commevent->remainfd.circle[1]){
 				commevent->remainfd.circle[1] = 0;
 			}
-			log("commevent_remainfd after read fd:%d, index:%d,cnt:%d\n\n", commevent->remainfd.fda[1][commevent->remainfd.circle[1]], commevent->remainfd.circle[1], commevent->remainfd.cnt[1]);
+			loger("commevent_remainfd after read fd:%d, index:%d,cnt:%d\n\n", commevent->remainfd.fda[1][commevent->remainfd.circle[1]], commevent->remainfd.circle[1], commevent->remainfd.cnt[1]);
 		}
 
 		if (commevent->remainfd.cnt[2] > 0) {
 			/* 处理解析事件 */
 			fd = commevent->remainfd.fda[2][commevent->remainfd.circle[2]];
 
-			 log("commevent_remainfd before parse fd:%d, index:%d,cnt:%d\n", fd, commevent->remainfd.circle[2], commevent->remainfd.cnt[2]);
+			 loger("commevent_remainfd before parse fd:%d, index:%d,cnt:%d\n", fd, commevent->remainfd.circle[2], commevent->remainfd.cnt[2]);
 			if (unlikely(!commdata_parse(commevent->connfd[fd], commevent, fd))) {
 				commevent->remainfd.circle[2] = (commevent->remainfd.circle[2] + 1) % commevent->remainfd.cnt[2];
 			} else if (commevent->remainfd.cnt[2] > 0 && commevent->remainfd.cnt[2] == commevent->remainfd.circle[2]){
 				commevent->remainfd.circle[2] = 0;
 			}
-			log("commevent_remainfd after parse fd:%d, index:%d,cnt:%d\n\n", commevent->remainfd.fda[2][commevent->remainfd.circle[2]], commevent->remainfd.circle[2], commevent->remainfd.cnt[2]);
+			loger("commevent_remainfd after parse fd:%d, index:%d,cnt:%d\n\n", commevent->remainfd.fda[2][commevent->remainfd.circle[2]], commevent->remainfd.circle[2], commevent->remainfd.cnt[2]);
 		}
 
 		if (commevent->remainfd.cnt[3] > 0) {
 			/* 处理打包事件 */
 			fd = commevent->remainfd.fda[3][commevent->remainfd.circle[3]];
 
-			 log("commevent_remainfd before package fd:%d, index:%d,cnt:%d\n", fd, commevent->remainfd.circle[3], commevent->remainfd.cnt[3]);
+			 loger("commevent_remainfd before package fd:%d, index:%d,cnt:%d\n", fd, commevent->remainfd.circle[3], commevent->remainfd.cnt[3]);
 			if (unlikely(!commdata_package(commevent->connfd[fd], commevent, fd))) {
 				commevent->remainfd.circle[3] = (commevent->remainfd.circle[3] + 1) % commevent->remainfd.cnt[3];
 			} else if (commevent->remainfd.cnt[3] > 0 && commevent->remainfd.cnt[3] == commevent->remainfd.circle[3]){
 				commevent->remainfd.circle[3] = 0;
 			}
-			log("commevent_remainfd after package fd:%d, index:%d,cnt:%d\n\n", commevent->remainfd.fda[3][commevent->remainfd.circle[3]], commevent->remainfd.circle[3], commevent->remainfd.cnt[3]);
+			loger("commevent_remainfd after package fd:%d, index:%d,cnt:%d\n\n", commevent->remainfd.fda[3][commevent->remainfd.circle[3]], commevent->remainfd.circle[3], commevent->remainfd.cnt[3]);
 		}
 
 		if (commevent->remainfd.cnt[4] > 0) {
 			/* 处理写事件 */
 			fd = commevent->remainfd.fda[4][commevent->remainfd.circle[4]];
 
-			log("commevent_remainfd before write fd:%d, index:%d,cnt:%d\n", fd, commevent->remainfd.circle[4], commevent->remainfd.cnt[4]);
+			loger("commevent_remainfd before write fd:%d, index:%d,cnt:%d\n", fd, commevent->remainfd.circle[4], commevent->remainfd.cnt[4]);
 			if (unlikely(!commdata_send(commevent->connfd[fd], commevent, fd))) {
 				commevent->remainfd.circle[4] = (commevent->remainfd.circle[4] + 1) % commevent->remainfd.cnt[4];
 			} else if (commevent->remainfd.cnt[4] > 0 && commevent->remainfd.cnt[4] == commevent->remainfd.circle[4]){ 
 				commevent->remainfd.circle[4] = 0;
 			}
-			log("commevent_remainfd after write fd:%d, index:%d,cnt:%d\n\n", commevent->remainfd.fda[4][commevent->remainfd.circle[4]], commevent->remainfd.circle[4], commevent->remainfd.cnt[4]); 
+			loger("commevent_remainfd after write fd:%d, index:%d,cnt:%d\n\n", commevent->remainfd.fda[4][commevent->remainfd.circle[4]], commevent->remainfd.circle[4], commevent->remainfd.cnt[4]); 
 		} 
 		counter++;
 	}
-	log("commevent_remainfd over\n\n");
+	loger("commevent_remainfd over\n\n");
 
 	/* 超时调用该函数则调用用户层的回调函数 */
 	if (timeout && commevent->timeoutcb.callback) {

@@ -3,7 +3,7 @@ ifeq ($(HANDLE_MODEL), EVCORO)
 LIBA += -levcs
 endif
 
-LIBA += -lscco -levcoro -lcoro -lev -lkv
+LIBA += -lscco -levcoro -lcoro -lev
 LIBS += -lcrypto
 
 

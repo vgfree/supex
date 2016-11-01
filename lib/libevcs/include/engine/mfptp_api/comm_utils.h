@@ -23,9 +23,7 @@ extern "C" {
 #if GOOGLE_LOG
   #include "loger.h"
 #else
- #ifdef log
-  #define log(fmt, ...) fprintf(stdout, "FILENAME:%s | LINE:%d | FUNCTION:%s | MASSAGE: "  fmt, __FILE__, __LINE__, __FUNCTION__, ##__VA_ARGS__)
- #endif
+  #define loger(fmt, ...) fprintf(stdout, "FILENAME:%s | LINE:%d | FUNCTION:%s | MASSAGE: "  fmt, __FILE__, __LINE__, __FUNCTION__, ##__VA_ARGS__)
 #endif
 
 /* 编译器版本 */

@@ -129,7 +129,7 @@ int main(int argc, char *argv[])
 	/*create ctx*/
 	struct comm_context     *commctx = comm_ctx_create(-1);
 	if (unlikely(!commctx)) {
-		log("client comm_ctx_create failed\n");
+		loger("client comm_ctx_create failed\n");
 		return -1;
 	}
 
@@ -142,12 +142,12 @@ int main(int argc, char *argv[])
 		finishedcb.usr = NULL;
 		if (unlikely((fds[n] = comm_socket(commctx, host, port, &finishedcb, COMM_CONNECT | CONNECT_ANYWAY)) == -1)) {
 			comm_ctx_destroy(commctx);
-			log("client comm_socket failed\n");
+			loger("client comm_socket failed\n");
 			return -1;
 		}
-		log("client connect successed fd:%d\n",fds[n]);
+		loger("client connect successed fd:%d\n",fds[n]);
 	}
-	log("\x1B[1;31m""client connect over!\n""\x1B[m");
+	loger("\x1B[1;31m""client connect over!\n""\x1B[m");
 
 	/* 循环接收 发送数据 */
 	struct comm_message     sendmsg = { 0 };
@@ -162,16 +162,16 @@ int main(int argc, char *argv[])
 			gain_package_data_only(&sendmsg, fds[n]);
 			
 			if (comm_send(commctx, &sendmsg, false, -1) <= -1) {
-				log("comm_send failed\n");
+				loger("comm_send failed\n");
 				continue;
 			}
-			log("\x1B[1;34m""fd:%d send data successed\n""\x1B[m", fds[n]);
+			loger("\x1B[1;34m""fd:%d send data successed\n""\x1B[m", fds[n]);
 			
 			if (comm_recv(commctx, &recvmsg, true, -1) <= -1) {
-				log("comm_recv failed\n");
+				loger("comm_recv failed\n");
 				continue;
 			}
-			log("\x1B[1;34m""fd:%d recv data successed\n""\x1B[m", fds[n]);
+			loger("\x1B[1;34m""fd:%d recv data successed\n""\x1B[m", fds[n]);
 
 			int     pckidx = 0, frmidx = 0;
 			int     k = 0;
@@ -181,13 +181,13 @@ int main(int argc, char *argv[])
 					printf("frame %d size :%d\n", frmidx + 1, recvmsg.package.frame_size[k]);
 				}
 
-				log("\x1B[1;31m""message fd:%d message body:%.*s socket_type:%d\n""\x1B[m", recvmsg.fd, recvmsg.package.dsize, recvmsg.content, recvmsg.socket_type);
+				loger("\x1B[1;31m""message fd:%d message body:%.*s socket_type:%d\n""\x1B[m", recvmsg.fd, recvmsg.package.dsize, recvmsg.content, recvmsg.socket_type);
 			}
 		}
 	}
 
 	/*over*/
-	log("goint to detroy everything here\n");
+	loger("goint to detroy everything here\n");
 	comm_ctx_destroy(commctx);
 	return -1;
 }

@@ -15,7 +15,6 @@
 #include "engine/async_tasks/async_obj.h"
 #include "engine/async_tasks/async_api.h"
 #include "engine/async_tasks/async_ctx.h"
-#include "engine/luakv/luakv.h"
 #include "engine/cpcall/cpcall.h"
 #include "engine/spx_evcs.h"
 #include "engine/redis_api/redis_reqresp.h"

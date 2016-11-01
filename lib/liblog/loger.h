@@ -11,7 +11,7 @@
 extern struct CSLog *g_imlog;
 
 #define __FILENAME__ (strrchr(__FILE__, '/') ? (strrchr(__FILE__, '/') + 1) : __FILE__)
-#define log(fmt, args ...)      Info(g_imlog, "<%s>|<%d>|<%s>," fmt, __FILENAME__, __LINE__, __FUNCTION__, ##args)
+#define loger(fmt, args ...)    Info(g_imlog, "<%s>|<%d>|<%s>," fmt, __FILENAME__, __LINE__, __FUNCTION__, ##args)
 #define trace(fmt, args ...)    Trace(g_imlog, "<%s>|<%d>|<%s>," fmt, __FILENAME__, __LINE__, __FUNCTION__, ##args)
 #define debug(fmt, args ...)    Debug(g_imlog, "<%s>|<%d>|<%s>," fmt, __FILENAME__, __LINE__, __FUNCTION__, ##args)
 #define warn(fmt, args ...)     Warn(g_imlog, "<%s>|<%d>|<%s>," fmt, __FILENAME__, __LINE__, __FUNCTION__, ##args)

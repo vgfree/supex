@@ -132,29 +132,29 @@ int comm_socket(struct comm_context *commctx, const char *host, const char *serv
 	if ((flag & 0x0F) == COMM_BIND) {
 		if (commctx->commevent->bindfdcnt < LISTEN_SIZE) {
 			if (unlikely(!socket_listen(&commtcp, host, service))) {
-				log("bind socket failed\n");
+				loger("bind socket failed\n");
 				return -1;
 			}
 		} else {
-			log("bind too many socket in one comm_context\n");
+			loger("bind too many socket in one comm_context\n");
 			return -1;
 		}
 	} else {
 		if (unlikely(!socket_connect(&commtcp, host, service, (flag & 0xF0)))) {
-			log("connect socket failed\n");
+			loger("connect socket failed\n");
 			return -1;
 		}
 	}
 
 	/* 添加一个fd进行监听 */
 	if (unlikely(!commdata_add(commctx->commevent, &commtcp, finishedcb))) {
-		log("add socket fd to monitor failed\n");
+		loger("add socket fd to monitor failed\n");
 		close(commtcp.fd);
 		return -1;
 	}
 
-	//log("commtcp local port:%d addr:%s\n", commtcp.localport, commtcp.localaddr);
-	//log("commtcp peer port:%d addr:%s\n", commtcp.peerport, commtcp.peeraddr);
+	//loger("commtcp local port:%d addr:%s\n", commtcp.localport, commtcp.localaddr);
+	//loger("commtcp peer port:%d addr:%s\n", commtcp.peerport, commtcp.peeraddr);
 
 	/* 将状态值设置为COMM_STAT_RUN并唤醒等待的线程 */
 	if (commctx->stat == COMM_STAT_INIT) {
@@ -235,7 +235,7 @@ int comm_recv(struct comm_context *commctx, struct comm_message *message, bool b
 				} else {
 					flag = false;
 				}
-				log("fd closed comm_recv:%d\n",commmsg->fd);
+				loger("fd closed comm_recv:%d\n",commmsg->fd);
 				if (commmsg->connfd->msgcounter == 0 && commmsg->connfd->commtcp.connattr != CONNECT_ANYWAY) {
 					//commdata_del(commctx->commevent, commmsg->fd);
 					commdata_destroy(commmsg->connfd);
@@ -245,13 +245,13 @@ int comm_recv(struct comm_context *commctx, struct comm_message *message, bool b
 			}
 			commmsg->connfd = NULL;	/* 此变量只是用来判断此fd是否已经被关闭 */
 		}
-		log("queue nodes:%d list nodes:%ld\n", commctx->recvqueue.nodes, commctx->recvlist.nodes);
+		loger("queue nodes:%d list nodes:%ld\n", commctx->recvqueue.nodes, commctx->recvlist.nodes);
 	} while (flag);								/* flag为true说明成功等待到数据 尝试再去取一次数据 */
 	commlock_unlock(&commctx->recvlock);
 
 	if (commmsg) {					/* 取到数据 */
 		copy_commmsg(message, commmsg);
-		//log("\x1B[1;32m""message socket_type:%d\n""\x1B[m", message->socket_type);
+		//loger("\x1B[1;32m""message socket_type:%d\n""\x1B[m", message->socket_type);
 		free_commmsg(commmsg);			/* 释放掉comm_message结构体 */
 		return message->package.dsize;
 	}
@@ -288,7 +288,7 @@ static void *_start_new_pthread(void *usr)
 	commlock_wait(&commctx->statlock, (int *)&commctx->stat, COMM_STAT_RUN, -1, false);
 
 	/* 启动管道读取信息计时器 */
-	log("start pipe timer\n");
+	loger("start pipe timer\n");
 	commtimer_start(commctx->pipetimer, &commctx->timerhead);
 
 	while (1) {
@@ -309,7 +309,7 @@ static void *_start_new_pthread(void *usr)
 			}
 		};
 
-		//log("commepoll_wait start\n");
+		//loger("commepoll_wait start\n");
 		if ((retval = commepoll_wait(&commctx->commepoll, commctx->commevent->timeoutcb.timeout))) {
 			for (n = 0; n < commctx->commepoll.eventcnt; n++) {
 				if (commctx->commepoll.events[n].data.fd > 0) {
@@ -318,7 +318,7 @@ static void *_start_new_pthread(void *usr)
 						add_remainfd(remainfd, fdidx, REMAINFD_LISTEN);
 					} else if (commctx->commepoll.events[n].events & EPOLLIN) {			/* 有数据可读，触发读数据事件 */
 						if (commctx->commepoll.events[n].data.fd == commctx->commpipe.rfd) {	/* 管道事件被触发，则触发打包事件 */
-							//log("pipe event start\n");
+							//loger("pipe event start\n");
 							_set_remainfd(NULL, NULL, (void*)commctx);
 						} else {	/* 非pipe的fd读事件被触发，则代表是socket的fd触发了读事件 */
 							add_remainfd(remainfd, commctx->commepoll.events[n].data.fd, REMAINFD_READ);
@@ -332,7 +332,7 @@ static void *_start_new_pthread(void *usr)
 				}
 			}
 		}
-		//log("commepoll_wait over\n");
+		//loger("commepoll_wait over\n");
 
 		if ((retval == false) && (errno == EINTR)) {
 			/* epoll_wait超时调用处理残留fd函数 @true会调用用户的超时回调函数 */
@@ -345,7 +345,7 @@ static void *_start_new_pthread(void *usr)
 	}
 	/* 停止管道读取信息计时器 */
 	commtimer_stop(commctx->pipetimer, &commctx->timerhead);
-	log("stop pipe timer\n");
+	loger("stop pipe timer\n");
 
 	return NULL;
 }
@@ -357,11 +357,11 @@ static void  _set_remainfd(struct comm_timer *commtimer, struct comm_list *timer
 	int fda[EPOLL_SIZE] = {};
 	struct comm_context *commctx = (struct comm_context*)usr;
 
-//	log("deal with pipe timer\n");
+//	loger("deal with pipe timer\n");
 	if ((cnt = commpipe_read(&commctx->commpipe, fda, sizeof(int))) > 0) {
 		for (i = 0; i < cnt; i++) {
 			add_remainfd(&commctx->commevent->remainfd, fda[i], REMAINFD_PACKAGE);
-	//		log("read pipe fd:%d\n", fda[i]);
+	//		loger("read pipe fd:%d\n", fda[i]);
 		}
 	}
 }
@@ -377,21 +377,21 @@ static bool _check_packageinfo(const struct comm_message *message)
 	int	frames = 0;	/* 帧的总数 */
 
 	if (unlikely(message->package.packages < 1)) {
-		log("wrong packages in comm_message structure, packages:%d", message->package.packages);
+		loger("wrong packages in comm_message structure, packages:%d", message->package.packages);
 		return false;
 	}
 	for (pckidx = 0; pckidx < message->package.packages; pckidx++) {
 		if (message->package.frames_of_package[pckidx] < 1 || message->package.frames_of_package[pckidx] > message->package.frames) { 
-			log("wrong sum of frames in frames_of_pack of comm_message structure, frames:%d, index:%d\n", message->package.frames_of_package[pckidx], pckidx);
+			loger("wrong sum of frames in frames_of_pack of comm_message structure, frames:%d, index:%d\n", message->package.frames_of_package[pckidx], pckidx);
 			return false;
 		}
 		for (frmidx = 0 ; frmidx < message->package.frames_of_package[pckidx]; frmidx++, index++) {
 			if (unlikely(dsize > message->package.dsize || message->package.frame_size[index] > message->package.dsize)) {
-				log("wrong frame_size in comm_message structure, frame_size:%d index:%d\n", message->package.frame_size[index], index);
+				loger("wrong frame_size in comm_message structure, frame_size:%d index:%d\n", message->package.frame_size[index], index);
 				return false;
 			}
 			if (unlikely(message->package.frame_offset[index] != dsize)) {
-				log("wrong frame_offset in comm_package, frame_offset:%d index:%d\n", message->package.frame_offset[index], index);
+				loger("wrong frame_offset in comm_package, frame_offset:%d index:%d\n", message->package.frame_offset[index], index);
 				return false;
 			}
 			dsize += message->package.frame_size[index];
@@ -400,11 +400,11 @@ static bool _check_packageinfo(const struct comm_message *message)
 	}
 
 	if (unlikely(frames != message->package.frames)) {
-		log("wrong sum of frames in comm_message structure, frames:%d\n",message->package.frames);
+		loger("wrong sum of frames in comm_message structure, frames:%d\n",message->package.frames);
 		return false;
 	}
 	if (unlikely(dsize != message->package.dsize)) {
-		log("wrong sum of datasize in comm_message structure, datasize:%d\n", message->package.dsize);
+		loger("wrong sum of datasize in comm_message structure, datasize:%d\n", message->package.dsize);
 		return false;
 	}
 	return true;

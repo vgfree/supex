@@ -68,5 +68,3 @@ REMIND:
 	63)evcs在支持协议解析完就执行回调，不一定在队列处执行
 	supex 执行代码打开反向shell
 	supex_make_shell  分流程可分段执行， 如先执行open编译 可以制定路径去编译
-./programs/timport/src/timport_cfg.c:#define log(fmt, ...) fprintf(stderr, "(%s:%d) " fmt "\n", __FUNCTION__, __LINE__, ##__VA_ARGS__)
-./lib/libevcs/include/engine/mfptp_api/comm_utils.h:#define log(fmt, ...) fprintf(stdout, "FILENAME:%s | LINE:%d | FUNCTION:%s | MASSAGE: "  fmt, __FILE__, __LINE__, __FUNCTION__, ##__VA_ARGS__)

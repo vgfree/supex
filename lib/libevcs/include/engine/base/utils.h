@@ -54,13 +54,13 @@ union virtual_system
 *       POSIX锁定义                                    *
 *==============================================================================================*/
 #ifdef USE_MUTEX
-  #define X_NEW_LOCK pthread_mutex_t
+  #define X_NEW_LOCK		pthread_mutex_t
   #define X_LOCK_INIT(lock)     pthread_mutex_init((lock), NULL)
   #define X_LOCK(lock)          pthread_mutex_lock((lock))
   #define X_TRYLOCK(lock)       pthread_mutex_trylock((lock))
   #define X_UNLOCK(lock)        pthread_mutex_unlock((lock))
 #else
-  #define X_NEW_LOCK pthread_spinlock_t
+  #define X_NEW_LOCK		pthread_spinlock_t
   #define X_LOCK_INIT(lock)     pthread_spin_init((lock), 0)
   #define X_LOCK(lock)          pthread_spin_lock((lock))
   #define X_TRYLOCK(lock)       pthread_spin_trylock((lock))

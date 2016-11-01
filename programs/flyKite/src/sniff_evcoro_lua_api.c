@@ -4,7 +4,6 @@
 #include "spx_evcs.h"
 #include "lua_expand/lj_c_coro.h"
 #include "lua_expand/lua_link.h"
-#include "luakv/luakv.h"
 #include "sniff_evcoro_lua_api.h"
 #ifdef OPEN_TOPO
   #include "topo.h"
@@ -62,7 +61,6 @@ static lua_State *_vms_new(void)
 #ifdef OPEN_TOPO
 	lua_register(L, "get_export_road_by_road", lua_get_export_road_by_road);
 #endif
-	lua_register(L, "search_kvhandle", search_kvhandle);
 	/*lua init*/
 	{
 		extern struct sniff_cfg_list g_sniff_cfg_list;

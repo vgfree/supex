@@ -4,7 +4,6 @@
 #include "spx_evcs.h"
 #include "lua_expand/lj_c_coro.h"
 #include "lua_expand/lua_link.h"
-#include "luakv/luakv.h"
 #include "sniff_evcoro_lua_api.h"
 
 static lua_State *_vms_new(void)
@@ -20,7 +19,6 @@ static lua_State *_vms_new(void)
 	lua_register(L, "lua_default_switch", lj_evcoro_switch);
 	// lua_register(L, "luakv_cmd", luakv_run);
 	// lua_register(L, "luakv_ask", luakv_iterfactory);
-	lua_register(L, "search_kvhandle", search_kvhandle);
 	/*lua init*/
 	{
 		extern struct sniff_cfg_list g_sniff_cfg_list;

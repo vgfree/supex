@@ -1,30 +1,6 @@
 package.cpath = "../lib/?.so;./lib/?.so;../?.so;" .. package.cpath
-local kvcore = require('luakv')
-local ffi = require('ffi');
-local log = require('lualog')
+local luakv 		= require('luakv')
 
-ffi.cdef[[
-	struct timeval {
-		long	tv_sec;
-		int	tv_usec;
-	};
-	struct tm {
-		int	tm_sec;	
-		int	tm_min;	
-		int	tm_hour;
-		int	tm_mday;
-		int	tm_mon;	
-		int	tm_year;
-		int	tm_wday;
-		int	tm_yday;
-		int	tm_isdst;
-		long	tm_gmtoff;
-		char	*tm_zone;
-	};
-	int gettimeofday(struct timeval *, void *);
-	struct tm *localtime_r(const long *, struct tm *);
-	size_t strftime(char *, size_t, const char *, const struct tm *);
-]];
 function dump(obj)
 	local getIndent, quoteStr, wrapKey, wrapVal, dumpObj
 	getIndent = function(level)
@@ -69,23 +45,14 @@ function dump(obj)
 	return dumpObj(obj, 0)
 end
 
-_G["LUAKV_POOLS"] = {} 
-local LOCAL_DEFAULT = '@default_local@'
+local log = {
+	writefull = print
+}
+local scan = {
+	dump = dump
+}
 
-function kvcmd( redname, hashkey, ... )
-        local kvhdl = _G["LUAKV_POOLS"][redname];
-        local ok, result = nil, nil;
-
-        if not kvhdl then
-                kvhdl = _G["LUAKV_POOLS"][LOCAL_DEFAULT];
-        end
-
-        if not kvhdl then
-                log.writefull('E', "Can't get libkv-handler of %s", redname);
-                return false, "can't get libkv-handler";
-        end
-        -- collectgarbage()
-
+local function entry_cmd( kvhdl, ... )
         local transresult = {
                 _tonumber_ = function ( result )
                         return tonumber(result[1])
@@ -151,46 +118,36 @@ function kvcmd( redname, hashkey, ... )
 
         }, { __index = transresult });
 
-        --[[
-        runcmd('set key value');
-        or
-        runcmd('set', 'key', 'value');
-        ]]
-        local runcmd = function ( ... )
-                local ok, command = pcall(table.concat, {...}, ' ');
-
-                if not ok then
-                        return ok, command;
-                end
-
-                -- command = string.lower(command)
-                local _, _, oper = string.find(command, '^%s*(%S+)%s*');
-                -- oper = oper or '@'
+        --[[runcmd('set', 'key', 'value');]]--
+        local runcmd = function ( oper, ... )
                 oper = string.lower(oper)
                 
-                local ok, value = nil, nil;
-                local result = setmetatable({}, { __mode = 'kv' });
-                for value in kvcore.ask(kvhdl, command) do
-                        result[#result + 1] = value;
-                end
-                --[[根据命令进行数据转换]]
-                result = (transresult[oper] or transresult._ontrans_)(result);
-
+                local ok, result = luakv.run(kvhdl, oper, ...)
+		if ok then
+			if type(result) == "table" then
+                		result = setmetatable(result, { __mode = 'kv' });
+			end
+        		--[[根据命令进行数据转换]]
+            		result = (transresult[oper] or transresult._ontrans_)(result);
+		else
+			assert(false, result)
+		end
                 return result;
         end
 
         
+        local ok, result = nil, nil;
         if type(...) == 'table' then
                 local results = setmetatable({}, { __mode = 'kv' });
                 for i, subtab in ipairs(...) do
                         if type(subtab) ~= 'table' then
-                                log.writefull("E", "error args %s", dump(...));
+                                log.writefull("E", "error args %s", scan.dump(...));
                                 break;
                         end
                         ok, result = pcall(runcmd, unpack(subtab))
                         if not ok then
                                 log.writefull("E", "run command %s fail : %s", 
-                                        dump(table.concat( subtab , " ")), result);
+                                        scan.dump(table.concat( subtab , " ")), result);
                                 return ok, result
                         end
 
@@ -202,81 +159,82 @@ function kvcmd( redname, hashkey, ... )
                 ok, result = pcall(runcmd, ...);
                 if not ok then
                         log.writefull("E", "run command %s fail : %s", 
-                                dump(table.concat( { ... } , " ")), result);
+                                scan.dump(table.concat( { ... } , " ")), result);
                 end
                 return ok, result;
         end
 end
 
-function kvcore_sadd_smembers( hdl )
-	local result = kvcore.run(hdl, {
+
+
+do
+	luakv.init()
+	local hdl = luakv.new("own");
+
+        local ok, result = pcall(luakv.run, hdl)
+	print("==>", dump(result));
+
+	local list = {
+		{ 'set', 'key', 8},
+		{ 'get', 'key'},
+	};
+	for _, cmd in pairs(list) do
+		local ok, result = entry_cmd( hdl, unpack(cmd) )
+		print("==>", dump(result));
+	end
+
+	local list = {
 		{ 'del', 'name'},
 		{ 'smembers', 'name'},
 		{ 'sadd', 'name', 'zhoukai', 'zhouqiuping' },
 		{ 'smembers', 'name'},
 		{ 'sismember', 'name', 'zhoukai' },
 		{ 'sismember', 'name', 'zhouxiaolong' },
-		});
-	
-	print(dump(result));
-end
+	};
+	for _, cmd in pairs(list) do
+		local ok, result = entry_cmd( hdl, unpack(cmd) )
+		print("==>", dump(result));
+	end
 
-function print_time()
-	local tm = ffi.new('struct tm[1]');
-	local tv = ffi.new('struct timeval[1]');
-	local timeptr = ffi.cast('long *', tv);
-	local timestr = ffi.new('char[32]');
-	
-	ffi.C.gettimeofday(tv, nil);
-	ffi.C.localtime_r(timeptr, tm);
-	ffi.C.strftime(timestr, ffi.sizeof('char[32]'), [[%Y-%m-%d %H:%M:%S]], tm);
-	print(ffi.string(timestr),tonumber(tv[0].tv_usec));
-end
-
-function kvcore_set_get( hdl )
-	local result = kvcore.run(hdl, {
+	local list = {
 		{ 'del', 'name' },
 		{ 'get', 'name' },
 		{ 'set', 'name', 'zhoukai' },
 		{ 'get', 'name' }
-		});
-	print(dump(result));
-end
-
-
-function kvcore_iterator( hdl )
-	-- body
-	for result in kvcore.ask(hdl, 'set name zhoukai') do
-		print("set success :", result);
+	};
+	for _, cmd in pairs(list) do
+		local ok, result = entry_cmd( hdl, unpack(cmd) )
+		print("==>", dump(result));
 	end
 
-	for result in kvcore.ask(hdl, 'get name') do
-		print("get success :", result);
+	local list = {
+                {'set', 'age', '24'},
+                {'incr', 'age'},
+                {'get', 'age'},
+	};
+	for _, cmd in pairs(list) do
+		local ok, result = entry_cmd( hdl, unpack(cmd) )
+		print("==>", dump(result));
 	end
 
-	for result in kvcore.ask(hdl, 'del name') do
-		print("del success :", result);
+	local list = {
+                {'sadd', 'name', 'zhoukai', 'louis', 'zhouqiuping'},
+                {'sadd', 'male', 'zhoukai', 'louis'},
+                {'sinter', 'name', 'male'},
+                {'sdiffstore', 'name', 'male'},
+	};
+	for _, cmd in pairs(list) do
+		local ok, result = entry_cmd( hdl, unpack(cmd) )
+		print("==>", dump(result));
 	end
-end
 
-function kvcore_cmd( hdl )
-	local result = kvcore.run(hdl, 'set name zhoukai');
-	print("set success :", result);
-
-	local result = kvcore.run(hdl, 'get name');
-	print("get success :", result);
-
-	local result = kvcore.run(hdl, 'del name');
-	print("del success :", result);
-
-end
-
-
-
-do
-	local hdl = kvcore.create();
-	kvcore_cmd(hdl);
-	kvcore_iterator(hdl);
-	kvcore_set_get(hdl);
-	kvcore_sadd_smembers(hdl);
+	local list = {
+                {'hset', 'people', 'louis', 'louistin'},
+                {'hset', 'people', 'zhou', 'zhoukai'},
+                {'hgetall', 'people'},
+	};
+	for _, cmd in pairs(list) do
+		local ok, result = entry_cmd( hdl, unpack(cmd) )
+		print("==>", dump(result));
+	end
 end

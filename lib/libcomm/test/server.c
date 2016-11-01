@@ -32,7 +32,7 @@ int main(int argc, char *argv[])
 	commctx = comm_ctx_create(-1);
 
 	if (unlikely(!commctx)) {
-		log("server comm_ctx_create failed\n");
+		loger("server comm_ctx_create failed\n");
 		return retval;
 	}
 
@@ -44,12 +44,12 @@ int main(int argc, char *argv[])
 		sprintf(str_port, "%d", (port + i));
 
 		if (unlikely((fd = comm_socket(commctx, argv[1], str_port, &finishedcb, COMM_BIND)) == -1)) {
-			log("server comm_socket failed\n");
+			loger("server comm_socket failed\n");
 			comm_ctx_destroy(commctx);
 			return retval;
 		}
 
-		log("server bind successed fd:%d\n", fd);
+		loger("server bind successed fd:%d\n", fd);
 	}
 
 	/* 循环接收 发送数据 */
@@ -63,25 +63,25 @@ int main(int argc, char *argv[])
 					memcpy(&buff[size], &message.content[message.package.frame_offset[k]], message.package.frame_size[k]);
 					size += message.package.frame_size[k];
 				}
-				log("messag fd: %d message body: %s\n", message.fd, buff);
+				loger("messag fd: %d message body: %s\n", message.fd, buff);
 			}
 #else
-			//log("\x1B[1;32m""message fd: %d message body:%.*s\n""\x1B[m", message.fd, message.package.dsize, message.content);
-			log("\x1B[1;32m""message fd: %d successed\n""\x1B[m", message.fd);
+			//loger("\x1B[1;32m""message fd: %d message body:%.*s\n""\x1B[m", message.fd, message.package.dsize, message.content);
+			loger("\x1B[1;32m""message fd: %d successed\n""\x1B[m", message.fd);
 #endif
 			/* 接收成功之后将此消息体再返回给用户 */
 			if (message.fd > 0) {
 				comm_send(commctx, &message, false, -1);
-				log("\x1B[1;32m""message send out\n""\x1B[m");
+				loger("\x1B[1;32m""message send out\n""\x1B[m");
 			}
 			sleep(1);
 		} else {
-			log("comm_recv failed\n");
+			loger("comm_recv failed\n");
 			sleep(1);
 		}
 	}
 
-	log("goint to detroy everything here\n");
+	loger("goint to detroy everything here\n");
 	comm_ctx_destroy(commctx);
 	return retval;
 }

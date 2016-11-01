@@ -33,7 +33,6 @@
 #include "lua_expand/lua_link.h"
 #include "lua_expand/lj_http_info.h"
 #include "lua_expand/lj_cache.h"
-#include "luakv/luakv.h"
 #include "libkv.h"
 
 EVCS_MODULE_SETUP(kernel, kernel_init, kernel_exit, &g_kernel_evts);
@@ -61,7 +60,6 @@ lua_State *lua_vm_init(void)
 
 	lua_register(L, "supex_http", async_http);
 	lua_register(L, "lua_default_switch", lj_evcoro_switch);
-	lua_register(L, "search_kvhandle", search_kvhandle);
 
 	/*lua init*/
 	{

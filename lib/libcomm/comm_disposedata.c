@@ -9,14 +9,14 @@
 static int _encryptcb(char *destbuff, const char *srcbuff, int dest_len, int src_len)
 {
 	memcpy(destbuff, srcbuff, src_len);
-	log("\x1B[1;32m""encrypt over\n""\x1B[m");
+	loger("\x1B[1;32m""encrypt over\n""\x1B[m");
 	return src_len;
 }
 
 static int _decryptcb(char *destbuff, const char *srcbuff, int dest_len, int src_len)
 {
 	memcpy(destbuff, srcbuff, src_len);
-	log("\x1B[1;32m""decrypt over\n""\x1B[m");
+	loger("\x1B[1;32m""decrypt over\n""\x1B[m");
 	return src_len;
 }
 
@@ -32,7 +32,7 @@ static int _compresscb(char *destbuff, const char *srcbuff, int dest_len, int sr
 		destbuff[j] = srcbuff[i];
 		j++;
 	}
-	log("\x1B[1;32m""compress over\n""\x1B[m");
+	loger("\x1B[1;32m""compress over\n""\x1B[m");
 	return src_len-k;
 }
 
@@ -49,7 +49,7 @@ static int _decompresscb(char *destbuff, const char *srcbuff, int dest_len, int 
 		}
 		j++;
 	}
-	log("\x1B[1;32m""decompress over\n""\x1B[m");
+	loger("\x1B[1;32m""decompress over\n""\x1B[m");
 	return src_len + k;
 }
 #endif
@@ -156,7 +156,7 @@ bool  encrypt_compress_data(struct comm_cache *cache, struct comm_message *messa
 					}
 					NewArray(encrypt, encryptsize);
 					if (encrypt == NULL) {
-						log("no more space for encrypt data in mfptp package\n");
+						loger("no more space for encrypt data in mfptp package\n");
 						return false;
 					}
 				}
@@ -170,7 +170,7 @@ bool  encrypt_compress_data(struct comm_cache *cache, struct comm_message *messa
 					}
 					NewArray(compress, compressize);
 					if (compress == NULL) {
-						log("no more space for compress data in mfptp package\n");
+						loger("no more space for compress data in mfptp package\n");
 						return false;
 					}
 				}
@@ -263,7 +263,7 @@ bool  decrypt_decompress_data(struct comm_cache *cache,  struct comm_message *me
 					}
 					NewArray(decompress, decomprsize);
 					if (decompress == NULL) {
-						log("no more space for decompress data in mfptp package\n");
+						loger("no more space for decompress data in mfptp package\n");
 						return false;
 					}
 				}
@@ -277,7 +277,7 @@ bool  decrypt_decompress_data(struct comm_cache *cache,  struct comm_message *me
 					}
 					NewArray(decrypt, decryptsize);
 					if (decrypt == NULL) {
-						log("no more space for decrypt data in mfptp package\n");
+						loger("no more space for decrypt data in mfptp package\n");
 						return false;
 					}
 				}

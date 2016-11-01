@@ -7,7 +7,6 @@
 #include <lauxlib.h>
 #include <lualib.h>
 
-#include "luakv/luakv.h"
 #include "skt.h"
 #include "load_cfg.h"
 #include "supex.h"
@@ -36,7 +35,6 @@ static lua_State *lua_vm_init(void)
 	// lua_register(L, "app_lua_lru_cache_set_value", lrucache_setvalue);
 	// lua_register(L, "app_lua_lru_cache_get_value", lrucache_getvalue);
 	// lua_register(L, "app_lua_lru_cache_remove_value", lrucache_removevalue);
-	lua_register(L, "search_kvhandle", search_kvhandle);
 	/*lua init*/
 	{
 		int app_lua_get_serv_name(lua_State *L)

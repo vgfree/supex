@@ -8,7 +8,7 @@
 #define MIN_DELAY_TIME  3600
 #define MIN_EXPIRE_TIME 1800
 
-#define log(fmt, ...) fprintf(stderr, "(%s:%d) " fmt "\n", __FUNCTION__, __LINE__, ##__VA_ARGS__)
+#define loger(fmt, ...) fprintf(stderr, "(%s:%d) " fmt "\n", __FUNCTION__, __LINE__, ##__VA_ARGS__)
 
 static tkey_type_e tkey_type_lookup(const char *str)
 {
@@ -64,7 +64,7 @@ static int load_tkey_from_jso(timport_key_t *p_tkey, struct json_object *jso, st
 		str_val = json_object_get_string(obj);
 		p_tkey->key = x_strdup(str_val);
 	} else {
-		log("(key) not found");
+		loger("(key) not found");
 		goto fail;
 	}
 
@@ -73,11 +73,11 @@ static int load_tkey_from_jso(timport_key_t *p_tkey, struct json_object *jso, st
 		p_tkey->type = tkey_type_lookup(str_val);
 
 		if (TKEY_TYPE_UNKNOWN == p_tkey->type) {
-			log("(type) must be \"WHOLE_INDEX\" or \"ALONE_INDEX\" or \"KEYS_INDEX\" or \"SET_VAL\" or \"STRING_VAL\", under key (%s)", p_tkey->key);
+			loger("(type) must be \"WHOLE_INDEX\" or \"ALONE_INDEX\" or \"KEYS_INDEX\" or \"SET_VAL\" or \"STRING_VAL\", under key (%s)", p_tkey->key);
 			goto fail;
 		}
 	} else {
-		log("(type) not found, under key (%s)", p_tkey->key);
+		loger("(type) not found, under key (%s)", p_tkey->key);
 		goto fail;
 	}
 
@@ -87,7 +87,7 @@ static int load_tkey_from_jso(timport_key_t *p_tkey, struct json_object *jso, st
 
 		if (TKEY_INTERVAL_UNKNOWN == p_tkey->interval) {
 			if ((TKEY_TYPE_WHOLE_INDEX == p_tkey->type) || (TKEY_TYPE_KEYS_INDEX == p_tkey->type)) {
-				log("(interval) must be \"TEN_MIN\" or \"ONE_HOUR\"");
+				loger("(interval) must be \"TEN_MIN\" or \"ONE_HOUR\"");
 				goto fail;
 			}
 		} else if (TKEY_INTERVAL_TEN_MIN == p_tkey->interval) {
@@ -95,7 +95,7 @@ static int load_tkey_from_jso(timport_key_t *p_tkey, struct json_object *jso, st
 		}
 	} else {
 		if ((TKEY_TYPE_WHOLE_INDEX == p_tkey->type) || (TKEY_TYPE_KEYS_INDEX == p_tkey->type)) {
-			log("(interval) not found, under key (%s)", p_tkey->key);
+			loger("(interval) not found, under key (%s)", p_tkey->key);
 			goto fail;
 		}
 	}
@@ -104,12 +104,12 @@ static int load_tkey_from_jso(timport_key_t *p_tkey, struct json_object *jso, st
 		p_tkey->expire_time = json_object_get_int(obj);
 
 		if (p_tkey->expire_time < MIN_EXPIRE_TIME) {
-			log("(expire_time) less than %d, under key (%s)", MIN_EXPIRE_TIME, p_tkey->key);
+			loger("(expire_time) less than %d, under key (%s)", MIN_EXPIRE_TIME, p_tkey->key);
 			goto fail;
 		}
 	} else {
 		if ((TKEY_TYPE_WHOLE_INDEX == p_tkey->type) || (TKEY_TYPE_KEYS_INDEX == p_tkey->type)) {
-			log("(expire_time) not found, under key (%s)", p_tkey->key);
+			loger("(expire_time) not found, under key (%s)", p_tkey->key);
 			goto fail;
 		} else {
 			p_tkey->expire_time = p_tkey->parent->expire_time;
@@ -120,14 +120,14 @@ static int load_tkey_from_jso(timport_key_t *p_tkey, struct json_object *jso, st
 		p_tkey->param_cnt = json_object_get_int(obj);
 
 		if ((1 != p_tkey->param_cnt) && (2 != p_tkey->param_cnt)) {
-			log("(param_cnt) must be 1 or 2, under key (%s)", p_tkey->key);
+			loger("(param_cnt) must be 1 or 2, under key (%s)", p_tkey->key);
 			goto fail;
 		}
 	} else {
 		if ((TKEY_TYPE_WHOLE_INDEX == p_tkey->type) || (TKEY_TYPE_KEYS_INDEX == p_tkey->type)) {
 			p_tkey->param_cnt = 1;
 		} else {
-			log("(param_cnt) not found, under key (%s)", p_tkey->key);
+			loger("(param_cnt) not found, under key (%s)", p_tkey->key);
 			goto fail;
 		}
 	}
@@ -136,14 +136,14 @@ static int load_tkey_from_jso(timport_key_t *p_tkey, struct json_object *jso, st
 		p_tkey->param_tm_pos = json_object_get_int(obj);
 
 		if ((0 != p_tkey->param_tm_pos) && (1 != p_tkey->param_tm_pos)) {
-			log("(param_tm_pos) must be 0 or 1, under key (%s)", p_tkey->key);
+			loger("(param_tm_pos) must be 0 or 1, under key (%s)", p_tkey->key);
 			goto fail;
 		}
 	} else {
 		if (p_tkey->param_cnt == 1) {
 			p_tkey->param_tm_pos = 0;
 		} else {
-			log("(param_tm_pos) not found, under key (%s)", p_tkey->key);
+			loger("(param_tm_pos) not found, under key (%s)", p_tkey->key);
 			goto fail;
 		}
 	}
@@ -153,7 +153,7 @@ static int load_tkey_from_jso(timport_key_t *p_tkey, struct json_object *jso, st
 		p_tkey->redis_filter = (TKEY_REDIS_FILTER)timport_filter_lookup(str_val);
 
 		if (NULL == p_tkey->redis_filter) {
-			log("(redis_filter) \"%s\" not found, under key (%s)", str_val, p_tkey->key);
+			loger("(redis_filter) \"%s\" not found, under key (%s)", str_val, p_tkey->key);
 			goto fail;
 		}
 	}
@@ -163,7 +163,7 @@ static int load_tkey_from_jso(timport_key_t *p_tkey, struct json_object *jso, st
 		p_tkey->result_filter = (TKEY_RESULT_FILTER)timport_filter_lookup(str_val);
 
 		if (NULL == p_tkey->result_filter) {
-			log("(result_filter) \"%s\" not found, under key (%s)", str_val, p_tkey->key);
+			loger("(result_filter) \"%s\" not found, under key (%s)", str_val, p_tkey->key);
 			goto fail;
 		}
 	}
@@ -173,7 +173,7 @@ static int load_tkey_from_jso(timport_key_t *p_tkey, struct json_object *jso, st
 		p_tkey->key_filter = (TKEY_KEY_FILTER)timport_filter_lookup(str_val);
 
 		if (NULL == p_tkey->key_filter) {
-			log("(key_filter) \"%s\" not found, under key (%s)", str_val, p_tkey->key);
+			loger("(key_filter) \"%s\" not found, under key (%s)", str_val, p_tkey->key);
 			goto fail;
 		}
 	}
@@ -183,12 +183,12 @@ static int load_tkey_from_jso(timport_key_t *p_tkey, struct json_object *jso, st
 		p_tkey->hash_filter = (TKEY_HASH_FILTER)timport_filter_lookup(str_val);
 
 		if (NULL == p_tkey->hash_filter) {
-			log("(hash_filter) \"%s\" not found, under key (%s)", str_val, p_tkey->key);
+			loger("(hash_filter) \"%s\" not found, under key (%s)", str_val, p_tkey->key);
 			goto fail;
 		}
 	} else {
 		if ((TKEY_TYPE_WHOLE_INDEX != p_tkey->type) && (TKEY_TYPE_KEYS_INDEX != p_tkey->type)) {
-			log("(hash_filter) not found, under key (%s)", p_tkey->key);
+			loger("(hash_filter) not found, under key (%s)", p_tkey->key);
 			goto fail;
 		}
 	}
@@ -199,7 +199,7 @@ static int load_tkey_from_jso(timport_key_t *p_tkey, struct json_object *jso, st
 		if (json_object_object_get_ex(jso, "tsdb_in_cfg", &obj)) {
 			if (json_object_get_int(obj)) {
 				if (p_cfg->tsdb.kset_cnt <= 0) {
-					log("(tsdb_in_cfg) need (tsdb), under key (%s)", p_tkey->key);
+					loger("(tsdb_in_cfg) need (tsdb), under key (%s)", p_tkey->key);
 					goto fail;
 				}
 
@@ -212,7 +212,7 @@ static int load_tkey_from_jso(timport_key_t *p_tkey, struct json_object *jso, st
 		str_val = json_object_get_string(obj);
 
 		if (p_cfg->statistics.keys_cnt == 0) {
-			log("(statistics) needed by key (%s)", p_tkey->key);
+			loger("(statistics) needed by key (%s)", p_tkey->key);
 			goto fail;
 		}
 
@@ -224,7 +224,7 @@ static int load_tkey_from_jso(timport_key_t *p_tkey, struct json_object *jso, st
 		}
 
 		if (i == p_cfg->statistics.keys_cnt) {
-			log("(statistics) has no named \"%s\", under key (%s)", str_val, p_tkey->key);
+			loger("(statistics) has no named \"%s\", under key (%s)", str_val, p_tkey->key);
 			goto fail;
 		}
 	}
@@ -238,14 +238,14 @@ static int load_tkey_from_jso(timport_key_t *p_tkey, struct json_object *jso, st
 			p_tkey->child_cnt = json_object_array_length(obj);
 
 			if (p_tkey->child_cnt <= 0) {
-				log("(child) have no child, under key (%s)", p_tkey->key);
+				loger("(child) have no child, under key (%s)", p_tkey->key);
 				goto fail;
 			}
 
 			p_tkey->child = calloc(p_tkey->child_cnt, sizeof(timport_key_t));
 
 			if (NULL == p_tkey->child) {
-				log("(child) calloc failed, under key (%s)", p_tkey->key);
+				loger("(child) calloc failed, under key (%s)", p_tkey->key);
 				goto fail;
 			}
 
@@ -254,12 +254,12 @@ static int load_tkey_from_jso(timport_key_t *p_tkey, struct json_object *jso, st
 				int ok = load_tkey_from_jso(&p_tkey->child[i], json_object_array_get_idx(obj, i), p_cfg);
 
 				if (ok != 0) {
-					log("(load_tkey_from_jso) failed, under key (%s)", p_tkey->key);
+					loger("(load_tkey_from_jso) failed, under key (%s)", p_tkey->key);
 					goto fail;
 				}
 			}
 		} else {
-			log("(child) not found, under key (%s)", p_tkey->key);
+			loger("(child) not found, under key (%s)", p_tkey->key);
 			goto fail;
 		}
 	}
@@ -299,7 +299,7 @@ static int load_kset_from_jso(tsdb_kset_t *p_kset, struct json_object *jso, stru
 		array_len = json_object_array_length(obj);
 
 		if (2 != array_len) {
-			log("(key_set) array_len != 2");
+			loger("(key_set) array_len != 2");
 			goto fail;
 		}
 
@@ -308,7 +308,7 @@ static int load_kset_from_jso(tsdb_kset_t *p_kset, struct json_object *jso, stru
 		tmp_obj = json_object_array_get_idx(obj, 1);
 		p_kset->e_key = (uint64_t)json_object_get_int(tmp_obj);
 	} else {
-		log("(key_set) not found");
+		loger("(key_set) not found");
 		goto fail;
 	}
 
@@ -316,7 +316,7 @@ static int load_kset_from_jso(tsdb_kset_t *p_kset, struct json_object *jso, stru
 		array_len = json_object_array_length(obj);
 
 		if (array_len > 2) {
-			log("(data_set) array_len > 2");
+			loger("(data_set) array_len > 2");
 			goto fail;
 		}
 
@@ -329,19 +329,19 @@ static int load_kset_from_jso(tsdb_kset_t *p_kset, struct json_object *jso, stru
 				str_val = json_object_get_string(dn_obj);
 				p_kset->data_node[i].host = x_strdup(str_val);
 			} else {
-				log("(host) not found, under (data_set) idx[%d]", i);
+				loger("(host) not found, under (data_set) idx[%d]", i);
 				goto fail;
 			}
 
 			if (json_object_object_get_ex(tmp_obj, "port", &dn_obj)) {
 				p_kset->data_node[i].port = json_object_get_int(dn_obj);
 			} else {
-				log("(port) not found, under (data_set) idx[%d]", i);
+				loger("(port) not found, under (data_set) idx[%d]", i);
 				goto fail;
 			}
 		}
 	} else {
-		log("(data_set) not found, under (key_set) [%d, %d]", p_kset->s_key, p_kset->e_key);
+		loger("(data_set) not found, under (key_set) [%d, %d]", p_kset->s_key, p_kset->e_key);
 		goto fail;
 	}
 
@@ -368,7 +368,7 @@ void read_timport_cfg(struct timport_cfg_file *p_cfg, char *name)
 	if (json_object_object_get_ex(cfg, "max_req_size", &obj)) {
 		p_cfg->max_req_size = json_object_get_int(obj);
 	} else {
-		log("(max_req_size) not found");
+		loger("(max_req_size) not found");
 		goto fail;
 	}
 
@@ -376,7 +376,7 @@ void read_timport_cfg(struct timport_cfg_file *p_cfg, char *name)
 		str_val = json_object_get_string(obj);
 		p_cfg->log_path = x_strdup(str_val);
 	} else {
-		log("(log_path) not found");
+		loger("(log_path) not found");
 		goto fail;
 	}
 
@@ -384,14 +384,14 @@ void read_timport_cfg(struct timport_cfg_file *p_cfg, char *name)
 		str_val = json_object_get_string(obj);
 		p_cfg->log_file = x_strdup(str_val);
 	} else {
-		log("(log_file) not found");
+		loger("(log_file) not found");
 		goto fail;
 	}
 
 	if (json_object_object_get_ex(cfg, "log_level", &obj)) {
 		p_cfg->log_level = json_object_get_int(obj);
 	} else {
-		log("(log_level) not found");
+		loger("(log_level) not found");
 		goto fail;
 	}
 
@@ -399,10 +399,10 @@ void read_timport_cfg(struct timport_cfg_file *p_cfg, char *name)
 		p_cfg->delay_time = json_object_get_int(obj);
 
 		if (p_cfg->delay_time < MIN_DELAY_TIME) {
-			log("(delay_time) less than %d", MIN_DELAY_TIME);
+			loger("(delay_time) less than %d", MIN_DELAY_TIME);
 		}
 	} else {
-		log("(delay_time) not found");
+		loger("(delay_time) not found");
 		goto fail;
 	}
 
@@ -410,24 +410,24 @@ void read_timport_cfg(struct timport_cfg_file *p_cfg, char *name)
 		p_cfg->zk_disabled = json_object_get_int(obj);
 
 		if (p_cfg->zk_disabled) {
-			log("[WARN] (zk_disabled) == 1");
+			loger("[WARN] (zk_disabled) == 1");
 		}
 	} else {
-		log("[INFO] (zk_disabled) not set");
+		loger("[INFO] (zk_disabled) not set");
 	}
 
 	if (json_object_object_get_ex(cfg, "redis", &obj)) {
 		array_len = json_object_array_length(obj);
 
 		if (array_len <= 0) {
-			log("(redis) array length err");
+			loger("(redis) array length err");
 			goto fail;
 		}
 
 		NewArray0(array_len, p_cfg->redis);
 
 		if (NULL == p_cfg->redis) {
-			log("(redis) NewArray0 err");
+			loger("(redis) NewArray0 err");
 			goto fail;
 		}
 
@@ -440,21 +440,21 @@ void read_timport_cfg(struct timport_cfg_file *p_cfg, char *name)
 				str_val = json_object_get_string(tmp_obj);
 				p_cfg->redis[i].host = x_strdup(str_val);
 			} else {
-				log("(redis) no (host)");
+				loger("(redis) no (host)");
 				goto fail;
 			}
 
 			if (json_object_object_get_ex(rds_obj, "port", &tmp_obj)) {
 				p_cfg->redis[i].port = json_object_get_int(tmp_obj);
 			} else {
-				log("(redis) no (port)");
+				loger("(redis) no (port)");
 				goto fail;
 			}
 
 			p_cfg->redis[i].idx = i;
 		}
 	} else {
-		log("(redis) not found");
+		loger("(redis) not found");
 		goto fail;
 	}
 
@@ -471,13 +471,13 @@ void read_timport_cfg(struct timport_cfg_file *p_cfg, char *name)
 			int ok = load_kset_from_jso(&p_tsdb->key_set[i], json_object_array_get_idx(obj, i), p_cfg);
 
 			if (ok != 0) {
-				log("(tsdb) load_kset_from_jso err");
+				loger("(tsdb) load_kset_from_jso err");
 				goto fail;
 			}
 		}
 	} else {
 		if (p_cfg->zk_disabled) {
-			log("(zk_disabled) == 1, but no (tsdb)");
+			loger("(zk_disabled) == 1, but no (tsdb)");
 			goto fail;
 		}
 	}
@@ -487,14 +487,14 @@ void read_timport_cfg(struct timport_cfg_file *p_cfg, char *name)
 			str_val = json_object_get_string(tmp_obj);
 			p_cfg->statistics.host = x_strdup(str_val);
 		} else {
-			log("(statistics) has no (host)");
+			loger("(statistics) has no (host)");
 			goto fail;
 		}
 
 		if (json_object_object_get_ex(obj, "port", &tmp_obj)) {
 			p_cfg->statistics.port = json_object_get_int(tmp_obj);
 		} else {
-			log("(statistics) has no (host)");
+			loger("(statistics) has no (host)");
 			goto fail;
 		}
 
@@ -502,14 +502,14 @@ void read_timport_cfg(struct timport_cfg_file *p_cfg, char *name)
 			array_len = json_object_array_length(tmp_obj);
 
 			if (array_len <= 0) {
-				log("(statistics) has 0 (keys)");
+				loger("(statistics) has 0 (keys)");
 				goto fail;
 			}
 
 			NewArray0(array_len, p_cfg->statistics.keys);
 
 			if (NULL == p_cfg->statistics.keys) {
-				log("(statistics) (keys) NewArray0 failed");
+				loger("(statistics) (keys) NewArray0 failed");
 				goto fail;
 			}
 
@@ -522,7 +522,7 @@ void read_timport_cfg(struct timport_cfg_file *p_cfg, char *name)
 					str_val = json_object_get_string(obj);
 					p_cfg->statistics.keys[i].name = x_strdup(str_val);
 				} else {
-					log("(statistics) (keys[%d]) has no (key)", i);
+					loger("(statistics) (keys[%d]) has no (key)", i);
 					goto fail;
 				}
 
@@ -539,7 +539,7 @@ void read_timport_cfg(struct timport_cfg_file *p_cfg, char *name)
 				}
 			}
 		} else {
-			log("(statistics) has no (keys)");
+			loger("(statistics) has no (keys)");
 			goto fail;
 		}
 	}
@@ -548,7 +548,7 @@ void read_timport_cfg(struct timport_cfg_file *p_cfg, char *name)
 		array_len = json_object_array_length(obj);
 
 		if (array_len <= 0) {
-			log("(timport) array length err");
+			loger("(timport) array length err");
 			goto fail;
 		}
 
@@ -557,7 +557,7 @@ void read_timport_cfg(struct timport_cfg_file *p_cfg, char *name)
 		NewArray0(array_len, p_tktree->child);
 
 		if (NULL == p_tktree->child) {
-			log("(timport) NewArray0 err");
+			loger("(timport) NewArray0 err");
 			goto fail;
 		}
 
@@ -568,7 +568,7 @@ void read_timport_cfg(struct timport_cfg_file *p_cfg, char *name)
 			int ok = load_tkey_from_jso(&p_tktree->child[i], json_object_array_get_idx(obj, i), p_cfg);
 
 			if (ok != 0) {
-				log("(timport) load_tkey_from_jso err");
+				loger("(timport) load_tkey_from_jso err");
 				goto fail;
 			}
 		}
@@ -581,7 +581,7 @@ void read_timport_cfg(struct timport_cfg_file *p_cfg, char *name)
 			str_val = json_object_get_string(obj);
 			p_cfg->zk_servers = x_strdup(str_val);
 		} else {
-			log("(zk_servers) not found");
+			loger("(zk_servers) not found");
 			goto fail;
 		}
 
@@ -589,7 +589,7 @@ void read_timport_cfg(struct timport_cfg_file *p_cfg, char *name)
 			str_val = json_object_get_string(obj);
 			p_cfg->zk_rnode = x_strdup(str_val);
 		} else {
-			log("(zk_rnode) not found");
+			loger("(zk_rnode) not found");
 			goto fail;
 		}
 	}
@@ -598,7 +598,7 @@ void read_timport_cfg(struct timport_cfg_file *p_cfg, char *name)
 		str_val = json_object_get_string(obj);
 		p_cfg->backup_path = x_strdup(str_val);
 	} else {
-		log("(backup_path) not found");
+		loger("(backup_path) not found");
 		goto fail;
 	}
 
@@ -606,7 +606,7 @@ void read_timport_cfg(struct timport_cfg_file *p_cfg, char *name)
 		str_val = json_object_get_string(obj);
 		p_cfg->start_time_file = x_strdup(str_val);
 	} else {
-		log("(start_time_file) not found");
+		loger("(start_time_file) not found");
 		goto fail;
 	}
 
@@ -620,7 +620,7 @@ fail:
 		json_object_put(cfg);
 	}
 
-	log("invalid config file :%s", name);
+	loger("invalid config file :%s", name);
 	exit(EXIT_FAILURE);
 }
 
