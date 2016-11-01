@@ -184,9 +184,9 @@ static bool task_report(void *user, void *task)
 
 int main(int argc, char **argv)
 {
-	if (!kvpool_init(kv_create)) {
-		exit(EXIT_FAILURE);
-	}
+	//if (!kvpool_init(kv_create)) {
+	//	exit(EXIT_FAILURE);
+	//}
 	create_io(TYPE_UPSTREAM | TYPE_STATUS);
 	// 1. 初始化线程池
 	tlpool_t *tlpool = tlpool_init(MAX_PTHREAD_COUNT, 100, sizeof(struct app_msg), NULL);

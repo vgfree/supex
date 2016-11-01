@@ -3,7 +3,6 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-#include "libkv.h"
 #include "swift_api.h"
 #include "swift_lua_api.h"
 #include "crzpt_api.h"
@@ -23,7 +22,6 @@ struct crzpt_cfg_list   g_crzpt_cfg_list[MAX_APP_COUNTS];
 
 int main(int argc, char **argv)
 {
-	kvpool_init(kv_create);
 	int     i = 0;
 	pid_t   pid[MAX_APP_COUNTS] = { 0 };
 	/*load swift config*/

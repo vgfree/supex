@@ -16,9 +16,9 @@ struct smart_cfg_list g_smart_cfg_list = {};
 
 void entry_init(void)
 {
-	if (!kvpool_init(kv_create)) {
-		exit(EXIT_FAILURE);
-	}
+	//if (!kvpool_init(kv_create)) {
+	//	exit(EXIT_FAILURE);
+	//}
 
 	pmr_load_data_all();
 }

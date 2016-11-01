@@ -10,7 +10,6 @@
 #include "skt.h"
 #include "load_cfg.h"
 #include "supex.h"
-#include "libkv.h"
 
 #define SERVER_NAME "AK47"
 
@@ -19,13 +18,7 @@ static struct loghub_cfg_list g_loghub_cfg_list = {};
 static lua_State *lua_vm_init(void)
 {
 	int     error = 0;
-	bool    ok = false;
 
-	ok = kvpool_init(kv_create);
-
-	if (!ok) {
-		exit(EXIT_FAILURE);
-	}
 
 	lua_State *L = luaL_newstate();
 	assert(L);

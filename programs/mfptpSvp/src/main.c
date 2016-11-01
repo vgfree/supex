@@ -5,7 +5,6 @@
 #include <assert.h>
 
 
-#include "libkv.h"
 #include "major/alive_api.h"
 #include "alive_cpp_api.h"
 #include "load_alive_cfg.h"
@@ -60,9 +59,6 @@ static void alive_entry_init(void)
 {
 	
 	keyval_init();
-	if (!kvpool_init(kv_create)) {
-		exit(EXIT_FAILURE);
-	}
 }
 
 int main(int argc, char **argv)

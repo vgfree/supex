@@ -14,7 +14,6 @@
 #include "load_sniff_cfg.h"
 #include "base/switch_queue.h"
 #include "app_queue.h"
-#include "libkv.h"
 
 #include "sniff_evcoro_lua_api.h"
 
@@ -36,9 +35,6 @@ void swift_entry_init(void)
 	//      fprintf(stdout, "libaray key-value initialize failed");
 	//      exit(-1);
 	// }
-	if (!kvpool_init(kv_create)) {
-		exit(EXIT_FAILURE);
-	}
 }
 
 int main(int argc, char **argv)
