@@ -9,7 +9,6 @@ OBJ = libmini.a \
       libleveldb.a \
       libucmq.a \
       liblrucache.a \
-      libkv.a \
       libhiredis.a \
       libtopoi.a \
       libzmq.a \
@@ -89,10 +88,6 @@ liblrucache.a:
 	$(MAKE) -C $(LIB_DIR)/liblrucache
 	mv $(LIB_DIR)/liblrucache/$@ $(LIB_DIR)
 
-libkv.a:
-	$(MAKE) -C $(LIB_DIR)/libkv release
-	mv $(LIB_DIR)/libkv/release/$@ $(LIB_DIR)
-
 libhiredis.a:
 	$(MAKE) -C $(LIB_DIR)/hiredis
 	mv $(LIB_DIR)/hiredis/$@ $(LIB_DIR)
@@ -133,7 +128,6 @@ clean:
 	$(MAKE) -C $(LIB_DIR)/libtopoi clean
 	$(MAKE) -C $(LIB_DIR)/liblrucache clean
 	$(MAKE) -C $(LIB_DIR)/hiredis clean
-	$(MAKE) -C $(LIB_DIR)/libkv clean
 	$(MAKE) -C $(LIB_DIR)/libmemhook distclean
 	$(MAKE) -C $(LIB_DIR)/libmini distclean
 	$(MAKE) -C $(LIB_DIR)/libxmq clean

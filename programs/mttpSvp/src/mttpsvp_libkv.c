@@ -7,88 +7,81 @@
 #include "mttpsvp_libkv.h"
 #include "sniff_evcoro_lua_api.h"
 
-static kv_handler_t *handler;
 
 #define CMD_BUF_SIZE 1024
 
 void mttpsvp_libkv_init()
 {
-	handler = kv_create(NULL);
-
-	if (handler == NULL) {
-		x_printf(E, "libkv create error\n");
-		exit(EXIT_FAILURE);
-	}
+	kv_init();
+	int idx = kv_load(NULL, NULL);
+	assert(idx == 0);
 }
 
 void mttpsvp_libkv_destory()
 {
-	kv_destroy(handler);
+	kv_destroy();
 }
 
 void mttpsvp_libkv_set(uint64_t cid, int sfd, const char *v)
 {
 	char            cmd[CMD_BUF_SIZE];
 	int             cmdlen = sprintf(cmd, "set %" PRId64 ":%d %s", cid, sfd, v);
-	kv_answer_t     *ans = kv_ask(handler, cmd, cmdlen);
+	kv_handler_t *handler = kv_spl(0, cmd, cmdlen);
+	if (handler == NULL) {
+		x_printf(E, "libkv kv_spl error: not enough memory for kv_answer_t\n");
+		return;
+	}
+	kv_answer_t *ans = &handler->answer;
 
-	if (ans == NULL) {
-		x_printf(E, "libkv kv_ask error: not enough memory for kv_answer_t\n");
+	if (ans->errnum != ERR_NONE) {
+		x_printf(E, "errnum:%d\terr:%s\n\n", ans->errnum, error_getinfo(ans->errnum));
+		kv_handler_release(handler);
 		return;
 	}
 
-	if (ans->errnum) {
-		x_printf(E, "libkv kv_ask error: %s\n", ans->err);
-	}
-
-	kv_answer_release(ans);
+	kv_handler_release(handler);
 }
 
 int mttpsvp_libkv_check_handshake(uint64_t cid, int sfd, const char *v, size_t vlen)
 {
 	char            cmd[CMD_BUF_SIZE];
 	int             cmdlen = sprintf(cmd, "get %" PRId64 ":%d", cid, sfd);
-	kv_answer_t     *ans = kv_ask(handler, cmd, cmdlen);
+	kv_handler_t *handler = kv_spl(0, cmd, cmdlen);
+	if (handler == NULL) {
+		x_printf(E, "libkv kv_spl error: not enough memory for kv_answer_t\n");
+		return -1;
+	}
+	kv_answer_t *ans = &handler->answer;
 
-	if (ans == NULL) {
-		x_printf(E, "libkv kv_ask error: not enough memory for kv_answer_t\n");
+	if (ans->errnum != ERR_NONE) {
+		x_printf(E, "errnum:%d\terr:%s\n\n", ans->errnum, error_getinfo(ans->errnum));
+		kv_handler_release(handler);
 		return -1;
 	}
 
-	if (ans->errnum) {
-		x_printf(E, "libkv kv_ask error: %s\n", ans->err);
-		kv_answer_release(ans);
-		return -1;
-	}
-
-	unsigned long len = kv_answer_length(ans);
+	unsigned long len = answer_length(ans);
 
 	if (len != 1) {
-		x_printf(E, "libkv kv_ask error: unknown answer length(%" PRId64 ")\n", len);
-		kv_answer_release(ans);
+		x_printf(E, "libkv kv_spl error: unknown answer length(%" PRId64 ")\n", len);
+		kv_handler_release(handler);
 		return -1;
 	}
 
-	kv_answer_value_t *value = kv_answer_first_value(ans);
-
-	if (value == NULL) {
-		kv_answer_release(ans);
-		x_printf(E, "libkv kv_answer_first_value error: not enough memory for kv_answer_value_t\n");
+	kv_answer_value_t *value = answer_head_value(ans);
+	char *data = (char *)answer_value_look_addr(value);
+	size_t size = answer_value_look_size(value);
+	if (size != vlen) {
+		x_printf(E, "libkv kv_answer_first_value error: unknown value length(%" PRId64 ")\n", size);
+		kv_handler_release(handler);
 		return -1;
 	}
 
-	if (value->ptrlen != vlen) {
-		x_printf(E, "libkv kv_answer_first_value error: unknown value length(%" PRId64 ")\n", value->ptrlen);
-		kv_answer_release(ans);
-		return -1;
-	}
-
-	if (strncmp(value->ptr, v, vlen) == 0) {
-		kv_answer_release(ans);
+	if (strncmp(data, v, vlen) == 0) {
+		kv_handler_release(handler);
 		return 0;
 	}
 
-	kv_answer_release(ans);
+	kv_handler_release(handler);
 	return -1;
 }
 
@@ -96,17 +89,19 @@ void mttpsvp_libkv_del(uint64_t cid, int sfd)
 {
 	char            cmd[CMD_BUF_SIZE];
 	int             cmdlen = sprintf(cmd, "del %" PRId64 ":%d", cid, sfd);
-	kv_answer_t     *ans = kv_ask(handler, cmd, cmdlen);
+	kv_handler_t *handler = kv_spl(0, cmd, cmdlen);
+	if (handler == NULL) {
+		x_printf(E, "libkv kv_spl error: not enough memory for kv_answer_t\n");
+		return;
+	}
+	kv_answer_t *ans = &handler->answer;
 
-	if (ans == NULL) {
-		x_printf(E, "libkv kv_ask error: not enough memory for kv_answer_t\n");
+	if (ans->errnum != ERR_NONE) {
+		x_printf(E, "errnum:%d\terr:%s\n\n", ans->errnum, error_getinfo(ans->errnum));
+		kv_handler_release(handler);
 		return;
 	}
 
-	if (ans->errnum) {
-		x_printf(E, "libkv kv_ask error: %s\n", ans->err);
-	}
-
-	kv_answer_release(ans);
+	kv_handler_release(handler);
 }
 

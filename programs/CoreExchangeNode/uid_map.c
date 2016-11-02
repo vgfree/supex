@@ -6,11 +6,11 @@
 #include "libmini.h"
 #include "comm_def.h"
 
-static kv_handler_t *g_uid_map = NULL;
+static int g_uid_map = 0;
 
 void init_uid_map()
 {
-	g_uid_map = kv_create(NULL);
+	g_uid_map = kv_load(NULL, NULL);
 }
 
 int find_fd(char *uid)

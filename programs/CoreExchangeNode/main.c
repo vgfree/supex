@@ -123,6 +123,7 @@ static int work_init(void)
 		fdman_list_push_back(LOGIN_SERVER, &node);
 	}
 
+	kv_init();
 	/*init maps*/
 	init_uid_map();
 	init_gid_map();

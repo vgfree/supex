@@ -5,11 +5,11 @@
 #include "gid_map.h"
 #include "libmini.h"
 
-static kv_handler_t *g_gid_map = NULL;
+static int g_gid_map = 0;
 
 void init_gid_map()
 {
-	g_gid_map = kv_create(NULL);
+	g_gid_map = kv_load(NULL, NULL);
 }
 
 int find_fd_list(char *gid, int fd_list[], int *size)

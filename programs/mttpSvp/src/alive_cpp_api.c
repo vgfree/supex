@@ -199,6 +199,7 @@ char *copy_query_string_value(qs_buf_t *buf, size_t buf_size, const char *key, s
 	return NULL;
 }
 
+#define ONLY_FOR_TEST
 int alive_vms_call(void *user, union virtual_system **VMS, struct adopt_task_node *task)
 {
 	ALIVE_WORKER_PTHREAD *p_alive_worker = (ALIVE_WORKER_PTHREAD *)user;

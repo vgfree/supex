@@ -9,6 +9,7 @@ INC_DIR=-I/usr/local/include/luajit-2.0 -I../../lib/libev -I../../lib/json-c \
 	-I../../lib/libevcs/include \
 	-I../../lib/libevcs/include/engine \
 	-I../../lib/libevcs/include/frame \
+	-I../../lib/leveldb-1.19/include \
 	-I../../lib/libcomm \
 	-I./src -I../
 
@@ -16,7 +17,7 @@ INC_DIR=-I/usr/local/include/luajit-2.0 -I../../lib/libev -I../../lib/json-c \
 
 LIB_DIR=-L/usr/local/lib -L../../lib -L../../lib/hiredis/
 LIBS=-lluajit-5.1 -lstdc++ -lpthread -lrt -lm -lhiredis
-LIBA=-lucmq -lcjson -lmini -ljson-c 
+LIBA=-lucmq -lcjson -lmini -ljson-c -lkv -lleveldb
 
 #[=========>MARK<=========]#
 MAIN_APP_SERV ?= mfptpSvp

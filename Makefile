@@ -71,7 +71,7 @@ SRV := $(openIMX) $(openHLS) $(openPMS) $(openLOG) \
 	topology crzptX crzptY ACB damS  roadRank \
 	gdgive bdgive gopath gomile ashman adcube_v2\
 	spark releaseServer dfsdb tsdb \
-	timport msgimport rtimport simimport PMR tagpick trafficapi mttpServer mfptpSvp mttpSvp rrtopo damR BRM mfptpServer pmrhttp weibo-S weibo-G
+	timport msgimport rtimport simimport PMR tagpick trafficapi mfptpSvp mttpSvp rrtopo damR BRM pmrhttp weibo-S weibo-G
 # club
 
 help:
@@ -228,10 +228,6 @@ bdgive:
 	$(MAKE) -C ./programs/GIVE MAIN_APP_SERV=bdgive
 	@echo -e $(GREEN)"【"$(YELLOW) $@ $(GREEN)"】"$(RED)"\n-->OK!\n"$(NONE)
 
-mttpServer:
-	$(MAKE) -C ./programs/mttpServer MAIN_APP_SERV=mttpServer
-	@echo -e $(GREEN)"【"$(YELLOW) $@ $(GREEN)"】"$(RED)"\n-->OK!\n"$(NONE)
-
 mttpSvp:
 	$(MAKE) -C ./programs/mttpSvp MAIN_APP_SERV=mttpSvp
 	@echo -e $(GREEN)"【"$(YELLOW) $@ $(GREEN)"】"$(RED)"\n-->OK!\n"$(NONE)
@@ -313,10 +309,6 @@ pmrhttp:
 	$(MAKE) -C ./programs/PMR_HTTP MAIN_APP_SERV=pmrhttp
 	@echo -e $(GREEN)"【"$(YELLOW) $@ $(GREEN)"】"$(RED)"\n-->OK!\n"$(NONE)
 
-mfptpServer:
-	$(MAKE) -C ./programs/mfptpServer MAIN_APP_SERV=mfptpServer
-	@echo -e $(GREEN)"【"$(YELLOW) $@ $(GREEN)"】"$(RED)"\n-->OK!\n"$(NONE)
-
 IMX_coreExchangeNode:
 	$(MAKE) -C ./programs/CoreExchangeNode MAIN_APP_SERV=coreExchangeNode
 	@echo -e $(GREEN)"【"$(YELLOW) $@ $(GREEN)"】"$(RED)"\n-->OK!\n"$(NONE)
@@ -359,7 +351,6 @@ clean:
 	$(MAKE) -C ./programs/pole-S clean
 	$(MAKE) -C ./programs/tagpick clean
 	$(MAKE) -C ./programs/GIVE clean
-	$(MAKE) -C ./programs/mttpServer clean
 	$(MAKE) -C ./programs/mttpSvp clean
 	$(MAKE) -C ./programs/mfptpSvp clean
 	$(MAKE) -C ./programs/RRDemo/topo clean
@@ -371,7 +362,6 @@ clean:
 	$(MAKE) -C ./programs/PMR clean
 	$(MAKE) -C ./programs/PMR_HTTP clean
 	$(MAKE) -C ./programs/loghub clean
-	$(MAKE) -C ./programs/mfptpServer clean
 	$(MAKE) -C ./programs/CoreExchangeNode clean
 	$(MAKE) -C ./programs/messageGateway clean
 	$(MAKE) -C ./programs/settingServer clean
@@ -397,7 +387,6 @@ distclean:
 	$(MAKE) -C ./programs/pole-S distclean
 	$(MAKE) -C ./programs/tagpick distclean
 	$(MAKE) -C ./programs/GIVE distclean
-	$(MAKE) -C ./programs/mttpServer distclean
 	$(MAKE) -C ./programs/mttpSvp distclean
 	$(MAKE) -C ./programs/mfptpSvp distclean
 	$(MAKE) -C ./programs/RRDemo/topo distclean
@@ -413,7 +402,6 @@ distclean:
 	$(MAKE) -C ./programs/trafficapi distclean
 	$(MAKE) -C ./programs/PMR distclean
 	$(MAKE) -C ./programs/PMR_HTTP distclean
-	$(MAKE) -C ./programs/mfptpServer distclean
 	$(MAKE) -C ./programs/appServer distclean
 	$(MAKE) -C ./lib clean
 	$(MAKE) -C ./open/lib clean
