@@ -25,8 +25,6 @@ static lua_State *_vms_new(void)
 	lua_register(L, "app_lua_get_uri_args", app_lua_get_uri_args);
 	lua_register(L, "app_lua_get_recv_data", app_lua_get_recv_data);
 	lua_register(L, "app_lua_add_send_data", app_lua_add_send_data);
-	// lua_register(L, "luakv_cmd", luakv_run);
-	// lua_register(L, "luakv_ask", luakv_iterfactory);
 #ifdef OPEN_ZOOKEEPER
 	lua_register(L, "zk_get_read_dn", zk_get_read_dn);
 #endif

@@ -25,7 +25,7 @@ int tsdb_cmd_init(struct tsdb_cfg_file *p_cfg)
 	}
 
 	if (s_engine_type & TSDB_ENGINE_KV) {
-		ret = tsdb_kv_init();
+		ret = tsdb_kv_init(LDB_DB_NAME);
 	}
 
 	return 0;

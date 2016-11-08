@@ -53,8 +53,6 @@ static lua_State *_vms_new(void)
 #ifdef GOBY
 	lua_register(L, "getpoi", getpoi);
 #endif
-	// lua_register(L, "luakv_cmd", luakv_run);
-	// lua_register(L, "luakv_ask", luakv_iterfactory);
 	/*lua init*/
 	{
 		extern struct smart_cfg_list g_smart_cfg_list;

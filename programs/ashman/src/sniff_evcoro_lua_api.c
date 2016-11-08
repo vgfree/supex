@@ -17,8 +17,6 @@ static lua_State *_vms_new(void)
 	/*reg func*/
 	lua_register(L, "supex_http", async_http);
 	lua_register(L, "lua_default_switch", lj_evcoro_switch);
-	// lua_register(L, "luakv_cmd", luakv_run);
-	// lua_register(L, "luakv_ask", luakv_iterfactory);
 	/*lua init*/
 	{
 		extern struct sniff_cfg_list g_sniff_cfg_list;

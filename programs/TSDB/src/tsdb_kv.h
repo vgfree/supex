@@ -4,7 +4,7 @@
 
 #include "tsdb_cfg.h"
 
-int tsdb_kv_init(void);
+int tsdb_kv_init(char *ident);
 
 int tsdb_kv_close(void);
 

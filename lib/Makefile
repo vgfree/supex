@@ -14,6 +14,7 @@ OBJ = libmini.a \
       libzmq.a \
       libxmq.a \
       libnetmod.a \
+      libmcache.a \
       libzookeeper_mt.a \
       libsqlite3.a
 
@@ -100,6 +101,10 @@ libmini.a:
 	$(MAKE) -j8 -C $(LIB_DIR)/libmini CFLAGS="-g -DSLOG_ADD_LENGTH_FIELD -DSQUEUE_USE_RWLOCK"
 	mv $(LIB_DIR)/libmini/lib/$@ $(LIB_DIR)
 
+libmcache.a:
+	$(MAKE) -j8 -C $(LIB_DIR)/mcache
+	mv $(LIB_DIR)/mcache/$@ $(LIB_DIR)
+
 libzookeeper_mt.a:
 	-if [ -d ./zookeeper-3.4.6 ];then echo "zookeeper-3.4.6 exist!"; else tar -zxvf ../third-party/zookeeper-3.4.6.tar.gz; fi
 	cd $(LIB_DIR)/zookeeper-3.4.6/src/c && ./configure
@@ -132,6 +137,7 @@ clean:
 	$(MAKE) -C $(LIB_DIR)/libmini distclean
 	$(MAKE) -C $(LIB_DIR)/libxmq clean
 	$(MAKE) -C $(LIB_DIR)/libnetmod clean
+	$(MAKE) -C $(LIB_DIR)/mcache clean
 	-if [ -d ./zookeeper-3.4.6 ];then rm -rf ./zookeeper-3.4.6; fi
 	rm -rf $(OBJ)
 

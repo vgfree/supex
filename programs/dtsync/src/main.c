@@ -27,8 +27,6 @@
 struct swift_cfg_list   g_swift_cfg_list = {};
 struct sniff_cfg_list   g_sniff_cfg_list = {};
 struct rr_cfg_file      g_rr_cfg_file = {};
-kv_handler_t            *g_kv_handler = NULL;
-kv_answer_t             *g_kv_ans = NULL;
 
 static void swift_pthrd_init(void *user)
 {
@@ -180,9 +178,6 @@ int main(int argc, char **argv)
 	}
 
 	// --> End.
-
-	// ---> init libkv
-	g_kv_handler = kv_create(NULL);
 
 	// ---> init sniff
 

@@ -25,8 +25,6 @@ MAIN_APP_SERV ?= tsdb
 
 CFLAGS += -DOPEN_COMPRESSION
 
-CFLAGS += -DOPEN_KV_EXPIRE
-
 ifeq ($(MAIN_APP_SERV), tsdb)
 HANDLE_MODEL = EVCORO
 endif
@@ -61,7 +59,6 @@ BASE_OBJ = $(addprefix $(BIN)/, \
 	   slave.o \
 	   zk.o \
 	   misc.o \
-	   kv_priv.o \
 	   )
 
 OBJ ?= $(BASE_OBJ)

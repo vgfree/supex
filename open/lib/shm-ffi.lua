@@ -60,7 +60,7 @@ local SHM_LIST = {}
 
 function init(key, max)
 	os.execute("ipcrm -M " ..  key)
-	local shmid = ffi.C.shmget(key, max, IPC_CREAT)
+	local shmid = ffi.C.shmget(key, max, bit.bor(IPC_CREAT, 0666))
 	print(shmid)
 	if shmid < 0 then
 		ffi.C.perror("creat shm")
