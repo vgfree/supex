@@ -1,0 +1,12 @@
+#!/bin/bash
+
+TRACE=./traces/`basename $1`
+RETCODE=0
+
+mkdir -p `dirname $TRACE`
+valgrind --error-exitcode=1 --leak-check=full --track-origins=yes --show-reachable=yes --suppressions=valgrind.supp $* 2&>$TRACE
+RETCODE=$?
+if [ $RETCODE == 0 ]; then
+    rm -rf $TRACE
+fi
+exit $RETCODE
