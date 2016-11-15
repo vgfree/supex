@@ -16,7 +16,8 @@ OBJ = libmini.a \
       libnetmod.a \
       libmcache.a \
       libzookeeper_mt.a \
-      libsqlite3.a
+      libsqlite3.a \
+      librinoo.a
 
 all:$(OBJ)
 	-@echo "Done LIB!"
@@ -117,6 +118,9 @@ libsqlite3.a:
 	mv $(LIB_DIR)/sqlite-autoconf-3090200/.libs/$@ $(LIB_DIR)
 
 
+librinoo.a:
+	mkdir librinoo/build && cd librinoo/build && cmake ../ && make rinoo_static && cp librinoo_static.a ../../librinoo.a
+
 test:
 	gcc -g -o example -I./libev -I./hiredis -L./  hiredis/examples/example-libev.c  -lev -lhiredis -lm
 
@@ -139,5 +143,6 @@ clean:
 	$(MAKE) -C $(LIB_DIR)/libnetmod clean
 	$(MAKE) -C $(LIB_DIR)/mcache clean
 	-if [ -d ./zookeeper-3.4.6 ];then rm -rf ./zookeeper-3.4.6; fi
+	-if [ -d ./librinoo/build ];then rm -rf ./librinoo/build; fi
 	rm -rf $(OBJ)
 
