@@ -14,7 +14,6 @@ void task1(void *channel)
 {
 	int i;
 	int x;
-	size_t len;
 
 	for (i = 0; i < 10; i++) {
 		rinoo_channel_write(channel, &i, sizeof(i));
@@ -27,7 +26,6 @@ void task2(void *channel)
 {
 	int i;
 	int x;
-	size_t len;
 
 	for (i = 0; i < 10; i++) {
 		rinoo_channel_read(channel, &x, sizeof(x));

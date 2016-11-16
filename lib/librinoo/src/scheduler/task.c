@@ -153,6 +153,7 @@ t_task *rinoo_task(t_sched *sched, t_task *parent, void (*function)(void *arg), 
 	t_task *task;
 
 	XASSERT(sched != NULL, NULL);
+	XASSERT(parent != NULL, NULL);
 	XASSERT(function != NULL, NULL);
 
 	task = malloc(sizeof(*task));
@@ -163,10 +164,7 @@ t_task *rinoo_task(t_sched *sched, t_task *parent, void (*function)(void *arg), 
 	task->scheduled = false;
 	task->context.stack.sp = task->stack;
 	task->context.stack.size = sizeof(task->stack);
-	task->context.link = NULL;
-	if (parent != NULL) {
-		task->context.link = &parent->context;
-	}
+	task->context.link = &parent->context;
 	memset(&task->tv, 0, sizeof(task->tv));
 	memset(&task->proc_node, 0, sizeof(task->proc_node));
 	fcontext(&task->context, function, arg);

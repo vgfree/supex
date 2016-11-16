@@ -13,7 +13,7 @@
 #if __WORDSIZE == 64
 # define INT_TO_PTR(p) ((void *)(uint64_t)(p))
 #else
-# define PTR_TO_INT(p) ((int)(p))
+# define INT_TO_PTR(p) ((void *)(p))
 #endif
 
 

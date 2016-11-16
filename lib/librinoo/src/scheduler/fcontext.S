@@ -67,7 +67,6 @@ fcontext_swap:
 	.type fcontext, @function
 
 fcontext:
-
 	movq	0x58(%rdi), %rax
 	addq	0x50(%rdi), %rax
 	subq	$8, %rax
