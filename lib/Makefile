@@ -17,7 +17,8 @@ OBJ = libmini.a \
       libmcache.a \
       libzookeeper_mt.a \
       libsqlite3.a \
-      librinoo.a
+      librinoo.a \
+      libsocket-server.a
 
 all:$(OBJ)
 	-@echo "Done LIB!"
@@ -121,6 +122,11 @@ libsqlite3.a:
 librinoo.a:
 	mkdir librinoo/build && cd librinoo/build && cmake ../ && make rinoo_static && cp librinoo_static.a ../../librinoo.a
 
+libsocket-server.a:
+	$(MAKE) -C $(LIB_DIR)/socket-server
+	mv $(LIB_DIR)/$@ $(LIB_DIR)
+
+
 test:
 	gcc -g -o example -I./libev -I./hiredis -L./  hiredis/examples/example-libev.c  -lev -lhiredis -lm
 
@@ -142,6 +148,7 @@ clean:
 	$(MAKE) -C $(LIB_DIR)/libxmq clean
 	$(MAKE) -C $(LIB_DIR)/libnetmod clean
 	$(MAKE) -C $(LIB_DIR)/mcache clean
+	$(MAKE) -C $(LIB_DIR)/socket-server clean
 	-if [ -d ./zookeeper-3.4.6 ];then rm -rf ./zookeeper-3.4.6; fi
 	-if [ -d ./librinoo/build ];then rm -rf ./librinoo/build; fi
 	rm -rf $(OBJ)
