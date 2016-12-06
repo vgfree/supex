@@ -124,7 +124,7 @@ librinoo.a:
 
 libsocket-server.a:
 	$(MAKE) -C $(LIB_DIR)/socket-server
-	mv $(LIB_DIR)/$@ $(LIB_DIR)
+	mv $(LIB_DIR)/socket-server/$@ $(LIB_DIR)
 
 
 test:

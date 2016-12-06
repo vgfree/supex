@@ -17,8 +17,8 @@ INC_DIR=-I/usr/local/include/luajit-2.0 \
 	-I./cpp/subsection
 
 LIB_DIR=-L/usr/local/lib -L../../lib -L../../engine/ -L./cpp
-LIBS=-lluajit-5.1 -lpthread -lrt -lm 
-LIBA=-ljson-c -lucmq  -lkv -lrrmodel -lcjson
+LIBS=-lluajit-5.1 -lpthread -lrt -lm -lstdc++
+LIBA=-ljson-c -lucmq -lrrmodel -lkv -lleveldb -lcjson -lsnappy
 
 #[=========>MARK<=========]#
 MAIN_APP_SERV ?= roadRank

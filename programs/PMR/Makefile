@@ -18,8 +18,8 @@ INC_DIR=-I/usr/local/include/luajit-2.0 \
 	-I./cpp
 
 LIB_DIR=-L/usr/local/lib -L../../lib -L/usr/lib64/mysql
-LIBS=-lluajit-5.1 -lpthread -lrt -lm -lmysqlclient
-LIBA=-ljson-c -lmappmr -lmapsegment -lmaptopo -lkv
+LIBS=-lluajit-5.1 -lpthread -lrt -lm -lmysqlclient -lstdc++
+LIBA=-ljson-c -lmappmr -lmapsegment -lmaptopo -lkv -lleveldb -lsnappy
 CFLAGS= -g -Wall
 
 #[=========>MARK<=========]#
