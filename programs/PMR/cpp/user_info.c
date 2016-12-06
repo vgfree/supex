@@ -7,18 +7,17 @@ int user_info_save(user_info_t *p_user)
 	char buff[1240] = { 0 };
 
 	memset(buff, '\0', sizeof(buff));
-	kv_answer_t *ans = NULL;
 	sprintf(buff, "set %s:user_info %ld", p_user->IMEI, (unsigned long)p_user);
-	ans = kv_cache_ask(g_kv_cache, p_user->IMEI, buff);
-
-	if (ans->errnum != ERR_NONE) {
-		x_printf(E, "Failed to set redis IMEI, errnum is %d, err is %s !\n", ans->errnum, ans->err);
-		kv_answer_release(ans);
+	kv_handler_t *handler = kv_cache_spl(g_kv_cache, p_user->IMEI, buff);
+	kv_answer_t *ans = &handler->answer;
+	
+	if (ERR_NONE != ans->errnum) {
+                x_printf(E, "errnum:%d\terr:%s\n\n", ans->errnum, error_getinfo(ans->errnum));
+                kv_handler_release(handler);
 		return -1;
-	}
+        }
 
-	kv_answer_release(ans);
-
+	kv_handler_release(handler);
 	return 0;
 }
 
@@ -42,44 +41,40 @@ int user_info_add(user_info_t *p_user, road_info_t *p_road)
 user_info_t *user_info_get(char *p_imei)
 {
 	char            buff[1024] = { 0 };
-	kv_answer_t     *ans;
 
 	memset(buff, '\0', sizeof(buff));
 	sprintf(buff, "get %s:user_info", p_imei);
 
-	ans = kv_cache_ask(g_kv_cache, p_imei, buff);
+	kv_handler_t *handler = kv_cache_spl(g_kv_cache, p_imei, buff);
+	kv_answer_t *ans = &handler->answer;
+	
+	if (ERR_NONE != ans->errnum) {
+                x_printf(E, "errnum:%d\terr:%s\n\n", ans->errnum, error_getinfo(ans->errnum));
+        }
 
-	if (ans->errnum != ERR_NONE) {
-		if (ans->errnum == ERR_NIL) {
+	unsigned long           len = answer_length(ans);
+	if (len == 1) {
+		kv_answer_value_t *value = answer_head_value(ans);
+		if (answer_value_look_type(value) == VALUE_TYPE_NIL) {
 			x_printf(D, "this IMEI has not data!\n");
+			user_info_t *p_user = (user_info_t *)malloc(sizeof(user_info_t));
+			memset(p_user, 0, sizeof(user_info_t));
+			strncpy(p_user->IMEI, p_imei, IMEI_LEN);
+			user_info_save(p_user);
+
+			kv_handler_release(handler);
+			return p_user;
+		} else {
+			char ptr[128] = {0};
+			memcpy(ptr, answer_value_look_addr(value), answer_value_look_size(value));
+			unsigned long pt = strtol((char *)ptr, NULL, 10);
+			kv_handler_release(handler);
+
+			user_info_t *p_user = (user_info_t *)pt;
+
+			return p_user;
 		}
-
-		x_printf(E, "Failed to get redis_IMEI, errnum is %d, err is %s\n", ans->errnum, ans->err);
 	}
-
-	unsigned long           len = kv_answer_length(ans);
-	kv_answer_iter_t        *iter = NULL;
-
-	if (len == 0) {
-		user_info_t *p_user = (user_info_t *)malloc(sizeof(user_info_t));
-		memset(p_user, 0, sizeof(user_info_t));
-		strncpy(p_user->IMEI, p_imei, IMEI_LEN);
-		user_info_save(p_user);
-		kv_answer_release(ans);
-
-		return p_user;
-	}
-
-	kv_answer_value_t *value = NULL;
-	iter = kv_answer_get_iter(ans, ANSWER_HEAD);
-	kv_answer_rewind_iter(ans, iter);
-	value = kv_answer_next(iter);
-	unsigned long pt = strtol((char *)(value->ptr), NULL, 10);
-	kv_answer_release_iter(iter);
-	kv_answer_release(ans);
-
-	user_info_t *p_user = (user_info_t *)pt;
-
-	return p_user;
+	return NULL;
 }
 

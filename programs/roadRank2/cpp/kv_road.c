@@ -179,79 +179,79 @@ void single_road_section(char *ret, SECKV_ROAD *road)
 int get_roadINFO_from_kv(long roadid, SECKV_ROAD *kv_road)
 {
 	char            buff[1024] = { 0 };
-	kv_answer_t     *ans;
 	int             flag = SUC_ROAD;
 
 	memset(buff, '\0', sizeof(buff));
 	sprintf(buff, "hmget %ld section IMEI max_speed avg_speed end_time used_time old_roadID citycode countycode sec_num", roadid);
 	char kv_hash[128];
 	sprintf(kv_hash, "%ld", roadid);
-	ans = kv_cache_ask(g_kv_cache, kv_hash, buff);
-
-	if (ans->errnum != ERR_NONE) {
-		if (ans->errnum == ERR_NIL) {
-			x_printf(D, "this IMEI has not data!\n");
-			flag = NIL_ROAD;
-			goto end;
-		}
-
-		x_printf(E, "Failed to get redis_IMEI, errnum is %d, err is %s\n", ans->errnum, ans->err);
+	kv_handler_t *handler = kv_cache_spl(g_kv_cache, kv_hash, buff);
+	kv_answer_t *ans = &handler->answer;
+	
+	if (ERR_NONE != ans->errnum) {
+                x_printf(E, "errnum:%d\terr:%s\n\n", ans->errnum, error_getinfo(ans->errnum));
 		flag = ERR_ROAD;
 		goto end;
-	}
+        }
 
-	unsigned long           len = kv_answer_length(ans);
-	kv_answer_iter_t        *iter = NULL;
-
+	unsigned long           len = answer_length(ans);
 	if (len != 1) {
 		int                     i = 0;
-		kv_answer_value_t       *value = NULL;
-		iter = kv_answer_get_iter(ans, ANSWER_HEAD);
-		kv_answer_rewind_iter(ans, iter);
+		kv_answer_iter_t        *iter = answer_iter_make(ans, ANSWER_HEAD);
 
-		while ((value = kv_answer_next(iter)) != NULL) {
+		kv_answer_value_t       *value;
+		while ((value = answer_iter_next(iter)) != NULL) {
+			if (answer_value_look_type(value) == VALUE_TYPE_NIL) {
+				x_printf(D, "this IMEI has not data!\n");
+				answer_iter_free(iter);
+				flag = NIL_ROAD;
+				goto end;
+			}
+
 			i = i + 1;
+			char ptr[128] = {0};
+			memcpy(ptr, answer_value_look_addr(value), answer_value_look_size(value));
 			switch (i)
 			{
 				case 1:
-					parse_road_section_s(value->ptr, kv_road); break;
+					parse_road_section_s(ptr, kv_road); break;
 
 				case 2:
-					kv_road->IMEI = atoll(value->ptr); break;
+					kv_road->IMEI = atoll(ptr); break;
 
 				case 3:
-					kv_road->max_speed = atoi(value->ptr); break;
+					kv_road->max_speed = atoi(ptr); break;
 
 				case 4:
-					kv_road->avg_speed = atoi(value->ptr); break;
+					kv_road->avg_speed = atoi(ptr); break;
 
 				case 5:
-					kv_road->end_time = atoll(value->ptr); break;
+					kv_road->end_time = atoll(ptr); break;
 
 				case 6:
-					kv_road->used_time = atoll(value->ptr); break;
+					kv_road->used_time = atoll(ptr); break;
 
 				case 7:
-					kv_road->old_roadID = atoll(value->ptr); break;
+					kv_road->old_roadID = atoll(ptr); break;
 
 				case 8:
-					kv_road->citycode = atoll(value->ptr); break;
+					kv_road->citycode = atoll(ptr); break;
 
 				case 9:
-					kv_road->countycode = atoll(value->ptr); break;
+					kv_road->countycode = atoll(ptr); break;
 
 				case 10:
-					kv_road->sec_num = atoi(value->ptr); break;
+					kv_road->sec_num = atoi(ptr); break;
 
 				default:
 					break;
 			}
 		}
+		answer_iter_free(iter);
 	}
 
-	kv_answer_release_iter(iter);
 end:
-	kv_answer_release(ans);
+	kv_handler_release(handler);
 	return flag;
 }
 
@@ -259,7 +259,6 @@ int set_secroad_to_kv(SECKV_ROAD *kv_road)
 {
 	char            buff[10240] = { 0 };
 	char            ret[2048] = { 0 };
-	kv_answer_t     *ans = NULL;
 
 	assembly_road_section(ret, kv_road);
 	memset(buff, '\0', sizeof(buff));
@@ -272,22 +271,23 @@ int set_secroad_to_kv(SECKV_ROAD *kv_road)
 
 	char kv_hash[128];
 	sprintf(kv_hash, "%ld", kv_road->old_roadID);
-	ans = kv_cache_ask(g_kv_cache, kv_hash, buff);
 
-	if (ans->errnum != ERR_NONE) {
-		x_printf(E, "redis command error errnum is %d\t err is %s\n", ans->errnum, ans->err);
-		kv_answer_release(ans);
+	kv_handler_t *handler = kv_cache_spl(g_kv_cache, kv_hash, buff);
+	kv_answer_t *ans = &handler->answer;
+	
+	if (ERR_NONE != ans->errnum) {
+                x_printf(E, "errnum:%d\terr:%s\n\n", ans->errnum, error_getinfo(ans->errnum));
+                kv_handler_release(handler);
 		return -1;
-	}
+        }
 
-	kv_answer_release(ans);
+	kv_handler_release(handler);
 	return 0;
 }
 
 int set_roadID_to_kv(SECKV_ROAD *kv_roadID)
 {
 	char            buff[10240] = { 0 };
-	kv_answer_t     *ans = NULL;
 
 	memset(buff, '\0', sizeof(buff));
 	sprintf(buff,
@@ -299,15 +299,16 @@ int set_roadID_to_kv(SECKV_ROAD *kv_roadID)
 
 	char kv_hash[128];
 	sprintf(kv_hash, "%ld", kv_roadID->old_roadID);
-	ans = kv_cache_ask(g_kv_cache, kv_hash, buff);
-
-	if (ans->errnum != ERR_NONE) {
-		x_printf(E, "redis command error errnum is %d\t err is %s\n", ans->errnum, ans->err);
-		kv_answer_release(ans);
+	kv_handler_t *handler = kv_cache_spl(g_kv_cache, kv_hash, buff);
+	kv_answer_t *ans = &handler->answer;
+	
+	if (ERR_NONE != ans->errnum) {
+                x_printf(E, "errnum:%d\terr:%s\n\n", ans->errnum, error_getinfo(ans->errnum));
+                kv_handler_release(handler);
 		return -1;
-	}
+        }
 
-	kv_answer_release(ans);
+	kv_handler_release(handler);
 	return 0;
 }
 

@@ -8,7 +8,6 @@ extern kv_cache *g_kv_cache;
 int set_roadID_to_kv(KV_ROADID *kv_roadID)
 {
 	char            buff[10240] = { 0 };
-	kv_answer_t     *ans = NULL;
 
 	memset(buff, '\0', sizeof(buff));
 	sprintf(buff,
@@ -20,15 +19,16 @@ int set_roadID_to_kv(KV_ROADID *kv_roadID)
 
 	char kv_hash[128];
 	sprintf(kv_hash, "%ld", kv_roadID->old_roadID);
-	ans = kv_cache_ask(g_kv_cache, kv_hash, buff);
-
-	if (ans->errnum != ERR_NONE) {
-		x_printf(E, "redis command error errnum is %d\t err is %s\n", ans->errnum, ans->err);
-		kv_answer_release(ans);
+	kv_handler_t *handler = kv_cache_spl(g_kv_cache, kv_hash, buff);
+	kv_answer_t *ans = &handler->answer;
+	
+	if (ERR_NONE != ans->errnum) {
+                x_printf(E, "errnum:%d\terr:%s\n\n", ans->errnum, error_getinfo(ans->errnum));
+                kv_handler_release(handler);
 		return -1;
-	}
+        }
 
-	kv_answer_release(ans);
+	kv_handler_release(handler);
 	return 0;
 }
 

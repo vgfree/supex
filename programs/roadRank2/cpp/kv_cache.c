@@ -17,21 +17,34 @@ kv_cache *kv_cache_create(int kv_num)
 	assert(p_cache);
 
 	p_cache->kv_count = kv_num;
-	p_cache->p_kv_buff = (kv_handler_t **)malloc(sizeof(kv_handler_t *) * kv_num);
+	p_cache->p_kv_buff = (int *)malloc(sizeof(int) * kv_num);
 
 	assert(p_cache->p_kv_buff);
 	/*init kv handlers*/
-	int i;
 
+	kv_init();
+
+	struct kv_config cfg = {
+                .open_on_disk   = false,
+                .time_to_stay   = -1,
+        };
+	int i;
 	for (i = 0; i < kv_num; i++) {
-		kv_handler_t *p_kv = kv_create(NULL);
-		*(p_cache->p_kv_buff + i) = p_kv;
+		char name[32] = {0};
+		snprintf(name, sizeof(name), "kv-%d", i);
+
+		int ret = kv_load(&cfg, name);
+		if (-1 == ret) {
+			x_printf(F, "kv_load failed");
+			return NULL;
+		}
+		*(p_cache->p_kv_buff + i) = ret;
 	}
 
 	return p_cache;
 }
 
-kv_answer_t *kv_cache_ask(kv_cache *p_cache, char *hash_key, char *kv_buff)
+kv_handler_t *kv_cache_spl(kv_cache *p_cache, char *hash_key, char *kv_buff)
 {
 	if (!p_cache || !p_cache->p_kv_buff || !hash_key || !kv_buff) {
 		return NULL;
@@ -43,10 +56,10 @@ kv_answer_t *kv_cache_ask(kv_cache *p_cache, char *hash_key, char *kv_buff)
 		return NULL;
 	}
 
-	kv_handler_t    *p_kv_handle = *(p_cache->p_kv_buff + hash_idx);
-	kv_answer_t     *p_ans = kv_ask(p_kv_handle, kv_buff, strlen(kv_buff));
+	int dbidx = *(p_cache->p_kv_buff + hash_idx);
+	kv_handler_t *handler = kv_spl(dbidx, kv_buff, strlen(kv_buff));
 
-	return p_ans;
+	return handler;
 }
 
 void kv_cache_destory(kv_cache *p_cache)
@@ -56,15 +69,9 @@ void kv_cache_destory(kv_cache *p_cache)
 	}
 
 	if (p_cache->p_kv_buff && (p_cache->kv_count > 0)) {
-		int i;
-
-		for (i = 0; i < p_cache->kv_count; i++) {
-			kv_destroy(*(p_cache->p_kv_buff + i));
-		}
-
+		kv_destroy();
 		free(p_cache->p_kv_buff);
-	} else {
-		free(p_cache);
 	}
+	free(p_cache);
 }
 
