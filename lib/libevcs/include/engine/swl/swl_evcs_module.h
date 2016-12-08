@@ -1,7 +1,7 @@
 #pragma once
 #include <stdbool.h>
 
-#include "core/evcs_events.h"
+#include "../core/evcs_events.h"
 #include "swl_evcs.h"
 
 extern struct evcs_events g_swl_evcs_evts;
