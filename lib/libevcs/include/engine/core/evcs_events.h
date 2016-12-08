@@ -4,6 +4,7 @@
 extern "C" {
 #endif
 #include <unistd.h>
+#include <stdio.h>
 
 #define EVENT_MAP(XX)		       \
 	XX(EVCS_EVENT_ROOT, "起源事件")    \

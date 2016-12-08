@@ -381,7 +381,7 @@ distclean:
 	$(MAKE) -C ./programs/ashman distclean
 	$(MAKE) -C ./programs/weibo-G distclean
 	$(MAKE) -C ./programs/BRM distclean
-	$(MAKE) -C ./programs/roadRank distclean
+	#$(MAKE) -C ./programs/roadRank distclean
 	$(MAKE) -C ./programs/dtsync distclean
 	$(MAKE) -C ./programs/pole-M distclean
 	$(MAKE) -C ./programs/pole-S distclean

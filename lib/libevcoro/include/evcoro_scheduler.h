@@ -9,6 +9,7 @@
 #ifndef ev_coro_scheduler_h
 #define ev_coro_scheduler_h
 
+#include <stdint.h>
 #include <stdbool.h>
 #include "ev.h"
 #include "_evcoro_common.h"

@@ -4,7 +4,7 @@
 #include "engine/proto_comm.h"
 #include "engine/supex.h"
 #include "engine/adopt_tasks/adopt_task.h"
-#include "engine/spx_evcs.h"
+#include "engine/spx/spx_evcs.h"
 #include "engine/base/free_queue.h"
 
 typedef struct

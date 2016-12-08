@@ -27,15 +27,15 @@
   #define OPEN_MAIN_STATUS_CNTL
 #endif
 
-struct schedule;
-typedef void *(*coroutine_func)(struct schedule *S, void *data);
+struct scco_schedule;
+typedef void *(*scco_coroutine_func)(struct scco_schedule *S, void *data);
 
 /*
  * safe_mark must add at head and tail,because stack is grow upwards.
  * Of course, we can also add safe_mark at tail and move stack to head.
  */
 /*协同成员*/
-struct coroutine
+struct scco_coroutine
 {
 #ifdef SCCO_USE_LEAST_SPACE
 	char                    *stack;			/**< dynamic stack space*/
@@ -44,17 +44,17 @@ struct coroutine
 #else
 	char                    stack[STACK_SIZE];	/**< static stack space*/
 #endif
-	struct schedule         *sch;			/**< 所属调度器*/
+	struct scco_schedule         *sch;			/**< 所属调度器*/
 	ucontext_t              ctx;			/**< 运行上下文*/
 
 	int                     status;			/**< 上下文状态*/
 	int                     origin;			/**< 数据空间位于栈/堆*/
 
-	coroutine_func          func;			/**< 协同回调*/
+	scco_coroutine_func          func;			/**< 协同回调*/
 	void                    *data;			/**< 回调参数*/
 
-	struct coroutine        *prev;			/**< 上一个切换的协同*/
-	struct coroutine        *next;			/**< 下一个切换的协同*/
+	struct scco_coroutine        *prev;			/**< 上一个切换的协同*/
+	struct scco_coroutine        *next;			/**< 下一个切换的协同*/
 #ifdef SCCO_USE_LEAST_SPACE
 #else
 	char                    safe_mark;
@@ -62,7 +62,7 @@ struct coroutine
 };
 
 /*调度器*/
-struct schedule
+struct scco_schedule
 {
 #ifdef SCCO_USE_LEAST_SPACE
 	char                    stack[STACK_SIZE];
@@ -73,40 +73,42 @@ struct schedule
 	bool                    append;
 #endif
 	int                     origin;	/**< 数据空间来源*/
-	struct coroutine        main;	/**< 主协同*/
-	struct coroutine        *exec;	/*exec context*/
-	struct coroutine        *exit;	/*exit context*/
+	struct scco_coroutine        main;	/**< 主协同*/
+	struct scco_coroutine        *exec;	/*exec context*/
+	struct scco_coroutine        *exit;	/*exit context*/
 
-	void                    (*_switch_)(struct schedule *S);
+	void                    (*_switch_)(struct scco_schedule *S);
 };
 
-struct schedule *coroutine_open(struct schedule *S, coroutine_func func, void *data);
+struct scco_schedule *scco_schedule_open(struct scco_schedule *S, scco_coroutine_func func, void *data);
 
-void coroutine_close(struct schedule *S);
+void scco_schedule_close(struct scco_schedule *S);
 
-/*===dynamic method===*/
-struct coroutine        *coroutine_create(struct schedule *S, coroutine_func func, void *data);
+void scco_schedule_switch(struct scco_schedule *S);
 
-/*=======ending=======*/
+void scco_schedule_loop(struct scco_schedule *S);
+
+
+
+
+/*
+ * C == NULL	--> dynamic method
+ * C != NULL	--> static method
+ */
+struct scco_coroutine *scco_coroutine_make(struct scco_schedule *S, struct scco_coroutine *C, scco_coroutine_func func, void *data);
 
 /*===static method===*/
-int coroutine_init(struct schedule *S, struct coroutine *C, coroutine_func func, void *data);
 
 /**
  * 重置协程状态为初始化状态
  * 成功返回0，失败则返回-1
  */
-int coroutine_reuse(struct coroutine *C);
-
-/*=======ending=======*/
+int scco_coroutine_reuse(struct scco_coroutine *C);
 
 /**
  * 指定协程时候状态可用
  * 可用则返回0，否则返回-1
  */
-int coroutine_useable(struct coroutine *C);
+int scco_coroutine_useable(struct scco_coroutine *C);
 
-void coroutine_switch(struct schedule *S);
-
-void coroutine_loop(struct schedule *S);
-
+/*=======ending=======*/

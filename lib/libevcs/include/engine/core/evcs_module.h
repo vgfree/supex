@@ -20,12 +20,16 @@ struct evcs_module
 	struct evcs_events      *evts;
 	void                    *argv;
 };
-#define evcs_module_t __thread struct evcs_module
 
-static __thread struct evcs_module *g_module_root = { 0 };
+/*
+ * if not __thread set, need copy settings
+ */
+#define __thread_evcs_module_t __thread struct evcs_module
+
+static __thread_evcs_module_t *g_module_root = { 0 };
 
 #define EVCS_MODULE_SETUP(name, init, exit, evts) \
-	static __thread struct evcs_module g_##name##_module_settings = {#name, false, init, exit, NULL, evts, NULL };
+	static __thread_evcs_module_t g_##name##_module_settings = {#name, false, init, exit, NULL, evts, NULL };
 
 #define EVCS_MODULE_CARRY(name, data)						\
 	do {									\
@@ -65,7 +69,6 @@ static __thread struct evcs_module *g_module_root = { 0 };
 		g_##name##_module_settings.state = vary;				      \
 	} while (0)
 
-// if not __thread set, need copy settings
 
 #define EVCS_MODULE_TOUCH(type)						      \
 	do {								      \

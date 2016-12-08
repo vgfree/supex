@@ -22,13 +22,13 @@ struct supex_scco
 	void                    *data;
 	bool                    (*safe_filter)(void *data, void *addr);
 	bool                    (*task_lookup)(void *data, void *addr);
-	void                    *(*task_supply)(struct schedule *S, void *self);
-	void                    *(*task_handle)(struct schedule *S, void *step);
+	void                    *(*task_supply)(struct scco_schedule *S, void *self);
+	void                    *(*task_handle)(struct scco_schedule *S, void *step);
 	void                    *temp;	/*No.(num + 1)*/
 	void                    *task;	/*num + 1*/
 	union virtual_system    *VMS;
-	struct coroutine        *C;
-	struct schedule         S;
+	struct scco_coroutine        *C;
+	struct scco_schedule         S;
 };
 
 void supex_scco_loop(struct supex_scco *scco);
