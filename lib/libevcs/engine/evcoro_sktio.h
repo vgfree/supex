@@ -15,9 +15,9 @@
 extern "C" {
 #endif
 
-int evcoro_read(struct evcoro_scheduler *scheduler, int sockfd, void *buf, unsigned int len, uint32_t timeout_repeat);
+int evcoro_sktio_read(struct evcoro_scheduler *scheduler, int sockfd, void *buf, unsigned int len, uint32_t timeout_repeat);
 
-int evcoro_write(struct evcoro_scheduler *scheduler, int sockfd, void *buf, unsigned int len, uint32_t timeout_repeat);
+int evcoro_sktio_write(struct evcoro_scheduler *scheduler, int sockfd, void *buf, unsigned int len, uint32_t timeout_repeat);
 
 #if __cplusplus
 }

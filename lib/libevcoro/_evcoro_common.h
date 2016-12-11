@@ -28,5 +28,29 @@
 #elif !defined(__CYGWIN__) && (defined(__CYGWIN32__) || defined(CYGWIN))
   #define  __CYGWIN__   (1)
 #endif
-#endif	/* _evcoro_common_h */
 
+#ifdef __LINUX__
+#include <sys/eventfd.h>
+#else
+#define EFD_SEMAPHORE	(1)
+#define EFD_NONBLOCK	(04000)
+#define eventfd_t	uint64_t
+static inline int eventfd_write(int fd, eventfd_t value)
+{
+	return write(fd, &value, sizeof(eventfd_t)) !=
+			sizeof(eventfd_t) ? -1 : 0;
+}
+
+static inline int eventfd_read(int fd, eventfd_t *value)
+{
+	return read(fd, value, sizeof(eventfd_t)) !=
+			sizeof(eventfd_t) ? -1 : 0;
+}
+
+static inline int eventfd(unsigned int initval, int flags)
+{
+	return syscall(__NR_eventfd2, initval, flags);
+}
+#endif
+
+#endif	/* _evcoro_common_h */

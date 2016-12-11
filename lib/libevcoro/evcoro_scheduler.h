@@ -97,6 +97,9 @@ struct evcoro_scheduler
 	long                    ownerid;	/**< 创建者线程id*/
 	struct ev_loop          *listener;	/**<就绪协程侦听器*/
 	unsigned                loops;		/**< 循环了多少次，每次启动前清零*/
+
+	int			notify_null;	/** notify event fd -> null */
+	struct ev_io		listen_null;	/** listen event fd -> null */
 	/*public:write and read*/
 	void                    *user;		/**<用户层数据*/
 };
@@ -141,6 +144,10 @@ int evcoro_loop(struct evcoro_scheduler *scheduler, evcoro_taskcb idle, void *us
 bool evcoro_push(struct evcoro_scheduler *scheduler, evcoro_taskcb call, void *usr, size_t ss);
 
 /* ------------------------------------------------------ */
+/*
+ * 如果repair = NULL,只做唤醒一下loop的效果.
+ */
+void evcoro_notify(struct evcoro_scheduler *scheduler, struct ev_coro *repair);
 
 /**
  * 快速切换，不从调度队列中踢出

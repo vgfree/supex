@@ -215,3 +215,11 @@ void *lua_alloc(void *ud, void *ptr, size_t osize, size_t nsize)
 
 int mkdir_if_doesnt_exist(const char *dirpath);
 
+#include <pthread.h>
+#define auto_call_once(driver)				\
+static void __attribute__((constructor)) __ ## driver ## __(void)	\
+{								\
+	static pthread_once_t once_control = PTHREAD_ONCE_INIT; \
+	pthread_once(&once_control, driver); \
+}
+
