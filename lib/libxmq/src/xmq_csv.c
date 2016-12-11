@@ -3,7 +3,7 @@
 #include <string.h>
 
 #include "xmq_csv.h"
-#include "base/utils.h"
+#include "libmini.h"
 
 static int csv_parse(csv_parse_t *csv);
 

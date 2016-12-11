@@ -6,10 +6,10 @@ INC_DIR=-I/usr/local/include/luajit-2.0 \
 	-I../../lib/libmini/include \
 	-I../../lib/libkv/release \
 	-I../../lib/libmemhook/src \
-	-I../../lib/libscco/include \
-	-I../../lib/libcoro/include \
-	-I../../lib/libevcoro/include \
-	-I../../lib/libevcs/include/ \
+	-I../../lib/libscco \
+	-I../../lib/libcoro \
+	-I../../lib/libevcoro \
+	-I../../lib/libevcs \
 	-I./src -I../
 
 

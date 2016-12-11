@@ -5,8 +5,8 @@ BIN=./bin
 INC=./include
 BASE_SRC=./src
 BASE_INC=-I$(INC) -I../libmini/include \
-	-I../libevcs/include/engine \
-	-I../libevcs/include/frame \
+	-I../libmini/include \
+	-I../libevcs \
 	-I/usr/local/include/luajit-2.0 \
 	-I/usr/local/include/
 

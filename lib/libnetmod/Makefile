@@ -5,7 +5,7 @@ INC=./include
 BASE_SRC=./src
 BASE_INC=-I$(INC) -I../libmini/include \
 	-I../zeromq-4.1.4/include/ \
-	-I../libevcs/include/engine \
+	-I../libevcs/engine \
 	-I/usr/local/include/luajit-2.0 \
 	-I/usr/local/include/
 

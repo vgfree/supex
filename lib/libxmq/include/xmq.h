@@ -27,7 +27,7 @@
 #include <pthread.h>
 
 #include "xmq_msg.h"
-#include "base/xlist.h"
+#include "engine/base/xlist.h"
 
 #define  XMQ_DBNAME_LEN         42	// 00000000000000000001-00000000000005000000
 #define  XMQ_IDENTITY_LEN       32
