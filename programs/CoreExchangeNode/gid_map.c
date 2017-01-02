@@ -17,31 +17,41 @@ int find_fd_list(char *gid, int fd_list[], int *size)
 	char cmd[30 + MAX_GID_SIZE] = {};
 	snprintf(cmd, 30 + MAX_GID_SIZE, "lrange %s 0 -1", gid);
 
-	kv_answer_t *ans = kv_ask(g_gid_map, cmd, strlen(cmd));
-
-	if (ans->errnum != ERR_NONE) {
+	kv_handler_t *handler = kv_spl(g_gid_map, cmd, strlen(cmd));
+	kv_answer_t *ans = &handler->answer;
+	
+	if (ERR_NONE != ans->errnum) {
+                x_printf(E, "errnum:%d\terr:%s\n\n", ans->errnum, error_getinfo(ans->errnum));
 		x_printf(E, "find multi fd error, cmd:%s", cmd);
 		*size = 0;
-		kv_answer_release(ans);
+		kv_handler_release(handler);
 		return -1;
-	}
+        }
 
 	int                     idx = 0;
-	kv_answer_value_t       *value;
-	kv_answer_iter_t        *iter;
+	unsigned long           len = answer_length(ans);
+	if (len != 1) {
+		kv_answer_iter_t        *iter = answer_iter_make(ans, ANSWER_HEAD);
 
-	iter = kv_answer_get_iter(ans, ANSWER_HEAD);
-	kv_answer_rewind_iter(ans, iter);
+		kv_answer_value_t       *value;
+		while (((value = answer_iter_next(iter)) != NULL) && (idx < *size)) {
+			if (answer_value_look_type(value) == VALUE_TYPE_NIL) {
+				x_printf(D, "this IMEI has not data!\n");
+				answer_iter_free(iter);
+				abort();
+			}
 
-	while (((value = kv_answer_next(iter)) != NULL) && (idx < *size)) {
-		char buf[20] = {};
-		strncpy(buf, (char *)value->ptr, value->ptrlen);
-		fd_list[idx] = atoi(buf);
-		idx++;
+			char ptr[128] = {0};
+			memcpy(ptr, answer_value_look_addr(value), answer_value_look_size(value));
+			fd_list[idx] = atoi(ptr);
+			idx++;
+		}
+
+
+		answer_iter_free(iter);
 	}
 
-	kv_answer_release_iter(iter);
-	kv_answer_release(ans);
+	kv_handler_release(handler);
 	*size = idx;
 	return 0;
 }
@@ -60,15 +70,16 @@ int insert_fd_list(char *gid, int fd_list[], int size)
 		strcat(cmd, buf);
 	}
 
-	kv_answer_t *ans = kv_ask(g_gid_map, cmd, strlen(cmd));
-
-	if (ans->errnum != ERR_NONE) {
-		x_printf(E, "errnum:%d\terr:%s\n", ans->errnum, ans->err);
-		kv_answer_release(ans);
+	kv_handler_t *handler = kv_spl(g_gid_map, cmd, strlen(cmd));
+	kv_answer_t *ans = &handler->answer;
+	
+	if (ERR_NONE != ans->errnum) {
+                x_printf(E, "errnum:%d\terr:%s\n\n", ans->errnum, error_getinfo(ans->errnum));
+                kv_handler_release(handler);
 		return -1;
-	}
+        }
 
-	kv_answer_release(ans);
+	kv_handler_release(handler);
 
 	return 0;
 }
@@ -81,15 +92,16 @@ int remove_fd_list(char *gid, int fd_list[], int size)
 		snprintf(cmd, 50 + MAX_GID_SIZE, "lrem %s 0 %d", gid, fd_list[i]);
 		x_printf(D, "%s", cmd);
 
-		kv_answer_t *ans = kv_ask(g_gid_map, cmd, strlen(cmd));
-		if (ans->errnum != ERR_NONE) {
-			x_printf(E, "cmd:%s, errnum:%d\terr:%s\n",
-				cmd, ans->errnum, ans->err);
-			kv_answer_release(ans);
+		kv_handler_t *handler = kv_spl(g_gid_map, cmd, strlen(cmd));
+		kv_answer_t *ans = &handler->answer;
+
+		if (ERR_NONE != ans->errnum) {
+			x_printf(E, "errnum:%d\terr:%s\n\n", ans->errnum, error_getinfo(ans->errnum));
+			kv_handler_release(handler);
 			return -1;
 		}
 
-		kv_answer_release(ans);
+		kv_handler_release(handler);
 	}
 
 	return 0;
@@ -100,15 +112,16 @@ int insert_gid_list(int fd, char *gid)
 	char    cmd[20 + MAX_GID_SIZE] = {};
 	snprintf(cmd, 20 + MAX_GID_SIZE, "lpush %d %s", fd, gid);
 
-	kv_answer_t *ans = kv_ask(g_gid_map, cmd, strlen(cmd));
-
-	if (ans->errnum != ERR_NONE) {
-		x_printf(E, "errnum:%d\terr:%s\n", ans->errnum, ans->err);
-		kv_answer_release(ans);
+	kv_handler_t *handler = kv_spl(g_gid_map, cmd, strlen(cmd));
+	kv_answer_t *ans = &handler->answer;
+	
+	if (ERR_NONE != ans->errnum) {
+                x_printf(E, "errnum:%d\terr:%s\n\n", ans->errnum, error_getinfo(ans->errnum));
+                kv_handler_release(handler);
 		return -1;
-	}
+        }
 
-	kv_answer_release(ans);
+	kv_handler_release(handler);
 	return 0;
 }
 
@@ -117,28 +130,43 @@ int find_gid_list(int fd, char *gid_list[], int *size)
 	char    cmd[40] = {};
 	snprintf(cmd, 40, "lrange %d 0 -1", fd);
 	
-	kv_answer_t *ans = kv_ask(g_gid_map, cmd, strlen(cmd));
-	if (ans->errnum != ERR_NONE) {
+	kv_handler_t *handler = kv_spl(g_gid_map, cmd, strlen(cmd));
+	kv_answer_t *ans = &handler->answer;
+	
+	if (ERR_NONE != ans->errnum) {
+                x_printf(E, "errnum:%d\terr:%s\n\n", ans->errnum, error_getinfo(ans->errnum));
 		x_printf(I, "find multi gid error, cmd:%s\n", cmd);
 		*size = 0;
-		kv_answer_release(ans);
+		kv_handler_release(handler);
 		return -1;
-	}
-
-	kv_answer_iter_t        *iter = kv_answer_get_iter(ans, ANSWER_HEAD);
-	kv_answer_rewind_iter(ans, iter);
+        }
 
 	int                     idx = 0;
-	kv_answer_value_t       *value = NULL;
-	while (((value = kv_answer_next(iter)) != NULL) && (idx < *size)) {
-		gid_list[idx] = (char *)malloc(value->ptrlen * sizeof(char) + 1);
-		strncpy(gid_list[idx], (char *)value->ptr, value->ptrlen);
-		gid_list[idx][value->ptrlen] = '\0';
-		idx++;
+	unsigned long           len = answer_length(ans);
+	if (len != 1) {
+		kv_answer_iter_t        *iter = answer_iter_make(ans, ANSWER_HEAD);
+
+		kv_answer_value_t       *value;
+		while (((value = answer_iter_next(iter)) != NULL) && (idx < *size)) {
+			if (answer_value_look_type(value) == VALUE_TYPE_NIL) {
+				x_printf(D, "this IMEI has not data!\n");
+				answer_iter_free(iter);
+				abort();
+			}
+
+			char *addr = answer_value_look_addr(value);
+			size_t size = answer_value_look_size(value);
+			gid_list[idx] = (char *)malloc(size * sizeof(char) + 1);
+			strncpy(gid_list[idx], (char *)addr, size);
+			gid_list[idx][size] = '\0';
+			idx++;
+		}
+
+
+		answer_iter_free(iter);
 	}
 
-	kv_answer_release_iter(iter);
-	kv_answer_release(ans);
+	kv_handler_release(handler);
 	*size = idx;
 	return 0;
 }
@@ -150,14 +178,16 @@ int remove_gid_list(int fd, char *gid[], int size)
 		memset(cmd, 0, 60 + MAX_GID_SIZE);
 		snprintf(cmd, 60 + MAX_GID_SIZE, "lrem %d 0 %s", fd, gid[i]);
 		
-		kv_answer_t *ans = kv_ask(g_gid_map, cmd, strlen(cmd));
-		if (ans->errnum != ERR_NONE) {
-			x_printf(E, "errnum:%d\terr:%s\n", ans->errnum, ans->err);
-			kv_answer_release(ans);
+		kv_handler_t *handler = kv_spl(g_gid_map, cmd, strlen(cmd));
+		kv_answer_t *ans = &handler->answer;
+	
+		if (ERR_NONE != ans->errnum) {
+			x_printf(E, "errnum:%d\terr:%s\n\n", ans->errnum, error_getinfo(ans->errnum));
+			kv_handler_release(handler);
 			return -1;
 		}
 
-		kv_answer_release(ans);
+		kv_handler_release(handler);
 	}
 
 	return 0;
@@ -165,6 +195,5 @@ int remove_gid_list(int fd, char *gid[], int size)
 
 void destroy_gid_map()
 {
-	kv_destroy(g_gid_map);
 }
 

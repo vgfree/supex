@@ -162,6 +162,7 @@ int main(void)
 	fdman_list_destroy();
 	destroy_uid_map();
 	destroy_gid_map();
+	kv_destroy();
 	daemon_exit(SERVER_FILE);
 	return 0;
 }

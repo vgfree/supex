@@ -7,30 +7,28 @@
 #include <hiredis/hiredis.h>
 #include "libkv.h"
 
-void *set_data_to_kv(char *key, char *value, kv_handler_t *handler)
+
+
+void *set_data_to_kv(char *key, char *value, int g_map)
 {
 	int             i;
 	char            strSet[100] = "hset ";
-	kv_answer_t     *ans;
 
 	strcat(strSet, key);
 	strcat(strSet, " ");
 	const char *cmd = strcat(strSet, value);
 	printf("cmd:%s\n", cmd);
 
-	ans = kv_ask(handler, cmd, strlen(cmd));
+	kv_handler_t *handler = kv_spl(g_map, cmd, strlen(cmd));
+	kv_answer_t *ans = &handler->answer;
+	
+	if (ERR_NONE != ans->errnum) {
+                x_printf(E, "errnum:%d\terr:%s\n\n", ans->errnum, error_getinfo(ans->errnum));
+                kv_handler_release(handler);
+		return NULL;
+        }
 
-	kv_answer_value_t *return_value;
-	return_value = kv_answer_first_value(ans);
-
-	for (i = 0; i < return_value->ptrlen; i++) {
-		printf("%c", ((char *)return_value->ptr)[i]);
-	}
-
-	printf("\n");
-
-	kv_answer_release(ans);
-
+	kv_handler_release(handler);
 	return NULL;
 }
 
@@ -45,9 +43,9 @@ void init_data_to_kv()
 	int             i;
 	int             j;
 	redisContext    *c = redisConnect("127.0.0.1", 6379);
-	kv_handler_t    *handler;
 
-	handler = kv_create(NULL);
+	kv_init();
+	int g_map = kv_load(NULL, NULL);
 
 	if (c->err) {
 		redisFree(c);
@@ -84,12 +82,12 @@ void init_data_to_kv()
 
 				printf("key=>%s\n", r->element[j]->str);
 				printf("strHset:%s\n", strHset);
-				set_data_to_kv(r->element[j]->str, strHset, handler);
+				set_data_to_kv(r->element[j]->str, strHset, g_map);
 			}
 		}
 	}
 
-	kv_destroy(handler);
+	kv_destroy();
 	freeReplyObject(r);
 	freeReplyObject(r1);
 	redisFree(c);
