@@ -4,7 +4,8 @@ TARGET = CoreExchangeNode
 
 CFLAG = -g -O1 -W -Wall
 
-INCLUDE_PATH = -I. -I../../lib/libcomm -I../../lib/utils -I../../lib/libkv/src -I../../lib/libmini/include -I/usr/include -I/usr/local/include
+INCLUDE_PATH = -I. -I../../lib/libcomm -I../../lib/utils -I../../lib/libmini/include -I/usr/include -I/usr/local/include \
+	-I../../lib/libkv/release/
 TARGET = ./core_exchange_node
 OBJ = fd_manager.o message_dispatch.o status.o uid_map.o gid_map.o notify.o main.o
 SRC = fd_manager.c message_dispatch.c status.c uid_map.c gid_map.c notify.c main.c

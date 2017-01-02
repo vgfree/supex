@@ -29,7 +29,7 @@ int find_fd(char *uid)
 
 	kv_answer_value_t *value = answer_head_value(ans);
 	if (answer_value_look_type(value) != VALUE_TYPE_STAR) {
-		x_printf(D, "get %d nil value", sfd);
+		x_printf(D, "get %s nil value", uid);
 		kv_handler_release(handler);
 		return -1;
 	}
@@ -61,14 +61,14 @@ int find_uid(char *uid, int *size, int fd)
 
 	kv_answer_value_t *value = answer_head_value(ans);
 	if (answer_value_look_type(value) != VALUE_TYPE_STAR) {
-		x_printf(D, "get %d nil value", sfd);
+		x_printf(D, "get %d nil value", fd);
 		kv_handler_release(handler);
 		return -1;
 	}
 	char *str = (char *)answer_value_look_addr(value);
 	size_t len = answer_value_look_size(value);
 
-	memcpy(uid, value->ptr, len);
+	memcpy(uid, str, len);
 	*size = len;
 	kv_handler_release(handler);
 

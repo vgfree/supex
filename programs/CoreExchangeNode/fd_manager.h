@@ -1,6 +1,7 @@
 #ifndef _FD_MANAGER_H_
 #define _FD_MANAGER_H_
 
+#include "stdint.h"
 #include "comm_def.h"
 
 #define FD_MAX_CLASSIFICATION   5
