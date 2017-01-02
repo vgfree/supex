@@ -39,7 +39,7 @@ static int extraction(unsigned char *cipher, int len, unsigned char *fibonacci_t
 	return 0;
 }
 
-static int id_cmd_in(kv_handler_t *handler, const char *id, long date, const unsigned char *cipher)
+static int id_cmd_in(kv_handler_t *hid, const char *id, long date, const unsigned char *cipher)
 {
 	if (!id || !cipher) {
 		x_printf(E, "id_cmd_in err\n");
@@ -50,15 +50,16 @@ static int id_cmd_in(kv_handler_t *handler, const char *id, long date, const uns
 
 	snprintf(cmd, CMD_BUF_SIZE, "hmset %s date %ld  cipher %s", id, date, cipher);
 
-	kv_answer_t *ans = kv_ask(handler, cmd, strlen(cmd));
-
-	if (ans->errnum != ERR_NONE) {
-		kv_answer_release(ans);
-		x_printf(E, "command[%s] --> errnum:%d, errstr:%s\n", cmd, ans->errnum, ans->err);
+	kv_handler_t *handler = kv_spl(hid, cmd, strlen(cmd));
+	kv_answer_t *ans = &handler->answer;
+	
+	if (ERR_NONE != ans->errnum) {
+                x_printf(E, "errnum:%d\terr:%s\n\n", ans->errnum, error_getinfo(ans->errnum));
+                kv_handler_release(handler);
 		return -1;
-	}
+        }
 
-	kv_answer_release(ans);
+	kv_handler_release(handler);
 	return 0;
 }
 
@@ -73,15 +74,16 @@ static int id_cmd_del(kv_handler_t *handler, const char *id)
 
 	snprintf(cmd, CMD_BUF_SIZE, "del %s", id);
 
-	kv_answer_t *ans = kv_ask(handler, cmd, strlen(cmd));
-
-	if (ans->errnum != ERR_NONE) {
-		kv_answer_release(ans);
-		x_printf(E, "command[%s] --> errnum:%d, errstr:%s\n", cmd, ans->errnum, ans->err);
+	kv_handler_t *handler = kv_spl(hid, cmd, strlen(cmd));
+	kv_answer_t *ans = &handler->answer;
+	
+	if (ERR_NONE != ans->errnum) {
+                x_printf(E, "errnum:%d\terr:%s\n\n", ans->errnum, error_getinfo(ans->errnum));
+                kv_handler_release(handler);
 		return -1;
-	}
+        }
 
-	kv_answer_release(ans);
+	kv_handler_release(handler);
 	return 0;
 }
 
@@ -101,78 +103,20 @@ int id_cmd_out(kv_handler_t *handler, const char *id, long date, unsigned char *
 	unsigned char   plaintext[128] = "";
 	// unsigned char encrypt_text[64] = "";
 	snprintf(cmd, CMD_BUF_SIZE, "hget %s date", id);
-	kv_answer_t *ans = kv_ask(handler, cmd, strlen(cmd));
+	kv_handler_t *handler = kv_spl(hid, cmd, strlen(cmd));
+	kv_answer_t *ans = &handler->answer;
+	
+	if (ERR_NONE != ans->errnum) {
+                x_printf(E, "errnum:%d\terr:%s\n\n", ans->errnum, error_getinfo(ans->errnum));
+		flag = -1;
+		goto end;
+        }
 
-	if (ans->errnum != ERR_NONE) {
-		if (ans->errnum == ERR_NIL) {
-			snprintf(plaintext, 128, "%s%ld", id, date);
-			/* Encrypt the plaintext */
-			snprintf(iv_date, 16, "%ld", date);
-			ciphertext_len = id_encrypt(plaintext, strlen(plaintext), aad, strlen(aad), key, iv_date, cipherbuff, tag);
-			// printf("Ciphertext is: %d\n", ciphertext_len);
-			// BIO_dump_fp(stdout, cipherbuff, ciphertext_len);
-
-			/*int i = 0;
-			 *   int k = 0;
-			 *   for(i=0; i<ciphertext_len; i+=2) {
-			 *        encrypt_text[k++] = cipherbuff[i];
-			 *   }
-			 */
-			extraction(cipherbuff, ciphertext_len, encrypt_text);
-			id_cmd_in(handler, id, date, encrypt_text);
-			// printf("encrypt_text is: %d\n", strlen(encrypt_text));
-			// BIO_dump_fp(stdout, encrypt_text, strlen(encrypt_text));
-			flag = 1;
-			goto end;
-		} else {
-			x_printf(E, "cmd:%s, errnum:%d, errstr:%s\n", cmd, ans->errnum, ans->err);
-			flag = -1;
-			goto end;
-		}
-	}
-
-	unsigned long len = kv_answer_length(ans);
-
+	unsigned long           len = answer_length(ans);
 	if (len == 1) {
-		kv_answer_value_t *value = kv_answer_first_value(ans);
-
-		if (!value) {
-			x_printf(E, "Failed to get date by cmd[%s].\n", cmd);
-			flag = -2;
-			goto end;
-		}
-
-		x_printf(D, "after executed cmd[%s], date:%s\n", cmd, (char *)value->ptr);
-		long get_date = atoi((char *)value->ptr);
-
-		if (date == get_date) {
-			memset(cmd, 0, sizeof(cmd));
-			snprintf(cmd, CMD_BUF_SIZE, "hget %s cipher", id);
-			kv_answer_t *ans_cipher = kv_ask(handler, cmd, strlen(cmd));
-
-			if (ans_cipher->errnum != ERR_NONE) {
-				flag = -1;
-				kv_answer_release(ans_cipher);
-				goto end;
-			}
-
-			unsigned num = kv_answer_length(ans_cipher);
-
-			if (num == 1) {
-				kv_answer_value_t *cipher_text = kv_answer_first_value(ans_cipher);
-
-				if (!cipher_text) {
-					x_printf(E, "Failed to get cipher_text by cmd[%s].\n", cmd);
-					flag = -2;
-				} else {
-					memcpy(encrypt_text, (char *)cipher_text->ptr, cipher_text->ptrlen);
-				}
-			}
-
-			kv_answer_release(ans_cipher);
-			goto end;
-		} else if (date > get_date) {
-			// id_cmd_del(handler, id);
+		kv_answer_value_t *value = answer_head_value(ans);
+		if (answer_value_look_type(value) == VALUE_TYPE_NIL) {
+			x_printf(D, "this IMEI has not data!\n");
 			snprintf(plaintext, 128, "%s%ld", id, date);
 			/* Encrypt the plaintext */
 			snprintf(iv_date, 16, "%ld", date);
@@ -191,17 +135,75 @@ int id_cmd_out(kv_handler_t *handler, const char *id, long date, unsigned char *
 			// printf("encrypt_text is: %d\n", strlen(encrypt_text));
 			// BIO_dump_fp(stdout, encrypt_text, strlen(encrypt_text));
 			flag = 1;
+			goto end;
 		} else {
-			x_printf(E, "now date:%ld < get date:%ld\n", date, get_date);
-			flag = -3;
+			char ptr[128] = {0};
+			memcpy(ptr, answer_value_look_addr(value), answer_value_look_size(value));
+			x_printf(D, "after executed cmd[%s], date:%s\n", cmd, (char *)ptr);
+			long get_date = atoi((char *)ptr);
+
+			if (date == get_date) {
+				memset(cmd, 0, sizeof(cmd));
+				snprintf(cmd, CMD_BUF_SIZE, "hget %s cipher", id);
+				kv_handler_t *ans_cipher = kv_spl(hid, cmd, strlen(cmd));
+				ans = &handler->answer;
+
+				if (ERR_NONE != ans->errnum) {
+					x_printf(E, "errnum:%d\terr:%s\n\n", ans->errnum, error_getinfo(ans->errnum));
+					flag = -1;
+					kv_handler_release(ans_cipher);
+					goto end;
+
+				}
+
+				unsigned long    num = answer_length(ans);
+
+				if (num == 1) {
+					kv_answer_value_t *cipher_text = answer_head_value(ans);
+					if (answer_value_look_type(cipher_text) != VALUE_TYPE_STAR) {
+						x_printf(E, "Failed to get cipher_text by cmd[%s].\n", cmd);
+						flag = -2;
+					} else {
+						char *str = (char *)answer_value_look_addr(cipher_text);
+						size_t len = answer_value_look_size(cipher_text);
+						memcpy(encrypt_text, (char *)str, len);
+					}
+				}
+
+				kv_handler_release(ans_cipher);
+				goto end;
+			} else if (date > get_date) {
+				// id_cmd_del(handler, id);
+				snprintf(plaintext, 128, "%s%ld", id, date);
+				/* Encrypt the plaintext */
+				snprintf(iv_date, 16, "%ld", date);
+				ciphertext_len = id_encrypt(plaintext, strlen(plaintext), aad, strlen(aad), key, iv_date, cipherbuff, tag);
+				// printf("Ciphertext is: %d\n", ciphertext_len);
+				// BIO_dump_fp(stdout, cipherbuff, ciphertext_len);
+
+				/*int i = 0;
+				 *   int k = 0;
+				 *   for(i=0; i<ciphertext_len; i+=2) {
+				 *        encrypt_text[k++] = cipherbuff[i];
+				 *   }
+				 */
+				extraction(cipherbuff, ciphertext_len, encrypt_text);
+				id_cmd_in(handler, id, date, encrypt_text);
+				// printf("encrypt_text is: %d\n", strlen(encrypt_text));
+				// BIO_dump_fp(stdout, encrypt_text, strlen(encrypt_text));
+				flag = 1;
+			} else {
+				x_printf(E, "now date:%ld < get date:%ld\n", date, get_date);
+				flag = -3;
+			}
 		}
 	}
 
-	kv_answer_release(ans);
+	kv_handler_release(handler);
 	return flag;
 
 end:
-	kv_answer_release(ans);
+	kv_handler_release(handler);
 	return flag;
 }
 

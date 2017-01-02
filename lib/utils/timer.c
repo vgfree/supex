@@ -95,14 +95,14 @@ int remove_timer(struct timer_list *list, uint8_t id)
 
 void schedule_timer(struct timer_list *list)
 {
-	log("schedule_timer");
+	loger("schedule_timer");
 	assert(list);
 	uint64_t curr_tick = get_tick_count();
-	log("max_pos:%d.", list->max_pos);
+	loger("max_pos:%d.", list->max_pos);
 
 	for (int i = 0; i <= list->max_pos; i++) {
 		struct timer_item *pitem = &list->timer[i];
-		log("curr_tick:%ld, next_tick:%ld.", curr_tick, pitem->next_tick);
+		loger("curr_tick:%ld, next_tick:%ld.", curr_tick, pitem->next_tick);
 
 		if (curr_tick >= pitem->next_tick) {
 			pitem->next_tick += pitem->interval;

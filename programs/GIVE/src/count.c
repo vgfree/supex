@@ -12,86 +12,124 @@
 extern struct rr_cfg_file g_rr_cfg_file;
 // #define __TEST 1
 
-static int str_cmd_in(kv_handler_t *handler, struct tm *timenow, char *const_str, unsigned int city_code, unsigned int val)
+static int str_cmd_in(kv_handler_t *hid, struct tm *timenow, char *const_str, unsigned int city_code, unsigned int val)
 {
 	char cmd[DAT_BUF_SIZE] = { '\0' };
 
 	snprintf(cmd, DAT_BUF_SIZE, "INCRBY %u:%d%02d%02d%02d%d:%s %u", city_code, timenow->tm_year + 1900,
 		timenow->tm_mon + 1, timenow->tm_mday, timenow->tm_hour, timenow->tm_min / (g_rr_cfg_file.synctime / 60), const_str, val);
 
-	kv_answer_t *ans = kv_ask(handler, cmd, strlen(cmd));
-
-	if (ans->errnum != ERR_NONE) {
-		kv_answer_release(ans);
+	kv_handler_t *handler = kv_spl(hid, cmd, strlen(cmd));
+	kv_answer_t *ans = &handler->answer;
+	
+	if (ERR_NONE != ans->errnum) {
+                x_printf(E, "errnum:%d\terr:%s\n\n", ans->errnum, error_getinfo(ans->errnum));
 		x_printf(E, "command[%s] --> errnum:%d, errstr:%s\n", cmd, ans->errnum, ans->err);
 		// x_x_printf(E, E, "command[%s] --> errnum:%d, errstr:%s\n", cmd, ans->errnum, ans->err);
+                kv_handler_release(handler);
 		return DAT_ERR;
-	}
+        }
 
-	kv_answer_release(ans);
+	kv_handler_release(handler);
 
 #if __TEST
 	snprintf(cmd, DAT_BUF_SIZE, "GET %u:%d%02d%02d%02d%d:%s", city_code, timenow->tm_year + 1900,
 		timenow->tm_mon + 1, timenow->tm_mday, timenow->tm_hour, timenow->tm_min / (g_rr_cfg_file.synctime / 60), const_str);
-	ans = kv_ask(handler, cmd, strlen(cmd));
-	unsigned long len = kv_answer_length(ans);
+	handler = kv_spl(hid, cmd, strlen(cmd));
+	ans = &handler->answer;
+	
+	if (ERR_NONE != ans->errnum) {
+                x_printf(E, "errnum:%d\terr:%s\n\n", ans->errnum, error_getinfo(ans->errnum));
+		kv_handler_release(handler);
+		return DAT_ERR;
+        }
+
+	unsigned long           len = answer_length(ans);
 
 	if (len == 1) {
-		kv_answer_value_t *value = kv_answer_first_value(ans);
+		kv_answer_value_t *value = answer_head_value(ans);
+		if (answer_value_look_type(value) != VALUE_TYPE_STAR) {
+			x_printf(D, "get %d nil value", sfd);
+			kv_handler_release(handler);
+			return DAT_ERR;
+		}
+		char *str = (char *)answer_value_look_addr(value);
+		size_t len = answer_value_look_size(value);
+		char ptr[128] = {0};
+		memcpy(ptr, answer_value_look_addr(value), answer_value_look_size(value));
 
 		if (value) {
-			x_printf(I, "after executed cmd[%s], %s:%lld\n", cmd, const_str, atoll((char *)value->ptr));
+			x_printf(I, "after executed cmd[%s], %s:%lld\n", cmd, const_str, atoll((char *)ptr));
 		} else {
 			x_printf(E, "Failed to get gpsCount by cmd[%s].\n", cmd);
-			kv_answer_release(ans);
+			kv_handler_release(handler);
 			return DAT_ERR;
 		}
 	}
-	kv_answer_release(ans);
+	kv_handler_release(handler);
 #endif
 	return DAT_OK;
 }
 
-static int set_cmd_in(kv_handler_t *handler, struct tm *timenow, char *const_str, unsigned int city_code, unsigned long long val)
+static int set_cmd_in(kv_handler_t *hid, struct tm *timenow, char *const_str, unsigned int city_code, unsigned long long val)
 {
 	char cmd[DAT_BUF_SIZE] = { '\0' };
 
 	snprintf(cmd, DAT_BUF_SIZE, "SADD %u:%d%02d%02d%02d%d:%s %llu", city_code, timenow->tm_year + 1900,
 		timenow->tm_mon + 1, timenow->tm_mday, timenow->tm_hour, timenow->tm_min / (g_rr_cfg_file.synctime / 60), const_str, val);
 
-	kv_answer_t *ans = kv_ask(handler, cmd, strlen(cmd));
-
-	if (ans->errnum != ERR_NONE) {
-		kv_answer_release(ans);
+	kv_handler_t *handler = kv_spl(hid, cmd, strlen(cmd));
+	kv_answer_t *ans = &handler->answer;
+	
+	if (ERR_NONE != ans->errnum) {
+                x_printf(E, "errnum:%d\terr:%s\n\n", ans->errnum, error_getinfo(ans->errnum));
 		x_printf(E, "command[%s] --> errnum:%d, errstr:%s\n", cmd, ans->errnum, ans->err);
+                kv_handler_release(handler);
 		return DAT_ERR;
-	}
+        }
 
-	kv_answer_release(ans);
+	kv_handler_release(handler);
 
 #if __TEST
 	snprintf(cmd, DAT_BUF_SIZE, "SCARD %u:%d%02d%02d%02d%d:%s", city_code, timenow->tm_year + 1900,
 		timenow->tm_mon + 1, timenow->tm_mday, timenow->tm_hour, (int)(timenow->tm_min / (g_rr_cfg_file.synctime / 60)), const_str);
-	ans = kv_ask(handler, cmd, strlen(cmd));
-	unsigned long len = kv_answer_length(ans);
+	handler = kv_spl(hid, cmd, strlen(cmd));
+	ans = &handler->answer;
+	
+	if (ERR_NONE != ans->errnum) {
+                x_printf(E, "errnum:%d\terr:%s\n\n", ans->errnum, error_getinfo(ans->errnum));
+		kv_handler_release(handler);
+		return DAT_ERR;
+        }
+
+	unsigned long           len = answer_length(ans);
 
 	if (len == 1) {
-		kv_answer_value_t *value = kv_answer_first_value(ans);
+		kv_answer_value_t *value = answer_head_value(ans);
+		if (answer_value_look_type(value) != VALUE_TYPE_STAR) {
+			x_printf(D, "get %d nil value", sfd);
+			kv_handler_release(handler);
+			return DAT_ERR;
+		}
+		char *str = (char *)answer_value_look_addr(value);
+		size_t len = answer_value_look_size(value);
+		char ptr[128] = {0};
+		memcpy(ptr, answer_value_look_addr(value), answer_value_look_size(value));
 
 		if (value) {
-			x_printf(I, "after executed cmd[%s], %s:%lld\n", cmd, const_str, atoll((char *)value->ptr));
+			x_printf(I, "after executed cmd[%s], %s:%lld\n", cmd, const_str, atoll((char *)ptr));
 		} else {
 			x_printf(E, "Failed to get activeUser count by [%s].\n", cmd);
-			kv_answer_release(ans);
+			kv_handler_release(handler);
 			return DAT_ERR;
 		}
 	}
-	kv_answer_release(ans);
+	kv_handler_release(handler);
 #endif
 	return DAT_OK;
 }
 
-static int str_cmd_out(kv_handler_t *handler, const char *const_str, unsigned long long *size, struct tm *timenow, unsigned int city_code)
+static int str_cmd_out(kv_handler_t *hid, const char *const_str, unsigned long long *size, struct tm *timenow, unsigned int city_code)
 {
 	if (!handler || !const_str) {
 		return DAT_ERR;
@@ -100,176 +138,233 @@ static int str_cmd_out(kv_handler_t *handler, const char *const_str, unsigned lo
 	char cmd[DAT_BUF_SIZE] = { 0 };
 	snprintf(cmd, DAT_BUF_SIZE, "GET %u:%d%02d%02d%02d%d:%s", city_code, timenow->tm_year + 1900,
 		timenow->tm_mon + 1, timenow->tm_mday, timenow->tm_hour, (int)(timenow->tm_min / (g_rr_cfg_file.synctime / 60))	/*tm_min*/, const_str);
-	kv_answer_t *ans = kv_ask(handler, cmd, strlen(cmd));
 
-	if (ans->errnum != ERR_NONE) {
-		kv_answer_release(ans);
-		x_printf(E, "cmd:%s, errnum:%d, errstr:%s\n", cmd, ans->errnum, ans->err);
+	kv_handler_t *handler = kv_spl(hid, cmd, strlen(cmd));
+	kv_answer_t *ans = &handler->answer;
+	
+	if (ERR_NONE != ans->errnum) {
+                x_printf(E, "errnum:%d\terr:%s\n\n", ans->errnum, error_getinfo(ans->errnum));
+		kv_handler_release(handler);
 		return DAT_ERR;
-	}
+        }
 
-	unsigned long len = kv_answer_length(ans);
+	unsigned long           len = answer_length(ans);
 
 	if (len == 1) {
-		kv_answer_value_t *value = kv_answer_first_value(ans);
+		kv_answer_value_t *value = answer_head_value(ans);
+		if (answer_value_look_type(value) != VALUE_TYPE_STAR) {
+			x_printf(D, "get %d nil value", sfd);
+			kv_handler_release(handler);
+			return DAT_ERR;
+		}
+		char *str = (char *)answer_value_look_addr(value);
+		size_t len = answer_value_look_size(value);
+		char ptr[128] = {0};
+		memcpy(ptr, answer_value_look_addr(value), answer_value_look_size(value));
 
 		if (value) {
-			x_printf(I, "after executed cmd[%s], gpsCount:%lld\n", cmd, atoll((char *)value->ptr));
-			*size = atoll((char *)value->ptr);
+			x_printf(I, "after executed cmd[%s], gpsCount:%lld\n", cmd, atoll((char *)ptr));
+			*size = atoll((char *)ptr);
 		} else {
 			x_printf(E, "Failed to get gpsCount by cmd[%s].\n", cmd);
-			kv_answer_release(ans);
+			kv_handler_release(handler);
 			return DAT_ERR;
 		}
 	}
-
-	kv_answer_release(ans);
+	kv_handler_release(handler);
 	return DAT_OK;
 }
 
-static int set_cmd_out(kv_handler_t *handler, const char *const_str, unsigned long long *size, struct tm *timenow, unsigned int city_code)
+static int set_cmd_out(kv_handler_t *hid, const char *const_str, unsigned long long *size, struct tm *timenow, unsigned int city_code)
 {
 	char cmd[DAT_BUF_SIZE] = { '\0' };
 
 	snprintf(cmd, DAT_BUF_SIZE, "SCARD %u:%d%02d%02d%02d%d:%s", city_code, timenow->tm_year + 1900,
 		timenow->tm_mon + 1, timenow->tm_mday, timenow->tm_hour, (int)(timenow->tm_min / (g_rr_cfg_file.synctime / 60)), const_str);
-	kv_answer_t *ans = kv_ask(handler, cmd, strlen(cmd));
 
-	if (ans->errnum != ERR_NONE) {
-		kv_answer_release(ans);
-		x_printf(E, "cmd:%s, errnum:%d, errstr:%s\n", cmd, ans->errnum, ans->err);
+	kv_handler_t *handler = kv_spl(hid, cmd, strlen(cmd));
+	kv_answer_t *ans = &handler->answer;
+	
+	if (ERR_NONE != ans->errnum) {
+                x_printf(E, "errnum:%d\terr:%s\n\n", ans->errnum, error_getinfo(ans->errnum));
+		kv_handler_release(handler);
 		return DAT_ERR;
-	}
+        }
 
-	unsigned long len = kv_answer_length(ans);
+	unsigned long           len = answer_length(ans);
 
 	if (len == 1) {
-		kv_answer_value_t *value = kv_answer_first_value(ans);
+		kv_answer_value_t *value = answer_head_value(ans);
+		if (answer_value_look_type(value) != VALUE_TYPE_STAR) {
+			x_printf(D, "get %d nil value", sfd);
+			kv_handler_release(handler);
+			return DAT_ERR;
+		}
+		char *str = (char *)answer_value_look_addr(value);
+		size_t len = answer_value_look_size(value);
+		char ptr[128] = {0};
+		memcpy(ptr, answer_value_look_addr(value), answer_value_look_size(value));
 
 		if (value) {
-			x_printf(I, "after executed cmd[%s], %s:%lld\n", cmd, const_str, atoll((char *)value->ptr));
-			*size = atoll((char *)value->ptr);
+			x_printf(I, "after executed cmd[%s], %s:%lld\n", cmd, const_str, atoll((char *)ptr));
+			*size = atoll((char *)ptr);
 		} else {
 			x_printf(E, "Failed to get activeUser count by [%s].\n", cmd);
-			kv_answer_release(ans);
+			kv_handler_release(handler);
 			return DAT_ERR;
 		}
 	}
-
-	kv_answer_release(ans);
+	kv_handler_release(handler);
 	return DAT_OK;
 }
 
-static int add_active_city(kv_handler_t *handler, struct tm *timenow, unsigned int city_code)
+static int add_active_city(kv_handler_t *hid, struct tm *timenow, unsigned int city_code)
 {
 	char cmd[DAT_BUF_SIZE] = { '\0' };
 
 	snprintf(cmd, DAT_BUF_SIZE, "SADD %d%02d%02d%02d%d:activeCity %u", timenow->tm_year + 1900,
 		timenow->tm_mon + 1, timenow->tm_mday, timenow->tm_hour, timenow->tm_min / (g_rr_cfg_file.synctime / 60), city_code);
 
-	kv_answer_t *ans = kv_ask(handler, cmd, strlen(cmd));
-
-	if (ans->errnum != ERR_NONE) {
-		kv_answer_release(ans);
-		x_printf(E, "command[%s] --> errnum:%d, errstr:%s\n", cmd, ans->errnum, ans->err);
+	kv_handler_t *handler = kv_spl(hid, cmd, strlen(cmd));
+	kv_answer_t *ans = &handler->answer;
+	
+	if (ERR_NONE != ans->errnum) {
+                x_printf(E, "errnum:%d\terr:%s\n\n", ans->errnum, error_getinfo(ans->errnum));
+		kv_handler_release(handler);
 		return DAT_ERR;
-	}
+        }
 
-	kv_answer_release(ans);
-
+	kv_handler_release(handler);
 #if __TEST
 	snprintf(cmd, DAT_BUF_SIZE, "SCARD %d%02d%02d%02d%d:activeCity", timenow->tm_year + 1900,
 		timenow->tm_mon + 1, timenow->tm_mday, timenow->tm_hour, timenow->tm_min / (g_rr_cfg_file.synctime / 60));
-	ans = kv_ask(handler, cmd, strlen(cmd));
 
-	if (ans->errnum != ERR_NONE) {
-		kv_answer_release(ans);
-		x_printf(E, "cmd:%s, errnum:%d, errstr:%s\n", cmd, ans->errnum, ans->err);
+	handler = kv_spl(hid, cmd, strlen(cmd));
+	ans = &handler->answer;
+	
+	if (ERR_NONE != ans->errnum) {
+                x_printf(E, "errnum:%d\terr:%s\n\n", ans->errnum, error_getinfo(ans->errnum));
+		kv_handler_release(handler);
 		return DAT_ERR;
-	}
+        }
 
-	unsigned long len = kv_answer_length(ans);
+	unsigned long           len = answer_length(ans);
 
 	if (len == 1) {
-		kv_answer_value_t *value = kv_answer_first_value(ans);
+		kv_answer_value_t *value = answer_head_value(ans);
+		if (answer_value_look_type(value) != VALUE_TYPE_STAR) {
+			x_printf(D, "get %d nil value", sfd);
+			kv_handler_release(handler);
+			return DAT_ERR;
+		}
+		char *str = (char *)answer_value_look_addr(value);
+		size_t len = answer_value_look_size(value);
+		char ptr[128] = {0};
+		memcpy(ptr, answer_value_look_addr(value), answer_value_look_size(value));
 
 		if (value) {
-			x_printf(I, "after executed cmd[%s], activeCity:%lld\n", cmd, atoll((char *)value->ptr));
+			x_printf(I, "after executed cmd[%s], activeCity:%lld\n", cmd, atoll((char *)ptr));
 		} else {
 			x_printf(E, "Failed to get activeUser count by [%s].\n", cmd);
-			kv_answer_release(ans);
+			kv_handler_release(handler);
 			return DAT_ERR;
 		}
 	} else if (len > 1) {
 		int                     i = 0;
-		kv_answer_value_t       *value;
-		kv_answer_iter_t        *iter = kv_answer_get_iter(ans, ANSWER_HEAD);
-		kv_answer_rewind_iter(ans, iter);
+		kv_answer_iter_t        *iter = answer_iter_make(ans, ANSWER_HEAD);
 
-		while ((value = kv_answer_next(iter)) != NULL) {
-			x_printf(D, "%dth cityCode:%d\n", i, atoi((char *)value->ptr));
+		kv_answer_value_t       *value;
+		while ((value = answer_iter_next(iter)) != NULL) {
+			if (answer_value_look_type(value) == VALUE_TYPE_NIL) {
+				x_printf(D, "this IMEI has not data!\n");
+				answer_iter_free(iter);
+				abort();
+			}
+
+			char ptr[128] = {0};
+			memcpy(ptr, answer_value_look_addr(value), answer_value_look_size(value));
+			x_printf(D, "%dth cityCode:%d\n", i, atoi((char *)ptr));
+			i ++;
 		}
 
-		kv_answer_release_iter(iter);
+
+		answer_iter_free(iter);
 	}
-	kv_answer_release(ans);
+	kv_handler_release(handler);
 #endif	/* if __TEST */
 	return DAT_OK;
 }
 
-static int get_active_city(kv_handler_t *handler, struct tm *timenow, unsigned int *active_city)
+static int get_active_city(kv_handler_t *hid, struct tm *timenow, unsigned int *active_city)
 {
 	char cmd[DAT_BUF_SIZE] = { '\0' };
 
 	snprintf(cmd, DAT_BUF_SIZE, "SMEMBERS %d%02d%02d%02d%d:activeCity", timenow->tm_year + 1900,
 		timenow->tm_mon + 1, timenow->tm_mday, timenow->tm_hour, timenow->tm_min / (g_rr_cfg_file.synctime / 60));
-	kv_answer_t *ans = kv_ask(handler, cmd, strlen(cmd));
 
-	if (ans->errnum != ERR_NONE) {
-		kv_answer_release(ans);
-		x_printf(E, "cmd:%s, errnum:%d, errstr:%s\n", cmd, ans->errnum, ans->err);
+	handler = kv_spl(hid, cmd, strlen(cmd));
+	ans = &handler->answer;
+	
+	if (ERR_NONE != ans->errnum) {
+                x_printf(E, "errnum:%d\terr:%s\n\n", ans->errnum, error_getinfo(ans->errnum));
+		kv_handler_release(handler);
 		return DAT_ERR;
-	}
+        }
 
-	unsigned long   len = kv_answer_length(ans);
+	unsigned long           len = answer_length(ans);
 	int             cnt = 0;
 	int             code = 0;
 
+
 	if (len == 1) {
-		kv_answer_value_t *value = kv_answer_first_value(ans);
+		kv_answer_value_t *value = answer_head_value(ans);
+		if (answer_value_look_type(value) != VALUE_TYPE_STAR) {
+			x_printf(D, "get %d nil value", sfd);
+			kv_handler_release(handler);
+			return DAT_ERR;
+		}
+		char *str = (char *)answer_value_look_addr(value);
+		size_t len = answer_value_look_size(value);
+		char ptr[128] = {0};
+		memcpy(ptr, answer_value_look_addr(value), answer_value_look_size(value));
 
 		if (value) {
-			x_printf(I, "after executed cmd[%s], activeCity:%d\n", cmd, atoi((char *)value->ptr));
+			x_printf(I, "after executed cmd[%s], activeCity:%d\n", cmd, atoi((char *)ptr));
 			cnt = 1;
-			active_city[0] = atoi((char *)value->ptr);
-			kv_answer_release(ans);
-			return cnt;
+			active_city[0] = atoi((char *)ptr);
 		} else {
 			x_printf(E, "Failed to get activeUser count by [%s].\n", cmd);
-			kv_answer_release(ans);
+			kv_handler_release(handler);
 			return DAT_ERR;
 		}
 	} else if (len > 1) {
-		kv_answer_value_t       *value;
-		kv_answer_iter_t        *iter = kv_answer_get_iter(ans, ANSWER_HEAD);
-		kv_answer_rewind_iter(ans, iter);
+		kv_answer_iter_t        *iter = answer_iter_make(ans, ANSWER_HEAD);
 
-		while ((value = kv_answer_next(iter)) != NULL) {
-			code = atoi((char *)value->ptr);
+		kv_answer_value_t       *value;
+		while ((value = answer_iter_next(iter)) != NULL) {
+			if (answer_value_look_type(value) == VALUE_TYPE_NIL) {
+				x_printf(D, "this IMEI has not data!\n");
+				answer_iter_free(iter);
+				abort();
+			}
+
+			char ptr[128] = {0};
+			memcpy(ptr, answer_value_look_addr(value), answer_value_look_size(value));
+			code = atoi((char *)ptr);
 			x_printf(D, "%dth cityCode:%d\n", cnt, code);
 			active_city[cnt] = code;
 			cnt++;
 		}
 
-		kv_answer_release_iter(iter);
-	}
 
-	kv_answer_release(ans);
+		answer_iter_free(iter);
+	}
+	kv_handler_release(handler);
 	return cnt;
-	// return DAT_OK;
 }
 
-static int str_cmd_del(kv_handler_t *handler, const char *const_str, struct tm *timenow, unsigned int city_code)
+
+static int str_cmd_del(kv_handler_t *hid, const char *const_str, struct tm *timenow, unsigned int city_code)
 {
 	if (!handler || !const_str) {
 		return DAT_ERR;
@@ -278,19 +373,19 @@ static int str_cmd_del(kv_handler_t *handler, const char *const_str, struct tm *
 	char cmd[DAT_BUF_SIZE] = { 0 };
 	snprintf(cmd, DAT_BUF_SIZE, "DEL %u:%d%02d%02d%02d%d:%s", city_code, timenow->tm_year + 1900,
 		timenow->tm_mon + 1, timenow->tm_mday, timenow->tm_hour, (int)(timenow->tm_min / (g_rr_cfg_file.synctime / 60)), const_str);
-	kv_answer_t *ans = kv_ask(handler, cmd, strlen(cmd));
-
-	if (ans->errnum != ERR_NONE) {
-		kv_answer_release(ans);
-		x_printf(E, "cmd:%s, errnum:%d, errstr:%s\n", cmd, ans->errnum, ans->err);
+	kv_handler_t *handler = kv_spl(hid, cmd, strlen(cmd));
+	kv_answer_t *ans = &handler->answer;
+	
+	if (ERR_NONE != ans->errnum) {
+                x_printf(E, "errnum:%d\terr:%s\n\n", ans->errnum, error_getinfo(ans->errnum));
+		kv_handler_release(handler);
 		return DAT_ERR;
-	}
-
-	kv_answer_release(ans);
+        }
+	kv_handler_release(handler);
 	return DAT_OK;
 }
 
-static int city_key_rm(kv_handler_t *handler, struct tm *timenow)
+static int city_key_rm(kv_handler_t *hid, struct tm *timenow)
 {
 	if (!handler || !timenow) {
 		return DAT_ERR;
@@ -299,15 +394,15 @@ static int city_key_rm(kv_handler_t *handler, struct tm *timenow)
 	char cmd[DAT_BUF_SIZE] = { 0 };
 	snprintf(cmd, DAT_BUF_SIZE, "DEL %d%02d%02d%02d%d:activeCity", timenow->tm_year + 1900,
 		timenow->tm_mon + 1, timenow->tm_mday, timenow->tm_hour, (int)(timenow->tm_min / (g_rr_cfg_file.synctime / 60)));
-	kv_answer_t *ans = kv_ask(handler, cmd, strlen(cmd));
-
-	if (ans->errnum != ERR_NONE) {
-		kv_answer_release(ans);
-		x_printf(E, "cmd:%s, errnum:%d, errstr:%s\n", cmd, ans->errnum, ans->err);
+	kv_handler_t *handler = kv_spl(hid, cmd, strlen(cmd));
+	kv_answer_t *ans = &handler->answer;
+	
+	if (ERR_NONE != ans->errnum) {
+                x_printf(E, "errnum:%d\terr:%s\n\n", ans->errnum, error_getinfo(ans->errnum));
+		kv_handler_release(handler);
 		return DAT_ERR;
-	}
-
-	kv_answer_release(ans);
+        }
+	kv_handler_release(handler);
 	return DAT_OK;
 }
 

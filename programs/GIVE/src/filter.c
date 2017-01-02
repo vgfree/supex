@@ -11,39 +11,36 @@ extern struct rr_cfg_file g_rr_cfg_file;
 
 // int g_city_code[CITY_COUNT];
 
-int citycode_filter(kv_handler_t *handler, double lon, double lat)
+int citycode_filter(kv_handler_t *hid, double lon, double lat)
 {
 	char cmd[64] = { 0 };
 
 	// sprintf(cmd, "HGET %d&%d cityCode", (int)(lon*100), (int)(lat*100));
 	sprintf(cmd, "GET %d&%d", (int)(lon * 100), (int)(lat * 100));
 
-	kv_answer_t *ans = kv_ask(handler, cmd, strlen(cmd));
-
-	if (ans->errnum != ERR_NONE) {
-                if (ans->errnum == ERR_NIL) {
-                        kv_answer_release(ans);
-                        x_printf(W, "can't find citycode lon:%ld lat:%ld errnum:%d, errstr:%s\n", lon, lat, ans->errnum, ans->err);
-                        return 10000;
-                }
-		kv_answer_release(ans);
-		x_printf(E, "errnum:%d, errstr:%s\n", ans->errnum, ans->err);
+	kv_handler_t *handler = kv_spl(hid, cmd, strlen(cmd));
+	kv_answer_t *ans = &handler->answer;
+	
+	if (ERR_NONE != ans->errnum) {
+                x_printf(E, "errnum:%d\terr:%s\n\n", ans->errnum, error_getinfo(ans->errnum));
+                kv_handler_release(handler);
 		return GV_ERR;
-	}
+        }
 
 	int             citycode = 0;
-	unsigned long   len = kv_answer_length(ans);
+	unsigned long           len = answer_length(ans);
 
 	if (len == 1) {
-		kv_answer_value_t *value = kv_answer_first_value(ans);
-
-		if (value) {
-			citycode = atoi((char *)value->ptr);
-		} else {
-			x_printf(E, "Failed to get cityCode by:%s\n", cmd);
-			kv_answer_release(ans);
-			return GV_ERR;
+		kv_answer_value_t *value = answer_head_value(ans);
+		if (answer_value_look_type(value) == VALUE_TYPE_NIL) {
+			kv_handler_release(handler);
+			x_printf(W, "can't find citycode lon:%ld lat:%ld\n", lon, lat);
+			return 10000;
 		}
+
+		char ptr[128] = {0};
+		memcpy(ptr, answer_value_look_addr(value), answer_value_look_size(value));
+		citycode = atoi((char *)ptr);
 	}
 
 	x_printf(D, "cityCode:%d, lon&lat:[%.7lf, %.7lf]\n", citycode, lon, lat);
@@ -75,109 +72,140 @@ int citycode_filter(kv_handler_t *handler, double lon, double lat)
 	return citycode;
 }
 
-int type_add(kv_handler_t *handler, long long IMEI, int type)
+int type_add(kv_handler_t *hid, long long IMEI, int type)
 {
 	char cmd[32] = { 0 };
 
 	sprintf(cmd, "HSET %lld type %d", IMEI, type);
-	kv_answer_t *ans = kv_ask(handler, cmd, strlen(cmd));
-
-	if (ans && (ans->errnum != ERR_NONE)) {
-		x_printf(E, "errnum:%d, errstr:%s\n", ans->errnum, ans->err);
+	kv_handler_t *handler = kv_spl(hid, cmd, strlen(cmd));
+	kv_answer_t *ans = &handler->answer;
+	
+	if (ERR_NONE != ans->errnum) {
+                x_printf(E, "errnum:%d\terr:%s\n\n", ans->errnum, error_getinfo(ans->errnum));
+                kv_handler_release(handler);
 		return -1;
-	}
-
-	kv_answer_value_t *value = kv_answer_first_value(ans);
-	// x_printf(E, "HSET type: %s\n", (char *)value->ptr);
-	kv_answer_release(ans);
+        }
+	kv_handler_release(handler);
 
 	sprintf(cmd, "HGET %lld type", IMEI);
-	ans = kv_ask(handler, cmd, strlen(cmd));
-	value = kv_answer_first_value(ans);
-
-	// x_printf(E, "HGET type: %s\n", (char *)value->ptr);
-	if (value && (atoi((char *)value->ptr) == type)) {
-		x_printf(E, "[%s] executed succeed.\n", cmd);
-		kv_answer_release(ans);
-		return 0;
+	handler = kv_spl(hid, cmd, strlen(cmd));
+	ans = &handler->answer;
+	
+	if (ERR_NONE != ans->errnum) {
+                x_printf(E, "errnum:%d\terr:%s\n\n", ans->errnum, error_getinfo(ans->errnum));
+                kv_handler_release(handler);
+		return -1;
+        }
+	kv_answer_value_t *value = answer_head_value(ans);
+	if (answer_value_look_type(value) == VALUE_TYPE_STAR) {
+		char ptr[128] = {0};
+		memcpy(ptr, answer_value_look_addr(value), answer_value_look_size(value));
+		
+		if ((atoi(ptr) == type)) {
+			x_printf(E, "[%s] executed succeed.\n", cmd);
+			kv_handler_release(handler);
+			return 0;
+		}
 	}
 
-	kv_answer_release(ans);
+	kv_handler_release(handler);
 	return -1;
 }
 
-int status_add(kv_handler_t *handler, long long IMEI, int status)
+int status_add(kv_handler_t *hid, long long IMEI, int status)
 {
 	char cmd[32] = { 0 };
 
 	sprintf(cmd, "HSET %lld status %d", IMEI, status);
-	kv_answer_t *ans = kv_ask(handler, cmd, strlen(cmd));
-
-	if (ans && (ans->errnum != ERR_NONE)) {
-		x_printf(E, "errnum:%d, errstr:%s\n", ans->errnum, ans->err);
+	kv_handler_t *handler = kv_spl(hid, cmd, strlen(cmd));
+	kv_answer_t *ans = &handler->answer;
+	
+	if (ERR_NONE != ans->errnum) {
+                x_printf(E, "errnum:%d\terr:%s\n\n", ans->errnum, error_getinfo(ans->errnum));
+                kv_handler_release(handler);
 		return -1;
-	}
-
-	kv_answer_release(ans);
+        }
+	kv_handler_release(handler);
 
 	sprintf(cmd, "HGET %lld status", IMEI);
-	ans = kv_ask(handler, cmd, strlen(cmd));
-	kv_answer_value_t *value = kv_answer_first_value(ans);
-
-	// x_printf(E, "HGET status : %s\n", (char *)value->ptr);
-	if (value && (atoi((char *)value->ptr) == status)) {
-		x_printf(E, "[%s] executed succeed.\n", cmd);
-		kv_answer_release(ans);
-		return 0;
+	handler = kv_spl(hid, cmd, strlen(cmd));
+	ans = &handler->answer;
+	
+	if (ERR_NONE != ans->errnum) {
+                x_printf(E, "errnum:%d\terr:%s\n\n", ans->errnum, error_getinfo(ans->errnum));
+                kv_handler_release(handler);
+		return -1;
+        }
+	kv_answer_value_t *value = answer_head_value(ans);
+	if (answer_value_look_type(value) == VALUE_TYPE_STAR) {
+		char ptr[128] = {0};
+		memcpy(ptr, answer_value_look_addr(value), answer_value_look_size(value));
+		
+		if ((atoi(ptr) == status)) {
+			x_printf(E, "[%s] executed succeed.\n", cmd);
+			kv_handler_release(handler);
+			return 0;
+		}
 	}
 
-	kv_answer_release(ans);
+	kv_handler_release(handler);
 	return -1;
 }
 
-int type_filter(kv_handler_t *handler, long long IMEI, int type)
+int type_filter(kv_handler_t *hid, long long IMEI, int type)
 {
 	char cmd[32] = { 0 };
 
 	sprintf(cmd, "HMGET %lld type", IMEI);
-	kv_answer_t *ans = kv_ask(handler, cmd, strlen(cmd));
-
-	if (ans && (ans->errnum != ERR_NONE)) {
-		x_printf(E, "errnum:%d, errstr:%s\n", ans->errnum, ans->err);
+	kv_handler_t *handler = kv_spl(hid, cmd, strlen(cmd));
+	kv_answer_t *ans = &handler->answer;
+	
+	if (ERR_NONE != ans->errnum) {
+                x_printf(E, "errnum:%d\terr:%s\n\n", ans->errnum, error_getinfo(ans->errnum));
+                kv_handler_release(handler);
 		return -1;
+        }
+	kv_answer_value_t *value = answer_head_value(ans);
+	if (answer_value_look_type(value) == VALUE_TYPE_STAR) {
+		char ptr[128] = {0};
+		memcpy(ptr, answer_value_look_addr(value), answer_value_look_size(value));
+		
+		if ((atoi(ptr) == type)) {
+			kv_handler_release(handler);
+			return 0;
+		}
 	}
 
-	kv_answer_value_t *value = kv_answer_first_value(ans);
-
-	if (value && (atoi(value->ptr) == type)) {
-		kv_answer_release(ans);
-		return 0;
-	}
-
-	kv_answer_release(ans);
+	kv_handler_release(handler);
 	return -1;
 }
 
-int status_filter(kv_handler_t *handler, long long IMEI, int status)
+int status_filter(kv_handler_t *hid, long long IMEI, int status)
 {
 	char cmd[32] = { 0 };
 
 	sprintf(cmd, "HMGET %lld status", IMEI);
-	kv_answer_t *ans = kv_ask(handler, cmd, strlen(cmd));
 
-	if (ans && (ans->errnum != ERR_NONE)) {
-		x_printf(E, "errnum:%d, errstr:%s\n", ans->errnum, ans->err);
+	kv_handler_t *handler = kv_spl(hid, cmd, strlen(cmd));
+	kv_answer_t *ans = &handler->answer;
+	
+	if (ERR_NONE != ans->errnum) {
+                x_printf(E, "errnum:%d\terr:%s\n\n", ans->errnum, error_getinfo(ans->errnum));
+                kv_handler_release(handler);
 		return -1;
+        }
+	kv_answer_value_t *value = answer_head_value(ans);
+	if (answer_value_look_type(value) == VALUE_TYPE_STAR) {
+		char ptr[128] = {0};
+		memcpy(ptr, answer_value_look_addr(value), answer_value_look_size(value));
+		
+		if ((atoi(ptr) == status)) {
+			kv_handler_release(handler);
+			return 0;
+		}
 	}
 
-	kv_answer_value_t *value = kv_answer_first_value(ans);
-
-	if (value && (atoi(value->ptr) == status)) {
-		kv_answer_release(ans);
-		return 0;
-	}
-
-	kv_answer_release(ans);
+	kv_handler_release(handler);
 	return -1;
 }
 

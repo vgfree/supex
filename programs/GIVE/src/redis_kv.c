@@ -16,32 +16,36 @@
 #include "redis_kv.h"
 
 //
-int libkv_cmd(kv_handler_t *handler, const char *cmd, unsigned int cmdlen, kv_answer_t **ans)
+int libkv_cmd(kv_handler_t *hid, const char *cmd, unsigned int cmdlen, kv_answer_t **ans)
 {
 	if (!cmd || (cmdlen == 0)) {
 		x_printf(E, "Invalid command, try again! .\n");
 		return -1;
 	}
 
-	(*ans) = kv_ask(handler, cmd, cmdlen);
-
-	if ((*ans)->errnum != ERR_NONE) {
-		x_printf(E, "errnum:%d\terr:%s! .\n", (*ans)->errnum, (*ans)->err);
+	kv_handler_t *handler = kv_spl(hid, cmd, cmdlen);
+	*ans = &handler->answer;
+	
+	if (ERR_NONE != (*ans)->errnum) {
+                x_printf(E, "errnum:%d\terr:%s\n\n", (*ans)->errnum, error_getinfo((*ans)->errnum));
+                kv_handler_release(handler);
 		return -1;
-	}
+        }
 
-	/*kvanswer_free(ans);*/
+	//kv_handler_release(handler);
+
 	return 0;
 }
 
 void kvanswer_free(kv_answer_t *ans)
 {
-	kv_answer_release(ans);
+	kv_handler_t *handler = NULL;//TODO : offset by ans
+	kv_handler_release(handler);
 }
 
-void kvhandler_destroy(kv_handler_t *handler)
+void kvhandler_destroy(void)
 {
-	kv_destroy(handler);
+	kv_destroy();
 }
 
 void get_allhashvaule(kv_answer_t *ans)
