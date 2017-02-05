@@ -12,7 +12,7 @@ extern "C" {
 
 static struct evcs_events g_kernel_evts = {};
 
-static void kernel_start(void *argv)
+static inline void kernel_start(void *argv)
 {
 	struct timeval  sta = {};
 	struct timeval  end = {};
@@ -32,13 +32,12 @@ static void kernel_start(void *argv)
 		// printf("use time %ld\n", diffms);
 	}
 }
-
-static void kernel_init(void *self)
+static inline void kernel_init(void *self)
 {
 	g_kernel_evts.evcb[EVCS_EVENT_ROOT] = (EVENTS_FUNCTION *)kernel_start;
 }
 
-static void kernel_exit(void *self)
+static inline void kernel_exit(void *self)
 {}
 
 #ifdef __cplusplus

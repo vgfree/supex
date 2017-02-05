@@ -48,7 +48,7 @@ struct mttp_parse_info
 
 void mttp_parse_init(struct mttp_parse_info *info, char *const *buff, unsigned const *size);
 
-bool mttp_parse(struct mttp_parse_info *parseinfo);
+bool mttp_parse(struct mttp_parse_info *info);
 
 void mttp_parse_free(struct mttp_parse_info *info);
 

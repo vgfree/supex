@@ -221,5 +221,6 @@ static void __attribute__((constructor)) __ ## driver ## __(void)	\
 {								\
 	static pthread_once_t once_control = PTHREAD_ONCE_INIT; \
 	pthread_once(&once_control, driver); \
+	printf("auto_call_once-->"#driver"\n"); \
 }
 

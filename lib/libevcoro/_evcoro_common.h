@@ -9,6 +9,9 @@
 #ifndef _evcoro_common_h
 #define _evcoro_common_h
 
+#ifndef AO_T
+typedef volatile long AO_T;
+#endif
 /* ------------------------------------------------------ */
 #ifndef likely
   #if defined __GNUC__
@@ -28,6 +31,7 @@
 #elif !defined(__CYGWIN__) && (defined(__CYGWIN32__) || defined(CYGWIN))
   #define  __CYGWIN__   (1)
 #endif
+
 
 #ifdef __LINUX__
 #include <sys/eventfd.h>

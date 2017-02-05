@@ -28,7 +28,7 @@ struct async_ctx        *async_ctx_initial(struct ev_loop *loop, int peak, bool 
 	void *data);
 
 struct command_node     *async_ctx_command(struct async_ctx *ctx, enum proto_type ptype, int sfd,
-	const char *data, size_t size,
+	const char *fops, const char *data1, size_t size1, const char *data2, size_t size2,
 	ASYNC_CALL_BACK fcb, void *usr);
 
 void async_ctx_startup(struct async_ctx *ctx);

@@ -56,7 +56,7 @@ struct cache
 	unsigned        incsize;	/**<每次增长的大小*/
 	/* ----- private : only read ------     */
 	unsigned        start;		/**<有效数据起始下标*/
-	unsigned        end;		/**<有效数据结束下班*/
+	unsigned        end;		/**<有效数据结束下标*/
 	unsigned        size;		/**<缓冲长度*/
 	char            *buff;		/**<缓冲地址*/
 	/* ----- public : write & read ------   */

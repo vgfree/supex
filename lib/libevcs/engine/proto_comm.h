@@ -4,6 +4,7 @@
 #include "redis_api/redis_status.h"
 #include "mttp_api/mttp_status.h"
 #include "mfptp_api/mfptp_parse.h"
+#include "sure_api/sure_status.h"
 
 /** async protocol callback prototype */
 typedef int (PROTO_CALL_BACK)(void *parse, ...);
@@ -13,6 +14,10 @@ typedef int (PROTO_CALL_BACK)(void *parse, ...);
  * < 0;PROTO_STAT_FAIL
  * > 0;PROTO_STAT_DONE
  */
+
+/*==============================================================*/
+/*				VARY				*/
+/*==============================================================*/
 int http_proto_init(struct http_parse_info *info, char *const *data, unsigned const *size);
 
 int http_proto_free(struct http_parse_info *info);
@@ -65,3 +70,21 @@ int mfptp_proto_reqt(struct mfptp_parse_info *info);
 struct mfptp_parse_info *mfptp_proto_dump(struct mfptp_parse_info *src);
 
 int mfptp_proto_good(struct mfptp_parse_info *src);
+
+
+
+/*==============================================================*/
+/*				SURE				*/
+/*==============================================================*/
+
+int sure_proto_init(struct sure_parse_info *info, char *const *data, unsigned const *size, size_t todo);
+
+int sure_proto_free(struct sure_parse_info *info);
+
+int sure_proto_reqt(struct sure_parse_info *info);
+
+#define sure_proto_resp sure_proto_reqt
+
+struct sure_parse_info *sure_proto_dump(struct sure_parse_info *src);
+
+int sure_proto_good(struct sure_parse_info *src);

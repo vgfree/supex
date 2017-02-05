@@ -83,6 +83,7 @@ typedef void (*evcoro_destroycb)(void *usr);
 struct evcoro_scheduler
 {
 	/*private:read only*/
+	struct ev_coro_t        *initing;	/**<初始协程对象链表，初始队列*/
 	struct ev_coro_t        *working;	/**<执行协程对象链表，调度队列*/
 	struct ev_coro_t        *suspending;	/**<挂起协程对象链表，挂起队列*/
 	struct ev_coro_t        *usable;	/**<可用协程对象栈，协程池*/
@@ -98,8 +99,8 @@ struct evcoro_scheduler
 	struct ev_loop          *listener;	/**<就绪协程侦听器*/
 	unsigned                loops;		/**< 循环了多少次，每次启动前清零*/
 
-	int			notify_null;	/** notify event fd -> null */
-	struct ev_io		listen_null;	/** listen event fd -> null */
+	int			notify_pipe[2];	/** notify event -> pipe */
+	struct ev_io		listen_pipe;	/** listen event -> pipe */
 	/*public:write and read*/
 	void                    *user;		/**<用户层数据*/
 };
@@ -108,7 +109,7 @@ struct evcoro_scheduler
 
 /**
  * 创建调度器
- * @param bolt 可用缓存协程对象的数量 -1则使用默认值
+ * @param bolt 可用缓存协程对象的数量, <= 0则不缓存
  * @return 返回调度器句柄
  */
 struct evcoro_scheduler *evcoro_create(int bolt);
@@ -121,7 +122,6 @@ struct evcoro_scheduler *evcoro_create(int bolt);
 void evcoro_destroy(struct evcoro_scheduler *scheduler, evcoro_destroycb destroy);
 
 /* ------------------------------------------------------ */
-int evcoro_evdo(struct evcoro_scheduler *scheduler);
 
 /**
  * 开始循环调度，如果没有加入协程（任务函数），将空转；
@@ -144,11 +144,6 @@ int evcoro_loop(struct evcoro_scheduler *scheduler, evcoro_taskcb idle, void *us
 bool evcoro_push(struct evcoro_scheduler *scheduler, evcoro_taskcb call, void *usr, size_t ss);
 
 /* ------------------------------------------------------ */
-/*
- * 如果repair = NULL,只做唤醒一下loop的效果.
- */
-void evcoro_notify(struct evcoro_scheduler *scheduler, struct ev_coro *repair);
-
 /**
  * 快速切换，不从调度队列中踢出
  */
@@ -164,11 +159,24 @@ void evcoro_fastswitch(struct evcoro_scheduler *scheduler);
  */
 bool evcoro_idleswitch(struct evcoro_scheduler *scheduler, const union evcoro_event *watcher, int event);
 
-void evcoro_deep_chase(struct ev_coro *cursor, int deep);
 
-void evcoro_deep_sleep(struct evcoro_scheduler *scheduler, struct ev_coro *repair);
 
-void evcoro_deep_awake(struct evcoro_scheduler *scheduler, struct ev_coro *repair);
+/*
+ * 可外部使用:
+ * 仅限子协程使用.
+ */
+void evcoro_deep_sleep(struct evcoro_scheduler *scheduler, struct ev_coro *repair, int deep);
+/*
+ * 仅内部使用:
+ * 仅限主协程使用.
+ */
+void evcoro_deep_awake(struct evcoro_scheduler *scheduler, struct ev_coro *repair, int deep);
+/*
+ * 可外部使用:
+ * 如果repair = NULL,只做唤醒一下loop的效果.
+ */
+void evcoro_deep_notify(struct evcoro_scheduler *scheduler, struct ev_coro *repair, int deep);
+
 
 /* ------------------------------------------------------ */
 
@@ -205,13 +213,16 @@ static inline void evcoro_stop(struct evcoro_scheduler *scheduler)
 	(scheduler)->stat = EVCOROSCHE_STAT_STOP;
 }
 
+/**当前初始协程数*/
+unsigned evcoro_initings(struct evcoro_scheduler *scheduler);
+
 /**当前工作协程数*/
 unsigned evcoro_workings(struct evcoro_scheduler *scheduler);
 
 /**当前空闲协程数*/
 unsigned evcoro_suspendings(struct evcoro_scheduler *scheduler);
 
-/**当前运作协程数*/
+/**当前有效协程数*/
 unsigned evcoro_actives(struct evcoro_scheduler *scheduler);
 
 /*设置携带数据*/

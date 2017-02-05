@@ -11,11 +11,61 @@
 #include <stdbool.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include "coro.h"
 #include "evcoro_scheduler.h"
 #if __cplusplus
 extern "C" {
 #endif
+
+//#define USE_LIBCORO
+
+#ifdef USE_LIBCORO
+#include "coro.h"
+#else
+#include <ucontext.h>
+	typedef struct coro_context coro_context;
+
+	struct coro_context
+	{
+		ucontext_t uc;
+	};
+
+	struct coro_stack
+	{
+		void    *sptr;
+		size_t  ssze;
+	};
+
+#define coro_transfer(p, n)   swapcontext(&((p)->uc), &((n)->uc))
+#define coro_destroy(ctx)     (void *)(ctx)
+
+	static inline
+		void coro_stack_free(struct coro_stack *stack)
+		{
+			if (stack->sptr) {
+				//printf("free stack->sptr %p\n", stack->sptr);
+				free(stack->sptr);
+				stack->sptr = NULL;
+			}
+		}
+
+	static inline
+		int coro_stack_alloc(struct coro_stack *stack, unsigned int size)
+		{
+			void    *base = calloc(1, size);
+			if (unlikely(!base)) {
+				return 0;
+			}
+
+			//printf("new stack->sptr %p\n", base);
+			stack->sptr = base;
+			stack->ssze = size;
+			return 1;
+		}
+#endif
+
+
+
+
 
 /* ------------------------------------------------------ *\
 * 协程对象定义
@@ -34,17 +84,19 @@ struct ev_coro
 	coro_context            ctx;	/*协程运行上下文*/
 	coro_context            *main;	/*如果是主协程上下文，则为nullptr*/
 
-	int                     depth;	/*调度状态切换的深度*/
+	AO_T                     depth;	/*调度状态切换的深度*/
 
+	int			slinks; /*引用计数*/
 	evcoro_taskcb           call;	/*协程运行时的入口函数*/
 	void                    *usr;	/*协程运行时的入口函数的参数*/
 	enum
 	{
-		EVCORO_STAT_INIT = 0,		/*初始化状态，创建或刚装载到调度器时*/
-		EVCORO_STAT_RUNNING,		/*已被调度*/
+		EVCORO_STAT_INITING = 0,		/*初始化状态，创建或刚装载到调度器时*/
+		EVCORO_STAT_RUNNING,		/*被调度，正常运行状态*/
+		EVCORO_STAT_SUSPENDING,		/*被调度，但挂起状态*/
 		EVCORO_STAT_EXITED,		/*被调度，但已从任务函数中正常退出*/
-		EVCORO_STAT_EXCEPT,		/*被调度，但发生了异常，需要销毁*/
-		EVCORO_STAT_TIMEDOUT,		/*被调度，当发生了运行超时*/
+		//EVCORO_STAT_EXCEPT,		/*被调度，但发生了异常，需要销毁*/
+		//EVCORO_STAT_TIMEDOUT,		/*被调度，当发生了运行超时*/
 	}                       stat;		/*协程的状态*/
 
 	struct coro_stack       stack;		/*运行栈空间*/
@@ -81,10 +133,13 @@ void _evcoro_destroy(struct ev_coro *coro, bool cache);
 #define _evcoro_subctx(ptr)             (likely((ptr)->main != NULL))
 /*是否是主协程对象（调度器的协程上下文）*/
 #define _evcoro_mainctx(ptr)            (unlikely((ptr)->main == NULL))
+
 /*是否是初始化状态*/
-#define _evcoro_stat_init(ptr)          (likely((ptr)->stat == EVCORO_STAT_INIT))
+#define _evcoro_stat_initing(ptr)          (likely((ptr)->stat == EVCORO_STAT_INITING))
 /*是否是运行状态*/
 #define _evcoro_stat_running(ptr)       (likely((ptr)->stat == EVCORO_STAT_RUNNING))
+/*是否是挂起状态*/
+#define _evcoro_stat_suspending(ptr)    (likely((ptr)->stat == EVCORO_STAT_SUSPENDING))
 /*是否是正常退出状态*/
 #define _evcoro_stat_exited(ptr)        (unlikely((ptr)->stat == EVCORO_STAT_EXITED))
 
@@ -179,7 +234,7 @@ void evcoro_list_destroy(struct ev_coro_t *list, evcoro_destroycb destroy);
 /**
  * 创建栈管理器，主要用于调度器暂存停止但可重用的协程对象
  */
-struct ev_coro_t        *evcoro_stack_new();
+struct ev_coro_t        *evcoro_stack_new(void);
 
 /**
  * 销毁栈管理器

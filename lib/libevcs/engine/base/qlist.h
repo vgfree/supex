@@ -36,6 +36,10 @@ void qlist_free(QLIST *list);
 
 int qlist_view(QLIST *list);
 
+int qlist_lock(QLIST *list);
+
+int qlist_unlock(QLIST *list);
+
 /* ----------------                 */
 
 /* ----------------                 */

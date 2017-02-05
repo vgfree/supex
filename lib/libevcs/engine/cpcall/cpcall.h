@@ -2,25 +2,35 @@
 
 #include <libmini.h>
 
+/******************************************/
+#include <sys/syscall.h>/*此头必须带上*/
+
+static inline pid_t gettid(void)
+{
+	return syscall(SYS_gettid);
+}
+
+/******************************************/
+
 void *cpinit(void);
 
 #define cpcall(fcb, ...)			 \
 	({					 \
-		bool ok = true;			 \
+		bool volatile ok = true;	 \
 		SKIP_TRY			 \
 		{				 \
 			fcb(##__VA_ARGS__);	 \
 		}				 \
-		SKIP_CATCH			 \
+		CATCH				 \
 		{				 \
-			printf("CATCH ...\n");	 \
+			printf("SKIP_CATCH ...\n"); \
 			ok = false;		 \
 		}				 \
-		SKIP_FINALLY			 \
+		FINALLY				 \
 		{				 \
-			printf("FINALLY ...\n"); \
+			printf("SKIP_FINALLY ...\n"); \
 		}				 \
-		SKIP_END;			 \
+		END;				 \
 		ok;				 \
 	})
 

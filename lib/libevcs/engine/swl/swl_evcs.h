@@ -41,6 +41,7 @@ void swell_evcoro_once(struct swell_evcoro *evcoro);
 
 void swell_evcoro_exit(struct swell_evcoro *evcoro);
 
+void swell_task_notify(struct swell_evcoro *evcoro);
+
 struct swell_evcoro     *swell_get_default(void);
 
-int eventfd_xsend(int efd, eventfd_t value);

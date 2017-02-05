@@ -1,13 +1,9 @@
 #pragma once
 
-#include "../proto_comm.h"
+#include "async_ops.h"
+#include "async_prt.h"
 #include "../cache/cache.h"
 
-enum proto_type
-{
-	PROTO_TYPE_HTTP = 0,
-	PROTO_TYPE_REDIS
-};
 enum queue_type
 {
 	QUEUE_TYPE_FIFO = 0,
@@ -42,28 +38,29 @@ struct command_node
 {
 	int                     sfd;
 	bool                    ok;
-	// enum	{
-	// }			step;
 	enum
 	{
 		ASYNC_OK = 0,
 		ASYNC_ER_SOCKET,
 		ASYNC_ER_PARSE,
+		ASYNC_ER_TIMEOUT,
 	}                       err;
+
+	/*proto details*/
+	char	fops[3];
+	short	step;
+	short	cycle;
+	char *r_data;
+	size_t r_size;
+	char *w_data;
+	size_t w_size;
+	/*cmd dispose*/
+	struct async_ops	*driver;
+	/*cmd parser*/
+	struct async_prt 	parser;
 
 	void                    *ev_impl;
 	struct ev_settings      *ev_hook;
-	/*cmd dispose*/
-	char                    ptype;
-	PROTO_CALL_BACK         *proto_handler_work;
-	PROTO_CALL_BACK         *proto_handler_init;	// 引入到外部
-	PROTO_CALL_BACK         *proto_handler_free;	// 引入到外部
-	/*cmd parser*/
-	union
-	{
-		struct http_parse_info  http_info;
-		struct redis_parse_info redis_info;
-	}                       parse;
 
 	/*cmd callback*/
 	ASYNC_CALL_BACK         fcb;
@@ -71,7 +68,8 @@ struct command_node
 	bool                    hit;
 
 	/*cmd data*/
-	struct cache            cache;
+	struct cache            r_cache;
+	struct cache            w_cache;
 	struct command_node     *next;	/* simple singly linked list */
 };
 struct command_list
@@ -103,13 +101,13 @@ struct async_obj
 	/* Regular command callbacks */
 	char                    qtype;
 	char                    ntype;
-	struct command_list     replies;// TODO:fixname
+	struct command_list     clist;
 };
 
 void async_obj_initial(struct async_obj *obj, int peak, enum queue_type qtype, enum nexus_type ntype, struct ev_settings *settings);
 
 struct command_node     *async_obj_command(struct async_obj *obj, enum proto_type ptype, int sfd,
-	const char *data, size_t size,
+	const char *fops, const char *data1, size_t size1, const char *data2, size_t size2,
 	ASYNC_CALL_BACK fcb, void *usr);
 
 void async_obj_startup(struct async_obj *obj);
@@ -118,7 +116,8 @@ void async_obj_suspend(struct async_obj *obj);
 
 int async_obj_distory(struct async_obj *obj);
 
-// 添加获取当前工作任务函数//TODO
+/*获取当前工作任务*/
+struct command_node     *async_obj_current(struct async_obj *obj);
 
 /* Handle read/write events */
 void _async_obj_handle_send(struct async_obj *obj, struct command_node *cmd);

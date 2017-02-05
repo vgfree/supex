@@ -12,7 +12,7 @@ typedef void (MODULE_FUNCTION)(void *self);
 
 struct evcs_module
 {
-	char                    *name;
+	const char              *name;
 	bool                    state;
 	MODULE_FUNCTION         *init;
 	MODULE_FUNCTION         *exit;
