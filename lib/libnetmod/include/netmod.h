@@ -25,8 +25,7 @@
 
 #include <stdint.h>
 #include <pthread.h>
-#include "base/xlist.h"
-#include "base/qlist.h"
+#include "libevcs.h"
 
 #define IDENTITY_SIZE 32
 

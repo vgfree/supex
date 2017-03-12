@@ -4,8 +4,7 @@
 #include "load_smart_cfg.h"
 #include "load_swift_cfg.h"
 
-#include "major/smart_api.h"
-#include "major/swift_api.h"
+#include "libevcs.h"
 
 #include "smart_cpp_api.h"
 #include "swift_cpp_api.h"

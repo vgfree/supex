@@ -1,14 +1,9 @@
 #include <assert.h>
 #include <unistd.h>
 
-#include "minor/sniff_api.h"
+#include "libevcs.h"
 #include "sniff_evcoro_cpp_api.h"
 #include "rr_cfg.h"
-#include "async_tasks/async_api.h"
-#include "pool_api/conn_xpool_api.h"
-#include "base/utils.h"
-#include "redis_api/redis_status.h"
-#include "redis_parse.h"
 
 #include "send_data.h"
 #define REDIS_ERR       -1
@@ -34,7 +29,7 @@ int import_to_redis(char command[], void *loop, char host[], unsigned short port
 		}
 
 		/*send*/
-		struct command_node *cmd = async_api_command(api, PROTO_TYPE_REDIS, cpool, proto, strlen(proto), NULL, NULL);
+		struct command_node *cmd = async_api_command(api, PROTO_TYPE_REDIS_RESP, cpool, "wr", proto, strlen(proto), NULL, 0, NULL, NULL);
 		free(proto);
 
 		if (cmd == NULL) {

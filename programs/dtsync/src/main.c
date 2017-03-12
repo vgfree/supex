@@ -8,16 +8,12 @@
 // --> end
 #include "mq_api.h"
 
-#include "major/swift_api.h"
+#include "libevcs.h"
 #include "swift_cpp_api.h"
 #include "load_swift_cfg.h"
-
-#include "minor/sniff_api.h"
-#include "pool_api/conn_xpool_api.h"
 #include "load_sniff_cfg.h"
 #include "rr_cfg.h"
 #include "libkv.h"
-#include "base/switch_queue.h"
 #include "app_queue.h"
 
 #include "sniff_evcoro_cpp_api.h"

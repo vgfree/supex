@@ -7,18 +7,12 @@
 #include <stdio.h>
 #include <sys/time.h>
 
-#include "core/evcs_module.h"
-#include "core/evcs_events.h"
-#include "core/evcs_kernel.h"
-#include "spx_evcs.h"
-#include "spx_evcs_module.h"
+#include "libevcs.h"
 
 EVCS_MODULE_SETUP(kernel, kernel_init, kernel_exit, &g_kernel_evts);
 EVCS_MODULE_SETUP(evcs, evcs_init, evcs_exit, &g_evcs_evts);
 
 #include "_ev_coro.h"
-#include "evcoro_async_tasks.h"
-#include "thread_pool_loop/tlpool.h"
 
 #include "conf.h"
 extern struct pole_conf g_pole_conf;

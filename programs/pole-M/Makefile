@@ -11,12 +11,10 @@ INC_PATH=\
 	 -I../../lib/libev \
 	 -I../../lib/libkv/release \
 	 -I../../lib/libmemhook/src \
-	 -I../../lib/libscco/include \
+	 -I../../lib/libscco \
 	 -I../../lib/libcoro/include \
-	 -I../../lib/libevcoro/include \
-	 -I../../lib/libevcs/include \
-	 -I../../lib/libevcs/include/engine \
-	 -I../../lib/libevcs/include/frame \
+	 -I../../lib/libevcoro \
+	 -I../../lib/libevcs \
 	 -I./src -I../ \
 	 -I../../lib/leveldb-1.19/include/ \
 	 -I../../lib/zeromq-4.1.4/include/ \

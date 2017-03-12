@@ -22,8 +22,7 @@
 #ifndef _EVENT_DISPENSER_H_
 #define _EVENT_DISPENSER_H_
 
-#include "thread_pool_loop/tlpool.h"
-#include "base/hashmap.h"
+#include "libevcs.h"
 #include "netmod.h"
 #include "xmq.h"
 

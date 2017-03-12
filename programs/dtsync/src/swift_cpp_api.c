@@ -2,8 +2,7 @@
 #include <stdlib.h>
 
 #include "utils.h"
-#include "major/swift_api.h"
-#include "minor/sniff_api.h"
+#include "libevcs.h"
 #include "swift_cpp_api.h"
 
 #include "sniff_evcoro_cpp_api.h"

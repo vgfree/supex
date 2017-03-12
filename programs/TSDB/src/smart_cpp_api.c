@@ -1,5 +1,4 @@
-#include "major_def.h"
-#include "major/smart_api.h"
+#include "libevcs.h"
 
 #include "tsdb_api.h"
 

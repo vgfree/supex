@@ -1,10 +1,9 @@
 #include <string.h>
 #include <stdlib.h>
 
-#include "base/sstr.h"
+#include "libevcs.h"
 #include "redis_parse.h"
 #include <ctype.h>
-#include "base/utils.h"
 
 /* Calculate the number of bytes needed to represent an integer as string. */
 static int intlen(int i)
