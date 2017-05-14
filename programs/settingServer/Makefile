@@ -1,4 +1,4 @@
-INC_DIR=-I../../lib/libcomm/ -I../../lib/utils -I../../lib/zeromq-4.1.4/include/
+INC_DIR=-I../../lib/libcomm/ -I../../lib/utils -I../../lib/zeromq-4.2.1/include/
 LIB_DIR=-L/usr/local/lib -L../../lib  -lstdc++
 
 INC_LIBS=-lutils -lcomm -lzmq -lmini

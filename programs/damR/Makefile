@@ -28,7 +28,7 @@ ADD_ARLIBS =		-levcs -lmini -lkv -lev -levcoro -lcjson -lscco -lcoro -lzmq
 ADD_INC_DIR = 		-I$(BUILD_PWD)/../../lib/libmini/include \
 			-I$(BUILD_PWD)/../../lib/libmemhook/src \
 			-I$(BUILD_PWD)/../../lib/libev \
-			-I$(BUILD_PWD)/../../lib/zeromq-4.1.4/include \
+			-I$(BUILD_PWD)/../../lib/zeromq-4.2.1/include \
 			-I$(BUILD_PWD)/../../lib/cJSON \
 			-I$(BUILD_PWD)/../../lib/libscco/include \
 			-I$(BUILD_PWD)/../../lib/libcoro/include \

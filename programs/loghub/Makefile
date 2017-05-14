@@ -8,7 +8,7 @@ INC_DIR=-I/usr/local/include/luajit-2.0 -I../../lib/libev \
 	-I../../lib/libevcs/include/engine \
 	-I../../lib/libevcs/include/frame \
 	-I./src \
-	-I../../lib/zeromq-4.1.4/include
+	-I../../lib/zeromq-4.2.1/include
 
 LIB_DIR=-L/usr/local/lib -L../../lib
 LIBS=-lluajit-5.1 -lpthread -lrt -lm -lstdc++ 

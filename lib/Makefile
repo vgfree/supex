@@ -31,9 +31,9 @@ libnetmod.a:
 	mv $(LIB_DIR)/libnetmod/$@ $(LIB_DIR)
 
 libzmq.a:
-	cd ./zeromq-4.1.4 && ./configure CC=g++ --with-pic --enable-shared=no --without-libsodium
-	$(MAKE) -j16 -C $(LIB_DIR)/zeromq-4.1.4
-	mv $(LIB_DIR)/zeromq-4.1.4/.libs/$@ $(LIB_DIR)
+	cd ./zeromq-4.2.1 && ./configure CC=g++ --with-pic --enable-shared=no --without-libsodium
+	$(MAKE) -j16 -C $(LIB_DIR)/zeromq-4.2.1
+	mv $(LIB_DIR)/zeromq-4.2.1/.libs/$@ $(LIB_DIR)
 
 #-DCORO_UCONTEXT"
 #if you want use libevcoro to operate a file-descriptor of libzmq, then you need to define a macro like "FEED_EVENT"
@@ -132,7 +132,7 @@ test:
 
 clean:
 	-if [ -f ./libev/Makefile ];then cd ./libev && make distclean; else cd ./libev && sh ./autogen.sh && ./configure && make distclean; fi
-	-if [ -f ./zeromq-4.1.4/Makefile ];then cd ./zeromq-4.1.4 && make distclean; else cd ./zeromq-4.1.4 && sh ./autogen.sh && ./configure CC=g++ -enable-shared=no && make distclean; fi
+	-if [ -f ./zeromq-4.2.1/Makefile ];then cd ./zeromq-4.2.1 && make distclean; else cd ./zeromq-4.2.1 && sh ./autogen.sh && ./configure CC=g++ -enable-shared=no && make distclean; fi
 	-if [ -f json-c/Makefile ];then cd ./json-c && make distclean; fi
 	-if [ -d ./snappy-1.1.1 ];then rm -rf ./snappy-1.1.1; fi
 	-if [ -f sqlite-autoconf-3090200/Makefile ];then cd ./sqlite-autoconf-3090200 && make distclean; fi

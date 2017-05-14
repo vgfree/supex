@@ -5,7 +5,7 @@ INC_DIR=-I/usr/local/include/luajit-2.0 -I../../lib/libev \
 	-I../../lib/hiredis -I../../lib/libtopo -I/usr/include/mysql \
 	-I../../lib/json-c -I../../lib/http-parser -I../../lib/libscco \
 	-I../../lib/libucmq/src -I../../engine -I../../engine/major \
-	-I../../engine/minor -I./src -I./cpp -I./cpp/mfptp -I../../lib/sqlite-autoconf-3090200/ -I../../lib/zeromq-4.1.4/include/
+	-I../../engine/minor -I./src -I./cpp -I./cpp/mfptp -I../../lib/sqlite-autoconf-3090200/ -I../../lib/zeromq-4.2.1/include/
 
 LIB_DIR=-L/usr/local/lib -L../../lib -L../../engine/
 LIBS=-lluajit-5.1 -lpthread -lrt -lm -ldl -lsqlite3 -lz -lssl -lstdc++

@@ -1,4 +1,4 @@
-INC =  -I../../../lib/zeromq-4.1.4/include/
+INC =  -I../../../lib/zeromq-4.2.1/include/
 LIB =  -L../../../lib -L/usr/local/lib
 TARGET = AppSrvTest
 

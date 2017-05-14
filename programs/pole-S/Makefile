@@ -8,7 +8,7 @@ INC_PATH=\
 	 -I/usr/local/include/luajit-2.0 \
 	 -I/usr/local/include \
 	 -I../../lib/json-c \
-	 -I../../lib/zeromq-4.1.4/include/ \
+	 -I../../lib/zeromq-4.2.1/include/ \
 	 -I../../lib/libmini/include/ \
 	 -I../../lib/libnetmod/include/ \
 	 -I../../lib/libcoro/include \

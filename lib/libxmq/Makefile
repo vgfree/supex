@@ -14,7 +14,7 @@ BIN_TEST=./bin_test
 TEST_SRC=./test
 TEST_INC=$(BASE_INC) \
 	-I../leveldb-1.19/include/ \
-	-I../zeromq-4.1.4/include
+	-I../zeromq-4.2.1/include
 
 LIB_INC=-L. -L../
 LIBS=-lpthread -lrt -lstdc++

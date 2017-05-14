@@ -3,7 +3,7 @@ AR = ar
 
 CFLAG = -O2 -W -Wall
 
-INCLUDE_PATH = -I. -I../ -I../../zeromq-4.1.4/include/
+INCLUDE_PATH = -I. -I../ -I../../zeromq-4.2.1/include/
 TARGET = test
 OBJ = main.o
 SRC = main.c

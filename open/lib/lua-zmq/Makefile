@@ -24,15 +24,15 @@ CFLAGS = `pkg-config luajit --cflags` -fPIC -O3 -Wall -I/usr/local/include/luaji
 LFLAGS = -shared -fPIC #`pkg-config --libs --cflags libzmq`
 INSTALL_PATH = `pkg-config luajit --variable=INSTALL_CMOD`
 
-CFLAGS	  +=-I./zeromq-4.1.4/include/
+CFLAGS	  +=-I./zeromq-4.2.1/include/
 
 all: zmq.so
 
 libzmq.a:
-	tar -xzvf zeromq-4.1.4.tar.gz
-	cd ./zeromq-4.1.4 && ./configure CC=g++ --with-pic --enable-shared=no --without-libsodium
-	$(MAKE) -j16 -C zeromq-4.1.4
-	mv zeromq-4.1.4/.libs/$@ .
+	tar -xzvf zeromq-4.2.1.tar.gz
+	cd ./zeromq-4.2.1 && ./configure CC=g++ --with-pic --enable-shared=no --without-libsodium
+	$(MAKE) -j16 -C zeromq-4.2.1
+	mv zeromq-4.2.1/.libs/$@ .
 
 
 zmq.lo: zmq.c
@@ -51,4 +51,4 @@ install: zmq.so
 
 clean:
 	rm -f libzmq.a zmq.so zmq.lo
-	-if [ -d ./zeromq-4.1.4 ];then rm -rf ./zeromq-4.1.4; fi
+	-if [ -d ./zeromq-4.2.1 ];then rm -rf ./zeromq-4.2.1; fi
