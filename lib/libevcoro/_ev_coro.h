@@ -45,6 +45,7 @@ extern "C" {
 				//printf("free stack->sptr %p\n", stack->sptr);
 				free(stack->sptr);
 				stack->sptr = NULL;
+				stack->ssze = 0;
 			}
 		}
 
@@ -63,7 +64,26 @@ extern "C" {
 		}
 #endif
 
-
+/*
+ * 缺陷:此功能函数操作的协程对象不能移交给其它线程。
+ * 因为:当线程a执行回调函数fcb把协程移交给线程b,
+ * 	a可能让出cpu暂时未执行setcontext,
+ * 	b先b开始使用协程或同时使用都会出现异常.
+ */
+#define coro_saveswap(p, n, f, d, ...)   do {      \
+	bool (*fcb)(void *, ...) = (bool (*)(void *, ...))f;   \
+	volatile int once = 0;   \
+	getcontext(&((p)->uc));	\
+	printf("coro_saveswap---- %d \n", once);      \
+	if (0 == once++) {      \
+		if (fcb) { \
+			printf("do fcb ... .. .\n");	\
+			(*fcb)(d, ##__VA_ARGS__);        \
+		}       \
+		/* printf("test coredump point 1\n"); sleep(2); printf("test coredump point 2\n"); */ \
+		setcontext(&((n)->uc));	\
+	}	\
+} while (0);
 
 
 
@@ -95,6 +115,7 @@ struct ev_coro
 		EVCORO_STAT_RUNNING,		/*被调度，正常运行状态*/
 		EVCORO_STAT_SUSPENDING,		/*被调度，但挂起状态*/
 		EVCORO_STAT_EXITED,		/*被调度，但已从任务函数中正常退出*/
+		EVCORO_STAT_TOSWAP,		/*被调度，需要被移交给其它调度器*/
 		//EVCORO_STAT_EXCEPT,		/*被调度，但发生了异常，需要销毁*/
 		//EVCORO_STAT_TIMEDOUT,		/*被调度，当发生了运行超时*/
 	}                       stat;		/*协程的状态*/
@@ -142,6 +163,8 @@ void _evcoro_destroy(struct ev_coro *coro, bool cache);
 #define _evcoro_stat_suspending(ptr)    (likely((ptr)->stat == EVCORO_STAT_SUSPENDING))
 /*是否是正常退出状态*/
 #define _evcoro_stat_exited(ptr)        (unlikely((ptr)->stat == EVCORO_STAT_EXITED))
+/*是否是需要移交状态*/
+#define _evcoro_stat_toswap(ptr)        (unlikely((ptr)->stat == EVCORO_STAT_TOSWAP))
 
 /**
  * 将coro节点插入到cursor的上一个节点与cursor之间

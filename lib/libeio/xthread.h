@@ -137,6 +137,7 @@ typedef pthread_t xthread_t;
 # define X_STACKSIZE sizeof (void *) * 4096
 #endif
 
+#if 0//BUG: create thread failed. by baoxue.
 static int
 xthread_create (xthread_t *tid, void *(*proc)(void *), void *arg)
 {
@@ -161,6 +162,15 @@ xthread_create (xthread_t *tid, void *(*proc)(void *), void *arg)
 
   return retval;
 }
+#else
+static int
+xthread_create (xthread_t *tid, void *(*proc)(void *), void *arg)
+{
+  int retval;
+  retval = pthread_create (tid, 0, proc, arg);
+  return retval == 0;
+}
+#endif
 
 #define respipe_read(a,b,c)  read  ((a), (b), (c))
 #define respipe_write(a,b,c) write ((a), (b), (c))

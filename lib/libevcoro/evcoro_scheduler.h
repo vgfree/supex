@@ -77,6 +77,12 @@ typedef void (*evcoro_taskcb)(struct evcoro_scheduler *scheduler, void *usr);
  */
 typedef void (*evcoro_destroycb)(void *usr);
 
+struct evcoro_notify
+{
+	int			pipe2[2];	/** notify -> pipe2 */
+	struct ev_io		watch;		/** notify -> watch */
+};
+
 /**
  * 协程调度器模型
  */
@@ -99,8 +105,8 @@ struct evcoro_scheduler
 	struct ev_loop          *listener;	/**<就绪协程侦听器*/
 	unsigned                loops;		/**< 循环了多少次，每次启动前清零*/
 
-	int			notify_pipe[2];	/** notify event -> pipe */
-	struct ev_io		listen_pipe;	/** listen event -> pipe */
+	struct evcoro_notify	deep;
+	struct evcoro_notify	swap;
 	/*public:write and read*/
 	void                    *user;		/**<用户层数据*/
 };
@@ -135,14 +141,20 @@ int evcoro_once(struct evcoro_scheduler *scheduler, evcoro_taskcb idle, void *us
 int evcoro_loop(struct evcoro_scheduler *scheduler, evcoro_taskcb idle, void *usr);
 
 /**
+ * 所在调度器线程内使用:
  * 加入一个协程（任务），新加入的协程要待下一次循环才会调度。
  * 如果底层是用信号运行栈和长跳转实现，则不能在协程（任务）中调用此函数，mac os x系统就是此种实现
  * @param scheduler 调度器
  * @param call 协程任务回调函数
  * @param ss 协程函数运行所需要的栈大小，如果函数中用大数据块的局部变量，则应该加大此值，0则使用默认值。
  */
-bool evcoro_push(struct evcoro_scheduler *scheduler, evcoro_taskcb call, void *usr, size_t ss);
+struct ev_coro *evcoro_open(struct evcoro_scheduler *scheduler, evcoro_taskcb call, void *usr, size_t ss);
 
+/**
+ * 可在调度器线程内外使用:
+ * 移交一个初始化或工作状态的协程给调度器。
+ */
+bool evcoro_join(struct evcoro_scheduler *scheduler, struct ev_coro *joiner);
 /* ------------------------------------------------------ */
 /**
  * 快速切换，不从调度队列中踢出
@@ -158,6 +170,17 @@ void evcoro_fastswitch(struct evcoro_scheduler *scheduler);
  * 计时器类型的空闲切换，返回值永远都是false
  */
 bool evcoro_idleswitch(struct evcoro_scheduler *scheduler, const union evcoro_event *watcher, int event);
+
+/*
+ * 检测事件是否生效。
+ */
+void evcoro_deepswitch(struct evcoro_scheduler *scheduler);
+
+/**
+ * 移交子协程给其它调度器。
+ */
+void evcoro_swapswitch(struct evcoro_scheduler *from, struct evcoro_scheduler *gvto, struct ev_coro *giving);
+
 
 
 
@@ -177,6 +200,11 @@ void evcoro_deep_awake(struct evcoro_scheduler *scheduler, struct ev_coro *repai
  */
 void evcoro_deep_notify(struct evcoro_scheduler *scheduler, struct ev_coro *repair, int deep);
 
+/*
+ * 可内外使用:
+ * 只做唤醒一下loop的效果.
+ */
+void evcoro_revive(struct evcoro_scheduler *scheduler);
 
 /* ------------------------------------------------------ */
 

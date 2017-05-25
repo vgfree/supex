@@ -38,7 +38,7 @@ int evcoro_locks_init(evcoro_locks_t *restrict locks, void *attr, enum evcoro_lo
 
 int evcoro_locks_destroy(evcoro_locks_t *locks);
 
-/*opt: 0 is read and 1 is write*/
+/*opt: 0 is read and 1 is write, only pthread_rwlock_t active!*/
 int evcoro_locks_trylock(struct evcoro_scheduler *scheduler, evcoro_locks_t *locks, int opt);
 
 int evcoro_locks_lock(struct evcoro_scheduler *scheduler, evcoro_locks_t *locks, int opt);
