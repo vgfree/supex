@@ -1,6 +1,6 @@
 SRC=./src
 BIN=./bin
-INC_DIR=-I../../lib/json-c -I../../lib/leveldb-1.19/include/ -I../../lib/zeromq-4.2.1/include/ -I./src
+INC_DIR=-I../../lib/json-c -I../../lib/leveldb-1.20/include/ -I../../lib/zeromq-4.2.1/include/ -I./src
 LIB_DIR=-L/usr/local/lib -L../../lib
 LIBS=-lstdc++ -lrt -lpthread
 LIBA=-ljson-c -lleveldb -lzmq -lsnappy

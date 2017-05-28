@@ -61,20 +61,27 @@ bool commcache_expend(struct comm_cache *commcache, int size)
 	assert(commcache && commcache->init);
 	int     length = commcache->size;
 	char    *buffer = commcache->buffer;
-	int     capacity = commcache->capacity + ((size > 0) ? size : INCREASE_SIZE);
+	int     remain = commcache->capacity - length;
 
 	commcache_clean(commcache);
+	if (remain >= size) {
+		return true;
+	}
+	int     update = size - remain;
+	int     capacity = commcache->capacity + ((update > INCREASE_SIZE) ? update : INCREASE_SIZE);
 
-	NewArray(commcache->buffer, capacity);
+	if (buffer == commcache->base) {
+		/*基地址不用realloc*/
+		NewArray(commcache->buffer, capacity);
+	} else {
+		commcache->buffer = realloc(buffer, capacity);
+	}
 
 	if (commcache->buffer) {
 		commcache->capacity = capacity;
-		memcpy(commcache->buffer, buffer, length);
-
-		if (buffer != commcache->base) {
-			Free(buffer);
+		if (buffer == commcache->base) {
+			memcpy(commcache->buffer, buffer, length);
 		}
-
 		return true;
 	} else {
 		commcache->buffer = buffer;
@@ -95,6 +102,8 @@ void commcache_restore(struct comm_cache *commcache)
 			Free(commcache->buffer);
 			commcache->buffer = commcache->base;
 			commcache->capacity = BASEBUFFERSIZE;
+			commcache->end -= commcache->start;
+			commcache->start = 0;
 			printf("restore cache capacity:%d\n", commcache->capacity);
 		}
 	}

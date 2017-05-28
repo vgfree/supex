@@ -16,7 +16,7 @@ INC_PATH=\
 	 -I../../lib/libevcoro \
 	 -I../../lib/libevcs \
 	 -I./src -I../ \
-	 -I../../lib/leveldb-1.19/include/ \
+	 -I../../lib/leveldb-1.20/include/ \
 	 -I../../lib/zeromq-4.2.1/include/ \
 	 -I../../lib/libmini/include/ \
 	 -I../../lib/libxmq/include/ \
