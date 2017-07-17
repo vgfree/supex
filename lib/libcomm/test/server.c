@@ -1,52 +1,43 @@
-#include "../communication.h"
 #include <signal.h>
+#include "../comm_api.h"
 
 
 static void event_fun(struct comm_context *commctx, struct comm_tcp *commtcp, void *usr);
 
 int main(int argc, char *argv[])
 {
-	int     i = 0, k = 0, fd = 0;
-	int     pckidx = 0, frmidx = 0;
-	int     retval = -1, port = 0;
-	int	datasize = 1024*1024*100;
-	char    str_port[64] = { 0 };
-	char*	content = NULL;
-	char*	buff = NULL;
+	//signal(SIGPIPE, SIG_IGN);
 
-	struct cbinfo           finishedcb = { 0 };
-	struct comm_context     *commctx = NULL;
-	struct comm_message     message = { 0 };
-
-	NewArray(content, datasize);
-	NewArray(buff, datasize);
 	if (unlikely(argc < 4)) {
 		/* 最后一个参数为绑定几个端口，输入端口为起始，后续端口都直接加1 */
 		printf("usage:%s <ipaddr> <port> <bind_times>\n", argv[0]);
-		return retval;
+		return -1;
 	}
 
-	signal(SIGPIPE, SIG_IGN);
-	port = atoi(argv[2]);
-	message.content = content;
-	commctx = comm_ctx_create(-1);
+	char    *ipaddr = argv[1];
+	int     port = atoi(argv[2]);
+	int     bind_times = atoi(argv[3]);
 
-	if (unlikely(!commctx)) {
-		loger("server comm_ctx_create failed\n");
-		return retval;
-	}
+
+	/*创建上下文*/
+	struct comm_context *commctx = commapi_ctx_create();
+	assert(commctx);
 
 	/* 设置回调函数的相关信息 */
+	struct cbinfo finishedcb = { 0 };
 	finishedcb.callback = event_fun;
-	finishedcb.usr = &message;
+	finishedcb.usr = NULL;
 
-	for (i = 0; i < atoi(argv[3]); i++) {
-		sprintf(str_port, "%d", (port + i));
+	/*创建多个监听端口*/
+	int i = 0, fd = 0;
+	for (i = 0; i < bind_times; i++) {
+		char str_port[64] = { 0 };
+		snprintf(str_port, 64, "%d", (port + i));
 
-		if (unlikely((fd = comm_socket(commctx, argv[1], str_port, &finishedcb, COMM_BIND)) == -1)) {
+		if (unlikely((fd = commapi_socket(commctx, ipaddr, str_port, &finishedcb, COMM_BIND)) == -1)) {
 			loger("server comm_socket failed\n");
-			comm_ctx_destroy(commctx);
-			return retval;
+			commapi_ctx_destroy(commctx);
+			return -1;
 		}
 
 		loger("server bind successed fd:%d\n", fd);
@@ -54,42 +45,48 @@ int main(int argc, char *argv[])
 
 	/* 循环接收 发送数据 */
 	while (1) {
-		if (comm_recv(commctx, &message, true, -1) > -1) {
-#if 1
-			for (pckidx = 0, k = 0; pckidx < message.package.packages; pckidx++) {
-				int     size = 0;
-				memset(buff, 0, datasize);
-				for (frmidx = 0; frmidx < message.package.frames_of_package[pckidx]; frmidx++, k++) {
-					memcpy(&buff[size], &message.content[message.package.frame_offset[k]], message.package.frame_size[k]);
-					size += message.package.frame_size[k];
-				}
-				loger("messag fd: %d message body: %s\n", message.fd, buff);
-			}
-#else
-			//loger("\x1B[1;32m""message fd: %d message body:%.*s\n""\x1B[m", message.fd, message.package.dsize, message.content);
-			loger("\x1B[1;32m""message fd: %d successed\n""\x1B[m", message.fd);
-#endif
-			/* 接收成功之后将此消息体再返回给用户 */
-			if (message.fd > 0) {
-				comm_send(commctx, &message, false, -1);
-				loger("\x1B[1;32m""message send out\n""\x1B[m");
-			}
-			sleep(1);
-		} else {
+		/*设置接收空间*/
+		struct comm_message     message = { 0 };
+		commmsg_make(&message, 1024);
+
+		int err = commapi_recv(commctx, &message);
+		if (err) {
+			commmsg_free(&message);
 			loger("comm_recv failed\n");
 			sleep(1);
+			continue;
 		}
+
+		int k = 0;
+		for (int pckidx = 0; pckidx < message.package.packages; pckidx++) {
+			/*unpackage*/
+			for (int frmidx = 0; frmidx < message.package.frames_of_package[pckidx]; frmidx++, k++) {
+					printf("frame %d data :%s\n", frmidx + 1, commmsg_frame_addr(&message, k));
+					printf("frame %d size :%d\n", frmidx + 1, commmsg_frame_size(&message, k));
+			}
+		}
+		loger("\x1B[1;31m" "message fd:%d message body:%.*s socket_type:%d\n" "\x1B[m",
+				message.fd, (int)message.package.raw_data.len, message.package.raw_data.str, message.ptype);
+
+		/* 接收成功之后将此消息体再返回给用户 */
+		err = commapi_send(commctx, &message);
+		if (err) {
+			loger("comm_recv failed\n");
+		}
+
+		commmsg_free(&message);
+		sleep(1);
 	}
 
-	loger("goint to detroy everything here\n");
-	comm_ctx_destroy(commctx);
-	return retval;
+	loger("going to detroy everything here\n");
+	commapi_ctx_destroy(commctx);
+	return 0;
 }
 
 void close_fun(void *usr)
 {
 #if 1
-	 struct comm_tcp* commtcp = (struct comm_tcp*)usr;
+	struct comm_tcp *commtcp = (struct comm_tcp *)usr;
 	printf("server here is close_fun():%d\n", commtcp->fd);
 #else
 	struct comm_message *message = (struct comm_message *)usr;
@@ -121,7 +118,9 @@ void accept_fun(void *usr)
 
 void timeout_fun(void *usr)
 {
-	printf("server here is timeout_fun()\n");
+	struct comm_tcp *commtcp = (struct comm_tcp *)usr;
+
+	printf("server here is timeout_fun(): %d\n", commtcp->fd);
 }
 
 static void event_fun(struct comm_context *commctx, struct comm_tcp *commtcp, void *usr)
@@ -130,6 +129,7 @@ static void event_fun(struct comm_context *commctx, struct comm_tcp *commtcp, vo
 	{
 		case FD_CLOSE:
 			close_fun(commtcp);
+			commapi_close(commctx, commtcp->fd);
 			break;
 
 		case FD_WRITE:

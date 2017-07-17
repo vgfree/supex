@@ -6,9 +6,11 @@
 #define __COMM_TCP_H__
 
 #include <sys/select.h>
+#include <sys/types.h>		/* See NOTES */
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <arpa/inet.h>
+#include <netinet/tcp.h>
 #include <sys/un.h>
 #include <netdb.h>
 #include <unistd.h>
@@ -36,11 +38,6 @@ struct comm_tcp
 	}               type;			/* 套接字的类型 */
 	enum
 	{
-		CONNECT_ONCE = 0x00,		/* 只连接服务器一次，失败就立刻返回 */
-		CONNECT_ANYWAY = 0x1 << 4	/* 连接服务器失败，一直尝试连接，直到超时返回 */
-	}               connattr;		/* COMM_CONNECT类型fd的连接属性 */
-	enum
-	{
 		FD_INIT = 0x01,
 		FD_READ,
 		FD_WRITE,
@@ -51,14 +48,37 @@ struct comm_tcp
 /* 设置socket套接字keep_alive选项 */
 static inline bool set_keepalive(int fd)
 {
-	int optval = 1;
-	socklen_t optlen = sizeof(optval);
-	if (setsockopt(fd, SOL_SOCKET, SO_KEEPALIVE, &optval, optlen) == -1) {
-		printf("set keep alive failed\n");
+	/*
+	 * KeepAlive实现，单位秒
+	 */
+	int     keepAlive = 1;		// 设定KeepAlive
+	int     keepIdle = 5;		// 开始首次KeepAlive探测前的TCP空闭时间
+	int     keepInterval = 5;	// 两次KeepAlive探测间的时间间隔
+	int     keepCount = 3;		// 判定断开前的KeepAlive探测次数
+
+	if (setsockopt(fd, SOL_SOCKET, SO_KEEPALIVE, (void *)&keepAlive, sizeof(keepAlive)) == -1) {
+		printf("setsockopt SO_KEEPALIVE error!\n");
 		return false;
 	}
+
+	if (setsockopt(fd, SOL_TCP, TCP_KEEPIDLE, (void *)&keepIdle, sizeof(keepIdle)) == -1) {
+		printf("(setsockopt TCP_KEEPIDLE error!\n");
+		return false;
+	}
+
+	if (setsockopt(fd, SOL_TCP, TCP_KEEPINTVL, (void *)&keepInterval, sizeof(keepInterval)) == -1) {
+		printf("setsockopt TCP_KEEPINTVL error!\n");
+		return false;
+	}
+
+	if (setsockopt(fd, SOL_TCP, TCP_KEEPCNT, (void *)&keepCount, sizeof(keepCount)) == -1) {
+		printf("setsockopt TCP_KEEPCNT error!\n");
+		return false;
+	}
+
 	return true;
 }
+
 /* 检查描述符是否可写 */
 static inline bool check_writeable(int fd)
 {
@@ -93,18 +113,14 @@ static inline bool check_readable(int fd)
 * 功能: 绑定监听指定地址端口[地址端口填入到commtcp->localport和commtcp->localaddr]
 * @返回值:true 监听成功 false 监听失败
 ***********************************************************************************/
-bool socket_listen(struct comm_tcp *commtcp, const char *host, const char *service);
-
-/* 连接一个指定的地址端口号 @timeout[connattr为CONNECT_ANYWAY时才有效]:-1 一直阻塞到连接到对方 0 只连接一次失败理解 >0 超时立即返回 @connattr:CONNECT_ONCE 和CONNECT_ANYWAY */
+bool socket_listen(struct comm_tcp *commtcp, const char *host, const char *port);
 
 /***********************************************************************************
 * 功能:连接到指定地址端口[地址端口填入到commtcp->peerlocal,commtcp->peeraddr]
-* @connattr:	CONNECT_ONCE   只连接一次无论成功与否都返回
-*		CONNECT_ANYWAY 根据timeout的值确定尝试连接多少次
+* retry == -1为一直循环，直到成功。
 * @返回值:true 连接成功 false 连接失败
 ***********************************************************************************/
-bool socket_connect(struct comm_tcp *commtcp, const char *host, const char *service, int connattr);
-
+bool socket_connect(struct comm_tcp *commtcp, const char *host, const char *port, int retry);
 
 /***********************************************************************************
 * 功能:接收一个新的连接
@@ -114,6 +130,19 @@ bool socket_connect(struct comm_tcp *commtcp, const char *host, const char *serv
 ***********************************************************************************/
 int socket_accept(const struct comm_tcp *lsncommtcp, struct comm_tcp *acptcommtcp);
 
+/*@return:
+ *       0:重试
+ *	-1:出错
+ *	>0:成功
+ */
+int socket_send(struct comm_tcp *commtcp, char *data, size_t size);
+
+/*@return:
+ *       0:重试
+ *	-1:出错
+ *	>0:成功
+ */
+int socket_recv(struct comm_tcp *commtcp, char *data, size_t size);
 
 #ifdef __cplusplus
 }

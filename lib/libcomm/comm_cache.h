@@ -34,13 +34,14 @@ void commcache_free(struct comm_cache *comm_cache);
 bool commcache_append(struct comm_cache *comm_cache, const char *data, int datasize);
 
 /* 扩展cache的内存， @size:需要增加内存的大小，-1则使用默认值 */
-bool commcache_expend(struct comm_cache *comm_cache, int size);
-
-/* 清除cache里面的无效数据 */
-void commcache_clean(struct comm_cache *comm_cache);
+bool commcache_expand(struct comm_cache *comm_cache, int size);
 
 /* 恢复cache里面的buffer为基地址 */
-void commcache_restore(struct comm_cache *commcache);
+void commcache_shrink(struct comm_cache *commcache);
+
+/* 清除cache里面的无效数据 */
+void commcache_adjust(struct comm_cache *comm_cache);
+
 
 #ifdef __cplusplus
 }

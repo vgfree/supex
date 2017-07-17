@@ -5,7 +5,7 @@
 
 #include "comm_epoll.h"
 
-#define MAXEPOLLSIZE (1024*1000)	/* epoll允许检测的最大的描述符数 */
+#define MAXEPOLLSIZE (1024 * 1000)		/* epoll允许检测的最大的描述符数 */
 
 bool commepoll_init(struct comm_epoll *commepoll, int epollsize)
 {
@@ -37,15 +37,16 @@ void commepoll_destroy(struct comm_epoll *commepoll)
 	}
 }
 
-bool commepoll_add(struct comm_epoll *commepoll, int fd, int flag)
+bool commepoll_add(struct comm_epoll *commepoll, int fhand, int flag, char ftype)
 {
 	assert(commepoll && commepoll->init);
 
 	if (commepoll->watchcnt < commepoll->epollsize) {
-		commepoll->events[0].data.fd = fd;
-		commepoll->events[0].events = flag;
+		struct epoll_event evt = { 0 };
+		evt.events = flag;
+		evt.data.u64 = (fhand << 8) | ftype;
 
-		if (!epoll_ctl(commepoll->epfd, EPOLL_CTL_ADD, fd, &commepoll->events[0])) {
+		if (!epoll_ctl(commepoll->epfd, EPOLL_CTL_ADD, fhand, &evt)) {
 			commepoll->watchcnt += 1;
 			return true;
 		}
@@ -54,14 +55,15 @@ bool commepoll_add(struct comm_epoll *commepoll, int fd, int flag)
 	return false;
 }
 
-bool commepoll_del(struct comm_epoll *commepoll, int fd, int flag)
+bool commepoll_del(struct comm_epoll *commepoll, int fhand, int flag, char ftype)
 {
 	assert(commepoll && commepoll->init);
 
-	commepoll->events[0].data.fd = fd;
-	commepoll->events[0].events = EPOLLIN;
+	struct epoll_event evt = { 0 };
+	evt.events = flag;
+	evt.data.u64 = (fhand << 8) | ftype;
 
-	if (!epoll_ctl(commepoll->epfd, EPOLL_CTL_DEL, fd, &commepoll->events[0])) {
+	if (!epoll_ctl(commepoll->epfd, EPOLL_CTL_DEL, fhand, &evt)) {
 		commepoll->watchcnt -= 1;
 		return true;
 	} else {
@@ -69,46 +71,37 @@ bool commepoll_del(struct comm_epoll *commepoll, int fd, int flag)
 	}
 }
 
-bool commepoll_mod(struct comm_epoll *commepoll, int fd, int flag)
+bool commepoll_mod(struct comm_epoll *commepoll, int fhand, int flag, char ftype)
 {
 	assert(commepoll && commepoll->init);
-	commepoll->events[0].data.fd = fd;
-	commepoll->events[0].events = flag;
 
-	if (!epoll_ctl(commepoll->epfd, EPOLL_CTL_MOD, fd, &commepoll->events[0])) {
+	struct epoll_event evt = { 0 };
+	evt.events = flag;
+	evt.data.u64 = (fhand << 8) | ftype;
+
+	if (!epoll_ctl(commepoll->epfd, EPOLL_CTL_MOD, fhand, &evt)) {
 		return true;
 	} else {
 		return false;
 	}
 }
 
-#if 0
 bool commepoll_wait(struct comm_epoll *commepoll, int timeout)
 {
 	assert(commepoll && commepoll->init);
+
 	memset(commepoll->events, 0, (sizeof(struct epoll_event)) * commepoll->epollsize);
 	commepoll->eventcnt = epoll_wait(commepoll->epfd, commepoll->events, commepoll->watchcnt, timeout);
 
-	if (commepoll->eventcnt > 0) {
-		return true;
-	} else {
-		return false;
-	}
+	return (commepoll->eventcnt > 0) ? true : false;
 }
-#endif
 
-bool commepoll_wait(struct comm_epoll *commepoll, int timeout)
+int commepoll_get_event_fhand(struct epoll_event *evt)
 {
-	assert(commepoll && commepoll->init);
-	bool flag = false;
-	memset(commepoll->events, 0, (sizeof(struct epoll_event)) * commepoll->epollsize);
-	commepoll->eventcnt = epoll_wait(commepoll->epfd, commepoll->events, commepoll->watchcnt, timeout);
+	return (evt->data.u64 >> 8);
+}
 
-	if (commepoll->eventcnt > 0) {
-		flag = true;
-	} else if (commepoll->eventcnt == 0) {
-		/* 超时 */
-		errno = EINTR;
-	}
-	return flag;
+char commepoll_get_event_ftype(struct epoll_event *evt)
+{
+	return (evt->data.u64 & 0xFF);
 }

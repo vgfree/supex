@@ -31,7 +31,7 @@ bool commcache_append(struct comm_cache *commcache, const char *data, int datasi
 
 	if (unlikely(datasize > 0)) {
 		// 缓冲区容量不足， 进行扩容
-		if (unlikely(!commcache_expend(commcache, datasize))) {
+		if (unlikely(!commcache_expand(commcache, datasize))) {
 			return false;
 		}
 	}
@@ -42,7 +42,7 @@ bool commcache_append(struct comm_cache *commcache, const char *data, int datasi
 	return true;
 }
 
-void commcache_clean(struct comm_cache *commcache)
+void commcache_adjust(struct comm_cache *commcache)
 {
 	assert(commcache && commcache->init);
 
@@ -56,17 +56,19 @@ void commcache_clean(struct comm_cache *commcache)
 	}
 }
 
-bool commcache_expend(struct comm_cache *commcache, int size)
+bool commcache_expand(struct comm_cache *commcache, int size)
 {
 	assert(commcache && commcache->init);
 	int     length = commcache->size;
 	char    *buffer = commcache->buffer;
 	int     remain = commcache->capacity - length;
 
-	commcache_clean(commcache);
+	commcache_adjust(commcache);
+
 	if (remain >= size) {
 		return true;
 	}
+
 	int     update = size - remain;
 	int     capacity = commcache->capacity + ((update > INCREASE_SIZE) ? update : INCREASE_SIZE);
 
@@ -79,9 +81,11 @@ bool commcache_expend(struct comm_cache *commcache, int size)
 
 	if (commcache->buffer) {
 		commcache->capacity = capacity;
+
 		if (buffer == commcache->base) {
 			memcpy(commcache->buffer, buffer, length);
 		}
+
 		return true;
 	} else {
 		commcache->buffer = buffer;
@@ -89,7 +93,7 @@ bool commcache_expend(struct comm_cache *commcache, int size)
 	}
 }
 
-void commcache_restore(struct comm_cache *commcache)
+void commcache_shrink(struct comm_cache *commcache)
 {
 	assert(commcache && commcache->init);
 
@@ -105,7 +109,9 @@ void commcache_restore(struct comm_cache *commcache)
 			commcache->end -= commcache->start;
 			commcache->start = 0;
 			printf("restore cache capacity:%d\n", commcache->capacity);
+			return;
 		}
 	}
+	commcache_adjust(commcache);
 }
 

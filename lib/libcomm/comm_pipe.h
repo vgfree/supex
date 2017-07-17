@@ -16,8 +16,6 @@ extern "C" {
 struct comm_pipe
 {
 	bool    init;			/* 用于判断此结构体是否被初始化 */
-	int     wcnt;
-	int     rcnt;
 	int     wfd;			/* PIPE打开用于读的描述符 */
 	int     rfd;			/* PIPE打开用于写的描述符 */
 };
@@ -27,12 +25,6 @@ bool commpipe_create(struct comm_pipe *commpipe);
 
 /* 关闭一个管道 */
 void commpipe_destroy(struct comm_pipe *commpipe);
-
-/* 从管道读取数据 */
-int commpipe_read(struct comm_pipe *commpipe, void *buff, int size);
-
-/* 往管道里面写数据 */
-int commpipe_write(struct comm_pipe *commpipe, void *buff, int size);
 
 #ifdef __cplusplus
 }

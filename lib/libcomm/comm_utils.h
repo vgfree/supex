@@ -13,6 +13,7 @@
 #include <stdbool.h>
 #include <string.h>
 #include <assert.h>
+#include <pthread.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -107,6 +108,9 @@ printf("%d", GCC_VERSION);
 #define ATOMIC_DEC(ptr)         ((void)ATOMIC_SUB_F((ptr), 1))
 #define ATOMIC_ADD(ptr, val)    ((void)ATOMIC_ADD_F((ptr), (val)))
 #define ATOMIC_SUB(ptr, val)    ((void)ATOMIC_SUB_F((ptr), (val)))
+
+#define MIN(a, b)       ((a) < (b) ? (a) : (b))
+#define MAX(a, b)       ((a) > (b) ? (a) : (b))
 
 /* 设置指定描述符的标志 */
 static inline bool fd_setopt(int fd, int flag)

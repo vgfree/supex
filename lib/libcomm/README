@@ -58,9 +58,9 @@ struct comm_package {
 	int dsize;					/* 数据总大小 */
 	int frames;					/* 总帧数 */
 	int packages;					/* 总包数 */
-	int frame_size[COMM_FRAMES];			/* 每个帧数据大小 */
-	int frame_offset[COMM_FRAMES];			/* 每个帧的偏移 */
-	int frames_of_package[COMM_FRAMES];		/* 每个包中帧多少 */
+	int frame_size[MAX_COMM_FRAMES];			/* 每个帧数据大小 */
+	int frame_offset[MAX_COMM_FRAMES];			/* 每个帧的偏移 */
+	int frames_of_package[MAX_COMM_FRAMES];		/* 每个包中帧多少 */
 };
 
 /* 发送接收数据的结构体 */
