@@ -90,7 +90,10 @@ libs:
 all:$(SRV)
 	@echo -e $(foreach bin,$^,$(BLUE)$(bin) $(GREEN)✔)$(RED)"\n-->OVER!\n"$(NONE)
 
-
+IMX:$(openIMX)
+HLS:$(openHLS)
+PMS:$(openPMS)
+LOG:$(openLOG)
 
 releaseServer:#DATA_LOAD_TYPE=cfg or mysql
 	$(MAKE) -C ./programs/releaseServer MAIN_APP_SERV=releaseServer DATA_LOAD_TYPE=cfg

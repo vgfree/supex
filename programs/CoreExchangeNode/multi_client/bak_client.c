@@ -32,7 +32,7 @@ static int send_data(struct comm_context *commctx, int fd)
 	set_msg_fd(&sendmsg, fd);
 	set_msg_frame(0, &sendmsg, strlen(str), str);
 	// printf("data(send):%s, data size:%d\n", sendmsg.content, sendmsg.package.dsize);
-	comm_send(commctx, &sendmsg, false, -1);
+	commapi_send(commctx, &sendmsg);
 	destroy_msg(&sendmsg);
 	free(str);
 	str = NULL;
@@ -47,7 +47,7 @@ void *read_message(void *arg)
 		printf("\x1B[1;32m" "start recv msg.\n" "\x1B[m");
 		init_msg(&recvmsg);
 		remove_first_nframe(get_max_msg_frame(&recvmsg), &recvmsg);
-		comm_recv(comm_ctx, &recvmsg, true, -1);
+		commapi_recv(comm_ctx, &recvmsg);
 		size_t  size = 0;
 		char    *frame = get_msg_frame(0, &recvmsg, &size);
 		char    *buf = (char *)malloc((size + 1) * sizeof(char));

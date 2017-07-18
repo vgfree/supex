@@ -13,6 +13,8 @@ OBJ = libmini.a \
       libtopoi.a \
       libzmq.a \
       libxmq.a \
+      libcomm.a \
+      libutils.a \
       libnetmod.a \
       libmcache.a \
       libzookeeper_mt.a \
@@ -30,10 +32,17 @@ libnetmod.a:
 	$(MAKE) -C $(LIB_DIR)/libnetmod
 	mv $(LIB_DIR)/libnetmod/$@ $(LIB_DIR)
 
+libcomm.a:
+	$(MAKE) -C $(LIB_DIR)/libcomm lib
+	mv $(LIB_DIR)/libcomm/lib/$@ $(LIB_DIR)
+libutils.a:
+	$(MAKE) -C $(LIB_DIR)/utils lib
+	mv $(LIB_DIR)/utils/lib/$@ $(LIB_DIR)
+
 libzmq.a:
-	cd ./zeromq-4.2.1 && ./configure CC=g++ --with-pic --enable-shared=no --without-libsodium
+	cd ./zeromq-4.2.1 && ./configure --with-pic --enable-shared=no --without-libsodium
 	$(MAKE) -j16 -C $(LIB_DIR)/zeromq-4.2.1
-	mv $(LIB_DIR)/zeromq-4.2.1/.libs/$@ $(LIB_DIR)
+	mv $(LIB_DIR)/zeromq-4.2.1/src/.libs/$@ $(LIB_DIR)
 
 #-DCORO_UCONTEXT"
 #if you want use libevcoro to operate a file-descriptor of libzmq, then you need to define a macro like "FEED_EVENT"

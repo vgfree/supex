@@ -2,7 +2,7 @@
 #include <stdlib.h>
 
 #include "config_reader.h"
-#include "communication.h"
+#include "comm_api.h"
 #include "daemon.h"
 #include "fd_manager.h"
 #include "message_dispatch.h"
@@ -42,13 +42,13 @@ static int work_init(void)
 	fdman_array_init();
 
 	/*io init*/
-	struct comm_context *commctx = comm_ctx_create(EPOLL_SIZE);
+	struct comm_context *commctx = commapi_ctx_create();
 	assert(commctx);
 
 	/*init client event*/
 	struct cbinfo clientCB = {};
 	clientCB.callback = client_event_notify;
-	int retval = comm_socket(commctx, clientHost, clientPort, &clientCB, COMM_BIND);
+	int retval = commapi_socket(commctx, clientHost, clientPort, &clientCB, COMM_BIND);
 	if (retval == -1) {
 		x_printf(E, "can't bind client socket, ip:%s, port:%s.", clientHost, clientPort);
 		return -1;
@@ -59,7 +59,7 @@ static int work_init(void)
 	if (MGcliHost) {
 		struct cbinfo MGCB = {};
 		MGCB.callback = message_gateway_event_notify;
-		msg_fd = comm_socket(commctx, MGcliHost, MGcliPort, &MGCB, COMM_CONNECT | CONNECT_ANYWAY);
+		msg_fd = commapi_socket(commctx, MGcliHost, MGcliPort, &MGCB, COMM_CONNECT);//TODO: | CONNECT_ANYWAY);
 		if (msg_fd <= 0) {
 			x_printf(E, "connect message gateway failed.");
 			return -1;
@@ -82,7 +82,7 @@ static int work_init(void)
 	if (settingServerHost) {
 		struct cbinfo settingServerCB = {};
 		settingServerCB.callback = setting_server_event_notify;
-		set_fd = comm_socket(commctx, settingServerHost, settingServerPort, &settingServerCB, COMM_CONNECT | CONNECT_ANYWAY);
+		set_fd = commapi_socket(commctx, settingServerHost, settingServerPort, &settingServerCB, COMM_CONNECT);//TODO: | CONNECT_ANYWAY);
 		if (set_fd <= 0) {
 			x_printf(E, "connect settingServer failed.");
 			return -1;
@@ -105,7 +105,7 @@ static int work_init(void)
 	if (loginServerHost) {
 		struct cbinfo loginServerCB = {};
 		loginServerCB.callback = login_server_event_notify;
-		gin_fd = comm_socket(commctx, loginServerHost, loginServerPort, &loginServerCB, COMM_CONNECT | CONNECT_ANYWAY);
+		gin_fd = commapi_socket(commctx, loginServerHost, loginServerPort, &loginServerCB, COMM_CONNECT);//TODO: | CONNECT_ANYWAY);
 		if (gin_fd <= 0) {
 			x_printf(E, "connect loginServer failed.");
 			return -1;

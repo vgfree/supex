@@ -1,7 +1,7 @@
 INC_DIR=-I../../lib/libcomm/ -I../../lib/utils -I../../lib/zeromq-4.2.1/include/
-LIB_DIR=-L/usr/local/lib -L../../lib  -lstdc++
+LIB_DIR=-L/usr/local/lib -L../../lib
 
-INC_LIBS=-lutils -lcomm -lzmq -lmini
+INC_LIBS=-lutils -lcomm -lzmq -lmini -lstdc++ -lm
 
 #[=========>MARK<=========]#
 MAIN_APP_SERV ?= settingServer

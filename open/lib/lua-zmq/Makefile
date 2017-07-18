@@ -30,9 +30,9 @@ all: zmq.so
 
 libzmq.a:
 	tar -xzvf zeromq-4.2.1.tar.gz
-	cd ./zeromq-4.2.1 && ./configure CC=g++ --with-pic --enable-shared=no --without-libsodium
+	cd ./zeromq-4.2.1 && ./configure --with-pic --enable-shared=no --without-libsodium
 	$(MAKE) -j16 -C zeromq-4.2.1
-	mv zeromq-4.2.1/.libs/$@ .
+	mv zeromq-4.2.1/src/.libs/$@ .
 
 
 zmq.lo: zmq.c

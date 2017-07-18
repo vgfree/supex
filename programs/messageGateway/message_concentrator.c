@@ -3,7 +3,7 @@
 #include <unistd.h>
 #include <string.h>
 
-#include "communication.h"
+#include "comm_api.h"
 #include "comm_io_wraper.h"
 #include "zmq_io_wraper.h"
 #include "comm_message_operator.h"

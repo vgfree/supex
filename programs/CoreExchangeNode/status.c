@@ -51,7 +51,7 @@ void send_status_msg(int clientfd, int status)
 	set_msg_frame(0, &msg, 6, "status");
 
 	set_msg_fd(&msg, g_serv_info.login_server_fd);
-	comm_send(g_serv_info.commctx, &msg, true, -1);
+	commapi_send(g_serv_info.commctx, &msg);
 	destroy_msg(&msg);
 }
 

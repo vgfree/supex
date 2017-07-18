@@ -1,6 +1,6 @@
 #ifndef _DOWNSTREAM_H_
 #define _DOWNSTREAM_H_
-#include "communication.h"
+#include "comm_api.h"
 
 int downstream_msg(struct comm_message *msg);
 

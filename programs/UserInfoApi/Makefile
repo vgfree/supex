@@ -6,8 +6,7 @@ OPT = -D_REENTRANT -D_GNU_SOURCE -DDEBUG -DBASE_THREADSAFE \
       -DSELECT_MULTITHREAD
 
 all:
-	
-	cd setting && gcc -g $(OPT) $(INC) $(LIB)  -lluajit-5.1 -lpthread -lrt skt.c main.c -lzmq  -lstdc++  -o setting
+	cd setting && gcc -g $(OPT) $(INC) $(LIB)  -lluajit-5.1 -lpthread -lrt skt.c main.c -lzmq  -lstdc++ -lm  -o setting
 	cd ..
 
 clean:

@@ -42,6 +42,8 @@ void client_event_notify(struct comm_context *commctx,
 			x_printf(D, "errase client fd:%d.", portinfo->fd);
 			
 			send_status_msg(portinfo->fd, FD_CLOSE);
+
+			commapi_close(commctx, portinfo->fd);
 		}
 		break;
 
@@ -91,6 +93,7 @@ void message_gateway_event_notify(struct comm_context *commctx,
 				x_printf(S, "this fd:%d is not belong to MESSAGE_GATEWAY.", portinfo->fd);
 			}
 
+			commapi_close(commctx, portinfo->fd);
 			break;
 		}
 
@@ -140,6 +143,7 @@ void setting_server_event_notify(struct comm_context *commctx,
 				x_printf(S, "this fd:%d is not belong to SETTING_SERVER.", portinfo->fd);
 			}
 
+			commapi_close(commctx, portinfo->fd);
 			break;
 		}
 
@@ -189,6 +193,7 @@ void login_server_event_notify(struct comm_context *commctx,
 				x_printf(S, "this fd:%d is not belong to LOGIN_SERVER.", portinfo->fd);
 			}
 
+			commapi_close(commctx, portinfo->fd);
 			break;
 		}
 

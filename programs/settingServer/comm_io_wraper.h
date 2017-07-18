@@ -1,7 +1,7 @@
 #ifndef _COMM_IO_WRAPER_H_
 #define _COMM_IO_WRAPER_H_
 
-#include "communication.h"
+#include "comm_api.h"
 
 #define NODE_SIZE 10
 

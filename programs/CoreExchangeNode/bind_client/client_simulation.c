@@ -26,7 +26,7 @@ void *client_thread_read(void *usr)
 		struct comm_message msg = {};
 		init_msg(&msg);
 		printf("start recv msg.\n");
-		comm_recv(g_ctx, &msg, true, -1);
+		commapi_recv(g_ctx, &msg);
 		int     size = 0;
 		char    *frame = get_msg_frame(0, &msg, &size);
 		char    *buf = (char *)malloc((size + 1) * sizeof(char));
@@ -60,7 +60,7 @@ void *client_thread_read(void *usr)
 			set_msg_frame(1, &msg, strlen(buf), buf);
 			printf("dsize:%d frame_size1:%d frame_size2:%d\n", msg.package.dsize, msg.package.frame_size[0], msg.package.frame_size[1]);
 
-			if (comm_send(g_ctx, &msg, true, -1) > 0) {
+			if (commapi_send(g_ctx, &msg) > 0) {
 				printf("\033[1;31m" "send json successfull!\n" "\033[0m");
 			}
 
@@ -114,7 +114,7 @@ int test_simulate_client(char *ip)
 		set_msg_fd(&msg, connectfd);
 		set_msg_frame(0, &msg, strlen(str), str);
 		printf("\033[1;32;32m" "fgets input frames: %d\n" "\033[0m", msg.package.frames);
-		comm_send(g_ctx, &msg, true, -1);
+		commapi_send(g_ctx, &msg);
 		destroy_msg(&msg);
 		//		sleep(10);
 	}

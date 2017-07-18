@@ -1,6 +1,6 @@
 #ifndef _COMM_MESSAGE_OPERATOR_H_
 #define _COMM_MESSAGE_OPERATOR_H_
-#include "comm_structure.h"
+#include "comm_message.h"
 
 #define MAX_MSG_SIZE (10 * 1024 * 1024)
 

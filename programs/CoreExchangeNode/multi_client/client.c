@@ -41,7 +41,7 @@ static int send_data(struct comm_context *commctx, int fd)
 		sendmsg.content[i] = 'a';
 	}
 
-	comm_send(commctx, &sendmsg, false, -1);
+	commapi_send(commctx, &sendmsg);
 	return 0;
 }
 
@@ -55,7 +55,7 @@ void *read_message(void *arg)
 		memset(&recvmsg, 0, sizeof(recvmsg));
 		recvmsg.content = content;
 		printf("\x1B[1;32m" "start recv msg.\n" "\x1B[m");
-		comm_recv(comm_ctx, &recvmsg, true, -1);
+		commapi_recv(comm_ctx, &recvmsg);
 		printf("\x1B[1;32m" "recv data successed fd:%d\n" "\x1B[m", recvmsg.fd);
 		printf("\x1Bp1;32m" "recv_data:%.*s\n" "\x1B[m", recvmsg.package.dsize, recvmsg.content);
 	}
@@ -124,7 +124,7 @@ int main(int argc, char *argv[])
 		for (i = 0; i < atoi(argv[3]); i++) {
 			sendmsg.fd = fd[i];
 
-			if (comm_send(comm_ctx, &sendmsg, false, -1) == -1) {
+			if (commapi_send(comm_ctx, &sendmsg) == -1) {
 				comm_ctx_destroy(comm_ctx);
 				CSLog_destroy(g_imlog);
 				return 0;

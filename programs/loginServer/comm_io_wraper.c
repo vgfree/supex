@@ -49,14 +49,14 @@ int init_comm_io(void)
 	char    *port = get_config_name(config, NODE_SERVER_PORT);
 	x_printf(D, "nodeServer:%s, nodePort:%s.", host, port);
 
-	g_commctx = comm_ctx_create(EPOLL_SIZE);
+	g_commctx = commapi_ctx_create();
 	if (!g_commctx) {
 		return -1;
 	}
 
 	struct cbinfo callback_info = {};
 	callback_info.callback = core_exchange_node_cb;
-	assert(comm_socket(g_commctx, host, port, &callback_info, COMM_BIND) != -1);
+	assert(commapi_socket(g_commctx, host, port, &callback_info, COMM_BIND) != -1);
 
 	destroy_config_reader(config);
 	return 0;
@@ -70,12 +70,12 @@ void exit_comm_io(void)
 int recv_msg(struct comm_message *msg)
 {
 	assert(msg);
-	return comm_recv(g_commctx, msg, true, -1);
+	return commapi_recv(g_commctx, msg);
 }
 
 int send_msg(struct comm_message *msg)
 {
 	assert(msg);
-	return comm_send(g_commctx, msg, false, -1);
+	return commapi_send(g_commctx, msg);
 }
 

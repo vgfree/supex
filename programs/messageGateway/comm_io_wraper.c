@@ -49,7 +49,7 @@ int init_comm_io(void)
 	char    *port = get_config_name(config, NODE_CONNECT_PORT);
 
 	x_printf(D, "host:%s. port:%s.", host, port);
-	g_commctx = comm_ctx_create(EPOLL_SIZE);
+	g_commctx = commapi_ctx_create();
 	if (!g_commctx) {
 		return -1;
 	}
@@ -60,7 +60,7 @@ int init_comm_io(void)
 	char    *nodeServer = get_config_name(config, NODE_SERVER_HOST);
 	char    *nodePort = get_config_name(config, NODE_SERVER_PORT);
 	x_printf(D, "nodeServer:%s, nodePort:%s.", nodeServer, nodePort);
-	comm_socket(g_commctx, nodeServer, nodePort, &callback_info, COMM_BIND);
+	commapi_socket(g_commctx, nodeServer, nodePort, &callback_info, COMM_BIND);
 	destroy_config_reader(config);
 	return 0;
 }
@@ -73,12 +73,12 @@ void exit_comm_io(void)
 int recv_msg(struct comm_message *msg)
 {
 	assert(msg);
-	return comm_recv(g_commctx, msg, true, -1);
+	return commapi_recv(g_commctx, msg);
 }
 
 int send_msg(struct comm_message *msg)
 {
 	assert(msg);
-	return comm_send(g_commctx, msg, false, -1);
+	return commapi_send(g_commctx, msg);
 }
 

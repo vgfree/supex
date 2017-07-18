@@ -1,21 +1,23 @@
 #include <assert.h>
+#include <string.h>
 
 #include "comm_message_operator.h"
 // #include "loger.h"
+#include "comm_api.h"
 
 
 void init_msg(struct comm_message *msg)
 {
 	assert(msg);
 	msg->package.packages = 1;
-	msg->socket_type = -1;
-	msg->content = (char *)malloc(MAX_MSG_SIZE * sizeof(char));
+	msg->ptype = PUSH_METHOD;
+	commmsg_make(msg, MAX_MSG_SIZE * sizeof(char));
 }
 
 void destroy_msg(struct comm_message *msg)
 {
-	assert(msg && msg->content);
-	free(msg->content);
+	assert(msg);
+	commmsg_free(msg);
 }
 
 int get_msg_fd(struct comm_message *msg)
@@ -32,7 +34,7 @@ void set_msg_fd(struct comm_message *msg, int fd)
 
 char *get_msg_frame(int index, struct comm_message *msg, int *size)
 {
-	assert(msg && msg->content);
+	assert(msg);
 
 	if ((index >= msg->package.frames) || (index < 0)) {
 		//    error("index:%d > max frames:%d.", index, msg->package.frames);
@@ -40,13 +42,13 @@ char *get_msg_frame(int index, struct comm_message *msg, int *size)
 	}
 
 	*size = msg->package.frame_size[index];
-	return msg->content + msg->package.frame_offset[index];
+	return msg->package.raw_data.str + msg->package.frame_offset[index];
 }
 
 int set_msg_frame(int index, struct comm_message *msg, int size, char *frame)
 {
 	// 默认msg->content 已经malloc 了足够大的空间。
-	assert(msg && msg->content && frame);
+	assert(msg && frame);
 
 	if ((index > msg->package.frames) || (index < 0)) {
 		//    error("index:%d > max frames:%d.", index, msg->package.frames);
@@ -54,16 +56,16 @@ int set_msg_frame(int index, struct comm_message *msg, int size, char *frame)
 	}
 
 	if (index == msg->package.frames) {
-		memcpy(msg->content + msg->package.dsize, frame, size);
+		memcpy(msg->package.raw_data.str + msg->package.raw_data.len, frame, size);
 		msg->package.frames++;
 		msg->package.frame_size[index] = size;
-		msg->package.frame_offset[index] = msg->package.dsize;
-		msg->package.dsize += size;
+		msg->package.frame_offset[index] = msg->package.raw_data.len;
+		msg->package.raw_data.len += size;
 	} else {
-		memmove(msg->content + msg->package.frame_offset[index] + size,
-			msg->content + msg->package.frame_offset[index],
-			msg->package.dsize - msg->package.frame_offset[index]);
-		memcpy(msg->content + msg->package.frame_offset[index],
+		memmove(msg->package.raw_data.str + msg->package.frame_offset[index] + size,
+			msg->package.raw_data.str + msg->package.frame_offset[index],
+			msg->package.raw_data.len - msg->package.frame_offset[index]);
+		memcpy(msg->package.raw_data.str + msg->package.frame_offset[index],
 			frame, size);
 
 		for (int i = msg->package.frames; i > index; i--) {
@@ -73,7 +75,7 @@ int set_msg_frame(int index, struct comm_message *msg, int size, char *frame)
 
 		msg->package.frames++;
 		msg->package.frame_size[index] = size;
-		msg->package.dsize += size;
+		msg->package.raw_data.len += size;
 	}
 
 	msg->package.frames_of_package[0] = msg->package.frames;
@@ -91,9 +93,9 @@ int remove_first_nframe(int nframe, struct comm_message *msg)
 	}
 
 	int rmsz = msg->package.frame_offset[nframe];
-	msg->package.dsize -= rmsz;
-	memmove(msg->content, msg->content + rmsz,
-		msg->package.dsize);
+	msg->package.raw_data.len -= rmsz;
+	memmove(msg->package.raw_data.str, msg->package.raw_data.str + rmsz,
+		msg->package.raw_data.len);
 
 	int i = 0;
 

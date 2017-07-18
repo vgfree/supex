@@ -55,7 +55,7 @@ static void _handle_cid_message(struct comm_message *msg)
 		set_msg_fd(msg, fd);
 		
 		remove_first_nframe(3, msg);
-		comm_send(g_serv_info.commctx, msg, true, -1);
+		commapi_send(g_serv_info.commctx, msg);
 	}
 }
 
@@ -80,7 +80,7 @@ static int _handle_gid_message(struct comm_message *msg)
 	for (int i = 0; i < size; i++) {
 		x_printf(D, "sent msg to fd:%d.", fd_list[i]);
 		set_msg_fd(msg, fd_list[i]);
-		comm_send(g_serv_info.commctx, msg, true, -1);
+		commapi_send(g_serv_info.commctx, msg);
 	}
 
 	return 0;
@@ -99,7 +99,7 @@ static int _handle_uid_message(struct comm_message *msg)
 	if (fd != -1) {
 		remove_first_nframe(3, msg);
 		set_msg_fd(msg, fd);
-		comm_send(g_serv_info.commctx, msg, true, -1);
+		commapi_send(g_serv_info.commctx, msg);
 	}
 
 	return 0;
@@ -237,7 +237,7 @@ static void _erased_client(struct comm_message *msg)
 
 	send_status_msg(fd, FD_CLOSE);
 	
-	comm_close(g_serv_info.commctx, fd);
+	commapi_close(g_serv_info.commctx, fd);
 }
 
 static void _handle_status(struct comm_message *msg)
@@ -313,17 +313,17 @@ static int _verified(struct comm_message *msg)
 		x_printf(D, "%d frame, data:%s", i, buf);
 		free(buf);
 	}
-	x_printf(I, "msg type:%d.", msg->socket_type);
+	x_printf(I, "msg type:%d.", msg->ptype);
 #endif
 
-	if (msg->socket_type == PAIR_METHOD) {
+	if (msg->ptype == PAIR_METHOD) {
 		remove_first_nframe(1, msg);
 		char buf[21] = {};
 		buf[0] = 0x01;
 		set_msg_frame(0, msg, 21, buf);
 
-		x_printf(D, "send message msg type:%d, dsize:%d frame_size:%d frames_of_package:%d frames:%d packages:%d", msg->socket_type, msg->package.dsize, msg->package.frame_size[0], msg->package.frames_of_package[0], msg->package.frames, msg->package.packages);
-		comm_send(g_serv_info.commctx, msg, true, -1);
+		x_printf(D, "send message msg type:%d, dsize:%d frame_size:%d frames_of_package:%d frames:%d packages:%d", msg->ptype, msg->package.raw_data.len, msg->package.frame_size[0], msg->package.frames_of_package[0], msg->package.frames, msg->package.packages);
+		commapi_send(g_serv_info.commctx, msg);
 		return 1;
 	}
 
@@ -336,7 +336,7 @@ void message_dispatch(void)
 	init_msg(&msg);
 	
 	x_printf(D, "comm_recv wait.");
-	comm_recv(g_serv_info.commctx, &msg, true, -1);
+	commapi_recv(g_serv_info.commctx, &msg);
 	
 	struct fd_descriptor des;
 	fdman_array_at_fd(msg.fd, &des);
@@ -354,7 +354,7 @@ void message_dispatch(void)
 				set_msg_frame(0, &msg, strlen(cid), cid);
 				set_msg_frame(0, &msg, 8, "upstream");
 				set_msg_fd(&msg, fd);
-				comm_send(g_serv_info.commctx, &msg, true, -1);
+				commapi_send(g_serv_info.commctx, &msg);
 			}
 		}
 	} else if (des.obj == MESSAGE_GATEWAY) {

@@ -1,6 +1,6 @@
 #ifndef _NOTIFY_H_
 #define _NOTIFY_H_
-#include "communication.h"
+#include "comm_api.h"
 
 void make_uuid(char *dst);
 
