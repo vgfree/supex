@@ -1,12 +1,11 @@
 #include <signal.h>
 #include "../comm_api.h"
 
-
 static void event_fun(struct comm_context *commctx, struct comm_tcp *commtcp, void *usr);
 
 int main(int argc, char *argv[])
 {
-	//signal(SIGPIPE, SIG_IGN);
+	// signal(SIGPIPE, SIG_IGN);
 
 	if (unlikely(argc < 4)) {
 		/* 最后一个参数为绑定几个端口，输入端口为起始，后续端口都直接加1 */
@@ -17,7 +16,6 @@ int main(int argc, char *argv[])
 	char    *ipaddr = argv[1];
 	int     port = atoi(argv[2]);
 	int     bind_times = atoi(argv[3]);
-
 
 	/*创建上下文*/
 	struct comm_context *commctx = commapi_ctx_create();
@@ -30,6 +28,7 @@ int main(int argc, char *argv[])
 
 	/*创建多个监听端口*/
 	int i = 0, fd = 0;
+
 	for (i = 0; i < bind_times; i++) {
 		char str_port[64] = { 0 };
 		snprintf(str_port, 64, "%d", (port + i));
@@ -46,10 +45,11 @@ int main(int argc, char *argv[])
 	/* 循环接收 发送数据 */
 	while (1) {
 		/*设置接收空间*/
-		struct comm_message     message = { 0 };
+		struct comm_message message = { 0 };
 		commmsg_make(&message, 1024);
 
 		int err = commapi_recv(commctx, &message);
+
 		if (err) {
 			commmsg_free(&message);
 			loger("comm_recv failed\n");
@@ -58,18 +58,21 @@ int main(int argc, char *argv[])
 		}
 
 		int k = 0;
+
 		for (int pckidx = 0; pckidx < message.package.packages; pckidx++) {
 			/*unpackage*/
 			for (int frmidx = 0; frmidx < message.package.frames_of_package[pckidx]; frmidx++, k++) {
-					printf("frame %d data :%s\n", frmidx + 1, commmsg_frame_addr(&message, k));
-					printf("frame %d size :%d\n", frmidx + 1, commmsg_frame_size(&message, k));
+				printf("frame %d data :%s\n", frmidx + 1, commmsg_frame_addr(&message, k));
+				printf("frame %d size :%d\n", frmidx + 1, commmsg_frame_size(&message, k));
 			}
 		}
+
 		loger("\x1B[1;31m" "message fd:%d message body:%.*s socket_type:%d\n" "\x1B[m",
-				message.fd, (int)message.package.raw_data.len, message.package.raw_data.str, message.ptype);
+			message.fd, (int)message.package.raw_data.len, message.package.raw_data.str, message.ptype);
 
 		/* 接收成功之后将此消息体再返回给用户 */
 		err = commapi_send(commctx, &message);
+
 		if (err) {
 			loger("comm_recv failed\n");
 		}

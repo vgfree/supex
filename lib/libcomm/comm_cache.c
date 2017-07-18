@@ -112,6 +112,7 @@ void commcache_shrink(struct comm_cache *commcache)
 			return;
 		}
 	}
+
 	commcache_adjust(commcache);
 }
 

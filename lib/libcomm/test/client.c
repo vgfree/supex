@@ -108,7 +108,7 @@ static void event_fun(struct comm_context *commctx, struct comm_tcp *commtcp, vo
 
 int main(int argc, char *argv[])
 {
-	//signal(SIGPIPE, SIG_IGN);
+	// signal(SIGPIPE, SIG_IGN);
 
 	/*get args*/
 	if (unlikely(argc < 4)) {
@@ -116,12 +116,14 @@ int main(int argc, char *argv[])
 		printf("usage:%s <ipaddr> <port> <connect_times>\n", argv[0]);
 		return -1;
 	}
+
 	char    *ipaddr = argv[1];
 	int     port = atoi(argv[2]);
 	int     bind_times = atoi(argv[3]);
 
 	/*create ctx*/
 	struct comm_context *commctx = commapi_ctx_create();
+
 	if (unlikely(!commctx)) {
 		loger("client comm_ctx_create failed\n");
 		return -1;
@@ -134,8 +136,8 @@ int main(int argc, char *argv[])
 
 	int     i = 0;
 	int     fds[bind_times];
-	for (; i < bind_times; i++) {
 
+	for (; i < bind_times; i++) {
 		char str_port[64] = { 0 };
 		snprintf(str_port, 64, "%d", (port + i));
 
@@ -153,6 +155,7 @@ int main(int argc, char *argv[])
 	/* 循环接收 发送数据 */
 	struct comm_message     sendmsg = { 0 };
 	struct comm_message     recvmsg = { 0 };
+
 	while (1) {
 		for (i = 0; i < bind_times; i++) {
 			commmsg_make(&sendmsg, 1024);
@@ -161,6 +164,7 @@ int main(int argc, char *argv[])
 
 			int err = commapi_send(commctx, &sendmsg);
 			commmsg_free(&sendmsg);
+
 			if (err) {
 				loger("comm_send failed\n");
 				continue;
@@ -170,6 +174,7 @@ int main(int argc, char *argv[])
 
 			commmsg_make(&recvmsg, 1024);
 			err = commapi_recv(commctx, &recvmsg);
+
 			if (err) {
 				loger("comm_recv failed\n");
 				commmsg_free(&recvmsg);
@@ -187,8 +192,9 @@ int main(int argc, char *argv[])
 					printf("frame %d size :%d\n", frmidx + 1, commmsg_frame_size(&recvmsg, k));
 				}
 			}
+
 			loger("\x1B[1;31m" "message fd:%d message body:%.*s socket_type:%d\n" "\x1B[m",
-					recvmsg.fd, (int)recvmsg.package.raw_data.len, recvmsg.package.raw_data.str, recvmsg.ptype);
+				recvmsg.fd, (int)recvmsg.package.raw_data.len, recvmsg.package.raw_data.str, recvmsg.ptype);
 			commmsg_free(&recvmsg);
 		}
 	}

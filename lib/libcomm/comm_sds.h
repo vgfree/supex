@@ -12,7 +12,7 @@ struct comm_sds
 	bool    freeable;
 } comm_sds_t;
 
-struct comm_sds   *commsds_make(struct comm_sds *sds, size_t cap);
+struct comm_sds *commsds_make(struct comm_sds *sds, size_t cap);
 
 void commsds_free(struct comm_sds *sds);
 
@@ -30,5 +30,5 @@ void commsds_pull_tail(struct comm_sds *sds, const char *str, int len);
 
 void commsds_copy(struct comm_sds *dst, struct comm_sds *src);
 
-struct comm_sds   *commsds_create(const char *str, size_t len);
+struct comm_sds *commsds_create(const char *str, size_t len);
 

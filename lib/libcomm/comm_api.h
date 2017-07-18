@@ -8,7 +8,6 @@
 extern "C" {
 #endif
 
-
 /**************************** munication模块 ************************************/
 
 /* 通信模块的上下文环境结构体 */
@@ -16,7 +15,7 @@ struct comm_context
 {
 	pthread_t               ptid;			/* 新线程的pid */
 
-	struct comm_evts       commevts;		/* 事件驱动的相关信息 */
+	struct comm_evts        commevts;		/* 事件驱动的相关信息 */
 
 	enum
 	{
@@ -29,7 +28,7 @@ struct comm_context
 };
 
 /* 创建一个通信上下文的结构体 */
-struct comm_context *commapi_ctx_create(void);
+struct comm_context     *commapi_ctx_create(void);
 
 /* 销毁一个通信上下文的结构体 */
 void commapi_ctx_destroy(struct comm_context *commctx);
@@ -51,3 +50,4 @@ void commapi_close(struct comm_context *commctx, int fd);
 #ifdef __cplusplus
 }
 #endif
+

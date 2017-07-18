@@ -28,18 +28,18 @@ void commmsg_copy(struct comm_message *dstmsg, struct comm_message *srcmsg)
 
 	commsds_copy(&dstmsg->package.raw_data, &srcmsg->package.raw_data);
 	memcpy((char *)&dstmsg->package + sizeof(struct comm_sds),
-			(char *)&srcmsg->package + sizeof(struct comm_sds),
-			sizeof(srcmsg->package) - sizeof(struct comm_sds));
+		(char *)&srcmsg->package + sizeof(struct comm_sds),
+		sizeof(srcmsg->package) - sizeof(struct comm_sds));
 }
 
 void commmsg_free(struct comm_message *message)
 {
 	commsds_free(&message->package.raw_data);
+
 	if (message->canfree) {
 		free(message);
 	}
 }
-
 
 /* 检测包的信息是否设置正确 */
 bool commmsg_check(const struct comm_message *message)
@@ -51,7 +51,8 @@ bool commmsg_check(const struct comm_message *message)
 	int     frmidx = 0;	/* 帧的索引 */
 	int     frames = 0;	/* 帧的总数 */
 
-	int     dtsize = message->package.raw_data.len;
+	int dtsize = message->package.raw_data.len;
+
 	if (unlikely(message->package.packages < 1)) {
 		loger("wrong packages in comm_message structure, packages:%d", message->package.packages);
 		return false;

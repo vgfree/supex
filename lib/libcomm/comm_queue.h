@@ -15,7 +15,6 @@ extern "C" {
 typedef void (*TRAVEL_FCB)(const void *data, size_t size, size_t idx, void *usr);
 #endif
 
-
 #ifndef AO_T
 typedef volatile long AO_T;
 #endif

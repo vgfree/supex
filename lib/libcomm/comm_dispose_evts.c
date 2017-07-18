@@ -13,18 +13,22 @@ bool commdata_init(struct comm_data *commdata)
 	if (unlikely(!commlock_init(&commdata->recvlock))) {
 		goto error;
 	}
+
 	if (unlikely(!commqueue_init(&commdata->recvqueue, sizeof(intptr_t), QUEUE_NODES))) {
 		goto error;
 	}
+
 	commlist_init(&commdata->recvlist);
 
 	/*send [queue list lock]*/
 	if (unlikely(!commlock_init(&commdata->sendlock))) {
 		goto error;
 	}
+
 	if (unlikely(!commqueue_init(&commdata->sendqueue, sizeof(intptr_t), QUEUE_NODES))) {
 		goto error;
 	}
+
 	commlist_init(&commdata->sendlist);
 
 	commcache_init(&commdata->send_cache);
@@ -50,6 +54,7 @@ error:
 static void travel_msgfcb(const void *data, size_t size, size_t idx, void *usr)
 {
 	struct comm_message *message = *(struct comm_message **)data;
+
 	commmsg_free(message);
 }
 
@@ -72,15 +77,17 @@ void commdata_away(struct comm_data *commdata)
 
 int commdata_package(struct comm_data *commdata)
 {
-	struct comm_message     *message = NULL;
+	struct comm_message *message = NULL;
 
 	assert(commdata);
 
 	commlock_lock(&commdata->sendlock);
 	bool ok = commqueue_pull(&commdata->sendqueue, (void *)&message);
+
 	if (unlikely(!ok)) {
 		ok = commlist_pull(&commdata->sendlist, (void *)&message, sizeof(&message));
 	}
+
 	commlock_unlock(&commdata->sendlock);
 
 	if (unlikely(!ok)) {
@@ -96,6 +103,7 @@ int commdata_package(struct comm_data *commdata)
 
 	int size = mfptp_check_memory(commdata->send_cache.capacity - commdata->send_cache.size,
 			message->package.frames, message->package.raw_data.len);
+
 	if (size > 0) {
 		/* 检测到内存不够 则增加内存*/
 		if (unlikely(!commcache_expand(&commdata->send_cache, size))) {
@@ -108,7 +116,7 @@ int commdata_package(struct comm_data *commdata)
 
 	/* 包的信息设置错误或者打包失败也会直接放弃这个有问题的包 */
 	mfptp_fill_package(&commdata->packager, message->package.frame_offset, message->package.frame_size,
-			message->package.frames_of_package, message->package.packages);
+		message->package.frames_of_package, message->package.packages);
 	size = mfptp_package(&commdata->packager, message->package.raw_data.str, message->flags, message->ptype);
 	commmsg_free(message);
 
@@ -140,7 +148,7 @@ static void _fill_message_package(struct comm_message *message, const struct mfp
 			message->package.frame_size[index] = bodyer->package[pckidx].frame[frmidx].frame_size;
 
 			commsds_push_tail(&message->package.raw_data,
-					&data[bodyer->package[pckidx].frame[frmidx].frame_offset], bodyer->package[pckidx].frame[frmidx].frame_size);
+				&data[bodyer->package[pckidx].frame[frmidx].frame_offset], bodyer->package[pckidx].frame[frmidx].frame_size);
 		}
 
 		message->package.frames_of_package[pckidx] = bodyer->package[pckidx].frames;
@@ -153,13 +161,16 @@ static void _fill_message_package(struct comm_message *message, const struct mfp
 	message->flags = header->compression | header->encryption;
 	message->ptype = header->socket_type;
 }
+
 int commdata_parse(struct comm_data *commdata)
 {
 	assert(commdata);
 
 	int idx = 0;
+
 	while (commdata->recv_cache.size > 0) {
-		int size = mfptp_parse(&commdata->parser);/* 成功解析数据的字节数 */
+		int size = mfptp_parse(&commdata->parser);	/* 成功解析数据的字节数 */
+
 		if (unlikely(size == 0)) {
 			/* 数据未接收完毕 */
 			return 0;
@@ -195,38 +206,45 @@ int commdata_parse(struct comm_data *commdata)
 		}
 
 		commlock_lock(&commdata->recvlock);
+
 		if (unlikely(!commqueue_push(&commdata->recvqueue, (void *)&message))) {
 			/* 队列已满，则放入链表中 */
 			commlist_push(&commdata->recvlist, &message, sizeof(&message));
 		}
+
 		commlock_unlock(&commdata->recvlock);
 
-		//commlock_wake(&commdata->recvlock, false);
+		// commlock_wake(&commdata->recvlock, false);
 
 		loger("parse successed\n");
 		idx++;
 	}
+
 	return idx;
 }
-
 
 bool commconnfd_send(struct connfd_info *connfd)
 {
 	assert(connfd);
 
 	struct comm_data *commdata = &connfd->commdata;
+
 	if (commdata->send_cache.size > 0) {
 		int bytes = socket_send(&connfd->commtcp, &commdata->send_cache.buffer[commdata->send_cache.start], commdata->send_cache.size);
+
 		if (bytes < 0) {
 			return false;
 		}
+
 		if (bytes > 0) {
 			commdata->send_cache.start += bytes;
 			commdata->send_cache.size -= bytes;
 			commcache_adjust(&commdata->send_cache);
 		}
+
 		/* 被打断，则下次继续处理 */
 	}
+
 	return true;
 }
 
@@ -238,6 +256,7 @@ bool commconnfd_recv(struct connfd_info *connfd)
 	char    buff[COMM_READ_MIOU] = {};
 
 	struct comm_data *commdata = &connfd->commdata;
+
 	while ((bytes = socket_recv(&connfd->commtcp, buff, COMM_READ_MIOU)) > 0) {
 		commcache_append(&commdata->recv_cache, buff, bytes);
 
@@ -250,8 +269,6 @@ bool commconnfd_recv(struct connfd_info *connfd)
 	/* 判断socket状态 */
 	return (bytes < 0) ? false : true;
 }
-
-
 
 struct comm_evts *commevts_make(struct comm_evts *commevts)
 {
@@ -270,9 +287,9 @@ struct comm_evts *commevts_make(struct comm_evts *commevts)
 	commpipe_create(&commevts->cmdspipe);
 	/*init pipe evts*/
 	commpipe_create(&commevts->sendpipe);
-	//commevts->sendevfd = eventfd(0, EFD_NONBLOCK);
+	// commevts->sendevfd = eventfd(0, EFD_NONBLOCK);
 	commpipe_create(&commevts->recvpipe);
-	//commevts->recvevfd = eventfd(0, EFD_NONBLOCK);
+	// commevts->recvevfd = eventfd(0, EFD_NONBLOCK);
 
 	commepoll_init(&commevts->commepoll, EPOLL_SIZE);
 	commepoll_add(&commevts->commepoll, commevts->cmdspipe.rfd, EPOLLET | EPOLLIN, EVT_TYPE_PIPE);
@@ -287,9 +304,11 @@ void commevts_free(struct comm_evts *commevts)
 {
 	if (commevts && commevts->init) {
 		int fd = 0;
+
 		/* 删除所有类型为COMM_CONNECT和COMM_ACCEPT的fd相关信息 */
 		while (commevts->connfdcnt) {
-			struct connfd_info      *connfd = commevts->connfd[fd];
+			struct connfd_info *connfd = commevts->connfd[fd];
+
 			if (connfd) {
 				commepoll_del(&commevts->commepoll, fd, -1, EVT_TYPE_NULL);
 				commdata_away(&connfd->commdata);
@@ -304,7 +323,7 @@ void commevts_free(struct comm_evts *commevts)
 
 		/* 删除所有类型为COMM_BIND的fd相关信息 */
 		while (commevts->bindfdcnt) {
-			struct bindfd_info      *bindfd = &commevts->bindfd[commevts->bindfdcnt - 1];
+			struct bindfd_info *bindfd = &commevts->bindfd[commevts->bindfdcnt - 1];
 			fd = bindfd->commtcp.fd;
 			commepoll_del(&commevts->commepoll, fd, -1, EVT_TYPE_NULL);
 			close(fd);
@@ -319,8 +338,8 @@ void commevts_free(struct comm_evts *commevts)
 		commpipe_destroy(&commevts->cmdspipe);
 		commpipe_destroy(&commevts->sendpipe);
 		commpipe_destroy(&commevts->recvpipe);
-		//close(commevts->sendevfd);
-		//close(commevts->recvevfd);
+		// close(commevts->sendevfd);
+		// close(commevts->recvevfd);
 
 		commepoll_destroy(&commevts->commepoll);
 
@@ -347,46 +366,53 @@ bool commevts_socket(struct comm_evts *commevts, struct comm_tcp *commtcp, struc
 
 		struct connfd_info *connfd = calloc(1, sizeof(struct connfd_info));
 		memcpy(&connfd->commtcp, commtcp, sizeof(*commtcp));
+
 		if (finishedcb) {
 			memcpy(&connfd->finishedcb, finishedcb, sizeof(*finishedcb));
 		}
+
 		connfd->workstep = STEP_WAIT;
 
-
 		bool ok = commdata_init(&connfd->commdata);
+
 		if (!ok) {
 			free(connfd);
 			return false;
 		}
+
 		commevts->connfd[commtcp->fd] = connfd;
 
 		commevts->connfdcnt++;
 	} else {
 		struct bindfd_info *bindfd = &commevts->bindfd[commevts->bindfdcnt];
 		memcpy(&bindfd->commtcp, commtcp, sizeof(*commtcp));
+
 		if (finishedcb) {
 			memcpy(&bindfd->finishedcb, finishedcb, sizeof(*finishedcb));
 		}
+
 		bindfd->workstep = STEP_WAIT;
 
 		commevts->bindfdcnt++;
 	}
+
 	write(commevts->cmdspipe.wfd, (void *)&commtcp->fd, sizeof(commtcp->fd));
 
 	loger("commtcp local port:%d addr:%s peer port:%d addr:%s\n",
-			commtcp->localport, commtcp->localaddr, commtcp->peerport, commtcp->peeraddr);
+		commtcp->localport, commtcp->localaddr, commtcp->peerport, commtcp->peeraddr);
 	return true;
 }
 
-
 bool commevts_push(struct comm_evts *commevts, struct comm_message *message)
 {
-	struct comm_message     *commmsg = commmsg_make(NULL, message->package.raw_data.len);
+	struct comm_message *commmsg = commmsg_make(NULL, message->package.raw_data.len);
+
 	commmsg_copy(commmsg, message);
 
-	struct connfd_info      *connfd = commevts->connfd[message->fd];
+	struct connfd_info *connfd = commevts->connfd[message->fd];
+
 	if (connfd) {
-		struct comm_data	*commdata = &connfd->commdata;
+		struct comm_data *commdata = &connfd->commdata;
 		commlock_lock(&commdata->sendlock);
 
 		if (unlikely(!commqueue_push(&commdata->sendqueue, (void *)&commmsg))) {
@@ -399,32 +425,36 @@ bool commevts_push(struct comm_evts *commevts, struct comm_message *message)
 		write(commevts->sendpipe.wfd, (void *)&message->fd, sizeof(message->fd));
 		return true;
 	}
+
 	return false;
 }
 
-
 bool commevts_pull(struct comm_evts *commevts, struct comm_message *message)
 {
-	int fd = 0;
-	int bytes = 0;
+	int     fd = 0;
+	int     bytes = 0;
+
 	do {
-		//TODO:add epoll
+		// TODO:add epoll
 		bytes = read(commevts->recvpipe.rfd, &fd, sizeof(fd));
 	} while (bytes != sizeof(fd));
 
 	struct comm_message     *commmsg = NULL;
 	struct connfd_info      *connfd = commevts->connfd[fd];
+
 	if (connfd) {
-		struct comm_data	*commdata = &connfd->commdata;
+		struct comm_data *commdata = &connfd->commdata;
 		commlock_lock(&commdata->recvlock);
 
 		if (unlikely(!commqueue_pull(&commdata->recvqueue, (void *)&commmsg))) {
 			/* 队列已空，则存放在链表中 */
 			commlist_pull(&commdata->recvlist, &commmsg, sizeof(&commmsg));
 		}
+
 		loger("queue nodes:%ld list nodes:%ld\n", commdata->recvqueue.nodes, commdata->recvlist.nodes);
 
 		commlock_unlock(&commdata->recvlock);
+
 		if (commmsg) {
 			/* 取到数据 */
 			commmsg->fd = fd;
@@ -433,9 +463,9 @@ bool commevts_pull(struct comm_evts *commevts, struct comm_message *message)
 			return true;
 		}
 	}
+
 	return false;
 }
-
 
 /* 检测fd是否为COMM_BIND类型的fd并保存于struct listenfd结构体中的数组中  @返回值：-1代表不是，否则返回fd所在数组的下标 */
 static inline int gain_bindfd_fdidx(struct comm_evts *commevts, int fd)
@@ -456,14 +486,16 @@ void commevts_close(struct comm_evts *commevts, int fd)
 {
 	assert(commevts && commevts->init && fd > 0);
 
-	struct connfd_info      *connfd = commevts->connfd[fd];
+	struct connfd_info *connfd = commevts->connfd[fd];
+
 	if (connfd) {
 		connfd->workstep = STEP_STOP;
 		write(commevts->cmdspipe.wfd, (void *)&fd, sizeof(fd));
 	} else {
 		int fdidx = gain_bindfd_fdidx(commevts, fd);
+
 		if (fdidx > -1) {
-			struct bindfd_info      *bindfd = &commevts->bindfd[fdidx];
+			struct bindfd_info *bindfd = &commevts->bindfd[fdidx];
 			bindfd->workstep = STEP_STOP;
 			write(commevts->cmdspipe.wfd, (void *)&fd, sizeof(fd));
 		}
@@ -478,9 +510,11 @@ static int commevts_accept(struct comm_evts *commevts, struct bindfd_info *bindf
 	do {
 		/* 循环处理accept直到所有新连接都处理完毕退出 */
 		struct comm_tcp commtcp = {};
-		int fd = socket_accept(&bindfd->commtcp, &commtcp);
+		int             fd = socket_accept(&bindfd->commtcp, &commtcp);
+
 		if (fd > 0) {
 			bool ok = commevts_socket(commevts, &commtcp, &bindfd->finishedcb);
+
 			if (!ok) {
 				/* fd添加到struct comm_evts中进行监控失败，则忽略并关闭此描述符 */
 				close(fd);
@@ -502,24 +536,29 @@ static int commevts_accept(struct comm_evts *commevts, struct bindfd_info *bindf
 
 static void do_open_or_close(struct comm_evts *commevts, int fd)
 {
-	struct connfd_info      *connfd = commevts->connfd[fd];
+	struct connfd_info *connfd = commevts->connfd[fd];
+
 	if (connfd) {
 		/*connect事件.*/
 		if (connfd->workstep == STEP_WAIT) {
 			/*open*/
 			bool ok = commepoll_add(&commevts->commepoll, fd, EPOLLIN | EPOLLET, EVT_TYPE_SOCK);
+
 			if (!ok) {
 				loger("add connect evt faild!\n");
 			} else {
 				connfd->workstep = STEP_HAND;
 			}
 		}
+
 		if (connfd->workstep == STEP_STOP) {
 			/*close*/
 			bool ok = commepoll_del(&commevts->commepoll, fd, -1, EVT_TYPE_NULL);
+
 			if (!ok) {
 				loger("del connect evt faild!\n");
 			}
+
 			commdata_away(&connfd->commdata);
 			free(connfd);
 			commevts->connfd[fd] = NULL;
@@ -528,29 +567,36 @@ static void do_open_or_close(struct comm_evts *commevts, int fd)
 		}
 	} else {
 		int fdidx = gain_bindfd_fdidx(commevts, fd);
+
 		if (fdidx >= 0) {
 			/*listen事件.*/
-			struct bindfd_info      *bindfd = &commevts->bindfd[fdidx];
+			struct bindfd_info *bindfd = &commevts->bindfd[fdidx];
+
 			if (bindfd->workstep == STEP_WAIT) {
 				/*open*/
 				bool ok = commepoll_add(&commevts->commepoll, fd, EPOLLIN | EPOLLET, EVT_TYPE_SOCK);
+
 				if (!ok) {
 					loger("add listen evt faild!\n");
 				} else {
 					bindfd->workstep = STEP_HAND;
 				}
 			}
+
 			if (bindfd->workstep == STEP_STOP) {
 				/*close*/
 				bool ok = commepoll_del(&commevts->commepoll, fd, -1, EVT_TYPE_NULL);
+
 				if (!ok) {
 					loger("del listen evt faild!\n");
 				}
+
 				if ((fdidx + 1) != commevts->bindfdcnt) {
 					/* 如果删除的fd不是最后一个fd，则将后面的fd数据往前拷贝 */
 					int size = sizeof(struct bindfd_info) * (commevts->bindfdcnt - fdidx - 1);
 					memmove(&commevts->bindfd[fdidx], &commevts->bindfd[fdidx + 1], size);
 				}
+
 				commevts->bindfdcnt--;
 				close(fd);
 			}
@@ -562,16 +608,19 @@ static void do_open_or_close(struct comm_evts *commevts, int fd)
 void commevts_once(struct comm_evts *commevts)
 {
 	bool have = commepoll_wait(&commevts->commepoll, EPOLLTIMEOUTED);
+
 	if (!have) {
 		return;
 	}
+
 	/*有事件*/
 	loger("commepoll_wait have events\n");
-	int             n = 0;
+	int n = 0;
+
 	for (n = 0; n < commevts->commepoll.eventcnt; n++) {
 		struct epoll_event      *evts = &commevts->commepoll.events[n];
-		int fhand = commepoll_get_event_fhand(evts);
-		char ftype = commepoll_get_event_ftype(evts);
+		int                     fhand = commepoll_get_event_fhand(evts);
+		char                    ftype = commepoll_get_event_ftype(evts);
 		assert(fhand > 0);
 
 		if (ftype == EVT_TYPE_PIPE) {
@@ -579,43 +628,57 @@ void commevts_once(struct comm_evts *commevts)
 			if (!(evts->events & EPOLLIN)) {
 				continue;
 			}
+
 			/* 管道可读事件 */
 			loger("pipe event start\n");
 
-			int fda[PIPE_READ_MIOU] = {0};
-			int bytes = read(fhand, fda, sizeof(fda));
-			int cnt = bytes / sizeof(int);
+			int     fda[PIPE_READ_MIOU] = { 0 };
+			int     bytes = read(fhand, fda, sizeof(fda));
+			int     cnt = bytes / sizeof(int);
+
 			if (cnt == 0) {
 				continue;
 			}
+
 			int i = 0;
+
 			for (i = 0; i < cnt; i++) {
 				int fd = fda[i];
+
 				if (fhand == commevts->cmdspipe.rfd) {
 					do_open_or_close(commevts, fd);
 				}
+
 				if (fhand == commevts->sendpipe.rfd) {
-					struct connfd_info      *connfd = commevts->connfd[fd];
-					if (connfd && connfd->workstep == STEP_HAND) {
+					struct connfd_info *connfd = commevts->connfd[fd];
+
+					if (connfd && (connfd->workstep == STEP_HAND)) {
 						/*打包发送事件*/
 						bool ok = commconnfd_send(connfd);
+
 						if (!ok) {
 							if (connfd->finishedcb.callback) {
 								connfd->finishedcb.callback(commevts->commctx, &connfd->commtcp, connfd->finishedcb.usr);
 							}
+
 							continue;
 						}
+
 						/* 处理打包事件 */
 						int ret = commdata_package(&connfd->commdata);
+
 						if (ret > 0) {
 							ok = commconnfd_send(connfd);
+
 							if (!ok) {
 								if (connfd->finishedcb.callback) {
 									connfd->finishedcb.callback(commevts->commctx, &connfd->commtcp, connfd->finishedcb.usr);
 								}
+
 								continue;
 							}
 						}
+
 						if (connfd->commdata.send_cache.size) {
 							commepoll_mod(&commevts->commepoll, fd, EPOLLIN | EPOLLET | EPOLLOUT, EVT_TYPE_SOCK);
 						}
@@ -624,71 +687,90 @@ void commevts_once(struct comm_evts *commevts)
 			}
 		} else {
 			/* 有sock事件触发 */
-			struct connfd_info      *connfd = commevts->connfd[fhand];
+			struct connfd_info *connfd = commevts->connfd[fhand];
+
 			if (connfd) {
-				if (evts->events & EPOLLERR){
+				if (evts->events & EPOLLERR) {
 					commepoll_del(&commevts->commepoll, fhand, -1, EVT_TYPE_NULL);
+
 					if (connfd->finishedcb.callback) {
 						connfd->finishedcb.callback(commevts->commctx, &connfd->commtcp, connfd->finishedcb.usr);
 					}
+
 					continue;
 				}
+
 				if (evts->events & EPOLLIN) {
 					/* socket的fd触发了读事件 */
 					bool ok = commconnfd_recv(connfd);
+
 					if (!ok) {
 						commepoll_del(&commevts->commepoll, fhand, -1, EVT_TYPE_NULL);
+
 						if (connfd->finishedcb.callback) {
 							connfd->finishedcb.callback(commevts->commctx, &connfd->commtcp, connfd->finishedcb.usr);
 						}
+
 						continue;
 					}
+
 					/* 处理解析事件 */
 					int ret = commdata_parse(&connfd->commdata);
+
 					if (ret == -1) {
-						//TODO:设置断开连接标志
-						connfd->commtcp.stat = FD_CLOSE;//?
+						// TODO:设置断开连接标志
+						connfd->commtcp.stat = FD_CLOSE;// ?
 						commepoll_del(&commevts->commepoll, fhand, -1, EVT_TYPE_NULL);
+
 						if (connfd->finishedcb.callback) {
 							connfd->finishedcb.callback(commevts->commctx, &connfd->commtcp, connfd->finishedcb.usr);
 						}
+
 						continue;
 					}
+
 					/*写入管道*/
 					int i = 0;
+
 					for (i = 0; i < ret; i++) {
 						write(commevts->recvpipe.wfd, (void *)&fhand, sizeof(fhand));
 					}
 				}
+
 				if (evts->events & EPOLLOUT) {
 					/* socket的fd触发了写事件 */
 					bool ok = commconnfd_send(connfd);
+
 					if (!ok) {
 						commepoll_del(&commevts->commepoll, fhand, -1, EVT_TYPE_NULL);
+
 						if (connfd->finishedcb.callback) {
 							connfd->finishedcb.callback(commevts->commctx, &connfd->commtcp, connfd->finishedcb.usr);
 						}
+
 						continue;
 					}
+
 					if (!connfd->commdata.send_cache.size) {
 						commepoll_mod(&commevts->commepoll, fhand, EPOLLIN | EPOLLET, EVT_TYPE_SOCK);
 					}
 				}
 			} else {
 				int fdidx = gain_bindfd_fdidx(commevts, fhand);
+
 				if (fdidx >= 0) {
 					/* 新的客户端连接,触发accept事件 */
-					struct bindfd_info *bindfd = &commevts->bindfd[fdidx];
-					int fd = commevts_accept(commevts, bindfd);
+					struct bindfd_info      *bindfd = &commevts->bindfd[fdidx];
+					int                     fd = commevts_accept(commevts, bindfd);
 
-					struct connfd_info      *connfd = commevts->connfd[fd];
+					struct connfd_info *connfd = commevts->connfd[fd];
 					connfd->workstep = STEP_WAIT;
 					do_open_or_close(commevts, fd);
 
 					loger("listen fd:%d accept fd:%d\n", bindfd->commtcp.fd, fd);
 					loger("accept fd localport: %d local addr:%s peerport:%d peeraddr:%s\n",
-							connfd->commtcp.localport, connfd->commtcp.localaddr,
-							connfd->commtcp.peerport, connfd->commtcp.peeraddr);
+						connfd->commtcp.localport, connfd->commtcp.localaddr,
+						connfd->commtcp.peerport, connfd->commtcp.peeraddr);
 
 					if (bindfd->finishedcb.callback) {
 						bindfd->finishedcb.callback(commevts->commctx, &connfd->commtcp, bindfd->finishedcb.usr);

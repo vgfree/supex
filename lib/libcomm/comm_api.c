@@ -23,6 +23,7 @@ static void *_start_main_loop(void *usr)
 			if (likely(old != COMM_STAT_NONE)) {
 				commlock_wake(&commctx->statlock, false);
 			}
+
 			break;
 		}
 
@@ -31,12 +32,12 @@ static void *_start_main_loop(void *usr)
 	return NULL;
 }
 
-
 struct comm_context *commapi_ctx_create(void)
 {
 	struct comm_context *commctx = NULL;
 
 	New(commctx);
+
 	if (unlikely(!commctx)) {
 		goto error;
 	}
@@ -45,19 +46,19 @@ struct comm_context *commapi_ctx_create(void)
 	if (unlikely(!commevts_make(&commctx->commevts))) {
 		goto error;
 	}
+
 	commctx->commevts.commctx = commctx;
 
 	/* stat init */
 	commctx->stat = COMM_STAT_INIT;
+
 	if (unlikely(!commlock_init(&commctx->statlock))) {
 		goto error;
 	}
 
-
 	if (unlikely((pthread_create(&commctx->ptid, NULL, _start_main_loop, (void *)commctx))) != 0) {
 		goto error;
 	}
-
 
 	return commctx;
 
@@ -69,6 +70,7 @@ error:
 		commlock_destroy(&commctx->statlock);
 		Free(commctx);
 	}
+
 	return NULL;
 }
 
@@ -83,6 +85,7 @@ void commapi_ctx_destroy(struct comm_context *commctx)
 				commlock_wake(&commctx->statlock, false);
 			}
 		}
+
 		ATOMIC_SET(&commctx->stat, COMM_STAT_STOP);
 
 		/* 等待子线程退出然后再继续销毁数据 */
@@ -97,17 +100,18 @@ void commapi_ctx_destroy(struct comm_context *commctx)
 	}
 }
 
-
 int commapi_socket(struct comm_context *commctx, const char *host, const char *port, struct cbinfo *finishedcb, int stype)
 {
 	assert(commctx && host && port);
 
 	struct comm_tcp commtcp = {};
+
 	if (stype == COMM_BIND) {
 		if (commctx->commevts.bindfdcnt >= LISTEN_SIZE) {
 			loger("bind too many socket in one comm_context\n");
 			return -1;
 		}
+
 		if (unlikely(!socket_listen(&commtcp, host, port))) {
 			loger("bind socket failed\n");
 			return -1;
@@ -117,6 +121,7 @@ int commapi_socket(struct comm_context *commctx, const char *host, const char *p
 			loger("conn too many socket in one comm_context\n");
 			return -1;
 		}
+
 		if (unlikely(!socket_connect(&commtcp, host, port, 0))) {
 			loger("connect socket failed\n");
 			return -1;
@@ -124,6 +129,7 @@ int commapi_socket(struct comm_context *commctx, const char *host, const char *p
 	}
 
 	bool ok = commevts_socket(&commctx->commevts, &commtcp, finishedcb);
+
 	if (!ok) {
 		close(commtcp.fd);
 		loger("add socket fd to monitor failed\n");
@@ -141,7 +147,6 @@ int commapi_socket(struct comm_context *commctx, const char *host, const char *p
 
 	return commtcp.fd;
 }
-
 
 int commapi_send(struct comm_context *commctx, struct comm_message *message)
 {
@@ -168,3 +173,4 @@ void commapi_close(struct comm_context *commctx, int fd)
 {
 	commevts_close(&commctx->commevts, fd);
 }
+

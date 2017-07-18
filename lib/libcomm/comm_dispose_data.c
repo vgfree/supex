@@ -34,16 +34,18 @@ static int _decompresscb(char *dstbuff, const char *srcbuff, int dst_len, int sr
 	loger("\x1B[1;32m" "decompresscb over\n" "\x1B[m");
 	return src_len;
 }
-#endif /* if 0 */
+#endif	/* if 0 */
 
 /* 设置加密压缩的回调函数 @type:true 代表的是加密压缩， false代表的是解密解压 */
 static inline DISPOSE_DATA_CALLBACK _set_callback(bool type, unsigned char flag)
 {
-	switch (flag) {
+	switch (flag)
+	{
 		case NO_ENCRYPTION:		/* NO_ENCRYPTION 和 NO_COMPRESSION值都为0,所以只需要写一个 */
 			return NULL;
 
 		case IDEA_ENCRYPTION:
+
 			if (type) {
 				return NULL;	/* 待完善，指向IDEA算法加密函数 */
 			} else {
@@ -51,24 +53,27 @@ static inline DISPOSE_DATA_CALLBACK _set_callback(bool type, unsigned char flag)
 			}
 
 		case AES_ENCRYPTION:
+
 			if (type) {
-				//return _encryptcb;	/* 待完善，指向AES算法加密函数 */
+				// return _encryptcb;	/* 待完善，指向AES算法加密函数 */
 				return NULL;	/* 待完善，指向AES算法加密函数 */
 			} else {
-				//return _decryptcb;	/* 待完善，指向AES算法的解密函数 */
+				// return _decryptcb;	/* 待完善，指向AES算法的解密函数 */
 				return NULL;	/* 待完善，指向AES算法的解密函数 */
 			}
 
 		case ZIP_COMPRESSION:
+
 			if (type) {
-				//return _compresscb;	/* 待完善，指向ZIP算法压缩函数 */
+				// return _compresscb;	/* 待完善，指向ZIP算法压缩函数 */
 				return NULL;	/* 待完善，指向ZIP算法压缩函数 */
 			} else {
-				//return _decompresscb;	/* 待完善，指向ZIP算法解压函数 */
+				// return _decompresscb;	/* 待完善，指向ZIP算法解压函数 */
 				return NULL;	/* 待完善，指向ZIP算法解压函数 */
 			}
 
 		case GZIP_COMPRESSION:
+
 			if (type) {
 				return NULL;	/* 待完善，指向GZIP算法压缩函数 */
 			} else {
@@ -84,8 +89,8 @@ static inline DISPOSE_DATA_CALLBACK _set_callback(bool type, unsigned char flag)
 bool encrypt_compress_data(struct comm_message *message)
 {
 	assert(message);
-	DISPOSE_DATA_CALLBACK    compresscb = NULL;
-	DISPOSE_DATA_CALLBACK    encryptcb = NULL;
+	DISPOSE_DATA_CALLBACK   compresscb = NULL;
+	DISPOSE_DATA_CALLBACK   encryptcb = NULL;
 
 	if ((message->flags & 0x0F) > 0) {
 		/* 设置加密的回调函数 */
@@ -102,23 +107,24 @@ bool encrypt_compress_data(struct comm_message *message)
 		return true;
 	}
 
-	struct comm_message     newmsg = {0};
+	struct comm_message newmsg = { 0 };
 	commmsg_make(&newmsg, message->package.raw_data.len);
 	newmsg.fd = message->fd;
 	newmsg.flags = message->flags;
 	newmsg.ptype = message->ptype;
 
-	char                    encryptbuff[ENCRYPTSIZE] = {};
-	char                    compressbuff[COMPRESSIZE] = {};
-	char                    *compress = compressbuff;
-	char                    *encrypt = encryptbuff;
-	int                     encryptsize = ENCRYPTSIZE;      /* 加密缓冲区的大小 */
-	int                     compressize = COMPRESSIZE;      /* 压缩缓冲区的大小 */
+	char    encryptbuff[ENCRYPTSIZE] = {};
+	char    compressbuff[COMPRESSIZE] = {};
+	char    *compress = compressbuff;
+	char    *encrypt = encryptbuff;
+	int     encryptsize = ENCRYPTSIZE;			/* 加密缓冲区的大小 */
+	int     compressize = COMPRESSIZE;			/* 压缩缓冲区的大小 */
 
-	int                     pckidx = 0;
-	int                     frmidx = 0;
-	int                     index = 0;
-	int                     frame_size = 0;
+	int     pckidx = 0;
+	int     frmidx = 0;
+	int     index = 0;
+	int     frame_size = 0;
+
 	for (pckidx = 0, index = 0; pckidx < message->package.packages; pckidx++) {
 		for (frmidx = 0; frmidx < message->package.frames_of_package[pckidx]; frmidx++, index++) {
 			/* 对每帧的数据进行操作 */
@@ -200,8 +206,8 @@ bool encrypt_compress_data(struct comm_message *message)
 bool decrypt_decompress_data(struct comm_message *message)
 {
 	assert(message);
-	DISPOSE_DATA_CALLBACK    decompresscb = NULL;
-	DISPOSE_DATA_CALLBACK    decryptcb = NULL;
+	DISPOSE_DATA_CALLBACK   decompresscb = NULL;
+	DISPOSE_DATA_CALLBACK   decryptcb = NULL;
 
 	if ((message->flags & 0x0F) > 0) {
 		/* 设置加密的回调函数 */
@@ -218,23 +224,24 @@ bool decrypt_decompress_data(struct comm_message *message)
 		return true;
 	}
 
-	struct comm_message     newmsg = {0};
+	struct comm_message newmsg = { 0 };
 	commmsg_make(&newmsg, message->package.raw_data.len);
 	newmsg.fd = message->fd;
 	newmsg.flags = message->flags;
 	newmsg.ptype = message->ptype;
 
-	char                    decryptbuff[DECRYPTSIZE] = {};		/* 保存解密之后的数据 */
-	char                    decompressbuff[DECOMPRESSIZE] = {};	/* 保存解压之后的数据 */
-	char                    *decrypt = decryptbuff;
-	char                    *decompress = decompressbuff;
-	int                     decryptsize = DECRYPTSIZE;		/* 解密缓冲区的大小 */
-	int                     decomprsize = DECOMPRESSIZE;		/* 解压缓冲区的大小 */
+	char    decryptbuff[DECRYPTSIZE] = {};				/* 保存解密之后的数据 */
+	char    decompressbuff[DECOMPRESSIZE] = {};			/* 保存解压之后的数据 */
+	char    *decrypt = decryptbuff;
+	char    *decompress = decompressbuff;
+	int     decryptsize = DECRYPTSIZE;				/* 解密缓冲区的大小 */
+	int     decomprsize = DECOMPRESSIZE;				/* 解压缓冲区的大小 */
 
-	int                     pckidx = 0;
-	int                     frmidx = 0;
-	int                     index = 0;
-	int                     frame_size = 0;
+	int     pckidx = 0;
+	int     frmidx = 0;
+	int     index = 0;
+	int     frame_size = 0;
+
 	for (pckidx = 0, index = 0; pckidx < message->package.packages; pckidx++) {
 		for (frmidx = 0; frmidx < message->package.frames_of_package[pckidx]; frmidx++, index++) {
 			/* 对每帧的数据进行操作 */

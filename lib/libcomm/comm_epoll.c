@@ -98,10 +98,11 @@ bool commepoll_wait(struct comm_epoll *commepoll, int timeout)
 
 int commepoll_get_event_fhand(struct epoll_event *evt)
 {
-	return (evt->data.u64 >> 8);
+	return evt->data.u64 >> 8;
 }
 
 char commepoll_get_event_ftype(struct epoll_event *evt)
 {
-	return (evt->data.u64 & 0xFF);
+	return evt->data.u64 & 0xFF;
 }
+

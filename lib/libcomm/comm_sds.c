@@ -98,8 +98,8 @@ void commsds_pull_tail(struct comm_sds *sds, const char *str, int len)
 
 void commsds_copy(struct comm_sds *dst, struct comm_sds *src)
 {
-        commsds_clean(dst);
-        commsds_push_tail(dst, src->str, src->len);
+	commsds_clean(dst);
+	commsds_push_tail(dst, src->str, src->len);
 }
 
 struct comm_sds *commsds_create(const char *str, size_t len)

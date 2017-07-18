@@ -62,6 +62,7 @@ bool socket_connect(struct comm_tcp *commtcp, const char *host, const char *port
 			if (retry == -1) {
 				continue;
 			}
+
 			if (retry-- <= 0) {
 				/* 重试次数用完 */
 				loger("connect fatal error fd: %d errno:%d\n", commtcp->fd, errno);
@@ -361,6 +362,7 @@ int socket_send(struct comm_tcp *commtcp, char *data, size_t size)
 	commtcp->stat = FD_WRITE;
 
 	int bytes = write(commtcp->fd, data, size);
+
 	if (bytes > 0) {
 		return bytes;
 	} else {
@@ -387,7 +389,8 @@ int socket_recv(struct comm_tcp *commtcp, char *data, size_t size)
 
 	commtcp->stat = FD_READ;
 
-	int     bytes = read(commtcp->fd, data, size);
+	int bytes = read(commtcp->fd, data, size);
+
 	if (bytes == 0) {
 		/* socket已经关闭 */
 		commtcp->stat = FD_CLOSE;
@@ -408,5 +411,4 @@ int socket_recv(struct comm_tcp *commtcp, char *data, size_t size)
 		return bytes;
 	}
 }
-
 

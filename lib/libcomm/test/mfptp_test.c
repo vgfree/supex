@@ -8,7 +8,6 @@ void parser(const char *pckbuff, int pckbuff_size);
 
 static void _fill_message_package(struct comm_message *message, const struct mfptp_parser *parser);
 
-
 int main()
 {
 	char    buff[1024] = {};		/* 保存打包成功的数据缓冲区 */
@@ -104,6 +103,7 @@ void parser(const char *pckbuff, int pckbuff_size)
 	struct comm_cache       cache = {};
 	struct mfptp_parser     parser = {};
 	struct comm_message     message = {};
+
 	commmsg_make(&message, 1024);
 
 	commcache_init(&cache);
@@ -154,7 +154,7 @@ static void _fill_message_package(struct comm_message *message, const struct mfp
 			message->package.frame_size[index] = bodyer->package[pckidx].frame[frmidx].frame_size;
 
 			commsds_push_tail(&message->package.raw_data,
-					&data[bodyer->package[pckidx].frame[frmidx].frame_offset], bodyer->package[pckidx].frame[frmidx].frame_size);
+				&data[bodyer->package[pckidx].frame[frmidx].frame_offset], bodyer->package[pckidx].frame[frmidx].frame_size);
 		}
 
 		message->package.frames_of_package[pckidx] = bodyer->package[pckidx].frames;
@@ -167,3 +167,4 @@ static void _fill_message_package(struct comm_message *message, const struct mfp
 	message->flags = header->compression | header->encryption;
 	message->ptype = header->socket_type;
 }
+

@@ -42,7 +42,6 @@ void commcache_shrink(struct comm_cache *commcache);
 /* 清除cache里面的无效数据 */
 void commcache_adjust(struct comm_cache *comm_cache);
 
-
 #ifdef __cplusplus
 }
 #endif

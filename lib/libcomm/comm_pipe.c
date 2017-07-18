@@ -4,7 +4,7 @@
 /*********************************************************************************************/
 #include "comm_pipe.h"
 
-#define PIPE_MAX_SIZE         ((1 << 8) * 1024)
+#define PIPE_MAX_SIZE ((1 << 8) * 1024)
 
 bool commpipe_create(struct comm_pipe *commpipe)
 {
