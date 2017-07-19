@@ -646,6 +646,26 @@ void commevts_once(struct comm_evts *commevts)
 				int fd = fda[i];
 
 				if (fhand == commevts->cmdspipe.rfd) {
+#if 0
+					//TODO: add FD_ERRO to commapi_close()
+					//TODO: fix FD_CLOSE to call below.
+					struct connfd_info *connfd = commevts->connfd[fd];
+					if (connfd) {
+						if (connfd->finishedcb.callback) {
+							connfd->finishedcb.callback(commevts->commctx, &connfd->commtcp, connfd->finishedcb.usr);
+						}
+					} else {
+						int fdidx = gain_bindfd_fdidx(commevts, fd);
+
+						if (fdidx >= 0) {
+							struct bindfd_info      *bindfd = &commevts->bindfd[fdidx];
+							if (bindfd->finishedcb.callback) {
+								bindfd->finishedcb.callback(commevts->commctx, &bindfd->commtcp, bindfd->finishedcb.usr);
+							}
+						}
+					}
+#endif
+
 					do_open_or_close(commevts, fd);
 				}
 

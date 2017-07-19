@@ -38,7 +38,7 @@ struct comm_tcp
 	}               type;			/* 套接字的类型 */
 	enum
 	{
-		FD_INIT = 0x01,
+		FD_INIT = 0x01,			/*socket刚创建,未connect/bind/accept*/
 		FD_READ,
 		FD_WRITE,
 		FD_CLOSE
