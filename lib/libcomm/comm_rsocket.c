@@ -227,6 +227,12 @@ int rsocket_accept(struct rsocket *rsocket)
 		close(sktfd);
 		return -1;
 	}
+	/* 连接到服务器端的socket设置keepalive选项 */
+	if (unlikely(!set_keepalive(sktfd))) {
+		close(sktfd);
+		return -1;
+	}
+
 	return sktfd;
 }
 #if 0

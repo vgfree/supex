@@ -50,30 +50,12 @@ int commdata_package(struct comm_data *commdata);
 /* 开始解析一个fd的数据,@return -1出错，>=0成功个数 */
 int commdata_parse(struct comm_data *commdata);
 
-enum STEP_CODE
-{
-	STEP_WAIT = 0,
-	STEP_HAND,	/*进入正常状态*/
-	STEP_ERRO,	/*进入异常状态*/
-	STEP_STOP,
-};
 
-// TODO
-#ifndef COMM_FCB
-struct comm_context;
-/* 回调函数的相关信息 */
-typedef void (*COMM_FCB)(struct comm_context *commctx, struct comm_tcp *commtcp, void *usr);
-struct cbinfo
-{
-	int             timeout;
-	COMM_FCB        callback;		/* 相关的回调函数 */
-	void            *usr;			/* 用户的参数 */
-};
-#endif
+
 /* 绑定监听描述符的相关信息[fd类型为COMM_BIND] */
 struct bindfd_info
 {
-	struct cbinfo   finishedcb;	/* 每个fd对应的回调函数 */
+	struct comm_cbinfo   cbinfo;	/* 每个fd对应的回调函数 */
 	struct comm_tcp commtcp;	/* 套接字的相关信息 */
 	enum STEP_CODE  workstep;
 };
@@ -81,7 +63,7 @@ struct bindfd_info
 /* 主动链接或被动连接的fd相关信息[fd的类型为COMM_CONNECT, COMM_ACCEPT] */
 struct connfd_info
 {
-	struct cbinfo           finishedcb;	/* 此描述符监听事件发生时相应的回调函数信息 */
+	struct comm_cbinfo           cbinfo;	/* 此描述符监听事件发生时相应的回调函数信息 */
 	struct comm_tcp         commtcp;	/* 套接字相关信息 */
 	enum STEP_CODE          workstep;
 
@@ -132,7 +114,7 @@ struct comm_evts        *commevts_make(struct comm_evts *commevts);
 void commevts_free(struct comm_evts *commevts);
 
 /* 新增一个socket */
-bool commevts_socket(struct comm_evts *commevts, struct comm_tcp *commtcp, struct cbinfo *finishedcb);
+bool commevts_socket(struct comm_evts *commevts, struct comm_tcp *commtcp, struct comm_cbinfo *cbinfo);
 
 bool commevts_push(struct comm_evts *commevts, struct comm_message *message);
 

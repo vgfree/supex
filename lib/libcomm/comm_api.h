@@ -36,7 +36,7 @@ void commapi_ctx_destroy(struct comm_context *commctx);
 /*********************************************************************************/
 
 /* bind或者connect某个指定的地址端口 @stype:可取的值为COMM_BIND或COMM_CONNECT*/
-int commapi_socket(struct comm_context *commctx, const char *host, const char *port, struct cbinfo *finishedcb, int stype);
+int commapi_socket(struct comm_context *commctx, const char *host, const char *port, struct comm_cbinfo *cbinfo, int stype);
 
 /* @返回值为-1失败*/
 int commapi_send(struct comm_context *commctx, struct comm_message *message);

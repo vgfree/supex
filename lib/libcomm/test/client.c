@@ -130,9 +130,9 @@ int main(int argc, char *argv[])
 	}
 
 	/* 设置回调函数的相关信息 */
-	struct cbinfo finishedcb = { 0 };
-	finishedcb.callback = event_fun;
-	finishedcb.usr = NULL;
+	struct comm_cbinfo cbinfo = { 0 };
+	cbinfo.callback = event_fun;
+	cbinfo.usr = NULL;
 
 	int     i = 0;
 	int     fds[bind_times];
@@ -141,7 +141,7 @@ int main(int argc, char *argv[])
 		char str_port[64] = { 0 };
 		snprintf(str_port, 64, "%d", (port + i));
 
-		if (unlikely((fds[i] = commapi_socket(commctx, ipaddr, str_port, &finishedcb, COMM_CONNECT)) == -1)) {
+		if (unlikely((fds[i] = commapi_socket(commctx, ipaddr, str_port, &cbinfo, COMM_CONNECT)) == -1)) {
 			commapi_ctx_destroy(commctx);
 			loger("client comm_socket failed\n");
 			return -1;

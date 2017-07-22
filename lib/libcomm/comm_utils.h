@@ -133,6 +133,24 @@ static inline bool fd_setopt(int fd, int flag)
 	return true;
 }
 
+enum STEP_CODE
+{
+	STEP_INIT = 0,
+	STEP_HAND,	/*进入正常状态*/
+	STEP_ERRO,	/*进入异常状态*/
+	STEP_WAIT,
+	STEP_STOP,
+};
+
+/* 回调函数的相关信息 */
+typedef void (*COMM_WORK_STEP_FCB)(void *commctx, int socket, enum STEP_CODE step, void *usr);
+struct comm_cbinfo
+{
+	int             timeout;
+	COMM_WORK_STEP_FCB        fcb;		/* 相关的回调函数 */
+	void            *usr;			/* 用户的参数 */
+};
+
 #ifdef __cplusplus
 }
 #endif

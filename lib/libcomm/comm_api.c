@@ -100,7 +100,7 @@ void commapi_ctx_destroy(struct comm_context *commctx)
 	}
 }
 
-int commapi_socket(struct comm_context *commctx, const char *host, const char *port, struct cbinfo *finishedcb, int stype)
+int commapi_socket(struct comm_context *commctx, const char *host, const char *port, struct comm_cbinfo *cbinfo, int stype)
 {
 	assert(commctx && host && port);
 
@@ -132,11 +132,13 @@ int commapi_socket(struct comm_context *commctx, const char *host, const char *p
 			loger("create socket failed\n");
 			return -1;
 		}
+		if (unlikely(rsocket_connect(&commtcp.rsocket))) {
+		}
 		commtcp.type = COMM_CONNECT;
 		commtcp_set_portinfo(&commtcp, false, host, port);
 	}
 
-	bool ok = commevts_socket(&commctx->commevts, &commtcp, finishedcb);
+	bool ok = commevts_socket(&commctx->commevts, &commtcp, cbinfo);
 
 	if (!ok) {
 		rsocket_close(&commtcp.rsocket);

@@ -22,9 +22,9 @@ int main(int argc, char *argv[])
 	assert(commctx);
 
 	/* 设置回调函数的相关信息 */
-	struct cbinfo finishedcb = { 0 };
-	finishedcb.callback = event_fun;
-	finishedcb.usr = NULL;
+	struct comm_cbinfo cbinfo = { 0 };
+	cbinfo.callback = event_fun;
+	cbinfo.usr = NULL;
 
 	/*创建多个监听端口*/
 	int i = 0, fd = 0;
@@ -33,7 +33,7 @@ int main(int argc, char *argv[])
 		char str_port[64] = { 0 };
 		snprintf(str_port, 64, "%d", (port + i));
 
-		if (unlikely((fd = commapi_socket(commctx, ipaddr, str_port, &finishedcb, COMM_BIND)) == -1)) {
+		if (unlikely((fd = commapi_socket(commctx, ipaddr, str_port, &cbinfo, COMM_BIND)) == -1)) {
 			loger("server comm_socket failed\n");
 			commapi_ctx_destroy(commctx);
 			return -1;

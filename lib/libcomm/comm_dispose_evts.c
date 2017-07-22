@@ -351,27 +351,20 @@ void commevts_free(struct comm_evts *commevts)
 	}
 }
 
-bool commevts_socket(struct comm_evts *commevts, struct comm_tcp *commtcp, struct cbinfo *finishedcb)
+bool commevts_socket(struct comm_evts *commevts, struct comm_tcp *commtcp, struct comm_cbinfo *cbinfo)
 {
 	assert(commevts && commevts->init && commtcp && commtcp->rsocket.sktfd > 0);
 
 	/* 添加一个fd进行监听 */
 	if ((commtcp->type == COMM_CONNECT) || (commtcp->type == COMM_ACCEPT)) {
-		if (commtcp->type == COMM_ACCEPT) {
-			/* 连接到服务器端的socket设置keepalive选项 */
-			if (unlikely(!set_keepalive(commtcp->rsocket.sktfd))) {
-				return false;
-			}
-		}
-
 		struct connfd_info *connfd = calloc(1, sizeof(struct connfd_info));
 		memcpy(&connfd->commtcp, commtcp, sizeof(*commtcp));
 
-		if (finishedcb) {
-			memcpy(&connfd->finishedcb, finishedcb, sizeof(*finishedcb));
+		if (cbinfo) {
+			memcpy(&connfd->cbinfo, cbinfo, sizeof(*cbinfo));
 		}
 
-		connfd->workstep = STEP_WAIT;
+		connfd->workstep = STEP_INIT;
 
 		bool ok = commdata_init(&connfd->commdata);
 
@@ -387,11 +380,11 @@ bool commevts_socket(struct comm_evts *commevts, struct comm_tcp *commtcp, struc
 		struct bindfd_info *bindfd = &commevts->bindfd[commevts->bindfdcnt];
 		memcpy(&bindfd->commtcp, commtcp, sizeof(*commtcp));
 
-		if (finishedcb) {
-			memcpy(&bindfd->finishedcb, finishedcb, sizeof(*finishedcb));
+		if (cbinfo) {
+			memcpy(&bindfd->cbinfo, cbinfo, sizeof(*cbinfo));
 		}
 
-		bindfd->workstep = STEP_WAIT;
+		bindfd->workstep = STEP_INIT;
 
 		commevts->bindfdcnt++;
 	}
@@ -519,7 +512,7 @@ static int commevts_accept(struct comm_evts *commevts, struct bindfd_info *bindf
 			assert(commtcp_get_portinfo(&commtcp, true, commtcp.localaddr, commtcp.localport));
 			assert(commtcp_get_portinfo(&commtcp, false, commtcp.peeraddr, commtcp.peerport));
 
-			bool ok = commevts_socket(commevts, &commtcp, &bindfd->finishedcb);
+			bool ok = commevts_socket(commevts, &commtcp, &bindfd->cbinfo);
 
 			if (!ok) {
 				/* fd添加到struct comm_evts中进行监控失败，则忽略并关闭此描述符 */
@@ -540,13 +533,16 @@ static int commevts_accept(struct comm_evts *commevts, struct bindfd_info *bindf
 	} while (1);
 }
 
-static void do_open_or_close(struct comm_evts *commevts, int fd)
+static void do_work_step(struct comm_evts *commevts, int fd)
 {
 	struct connfd_info *connfd = commevts->connfd[fd];
 
 	if (connfd) {
-		/*connect事件.*/
-		if (connfd->workstep == STEP_WAIT) {
+		/*connect/accept事件.*/
+		if (connfd->cbinfo.fcb) {
+			connfd->cbinfo.fcb(commevts->commctx, connfd->commtcp.rsocket.sktfd, connfd->workstep, connfd->cbinfo.usr);
+		}
+		if (connfd->workstep == STEP_INIT) {
 			/*open*/
 			bool ok = commepoll_add(&commevts->commepoll, fd, EPOLLIN | EPOLLET, EVT_TYPE_SOCK);
 
@@ -555,6 +551,11 @@ static void do_open_or_close(struct comm_evts *commevts, int fd)
 			} else {
 				connfd->workstep = STEP_HAND;
 			}
+		}
+		
+		if (connfd->workstep == STEP_ERRO) {
+			commepoll_del(&commevts->commepoll, fd, -1, EVT_TYPE_NULL);
+			//TODO
 		}
 
 		if (connfd->workstep == STEP_STOP) {
@@ -569,7 +570,7 @@ static void do_open_or_close(struct comm_evts *commevts, int fd)
 			free(connfd);
 			commevts->connfd[fd] = NULL;
 			commevts->connfdcnt--;
-			close(fd);
+			rsocket_close(&connfd->commtcp.rsocket);
 		}
 	} else {
 		int fdidx = gain_bindfd_fdidx(commevts, fd);
@@ -578,7 +579,10 @@ static void do_open_or_close(struct comm_evts *commevts, int fd)
 			/*listen事件.*/
 			struct bindfd_info *bindfd = &commevts->bindfd[fdidx];
 
-			if (bindfd->workstep == STEP_WAIT) {
+			if (bindfd->cbinfo.fcb) {
+				bindfd->cbinfo.fcb(commevts->commctx, bindfd->commtcp.rsocket.sktfd, bindfd->workstep, bindfd->cbinfo.usr);
+			}
+			if (bindfd->workstep == STEP_INIT) {
 				/*open*/
 				bool ok = commepoll_add(&commevts->commepoll, fd, EPOLLIN | EPOLLET, EVT_TYPE_SOCK);
 
@@ -587,6 +591,11 @@ static void do_open_or_close(struct comm_evts *commevts, int fd)
 				} else {
 					bindfd->workstep = STEP_HAND;
 				}
+			}
+
+			if (bindfd->workstep == STEP_ERRO) {
+				commepoll_del(&commevts->commepoll, fd, -1, EVT_TYPE_NULL);
+				//TODO
 			}
 
 			if (bindfd->workstep == STEP_STOP) {
@@ -604,7 +613,7 @@ static void do_open_or_close(struct comm_evts *commevts, int fd)
 				}
 
 				commevts->bindfdcnt--;
-				close(fd);
+				rsocket_close(&bindfd->commtcp.rsocket);
 			}
 		}
 	}
@@ -664,22 +673,22 @@ void commevts_once(struct comm_evts *commevts)
 					//TODO: fix FD_CLOSE to call below.
 					struct connfd_info *connfd = commevts->connfd[fd];
 					if (connfd) {
-						if (connfd->finishedcb.callback) {
-							connfd->finishedcb.callback(commevts->commctx, &connfd->commtcp, connfd->finishedcb.usr);
+						if (connfd->cbinfo.callback) {
+							connfd->cbinfo.callback(commevts->commctx, &connfd->commtcp, connfd->cbinfo.usr);
 						}
 					} else {
 						int fdidx = gain_bindfd_fdidx(commevts, fd);
 
 						if (fdidx >= 0) {
 							struct bindfd_info      *bindfd = &commevts->bindfd[fdidx];
-							if (bindfd->finishedcb.callback) {
-								bindfd->finishedcb.callback(commevts->commctx, &bindfd->commtcp, bindfd->finishedcb.usr);
+							if (bindfd->cbinfo.callback) {
+								bindfd->cbinfo.callback(commevts->commctx, &bindfd->commtcp, bindfd->cbinfo.usr);
 							}
 						}
 					}
 #endif
 
-					do_open_or_close(commevts, fd);
+					do_work_step(commevts, fd);
 				}
 
 				if (fhand == commevts->sendpipe.rfd) {
@@ -691,10 +700,7 @@ void commevts_once(struct comm_evts *commevts)
 
 						if (!ok) {
 							connfd->workstep = STEP_ERRO;
-							if (connfd->finishedcb.callback) {
-								connfd->finishedcb.callback(commevts->commctx, &connfd->commtcp, connfd->finishedcb.usr);
-							}
-
+							do_work_step(commevts, fd);
 							continue;
 						}
 
@@ -706,10 +712,7 @@ void commevts_once(struct comm_evts *commevts)
 
 							if (!ok) {
 								connfd->workstep = STEP_ERRO;
-								if (connfd->finishedcb.callback) {
-									connfd->finishedcb.callback(commevts->commctx, &connfd->commtcp, connfd->finishedcb.usr);
-								}
-
+								do_work_step(commevts, fd);
 								continue;
 							}
 						}
@@ -726,12 +729,8 @@ void commevts_once(struct comm_evts *commevts)
 
 			if (connfd) {
 				if (evts->events & EPOLLERR) {
-					commepoll_del(&commevts->commepoll, fhand, -1, EVT_TYPE_NULL);
-
-					if (connfd->finishedcb.callback) {
-						connfd->finishedcb.callback(commevts->commctx, &connfd->commtcp, connfd->finishedcb.usr);
-					}
-
+					connfd->workstep = STEP_ERRO;
+					do_work_step(commevts, fhand);
 					continue;
 				}
 
@@ -741,12 +740,7 @@ void commevts_once(struct comm_evts *commevts)
 
 					if (!ok) {
 						connfd->workstep = STEP_ERRO;
-						commepoll_del(&commevts->commepoll, fhand, -1, EVT_TYPE_NULL);
-
-						if (connfd->finishedcb.callback) {
-							connfd->finishedcb.callback(commevts->commctx, &connfd->commtcp, connfd->finishedcb.usr);
-						}
-
+						do_work_step(commevts, fhand);
 						continue;
 					}
 
@@ -756,12 +750,7 @@ void commevts_once(struct comm_evts *commevts)
 					if (ret == -1) {
 						// TODO:设置断开连接标志
 						connfd->workstep = STEP_ERRO;
-						commepoll_del(&commevts->commepoll, fhand, -1, EVT_TYPE_NULL);
-
-						if (connfd->finishedcb.callback) {
-							connfd->finishedcb.callback(commevts->commctx, &connfd->commtcp, connfd->finishedcb.usr);
-						}
-
+						do_work_step(commevts, fhand);
 						continue;
 					}
 
@@ -779,12 +768,7 @@ void commevts_once(struct comm_evts *commevts)
 
 					if (!ok) {
 						connfd->workstep = STEP_ERRO;
-						commepoll_del(&commevts->commepoll, fhand, -1, EVT_TYPE_NULL);
-
-						if (connfd->finishedcb.callback) {
-							connfd->finishedcb.callback(commevts->commctx, &connfd->commtcp, connfd->finishedcb.usr);
-						}
-
+						do_work_step(commevts, fhand);
 						continue;
 					}
 
@@ -801,17 +785,14 @@ void commevts_once(struct comm_evts *commevts)
 					int                     fd = commevts_accept(commevts, bindfd);
 
 					struct connfd_info *connfd = commevts->connfd[fd];
-					connfd->workstep = STEP_WAIT;
-					do_open_or_close(commevts, fd);
+
+					connfd->workstep = STEP_INIT;
+					do_work_step(commevts, fd);
 
 					loger("listen fd:%d accept fd:%d\n", bindfd->commtcp.rsocket.sktfd, fd);
 					loger("accept fd localport: %s local addr:%s peerport:%s peeraddr:%s\n",
 						connfd->commtcp.localport, connfd->commtcp.localaddr,
 						connfd->commtcp.peerport, connfd->commtcp.peeraddr);
-
-					if (bindfd->finishedcb.callback) {
-						bindfd->finishedcb.callback(commevts->commctx, &connfd->commtcp, bindfd->finishedcb.usr);
-					}
 				}
 			}
 		}
