@@ -53,7 +53,8 @@ int commdata_parse(struct comm_data *commdata);
 enum STEP_CODE
 {
 	STEP_WAIT = 0,
-	STEP_HAND,
+	STEP_HAND,	/*进入正常状态*/
+	STEP_ERRO,	/*进入异常状态*/
 	STEP_STOP,
 };
 

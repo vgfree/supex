@@ -230,7 +230,7 @@ bool commconnfd_send(struct connfd_info *connfd)
 	struct comm_data *commdata = &connfd->commdata;
 
 	if (commdata->send_cache.size > 0) {
-		int bytes = socket_send(&connfd->commtcp, &commdata->send_cache.buffer[commdata->send_cache.start], commdata->send_cache.size);
+		int bytes = rsocket_send(&connfd->commtcp.rsocket, &commdata->send_cache.buffer[commdata->send_cache.start], commdata->send_cache.size);
 
 		if (bytes < 0) {
 			return false;
@@ -257,7 +257,7 @@ bool commconnfd_recv(struct connfd_info *connfd)
 
 	struct comm_data *commdata = &connfd->commdata;
 
-	while ((bytes = socket_recv(&connfd->commtcp, buff, COMM_READ_MIOU)) > 0) {
+	while ((bytes = rsocket_recv(&connfd->commtcp.rsocket, buff, COMM_READ_MIOU)) > 0) {
 		commcache_append(&commdata->recv_cache, buff, bytes);
 
 		if (bytes < COMM_READ_MIOU) {
@@ -324,7 +324,7 @@ void commevts_free(struct comm_evts *commevts)
 		/* 删除所有类型为COMM_BIND的fd相关信息 */
 		while (commevts->bindfdcnt) {
 			struct bindfd_info *bindfd = &commevts->bindfd[commevts->bindfdcnt - 1];
-			fd = bindfd->commtcp.fd;
+			fd = bindfd->commtcp.rsocket.sktfd;
 			commepoll_del(&commevts->commepoll, fd, -1, EVT_TYPE_NULL);
 			close(fd);
 			loger("close bindfd %d\n", fd);
@@ -353,13 +353,13 @@ void commevts_free(struct comm_evts *commevts)
 
 bool commevts_socket(struct comm_evts *commevts, struct comm_tcp *commtcp, struct cbinfo *finishedcb)
 {
-	assert(commevts && commevts->init && commtcp && commtcp->fd > 0);
+	assert(commevts && commevts->init && commtcp && commtcp->rsocket.sktfd > 0);
 
 	/* 添加一个fd进行监听 */
 	if ((commtcp->type == COMM_CONNECT) || (commtcp->type == COMM_ACCEPT)) {
 		if (commtcp->type == COMM_ACCEPT) {
 			/* 连接到服务器端的socket设置keepalive选项 */
-			if (unlikely(!set_keepalive(commtcp->fd))) {
+			if (unlikely(!set_keepalive(commtcp->rsocket.sktfd))) {
 				return false;
 			}
 		}
@@ -380,7 +380,7 @@ bool commevts_socket(struct comm_evts *commevts, struct comm_tcp *commtcp, struc
 			return false;
 		}
 
-		commevts->connfd[commtcp->fd] = connfd;
+		commevts->connfd[commtcp->rsocket.sktfd] = connfd;
 
 		commevts->connfdcnt++;
 	} else {
@@ -396,9 +396,9 @@ bool commevts_socket(struct comm_evts *commevts, struct comm_tcp *commtcp, struc
 		commevts->bindfdcnt++;
 	}
 
-	write(commevts->cmdspipe.wfd, (void *)&commtcp->fd, sizeof(commtcp->fd));
+	write(commevts->cmdspipe.wfd, (void *)&commtcp->rsocket.sktfd, sizeof(commtcp->rsocket.sktfd));
 
-	loger("commtcp local port:%d addr:%s peer port:%d addr:%s\n",
+	loger("commtcp local port:%s addr:%s peer port:%s addr:%s\n",
 		commtcp->localport, commtcp->localaddr, commtcp->peerport, commtcp->peeraddr);
 	return true;
 }
@@ -474,7 +474,7 @@ static inline int gain_bindfd_fdidx(struct comm_evts *commevts, int fd)
 	int fdidx = 0;
 
 	for (fdidx = 0; fdidx < commevts->bindfdcnt; fdidx++) {
-		if (fd == commevts->bindfd[fdidx].commtcp.fd) {
+		if (fd == commevts->bindfd[fdidx].commtcp.rsocket.sktfd) {
 			return fdidx;
 		}
 	}
@@ -509,10 +509,16 @@ static int commevts_accept(struct comm_evts *commevts, struct bindfd_info *bindf
 
 	do {
 		/* 循环处理accept直到所有新连接都处理完毕退出 */
-		struct comm_tcp commtcp = {};
-		int             fd = socket_accept(&bindfd->commtcp, &commtcp);
+		int             fd = rsocket_accept(&bindfd->commtcp.rsocket);
 
 		if (fd > 0) {
+			struct comm_tcp commtcp = {};
+			commtcp.rsocket.sktfd = fd;
+			commtcp.type = COMM_ACCEPT;
+
+			assert(commtcp_get_portinfo(&commtcp, true, commtcp.localaddr, commtcp.localport));
+			assert(commtcp_get_portinfo(&commtcp, false, commtcp.peeraddr, commtcp.peerport));
+
 			bool ok = commevts_socket(commevts, &commtcp, &bindfd->finishedcb);
 
 			if (!ok) {
@@ -647,6 +653,13 @@ void commevts_once(struct comm_evts *commevts)
 
 				if (fhand == commevts->cmdspipe.rfd) {
 #if 0
+		// connect
+		if (unlikely(!rsocket_connect(&commtcp))) {
+			loger("connect socket failed\n");
+			return -1;
+		}
+		assert(_get_portinfo(commtcp, true);
+
 					//TODO: add FD_ERRO to commapi_close()
 					//TODO: fix FD_CLOSE to call below.
 					struct connfd_info *connfd = commevts->connfd[fd];
@@ -677,6 +690,7 @@ void commevts_once(struct comm_evts *commevts)
 						bool ok = commconnfd_send(connfd);
 
 						if (!ok) {
+							connfd->workstep = STEP_ERRO;
 							if (connfd->finishedcb.callback) {
 								connfd->finishedcb.callback(commevts->commctx, &connfd->commtcp, connfd->finishedcb.usr);
 							}
@@ -691,6 +705,7 @@ void commevts_once(struct comm_evts *commevts)
 							ok = commconnfd_send(connfd);
 
 							if (!ok) {
+								connfd->workstep = STEP_ERRO;
 								if (connfd->finishedcb.callback) {
 									connfd->finishedcb.callback(commevts->commctx, &connfd->commtcp, connfd->finishedcb.usr);
 								}
@@ -725,6 +740,7 @@ void commevts_once(struct comm_evts *commevts)
 					bool ok = commconnfd_recv(connfd);
 
 					if (!ok) {
+						connfd->workstep = STEP_ERRO;
 						commepoll_del(&commevts->commepoll, fhand, -1, EVT_TYPE_NULL);
 
 						if (connfd->finishedcb.callback) {
@@ -739,7 +755,7 @@ void commevts_once(struct comm_evts *commevts)
 
 					if (ret == -1) {
 						// TODO:设置断开连接标志
-						connfd->commtcp.stat = FD_CLOSE;// ?
+						connfd->workstep = STEP_ERRO;
 						commepoll_del(&commevts->commepoll, fhand, -1, EVT_TYPE_NULL);
 
 						if (connfd->finishedcb.callback) {
@@ -762,6 +778,7 @@ void commevts_once(struct comm_evts *commevts)
 					bool ok = commconnfd_send(connfd);
 
 					if (!ok) {
+						connfd->workstep = STEP_ERRO;
 						commepoll_del(&commevts->commepoll, fhand, -1, EVT_TYPE_NULL);
 
 						if (connfd->finishedcb.callback) {
@@ -787,8 +804,8 @@ void commevts_once(struct comm_evts *commevts)
 					connfd->workstep = STEP_WAIT;
 					do_open_or_close(commevts, fd);
 
-					loger("listen fd:%d accept fd:%d\n", bindfd->commtcp.fd, fd);
-					loger("accept fd localport: %d local addr:%s peerport:%d peeraddr:%s\n",
+					loger("listen fd:%d accept fd:%d\n", bindfd->commtcp.rsocket.sktfd, fd);
+					loger("accept fd localport: %s local addr:%s peerport:%s peeraddr:%s\n",
 						connfd->commtcp.localport, connfd->commtcp.localaddr,
 						connfd->commtcp.peerport, connfd->commtcp.peeraddr);
 

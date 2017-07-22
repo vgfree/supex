@@ -112,26 +112,34 @@ int commapi_socket(struct comm_context *commctx, const char *host, const char *p
 			return -1;
 		}
 
-		if (unlikely(!socket_listen(&commtcp, host, port))) {
+		if (unlikely(rsocket_open(&commtcp.rsocket, host, port))) {
+			loger("create socket failed\n");
+			return -1;
+		}
+		if (unlikely(rsocket_bind_and_listen(&commtcp.rsocket))) {
 			loger("bind socket failed\n");
 			return -1;
 		}
+		commtcp.type = COMM_BIND;
+		commtcp_set_portinfo(&commtcp, true, host, port);
 	} else {
 		if (commctx->commevts.connfdcnt >= EPOLL_SIZE) {
 			loger("conn too many socket in one comm_context\n");
 			return -1;
 		}
 
-		if (unlikely(!socket_connect(&commtcp, host, port, 0))) {
-			loger("connect socket failed\n");
+		if (unlikely(rsocket_open(&commtcp.rsocket, host, port))) {
+			loger("create socket failed\n");
 			return -1;
 		}
+		commtcp.type = COMM_CONNECT;
+		commtcp_set_portinfo(&commtcp, false, host, port);
 	}
 
 	bool ok = commevts_socket(&commctx->commevts, &commtcp, finishedcb);
 
 	if (!ok) {
-		close(commtcp.fd);
+		rsocket_close(&commtcp.rsocket);
 		loger("add socket fd to monitor failed\n");
 		return -1;
 	}
@@ -145,7 +153,7 @@ int commapi_socket(struct comm_context *commctx, const char *host, const char *p
 		}
 	}
 
-	return commtcp.fd;
+	return commtcp.rsocket.sktfd;
 }
 
 int commapi_send(struct comm_context *commctx, struct comm_message *message)
