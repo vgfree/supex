@@ -16,6 +16,7 @@
 #include "comm_list.h"
 #include "comm_cache.h"
 #include "comm_pipe.h"
+#include "comm_slist.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -101,6 +102,8 @@ struct comm_evts
 	// int			recvevfd;
 
 	struct comm_pipe        cmdspipe;		/* 记录有open/close的fd信息 */
+
+	struct comm_slist	timeslist;
 
 	struct comm_epoll       commepoll;		/* epoll监听事件的相关信息 */
 

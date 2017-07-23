@@ -291,6 +291,8 @@ struct comm_evts *commevts_make(struct comm_evts *commevts)
 	commpipe_create(&commevts->recvpipe);
 	// commevts->recvevfd = eventfd(0, EFD_NONBLOCK);
 
+	commslist_init(&commevts->timeslist, NULL, NULL);
+
 	commepoll_init(&commevts->commepoll, EPOLL_SIZE);
 	commepoll_add(&commevts->commepoll, commevts->cmdspipe.rfd, EPOLLET | EPOLLIN, EVT_TYPE_PIPE);
 	commepoll_add(&commevts->commepoll, commevts->sendpipe.rfd, EPOLLET | EPOLLIN, EVT_TYPE_PIPE);
@@ -340,6 +342,8 @@ void commevts_free(struct comm_evts *commevts)
 		commpipe_destroy(&commevts->recvpipe);
 		// close(commevts->sendevfd);
 		// close(commevts->recvevfd);
+
+		commslist_destroy(&commevts->timeslist);
 
 		commepoll_destroy(&commevts->commepoll);
 
