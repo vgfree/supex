@@ -661,31 +661,19 @@ void commevts_once(struct comm_evts *commevts)
 				int fd = fda[i];
 
 				if (fhand == commevts->cmdspipe.rfd) {
-#if 0
-		// connect
-		if (unlikely(!rsocket_connect(&commtcp))) {
-			loger("connect socket failed\n");
-			return -1;
-		}
-		assert(_get_portinfo(commtcp, true);
-
-					//TODO: add FD_ERRO to commapi_close()
-					//TODO: fix FD_CLOSE to call below.
 					struct connfd_info *connfd = commevts->connfd[fd];
-					if (connfd) {
-						if (connfd->cbinfo.callback) {
-							connfd->cbinfo.callback(commevts->commctx, &connfd->commtcp, connfd->cbinfo.usr);
+					if (connfd && (connfd->commtcp.type == COMM_CONNECT)
+							&& (connfd->workstep == STEP_INIT)) {
+						if (unlikely(rsocket_connect(&connfd->commtcp.rsocket))) {
+							loger("connect socket failed\n");
+							connfd->workstep = STEP_WAIT;
+						} else {
+							connfd->workstep = STEP_INIT;
 						}
-					} else {
-						int fdidx = gain_bindfd_fdidx(commevts, fd);
-
-						if (fdidx >= 0) {
-							struct bindfd_info      *bindfd = &commevts->bindfd[fdidx];
-							if (bindfd->cbinfo.callback) {
-								bindfd->cbinfo.callback(commevts->commctx, &bindfd->commtcp, bindfd->cbinfo.usr);
-							}
-						}
+						assert(commtcp_get_portinfo(&connfd->commtcp, true, connfd->commtcp.localaddr, connfd->commtcp.localport));
 					}
+#if 0
+					//TODO: add FD_ERRO to commapi_close()
 #endif
 
 					do_work_step(commevts, fd);

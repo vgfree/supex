@@ -132,8 +132,6 @@ int commapi_socket(struct comm_context *commctx, const char *host, const char *p
 			loger("create socket failed\n");
 			return -1;
 		}
-		if (unlikely(rsocket_connect(&commtcp.rsocket))) {
-		}
 		commtcp.type = COMM_CONNECT;
 		commtcp_set_portinfo(&commtcp, false, host, port);
 	}
