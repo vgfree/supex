@@ -518,7 +518,7 @@ static int commevts_accept(struct comm_evts *commevts, struct bindfd_info *bindf
 		if (fd > 0) {
 			struct comm_tcp commtcp = {};
 			commtcp.rsocket.sktfd = fd;
-			commtcp.rsocket.sktstat = RSOCKET_JARLESS;
+			commtcp.rsocket.sktstat = RSOCKET_JARLESS;/*如果不设,读写操作会失败.*/
 			commtcp.type = COMM_ACCEPT;
 
 			assert(commtcp_get_portinfo(&commtcp, true, commtcp.localaddr, commtcp.localport));
