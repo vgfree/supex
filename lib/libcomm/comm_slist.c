@@ -8,7 +8,7 @@
  * commslist_create receives function pointers to cf and df, then it allocates enough space on the heap for a struct of comm_slist, !!warning!! sizeof(struct comm_slist *)
  *   does not provide sufficient space then you set all of the allocates memory to 0 so we know that everything points to * "empty"
  **************************************************/
-void commslist_make(struct comm_slist *slist, SLIST_COMPARE_FUNC cf, SLIST_DESTRUCT_FUNC df)
+void commslist_init(struct comm_slist *slist, SLIST_COMPARE_FUNC cf, SLIST_DESTRUCT_FUNC df)
 {
 	memset(slist, 0, sizeof(struct comm_slist));
 	slist->cmp_fcb = cf;

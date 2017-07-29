@@ -17,6 +17,7 @@
 #include "comm_cache.h"
 #include "comm_pipe.h"
 #include "comm_slist.h"
+#include "comm_timer.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -81,7 +82,8 @@ enum
 {
 	EVT_TYPE_NULL = 0x00,
 	EVT_TYPE_PIPE = 0x01,
-	EVT_TYPE_SOCK = 0x10,
+	EVT_TYPE_SOCK = 0x02,
+	EVT_TYPE_TIME = 0x03,
 };
 
 /* 事件相关信息 */
@@ -104,6 +106,7 @@ struct comm_evts
 	struct comm_pipe        cmdspipe;		/* 记录有open/close的fd信息 */
 
 	struct comm_slist	timeslist;
+	struct comm_timer	commtimer;
 
 	struct comm_epoll       commepoll;		/* epoll监听事件的相关信息 */
 

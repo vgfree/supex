@@ -2,7 +2,7 @@
 /************************	Created by 许莉 on 16/05/11.	******************************/
 /*********	 Copyright © 2016年 xuli. All rights reserved.	******************************/
 /*********************************************************************************************/
-
+#include <sys/time.h>
 #include "comm_confs.h"
 #include "comm_dispose_data.h"
 #include "comm_dispose_evts.h"
@@ -291,11 +291,13 @@ struct comm_evts *commevts_make(struct comm_evts *commevts)
 	commpipe_create(&commevts->recvpipe);
 	// commevts->recvevfd = eventfd(0, EFD_NONBLOCK);
 
-	commslist_init(&commevts->timeslist, NULL, NULL);
-
 	commepoll_init(&commevts->commepoll, EPOLL_SIZE);
 	commepoll_add(&commevts->commepoll, commevts->cmdspipe.rfd, EPOLLET | EPOLLIN, EVT_TYPE_PIPE);
 	commepoll_add(&commevts->commepoll, commevts->sendpipe.rfd, EPOLLET | EPOLLIN, EVT_TYPE_PIPE);
+
+	commslist_init(&commevts->timeslist, NULL, NULL);
+	assert(commtimer_init(&commevts->commtimer) == 0);
+	commepoll_add(&commevts->commepoll, commevts->commtimer.tmfd, EPOLLET | EPOLLIN, EVT_TYPE_TIME);
 
 	commevts->init = true;
 
@@ -345,6 +347,9 @@ void commevts_free(struct comm_evts *commevts)
 
 		commslist_destroy(&commevts->timeslist);
 
+		commepoll_del(&commevts->commepoll, commevts->commtimer.tmfd, -1, EVT_TYPE_NULL);
+		commtimer_free(&commevts->commtimer);
+
 		commepoll_destroy(&commevts->commepoll);
 
 		commevts->init = false;
@@ -393,7 +398,9 @@ bool commevts_socket(struct comm_evts *commevts, struct comm_tcp *commtcp, struc
 		commevts->bindfdcnt++;
 	}
 
-	write(commevts->cmdspipe.wfd, (void *)&commtcp->rsocket.sktfd, sizeof(commtcp->rsocket.sktfd));
+	if (commtcp->type != COMM_ACCEPT) {
+		write(commevts->cmdspipe.wfd, (void *)&commtcp->rsocket.sktfd, sizeof(commtcp->rsocket.sktfd));
+	}
 
 	loger("commtcp local port:%s addr:%s peer port:%s addr:%s\n",
 		commtcp->localport, commtcp->localaddr, commtcp->peerport, commtcp->peeraddr);
@@ -537,44 +544,68 @@ static int commevts_accept(struct comm_evts *commevts, struct bindfd_info *bindf
 	} while (1);
 }
 
+uint64_t get_time_of_day(void)
+{
+        struct timeval tv;
+
+        if(gettimeofday(&tv,NULL))
+                return 0;
+        else
+                return (double)tv.tv_sec * 1000 + ((double)tv.tv_usec) / 1000;
+}
+
 static void do_work_step(struct comm_evts *commevts, int fd)
 {
+	bool ok = false;
+	uint64_t score = 0;
 	struct connfd_info *connfd = commevts->connfd[fd];
-
 	if (connfd) {
+		int workstep = connfd->workstep;
 		/*connect/accept事件.*/
 		if (connfd->cbinfo.fcb) {
 			connfd->cbinfo.fcb(commevts->commctx, connfd->commtcp.rsocket.sktfd, connfd->workstep, connfd->cbinfo.usr);
 		}
-		if (connfd->workstep == STEP_INIT) {
-			/*open*/
-			bool ok = commepoll_add(&commevts->commepoll, fd, EPOLLIN | EPOLLET, EVT_TYPE_SOCK);
 
-			if (!ok) {
-				loger("add connect evt faild!\n");
-			} else {
-				connfd->workstep = STEP_HAND;
-			}
-		}
-		
-		if (connfd->workstep == STEP_ERRO) {
-			commepoll_del(&commevts->commepoll, fd, -1, EVT_TYPE_NULL);
-			//TODO
-		}
+		switch (workstep) {
+			case STEP_INIT:
+				/*open*/
+				ok = commepoll_add(&commevts->commepoll, fd, EPOLLIN | EPOLLET, EVT_TYPE_SOCK);
+				if (!ok) {
+					loger("add connect/accept evt faild!\n");
+				} else {
+					connfd->workstep = STEP_HAND;
+				}
+				break;
+			case STEP_ERRO:
+				/*user not close socket*/
+				commepoll_del(&commevts->commepoll, fd, -1, EVT_TYPE_NULL);
+				if (connfd->workstep == STEP_STOP) {
+					break;
+				}
+				connfd->workstep = STEP_WAIT;
+				/*fullthrouth*/
+			case STEP_WAIT:
+				score = get_time_of_day() + DELAY_RECONNECT_INTERVAL;
+				commslist_insert(&commevts->timeslist, (void *)fd, score);
+				if (commevts->commtimer.active == false) {
+					commtimer_wait(&commevts->commtimer, DELAY_RECONNECT_INTERVAL);
+				}
+				break;
+			case STEP_STOP:
+				/*close*/
+				ok = commepoll_del(&commevts->commepoll, fd, -1, EVT_TYPE_NULL);
+				if (!ok) {
+					loger("del connect/accept evt faild!\n");
+				}
 
-		if (connfd->workstep == STEP_STOP) {
-			/*close*/
-			bool ok = commepoll_del(&commevts->commepoll, fd, -1, EVT_TYPE_NULL);
-
-			if (!ok) {
-				loger("del connect evt faild!\n");
-			}
-
-			commdata_away(&connfd->commdata);
-			free(connfd);
-			commevts->connfd[fd] = NULL;
-			commevts->connfdcnt--;
-			rsocket_close(&connfd->commtcp.rsocket);
+				commdata_away(&connfd->commdata);
+				free(connfd);
+				commevts->connfd[fd] = NULL;
+				commevts->connfdcnt--;
+				rsocket_close(&connfd->commtcp.rsocket);
+				break;
+			default:
+				abort();
 		}
 	} else {
 		int fdidx = gain_bindfd_fdidx(commevts, fd);
@@ -582,42 +613,42 @@ static void do_work_step(struct comm_evts *commevts, int fd)
 		if (fdidx >= 0) {
 			/*listen事件.*/
 			struct bindfd_info *bindfd = &commevts->bindfd[fdidx];
+			int workstep = bindfd->workstep;
 
 			if (bindfd->cbinfo.fcb) {
 				bindfd->cbinfo.fcb(commevts->commctx, bindfd->commtcp.rsocket.sktfd, bindfd->workstep, bindfd->cbinfo.usr);
 			}
-			if (bindfd->workstep == STEP_INIT) {
-				/*open*/
-				bool ok = commepoll_add(&commevts->commepoll, fd, EPOLLIN | EPOLLET, EVT_TYPE_SOCK);
+			switch (workstep) {
+				case STEP_INIT:
+					/*open*/
+					ok = commepoll_add(&commevts->commepoll, fd, EPOLLIN | EPOLLET, EVT_TYPE_SOCK);
+					if (!ok) {
+						loger("add listen evt faild!\n");
+					} else {
+						bindfd->workstep = STEP_HAND;
+					}
+					break;
+				case STEP_ERRO:
+					commepoll_del(&commevts->commepoll, fd, -1, EVT_TYPE_NULL);
+					break;
+				case STEP_STOP:
+					/*close*/
+					ok = commepoll_del(&commevts->commepoll, fd, -1, EVT_TYPE_NULL);
+					if (!ok) {
+						loger("del listen evt faild!\n");
+					}
 
-				if (!ok) {
-					loger("add listen evt faild!\n");
-				} else {
-					bindfd->workstep = STEP_HAND;
-				}
-			}
+					if ((fdidx + 1) != commevts->bindfdcnt) {
+						/* 如果删除的fd不是最后一个fd，则将后面的fd数据往前拷贝 */
+						int size = sizeof(struct bindfd_info) * (commevts->bindfdcnt - fdidx - 1);
+						memmove(&commevts->bindfd[fdidx], &commevts->bindfd[fdidx + 1], size);
+					}
 
-			if (bindfd->workstep == STEP_ERRO) {
-				commepoll_del(&commevts->commepoll, fd, -1, EVT_TYPE_NULL);
-				//TODO
-			}
-
-			if (bindfd->workstep == STEP_STOP) {
-				/*close*/
-				bool ok = commepoll_del(&commevts->commepoll, fd, -1, EVT_TYPE_NULL);
-
-				if (!ok) {
-					loger("del listen evt faild!\n");
-				}
-
-				if ((fdidx + 1) != commevts->bindfdcnt) {
-					/* 如果删除的fd不是最后一个fd，则将后面的fd数据往前拷贝 */
-					int size = sizeof(struct bindfd_info) * (commevts->bindfdcnt - fdidx - 1);
-					memmove(&commevts->bindfd[fdidx], &commevts->bindfd[fdidx + 1], size);
-				}
-
-				commevts->bindfdcnt--;
-				rsocket_close(&bindfd->commtcp.rsocket);
+					commevts->bindfdcnt--;
+					rsocket_close(&bindfd->commtcp.rsocket);
+					break;
+				default:
+					abort();
 			}
 		}
 	}
@@ -676,9 +707,6 @@ void commevts_once(struct comm_evts *commevts)
 						}
 						assert(commtcp_get_portinfo(&connfd->commtcp, true, connfd->commtcp.localaddr, connfd->commtcp.localport));
 					}
-#if 0
-					//TODO: add FD_ERRO to commapi_close()
-#endif
 
 					do_work_step(commevts, fd);
 				}
@@ -713,6 +741,40 @@ void commevts_once(struct comm_evts *commevts)
 							commepoll_mod(&commevts->commepoll, fd, EPOLLIN | EPOLLET | EPOLLOUT, EVT_TYPE_SOCK);
 						}
 					}
+				}
+			}
+		} else if (ftype == EVT_TYPE_TIME) {
+			if (evts->events & EPOLLIN) {
+				assert(fhand == commevts->commtimer.tmfd);
+				if (commtimer_grab(&commevts->commtimer)) {
+					uint64_t tline = get_time_of_day();
+					do {
+						void *ofd = 0;
+						uint64_t score = 0;
+						int leave = commslist_remove(&commevts->timeslist, &ofd, &score);
+						if (leave) {
+							int fd = (int)ofd;
+							if (score <= tline) {
+								struct connfd_info *connfd = commevts->connfd[fd];
+								if (connfd) {
+									if (unlikely(rsocket_connect(&connfd->commtcp.rsocket))) {
+										loger("connect socket failed\n");
+										connfd->workstep = STEP_WAIT;
+									} else {
+										connfd->workstep = STEP_INIT;
+									}
+								}
+								do_work_step(commevts, fd);
+							} else {
+								commslist_insert(&commevts->timeslist, (void *)fd, score);
+								commtimer_wait(&commevts->commtimer, score - tline);
+								break;
+							}
+						} else {
+							commtimer_stop(&commevts->commtimer);
+							break;
+						}
+					} while (1);
 				}
 			}
 		} else {

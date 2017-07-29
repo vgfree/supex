@@ -1,7 +1,29 @@
 #include <signal.h>
 #include "../comm_api.h"
 
-static void event_fun(struct comm_context *commctx, struct comm_tcp *commtcp, void *usr);
+static void event_fun(void *ctx, int socket, enum STEP_CODE step, void *usr)
+{
+	struct comm_context *commctx = (struct comm_context *)ctx;
+	switch (step)
+	{
+		case STEP_INIT:
+			printf("server here is accept : %d\n", socket);
+			break;
+
+		case STEP_ERRO:
+			printf("server here is error : %d\n", socket);
+			commapi_close(commctx, socket);
+			break;
+
+		case STEP_STOP:
+			printf("server here is close : %d\n", socket);
+			break;
+
+		default:
+			printf("server here is timeout\n");
+			break;
+	}
+}
 
 int main(int argc, char *argv[])
 {
@@ -23,7 +45,7 @@ int main(int argc, char *argv[])
 
 	/* 设置回调函数的相关信息 */
 	struct comm_cbinfo cbinfo = { 0 };
-	cbinfo.callback = event_fun;
+	cbinfo.fcb = event_fun;
 	cbinfo.usr = NULL;
 
 	/*创建多个监听端口*/
@@ -84,74 +106,5 @@ int main(int argc, char *argv[])
 	loger("going to detroy everything here\n");
 	commapi_ctx_destroy(commctx);
 	return 0;
-}
-
-void close_fun(void *usr)
-{
-#if 1
-	struct comm_tcp *commtcp = (struct comm_tcp *)usr;
-	printf("server here is close_fun():%d\n", commtcp->fd);
-#else
-	struct comm_message *message = (struct comm_message *)usr;
-	printf("server here is close_fun():%d\n", message->fd);
-	message->fd = -1;
-#endif
-}
-
-void write_fun(void *usr)
-{
-	struct comm_tcp *commtcp = (struct comm_tcp *)usr;
-
-	printf("server here is write_fun(): %d\n", commtcp->fd);
-}
-
-void read_fun(void *usr)
-{
-	struct comm_tcp *commtcp = (struct comm_tcp *)usr;
-
-	printf("server here is read_fun(): %d\n", commtcp->fd);
-}
-
-void accept_fun(void *usr)
-{
-	struct comm_tcp *commtcp = (struct comm_tcp *)usr;
-
-	printf("server here is accept_fun(): %d\n", commtcp->fd);
-}
-
-void timeout_fun(void *usr)
-{
-	struct comm_tcp *commtcp = (struct comm_tcp *)usr;
-
-	printf("server here is timeout_fun(): %d\n", commtcp->fd);
-}
-
-static void event_fun(struct comm_context *commctx, struct comm_tcp *commtcp, void *usr)
-{
-	switch (commtcp->stat)
-	{
-		case FD_CLOSE:
-			close_fun(commtcp);
-			commapi_close(commctx, commtcp->fd);
-			break;
-
-		case FD_WRITE:
-			write_fun(commtcp);
-			break;
-
-		case FD_READ:
-			read_fun(commtcp);
-			break;
-
-		case FD_INIT:
-
-			if (commtcp->type == COMM_ACCEPT) {
-				accept_fun(commtcp);
-			}
-
-		default:
-			timeout_fun(commtcp);
-			break;
-	}
 }
 

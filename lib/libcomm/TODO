@@ -1,8 +1,9 @@
 fd分别唤醒对应的线程
 pipe只做事件标记
-去除timer重连
 close安全问题
 recv and send check message is ok,
 发收包都要做check
 1.commapi_close如果在事件线程内执行，不用写管道？
 2.如果commapi_close被先调用，每取走的消息怎么办？
+
+close 时遍历清除timeslist

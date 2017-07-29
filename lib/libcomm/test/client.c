@@ -104,7 +104,26 @@ static void gain_package_data_null(struct comm_message *message, int fd)
 	message->package.frames_of_package[0] = 0;
 }
 
-static void event_fun(struct comm_context *commctx, struct comm_tcp *commtcp, void *usr);
+static void event_fun(void *ctx, int socket, enum STEP_CODE step, void *usr)
+{
+	struct comm_context *commctx = (struct comm_context *)ctx;
+	switch (step)
+	{
+		case STEP_INIT:
+			printf("client here is connect : %d\n", socket);
+			break;
+
+		case STEP_STOP:
+			printf("client here is close : %d\n", socket);
+			break;
+
+		default:
+			printf("client here is timeout\n");
+			break;
+	}
+}
+
+
 
 int main(int argc, char *argv[])
 {
@@ -131,7 +150,7 @@ int main(int argc, char *argv[])
 
 	/* 设置回调函数的相关信息 */
 	struct comm_cbinfo cbinfo = { 0 };
-	cbinfo.callback = event_fun;
+	cbinfo.fcb = event_fun;
 	cbinfo.usr = NULL;
 
 	int     i = 0;
@@ -205,64 +224,6 @@ int main(int argc, char *argv[])
 	return -1;
 }
 
-void close_fun(void *usr)
-{
-	struct comm_tcp *commtcp = (struct comm_tcp *)usr;
 
-	printf("client here is close_fun():%d\n", commtcp->fd);
-}
 
-void write_fun(void *usr)
-{
-	struct comm_tcp *commtcp = (struct comm_tcp *)usr;
-
-	printf("client here is write_fun(): %d\n", commtcp->fd);
-}
-
-void read_fun(void *usr)
-{
-	struct comm_tcp *commtcp = (struct comm_tcp *)usr;
-
-	printf("client here is read_fun(): %d\n", commtcp->fd);
-}
-
-void accept_fun(void *usr)
-{
-	struct comm_tcp *commtcp = (struct comm_tcp *)usr;
-
-	printf("client here is accept_fun(): %d\n", commtcp->fd);
-}
-
-void timeout_fun(void *usr)
-{
-	printf("client here is timeout_fun()\n");
-}
-
-static void event_fun(struct comm_context *commctx, struct comm_tcp *commtcp, void *usr)
-{
-	switch (commtcp->stat)
-	{
-		case FD_CLOSE:
-			close_fun(commtcp);
-			break;
-
-		case FD_WRITE:
-			write_fun(commtcp);
-			break;
-
-		case FD_READ:
-			read_fun(commtcp);
-			break;
-
-		case FD_INIT:
-
-			if (commtcp->type == COMM_ACCEPT) {
-				accept_fun(commtcp);
-			}
-
-		default:
-			timeout_fun(commtcp);
-			break;
-	}
-}
 

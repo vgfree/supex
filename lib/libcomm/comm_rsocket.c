@@ -20,7 +20,7 @@ static bool _get_addrinfo(struct addrinfo **ai, const char *host, const char *po
 	assert(ai && host && port);
 
 	struct addrinfo hints = {};
-#if 1
+#if 0
 	hints.ai_flags = AI_PASSIVE | AI_CANONNAME;
 	hints.ai_family = AF_UNSPEC;
 	hints.ai_socktype = SOCK_STREAM;

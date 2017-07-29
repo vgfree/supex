@@ -11,3 +11,4 @@
 
 #define EPOLLTIMEOUTED  20		/* epoll_wait的超时事件 以毫秒(ms)为单位 1s = 1000ms*/
 
+#define DELAY_RECONNECT_INTERVAL	2000/*2s*/
