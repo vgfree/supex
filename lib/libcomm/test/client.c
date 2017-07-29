@@ -113,12 +113,21 @@ static void event_fun(void *ctx, int socket, enum STEP_CODE step, void *usr)
 			printf("client here is connect : %d\n", socket);
 			break;
 
+		case STEP_ERRO:
+			printf("client here is error : %d\n", socket);
+			break;
+
+		case STEP_WAIT:
+			printf("client here is wait : %d\n", socket);
+			break;
+
+
 		case STEP_STOP:
 			printf("client here is close : %d\n", socket);
 			break;
 
 		default:
-			printf("client here is timeout\n");
+			printf("unknow!\n");
 			break;
 	}
 }

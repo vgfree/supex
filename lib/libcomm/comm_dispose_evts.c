@@ -578,20 +578,25 @@ static void do_work_step(struct comm_evts *commevts, int fd)
 				}
 				break;
 			case STEP_ERRO:
-				/*user not close socket*/
 				commepoll_del(&commevts->commepoll, fd, -1, EVT_TYPE_NULL);
 				if (connfd->workstep == STEP_STOP) {
 					break;
 				}
+				/*user not close socket*/
 				connfd->workstep = STEP_WAIT;
 				/*fullthrouth*/
 			case STEP_WAIT:
-				score = get_time_of_day() + DELAY_RECONNECT_INTERVAL;
-				commslist_insert(&commevts->timeslist, (void *)fd, score);
-				if (commevts->commtimer.active == false) {
-					commtimer_wait(&commevts->commtimer, DELAY_RECONNECT_INTERVAL);
+				if (connfd->commtcp.type == COMM_CONNECT) {
+					score = get_time_of_day() + DELAY_RECONNECT_INTERVAL;
+					commslist_insert(&commevts->timeslist, (void *)fd, score);
+					if (commevts->commtimer.active == false) {
+						commtimer_wait(&commevts->commtimer, DELAY_RECONNECT_INTERVAL);
+					}
+					break;
 				}
-				break;
+				/*accepter auto close socket*/
+				connfd->workstep = STEP_STOP;
+				/*fullthrouth*/
 			case STEP_STOP:
 				/*close*/
 				ok = commepoll_del(&commevts->commepoll, fd, -1, EVT_TYPE_NULL);

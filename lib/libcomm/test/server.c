@@ -15,12 +15,16 @@ static void event_fun(void *ctx, int socket, enum STEP_CODE step, void *usr)
 			commapi_close(commctx, socket);
 			break;
 
+		case STEP_WAIT:
+			printf("server here is wait : %d\n", socket);
+			break;
+
 		case STEP_STOP:
 			printf("server here is close : %d\n", socket);
 			break;
 
 		default:
-			printf("server here is timeout\n");
+			printf("unknow!\n");
 			break;
 	}
 }
