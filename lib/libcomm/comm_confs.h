@@ -10,5 +10,6 @@
 #define COMM_READ_MIOU  (1024 * 1024)	/* 一次性最多读取数据的字节数 */
 
 #define EPOLLTIMEOUTED  20		/* epoll_wait的超时事件 以毫秒(ms)为单位 1s = 1000ms*/
+//#define EPOLLTIMEOUTED  2000000		/* epoll_wait的超时事件 以毫秒(ms)为单位 1s = 1000ms*/
 
 #define DELAY_RECONNECT_INTERVAL	2000/*2s*/

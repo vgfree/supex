@@ -292,12 +292,12 @@ struct comm_evts *commevts_make(struct comm_evts *commevts)
 	// commevts->recvevfd = eventfd(0, EFD_NONBLOCK);
 
 	commepoll_init(&commevts->commepoll, EPOLL_SIZE);
-	commepoll_add(&commevts->commepoll, commevts->cmdspipe.rfd, EPOLLET | EPOLLIN, EVT_TYPE_PIPE);
-	commepoll_add(&commevts->commepoll, commevts->sendpipe.rfd, EPOLLET | EPOLLIN, EVT_TYPE_PIPE);
+	commepoll_add(&commevts->commepoll, commevts->cmdspipe.rfd, EPOLLERR | EPOLLIN, EVT_TYPE_PIPE);
+	commepoll_add(&commevts->commepoll, commevts->sendpipe.rfd, EPOLLERR | EPOLLIN, EVT_TYPE_PIPE);
 
 	commslist_init(&commevts->timeslist, NULL, NULL);
 	assert(commtimer_init(&commevts->commtimer) == 0);
-	commepoll_add(&commevts->commepoll, commevts->commtimer.tmfd, EPOLLET | EPOLLIN, EVT_TYPE_TIME);
+	commepoll_add(&commevts->commepoll, commevts->commtimer.tmfd, EPOLLERR | EPOLLIN, EVT_TYPE_TIME);
 
 	commevts->init = true;
 
@@ -518,6 +518,7 @@ static int commevts_accept(struct comm_evts *commevts, struct bindfd_info *bindf
 		if (fd > 0) {
 			struct comm_tcp commtcp = {};
 			commtcp.rsocket.sktfd = fd;
+			commtcp.rsocket.sktstat = RSOCKET_JARLESS;
 			commtcp.type = COMM_ACCEPT;
 
 			assert(commtcp_get_portinfo(&commtcp, true, commtcp.localaddr, commtcp.localport));
@@ -569,7 +570,7 @@ static void do_work_step(struct comm_evts *commevts, int fd)
 		switch (workstep) {
 			case STEP_INIT:
 				/*open*/
-				ok = commepoll_add(&commevts->commepoll, fd, EPOLLIN | EPOLLET, EVT_TYPE_SOCK);
+				ok = commepoll_add(&commevts->commepoll, fd, EPOLLERR | EPOLLIN, EVT_TYPE_SOCK);
 				if (!ok) {
 					loger("add connect/accept evt faild!\n");
 				} else {
@@ -621,7 +622,7 @@ static void do_work_step(struct comm_evts *commevts, int fd)
 			switch (workstep) {
 				case STEP_INIT:
 					/*open*/
-					ok = commepoll_add(&commevts->commepoll, fd, EPOLLIN | EPOLLET, EVT_TYPE_SOCK);
+					ok = commepoll_add(&commevts->commepoll, fd, EPOLLERR | EPOLLIN, EVT_TYPE_SOCK);
 					if (!ok) {
 						loger("add listen evt faild!\n");
 					} else {
@@ -738,7 +739,7 @@ void commevts_once(struct comm_evts *commevts)
 						}
 
 						if (connfd->commdata.send_cache.size) {
-							commepoll_mod(&commevts->commepoll, fd, EPOLLIN | EPOLLET | EPOLLOUT, EVT_TYPE_SOCK);
+							commepoll_mod(&commevts->commepoll, fd, EPOLLERR | EPOLLIN | EPOLLOUT, EVT_TYPE_SOCK);
 						}
 					}
 				}
@@ -827,7 +828,7 @@ void commevts_once(struct comm_evts *commevts)
 					}
 
 					if (!connfd->commdata.send_cache.size) {
-						commepoll_mod(&commevts->commepoll, fhand, EPOLLIN | EPOLLET, EVT_TYPE_SOCK);
+						commepoll_mod(&commevts->commepoll, fhand, EPOLLERR | EPOLLIN, EVT_TYPE_SOCK);
 					}
 				}
 			} else {

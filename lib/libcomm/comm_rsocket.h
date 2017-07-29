@@ -45,9 +45,9 @@ typedef struct rsocket
 	int             sktfd;	/* 套接字描述符 */
 
 	enum {
-		RSOCKET_UNCONNECT = 0,
-		RSOCKET_CONNECT,
-	} cntstat;
+		RSOCKET_FORSAKE = 0,
+		RSOCKET_JARLESS,
+	} sktstat;
 	/**
 	 * The address info that should be used to reconnect on disconnect.
 	 */

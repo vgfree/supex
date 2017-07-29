@@ -84,13 +84,13 @@ int rsocket_open(struct rsocket *rsocket, const char *host, const char *port)
 		rsocket->sktfd = -1;
 		rsocket->addrs = NULL;
 		rsocket->curr_addr = NULL;
-		rsocket->cntstat = RSOCKET_UNCONNECT;
+		rsocket->sktstat = RSOCKET_FORSAKE;
 		return -1;
 	} else {
 		rsocket->sktfd = sock;
 		rsocket->addrs = aires;
 		rsocket->curr_addr = aiptr;
-		rsocket->cntstat = RSOCKET_UNCONNECT;
+		rsocket->sktstat = RSOCKET_FORSAKE;
 		return 0;
 	}
 }
@@ -167,14 +167,14 @@ static int check_connect(int socketfd)
 int rsocket_connect(struct rsocket *rsocket)
 {
 	int ret = 0;
-	if (rsocket->cntstat == RSOCKET_CONNECT) {
+	if (rsocket->sktstat == RSOCKET_JARLESS) {
 		struct sockaddr addr = {.sa_family = AF_UNSPEC,};
 		ret = connect(rsocket->sktfd, &addr, sizeof(addr));
 		if (ret == -1) {
 			if (errno != EINPROGRESS) {}
 			return -1;
 		}
-		rsocket->cntstat = RSOCKET_UNCONNECT;
+		rsocket->sktstat = RSOCKET_FORSAKE;
 	}
 
 	ret = connect(rsocket->sktfd, rsocket->curr_addr->ai_addr, rsocket->curr_addr->ai_addrlen);
@@ -183,7 +183,7 @@ int rsocket_connect(struct rsocket *rsocket)
 			if (errno == EINPROGRESS || errno == EALREADY || errno == EWOULDBLOCK) {
 				ret = check_connect(rsocket->sktfd);
 				if (ret == 0) {
-					rsocket->cntstat = RSOCKET_CONNECT;
+					rsocket->sktstat = RSOCKET_JARLESS;
 				}
 				return ret;
 			}
@@ -191,7 +191,7 @@ int rsocket_connect(struct rsocket *rsocket)
 		}
 	}
 
-	rsocket->cntstat = RSOCKET_CONNECT;
+	rsocket->sktstat = RSOCKET_JARLESS;
 	return 0;
 }
 
@@ -201,22 +201,30 @@ int rsocket_bind_and_listen(struct rsocket *rsocket)
 	/* 设置地址可重用 */
 	int optval = 1;
 	if (setsockopt(rsocket->sktfd, SOL_SOCKET, SO_REUSEADDR, &optval, (socklen_t)sizeof(optval)) != 0) {
+		rsocket->sktstat = RSOCKET_FORSAKE;
 		return -1;
 	}
 
 	if (bind(rsocket->sktfd, rsocket->curr_addr->ai_addr, rsocket->curr_addr->ai_addrlen) != 0) {
+		rsocket->sktstat = RSOCKET_FORSAKE;
 		return -1;
 	}
 
 	/* 监听描述符 */
 	if (unlikely(listen(rsocket->sktfd, MAX_LISTENFDS) == -1)) {
+		rsocket->sktstat = RSOCKET_FORSAKE;
 		return -1;
 	}
+	rsocket->sktstat = RSOCKET_JARLESS;
 	return 0;
 }
 
 int rsocket_accept(struct rsocket *rsocket)
 {
+	if (rsocket->sktstat == RSOCKET_FORSAKE) {
+		return -1;
+	}
+
 	assert(rsocket->sktfd > 0);
 	int sktfd = accept(rsocket->sktfd, NULL, NULL);
 
@@ -253,13 +261,13 @@ void rsocket_close(struct rsocket *rsocket)
 	rsocket->sktfd = -1;
 	rsocket->addrs = NULL;
 	rsocket->curr_addr = NULL;
-	rsocket->cntstat = RSOCKET_UNCONNECT;
+	rsocket->sktstat = RSOCKET_FORSAKE;
 }
 
 
 int rsocket_send(struct rsocket *rsocket, char *data, size_t size)
 {
-	if (rsocket->cntstat == RSOCKET_UNCONNECT) {
+	if (rsocket->sktstat == RSOCKET_FORSAKE) {
 		return -1;
 	}
 
@@ -285,7 +293,7 @@ int rsocket_send(struct rsocket *rsocket, char *data, size_t size)
 
 int rsocket_recv(struct rsocket *rsocket, char *data, size_t size)
 {
-	if (rsocket->cntstat == RSOCKET_UNCONNECT) {
+	if (rsocket->sktstat == RSOCKET_FORSAKE) {
 		return -1;
 	}
 
