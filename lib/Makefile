@@ -40,7 +40,7 @@ libutils.a:
 	mv $(LIB_DIR)/utils/lib/$@ $(LIB_DIR)
 
 libzmq.a:
-	cd ./zeromq-4.2.1 && ./configure --with-pic --enable-shared=no --without-libsodium
+	cd ./zeromq-4.2.1 && sh ./configure --with-pic --enable-shared=no --without-libsodium
 	$(MAKE) -j16 -C $(LIB_DIR)/zeromq-4.2.1
 	mv $(LIB_DIR)/zeromq-4.2.1/src/.libs/$@ $(LIB_DIR)
 

@@ -46,8 +46,8 @@ static int work_init(void)
 	assert(commctx);
 
 	/*init client event*/
-	struct cbinfo clientCB = {};
-	clientCB.callback = client_event_notify;
+	struct comm_cbinfo clientCB = {};
+	clientCB.fcb = client_event_notify;
 	int retval = commapi_socket(commctx, clientHost, clientPort, &clientCB, COMM_BIND);
 	if (retval == -1) {
 		x_printf(E, "can't bind client socket, ip:%s, port:%s.", clientHost, clientPort);
@@ -57,9 +57,9 @@ static int work_init(void)
 	/*init messageGetway event*/
 	int msg_fd = 0;
 	if (MGcliHost) {
-		struct cbinfo MGCB = {};
-		MGCB.callback = message_gateway_event_notify;
-		msg_fd = commapi_socket(commctx, MGcliHost, MGcliPort, &MGCB, COMM_CONNECT);//TODO: | CONNECT_ANYWAY);
+		struct comm_cbinfo MGCB = {};
+		MGCB.fcb = message_gateway_event_notify;
+		msg_fd = commapi_socket(commctx, MGcliHost, MGcliPort, &MGCB, COMM_CONNECT);
 		if (msg_fd <= 0) {
 			x_printf(E, "connect message gateway failed.");
 			return -1;
@@ -80,9 +80,9 @@ static int work_init(void)
 	/*init setting event*/
 	int set_fd = 0;
 	if (settingServerHost) {
-		struct cbinfo settingServerCB = {};
-		settingServerCB.callback = setting_server_event_notify;
-		set_fd = commapi_socket(commctx, settingServerHost, settingServerPort, &settingServerCB, COMM_CONNECT);//TODO: | CONNECT_ANYWAY);
+		struct comm_cbinfo settingServerCB = {};
+		settingServerCB.fcb = setting_server_event_notify;
+		set_fd = commapi_socket(commctx, settingServerHost, settingServerPort, &settingServerCB, COMM_CONNECT);
 		if (set_fd <= 0) {
 			x_printf(E, "connect settingServer failed.");
 			return -1;
@@ -103,9 +103,9 @@ static int work_init(void)
 	/*init login event*/
 	int gin_fd = 0;
 	if (loginServerHost) {
-		struct cbinfo loginServerCB = {};
-		loginServerCB.callback = login_server_event_notify;
-		gin_fd = commapi_socket(commctx, loginServerHost, loginServerPort, &loginServerCB, COMM_CONNECT);//TODO: | CONNECT_ANYWAY);
+		struct comm_cbinfo loginServerCB = {};
+		loginServerCB.fcb = login_server_event_notify;
+		gin_fd = commapi_socket(commctx, loginServerHost, loginServerPort, &loginServerCB, COMM_CONNECT);
 		if (gin_fd <= 0) {
 			x_printf(E, "connect loginServer failed.");
 			return -1;

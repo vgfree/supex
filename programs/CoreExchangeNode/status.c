@@ -42,9 +42,9 @@ void send_status_msg(int clientfd, int status)
 	set_msg_frame(0, &msg, strlen(cid), cid);
 	x_printf(D, "send status:%d", status);
 
-	if (status == FD_INIT) {
+	if (status == STEP_INIT) {
 		set_msg_frame(0, &msg, 9, "connected");
-	} else if (status == FD_CLOSE) {
+	} else if (status == STEP_STOP) {
 		set_msg_frame(0, &msg, 6, "closed");
 	}
 

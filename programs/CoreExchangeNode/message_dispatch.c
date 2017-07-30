@@ -235,7 +235,7 @@ static void _erased_client(struct comm_message *msg)
 	erase_client(fd);
 	x_printf(D, "errase client fd:%d.", fd);
 
-	send_status_msg(fd, FD_CLOSE);
+	send_status_msg(fd, STEP_STOP);
 	
 	commapi_close(g_serv_info.commctx, fd);
 }

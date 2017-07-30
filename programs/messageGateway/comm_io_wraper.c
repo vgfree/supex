@@ -8,35 +8,55 @@
 #define NODE_SERVER_HOST          "NodeServer"
 #define NODE_SERVER_PORT        "NodePort"
 
-static void core_exchange_node_cb(struct comm_context   *commctx,
-	struct comm_tcp                                 *portinfo,
-	void                                            *usr)
+static void core_exchange_node_cb(void *ctx, int socket, enum STEP_CODE step, void *usr)
 {
-	x_printf(D, "callback, fd:%d, status:%d.", portinfo->fd, portinfo->stat);
+	struct comm_context *commctx = (struct comm_context *)ctx;
+	x_printf(D, "callback, fd:%d, status:%d.", socket, step);
 
-	if (portinfo->stat == FD_INIT) {
-		if (g_node_ptr->max_size > NODE_SIZE) {
-			x_printf(E, "core exchange node:%d > max size:%d.", g_node_ptr->max_size, NODE_SIZE);
-		}
-
-		g_node_ptr->fd_array[g_node_ptr->max_size++] = portinfo->fd;
-	} else if (portinfo->stat == FD_CLOSE) {
-		int i = 0;
-		for (; i < g_node_ptr->max_size; i++) {
-			if (g_node_ptr->fd_array[i] == portinfo->fd) {
-				break;
+	switch (step)
+	{
+		case STEP_INIT:
+			printf("server here is connect : %d\n", socket);
+			if (g_node_ptr->max_size > NODE_SIZE) {
+				x_printf(E, "core exchange node:%d > max size:%d.", g_node_ptr->max_size, NODE_SIZE);
 			}
-		}
 
-		for (; i < g_node_ptr->max_size - 1; i++) {
-			g_node_ptr->fd_array[i] = g_node_ptr->fd_array[i + 1];
-		}
+			g_node_ptr->fd_array[g_node_ptr->max_size++] = socket;
+			break;
 
-		if (g_node_ptr->max_size == i) {
-			x_printf(E, "not g_node fd_array no include this fd:%d.", portinfo->fd);
-		} else {
-			g_node_ptr->max_size--;
-		}
+		case STEP_ERRO:
+			printf("server here is error : %d\n", socket);
+			commapi_close(commctx, socket);
+			break;
+
+		case STEP_WAIT:
+			printf("server here is wait : %d\n", socket);
+			break;
+
+
+		case STEP_STOP:
+			printf("server here is close : %d\n", socket);
+			int i = 0;
+			for (; i < g_node_ptr->max_size; i++) {
+				if (g_node_ptr->fd_array[i] == socket) {
+					break;
+				}
+			}
+
+			for (; i < g_node_ptr->max_size - 1; i++) {
+				g_node_ptr->fd_array[i] = g_node_ptr->fd_array[i + 1];
+			}
+
+			if (g_node_ptr->max_size == i) {
+				x_printf(E, "not g_node fd_array no include this fd:%d.", socket);
+			} else {
+				g_node_ptr->max_size--;
+			}
+			break;
+
+		default:
+			printf("unknow!\n");
+			break;
 	}
 }
 
@@ -54,8 +74,8 @@ int init_comm_io(void)
 		return -1;
 	}
 
-	struct cbinfo callback_info = {};
-	callback_info.callback = core_exchange_node_cb;
+	struct comm_cbinfo callback_info = {};
+	callback_info.fcb = core_exchange_node_cb;
 
 	char    *nodeServer = get_config_name(config, NODE_SERVER_HOST);
 	char    *nodePort = get_config_name(config, NODE_SERVER_PORT);
