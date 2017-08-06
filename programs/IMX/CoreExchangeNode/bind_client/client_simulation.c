@@ -24,11 +24,11 @@ void *client_thread_read(void *usr)
 {
 	while (1) {
 		struct comm_message msg = {};
-		init_msg(&msg);
+		commmsg_make(&msg, DEFAULT_MSG_SIZE);
 		printf("start recv msg.\n");
 		commapi_recv(g_ctx, &msg);
 		int     size = 0;
-		char    *frame = get_msg_frame(0, &msg, &size);
+		char    *frame = commmsg_frame_get(&msg, 0, &size);
 		char    *buf = (char *)malloc((size + 1) * sizeof(char));
 		memcpy(buf, frame, size);
 		buf[size] = '\0';
@@ -66,7 +66,7 @@ void *client_thread_read(void *usr)
 
 			free(buf);
 			remove_first_nframe(get_max_msg_frame(&msg), &msg);
-			destroy_msg(&msg);
+			commmsg_free(&msg);
 		}
 	}
 
@@ -110,12 +110,12 @@ int test_simulate_client(char *ip)
 		print_current_time();
 		printf("\n" "\033[0m");
 		struct comm_message msg = {};
-		init_msg(&msg);
-		set_msg_fd(&msg, connectfd);
+		commmsg_make(&msg, DEFAULT_MSG_SIZE);
+		commmsg_sets(&msg, connectfd, 0, PUSH_METHOD);
 		set_msg_frame(0, &msg, strlen(str), str);
 		printf("\033[1;32;32m" "fgets input frames: %d\n" "\033[0m", msg.package.frames);
 		commapi_send(g_ctx, &msg);
-		destroy_msg(&msg);
+		commmsg_free(&msg);
 		//		sleep(10);
 	}
 

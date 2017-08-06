@@ -15,7 +15,7 @@ int downstream_msg(struct comm_message *msg)
 	 *   }
 	 *   x_printf(D, "frames_of_package：%d packages:%d dsize:%d\n", msg->package.frames_of_package[0], msg->package.packages, msg->package.dsize);*/
 	for (int i = 0; i < g_node_ptr->max_size; i++) {
-		msg->fd = g_node_ptr->fd_array[i];
+		commmsg_sets(msg, g_node_ptr->fd_array[i], 0, PUSH_METHOD);
 
 		if (send_msg(msg) == -1) {
 			x_printf(E, "wrong msg, msg fd:%d.", msg->fd);

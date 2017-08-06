@@ -9,14 +9,14 @@ int upstream_msg(void)
 	int i = 0;
 	struct comm_message msg = {};
 
-	init_msg(&msg);
+	commmsg_make(&msg, DEFAULT_MSG_SIZE);
 	recv_msg(&msg);
 	x_printf(D, "get_max_msg_frame, :%d", get_max_msg_frame(&msg));
 
 	for (i = 0; i < get_max_msg_frame(&msg); i++) {
 		zmq_msg_t       msg_frame;
 		int             fsz = 0;
-		char            *frame = get_msg_frame(i, &msg, &fsz);
+		char            *frame = commmsg_frame_get(&msg, i, &fsz);
 		int             rc = zmq_msg_init_size(&msg_frame, fsz);
 		assert(rc == 0);
 		memcpy(zmq_msg_data(&msg_frame), frame, fsz);
@@ -31,7 +31,7 @@ int upstream_msg(void)
 	for (i = 0; i < get_max_msg_frame(&msg); i++) {
 		zmq_msg_t       msg_frame;
 		int             fsz = 0;
-		char            *frame = get_msg_frame(i, &msg, &fsz);
+		char            *frame = commmsg_frame_get(&msg, i, &fsz);
 		int             rc = zmq_msg_init_size(&msg_frame, fsz);
 		assert(rc == 0);
 		memcpy(zmq_msg_data(&msg_frame), frame, fsz);
@@ -43,7 +43,7 @@ int upstream_msg(void)
 		}
 	}
 
-	destroy_msg(&msg);
+	commmsg_free(&msg);
 	return 0;
 }
 

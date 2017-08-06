@@ -21,11 +21,11 @@ void *client_thread_read(void *usr)
 {
 	while (1) {
 		struct comm_message msg = {};
-		init_msg(&msg);
+		commmsg_make(&msg, DEFAULT_MSG_SIZE);
 		printf("start recv msg.\n");
 		commapi_recv(g_ctx, &msg);
 		int     size = 0;
-		char    *frame = get_msg_frame(0, &msg, &size);
+		char    *frame = commmsg_frame_get(&msg, 0, &size);
 		char    *buf = (char *)malloc((size + 1) * sizeof(char));
 		int     i;
 
@@ -41,7 +41,7 @@ void *client_thread_read(void *usr)
 		printf("\n");
 		//	printf("%s\n", buf);
 		free(buf);
-		destroy_msg(&msg);
+		commmsg_free(&msg);
 	}
 
 	return NULL;
@@ -71,12 +71,11 @@ int test_simulate_client(char *ip)
 		print_current_time();
 		printf("\n");
 		struct comm_message msg = {};
-		init_msg(&msg);
-		msg.socket_type = PAIR_METHOD;
-		set_msg_fd(&msg, connectfd);
+		commmsg_make(&msg, DEFAULT_MSG_SIZE);
+		commmsg_sets(&msg, connectfd, 0, PAIR_METHOD);
 		set_msg_frame(0, &msg, strlen(str), str);
 		commapi_send(g_ctx, &msg);
-		destroy_msg(&msg);
+		commmsg_free(&msg);
 		//		sleep(5);
 	}
 

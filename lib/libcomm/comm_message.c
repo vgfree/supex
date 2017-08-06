@@ -93,3 +93,38 @@ bool commmsg_check(const struct comm_message *message)
 	return true;
 }
 
+
+void commmsg_sets(struct comm_message *message, int fd, int flags, int ptype)
+{
+	assert(message);
+	message->fd = fd;
+	message->flags = flags;
+	message->ptype = ptype;
+}
+
+void commmsg_gets(struct comm_message *message, int *fd, int *flags, int *ptype)
+{
+	assert(message);
+	if (fd) {
+		*fd = message->fd;
+	}
+	if (flags) {
+		*flags = message->flags;
+	}
+	if (ptype) {
+		*ptype = message->ptype;
+	}
+}
+
+char *commmsg_frame_get(struct comm_message *msg, int index, int *size)
+{
+        assert(msg);
+
+        if ((index >= msg->package.frames) || (index < 0)) {
+                printf("index:%d > max frames:%d.", index, msg->package.frames);
+                return NULL;
+        }
+
+        *size = commmsg_frame_size(msg, index);
+        return commmsg_frame_addr(msg, index);
+}

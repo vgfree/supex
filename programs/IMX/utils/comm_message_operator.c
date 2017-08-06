@@ -13,36 +13,8 @@ void init_msg(struct comm_message *msg)
 	msg->ptype = PUSH_METHOD;
 }
 
-void destroy_msg(struct comm_message *msg)
-{
-	assert(msg);
-	commmsg_free(msg);
-}
 
-int get_msg_fd(struct comm_message *msg)
-{
-	assert(msg);
-	return msg->fd;
-}
 
-void set_msg_fd(struct comm_message *msg, int fd)
-{
-	assert(msg);
-	msg->fd = fd;
-}
-
-char *get_msg_frame(int index, struct comm_message *msg, int *size)
-{
-	assert(msg);
-
-	if ((index >= msg->package.frames) || (index < 0)) {
-		//    error("index:%d > max frames:%d.", index, msg->package.frames);
-		return NULL;
-	}
-
-	*size = msg->package.frame_size[index];
-	return msg->package.raw_data.str + msg->package.frame_offset[index];
-}
 
 int set_msg_frame(int index, struct comm_message *msg, int size, char *frame)
 {
@@ -112,11 +84,5 @@ int get_max_msg_frame(struct comm_message *msg)
 {
 	assert(msg);
 	return msg->package.frames;
-}
-
-int get_frame_size(int index, struct comm_message *msg)
-{
-	assert(msg);
-	return msg->package.frame_size[index];
 }
 

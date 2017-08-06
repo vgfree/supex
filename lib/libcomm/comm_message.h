@@ -36,6 +36,11 @@ void commmsg_free(struct comm_message *message);
 
 bool commmsg_check(const struct comm_message *message);
 
+void commmsg_sets(struct comm_message *message, int fd, int flags, int ptype);
+
+void commmsg_gets(struct comm_message *message, int *fd, int *flags, int *ptype);
+
 #define commmsg_frame_size(msg, idx)    (msg)->package.frame_size[idx]
 #define commmsg_frame_addr(msg, idx)    (&(msg)->package.raw_data.str[(msg)->package.frame_offset[idx]])
 
+char *commmsg_frame_get(struct comm_message *msg, int index, int *size);

@@ -20,7 +20,7 @@ int downstream_msg(struct comm_message *msg)
 	 *   }
 	 *   x_printf(D, "frames_of_package：%d packages:%d dsize:%d\n", msg->package.frames_of_package[0], msg->package.packages, msg->package.dsize);*/
 	for (int i = 0; i < g_node_ptr->max_size; i++) {
-		msg->fd = g_node_ptr->fd_array[i];
+		commmsg_sets(msg, g_node_ptr->fd_array[i], 0, PUSH_METHOD);
 
 		if (send_msg(msg) == -1) {
 			x_printf(E, "wrong msg, msg fd:%d.", msg->fd);
@@ -66,10 +66,10 @@ static void *_pull_thread(void *usr)
 {
 	while (1) {
 		struct comm_message msg = {};
-		init_msg(&msg);
+		commmsg_make(&msg, DEFAULT_MSG_SIZE);
 		pull_msg(&msg);
 		downstream_msg(&msg);
-		destroy_msg(&msg);
+		commmsg_free(&msg);
 	}
 
 	return NULL;
@@ -80,14 +80,14 @@ int upstream_msg(void)
 	int i = 0;
 	struct comm_message msg = {};
 
-	init_msg(&msg);
+	commmsg_make(&msg, DEFAULT_MSG_SIZE);
 	recv_msg(&msg);
 	x_printf(D, "get_max_msg_frame, :%d", get_max_msg_frame(&msg));
 
 	for (i = 0; i < get_max_msg_frame(&msg); i++) {
 		zmq_msg_t       msg_frame;
 		int             fsz = 0;
-		char            *frame = get_msg_frame(i, &msg, &fsz);
+		char            *frame = commmsg_frame_get(&msg, i, &fsz);
 		int             rc = zmq_msg_init_size(&msg_frame, fsz);
 		assert(rc == 0);
 		memcpy(zmq_msg_data(&msg_frame), frame, fsz);
@@ -99,7 +99,7 @@ int upstream_msg(void)
 		}
 	}
 
-	destroy_msg(&msg);
+	commmsg_free(&msg);
 	return 0;
 }
 

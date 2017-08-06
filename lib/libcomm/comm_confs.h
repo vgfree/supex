@@ -13,3 +13,6 @@
 //#define EPOLLTIMEOUTED  2000000		/* epoll_wait的超时事件 以毫秒(ms)为单位 1s = 1000ms*/
 
 #define DELAY_RECONNECT_INTERVAL	2000/*2s*/
+
+
+#define DEFAULT_MSG_SIZE (10 * 1024 * 1024)

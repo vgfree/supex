@@ -17,10 +17,10 @@ void message_work(void)
 	assert(init_zmq_io() == 0);
 	while (1) {
 		struct comm_message msg = {};
-		init_msg(&msg);
+		commmsg_make(&msg, DEFAULT_MSG_SIZE);
 		pull_msg(&msg);
 		downstream_msg(&msg);
-		destroy_msg(&msg);
+		commmsg_free(&msg);
 	}
 	exit_comm_io();
 	exit_zmq_io();

@@ -38,7 +38,9 @@ void send_status_msg(int clientfd, int status)
 	get_cid(cid, clientfd);
 
 	struct comm_message msg = {};
-	init_msg(&msg);
+	commmsg_make(&msg, DEFAULT_MSG_SIZE);
+	commmsg_sets(&msg, g_serv_info.login_server_fd, 0, PUSH_METHOD);
+
 	set_msg_frame(0, &msg, strlen(cid), cid);
 	x_printf(D, "send status:%d", status);
 
@@ -50,8 +52,7 @@ void send_status_msg(int clientfd, int status)
 
 	set_msg_frame(0, &msg, 6, "status");
 
-	set_msg_fd(&msg, g_serv_info.login_server_fd);
 	commapi_send(g_serv_info.commctx, &msg);
-	destroy_msg(&msg);
+	commmsg_free(&msg);
 }
 

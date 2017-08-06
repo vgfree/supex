@@ -39,7 +39,7 @@ void find_best_gateway(int *fd)
 static void _handle_cid_message(struct comm_message *msg)
 {
 	int     fsz;
-	char    *frame = get_msg_frame(2, msg, &fsz);
+	char    *frame = commmsg_frame_get(msg, 2, &fsz);
 	
 	char    cid[MAX_CID_SIZE] = {};
 	strncpy(cid, frame, fsz);
@@ -51,8 +51,11 @@ static void _handle_cid_message(struct comm_message *msg)
 		char    *cfd = strtok(NULL, ":");
 		int     fd = atoi(cfd);
 		x_printf(D, "fd:%d.", fd);
-		
-		set_msg_fd(msg, fd);
+
+		int flags = 0;
+		int ptype = 0;
+		commmsg_gets(msg, NULL, &flags, &ptype);
+		commmsg_sets(msg, fd, flags, ptype);
 		
 		remove_first_nframe(3, msg);
 		commapi_send(g_serv_info.commctx, msg);
@@ -62,7 +65,7 @@ static void _handle_cid_message(struct comm_message *msg)
 static int _handle_gid_message(struct comm_message *msg)
 {
 	int     fsz = 0;
-	char    *frame = get_msg_frame(2, msg, &fsz);
+	char    *frame = commmsg_frame_get(msg, 2, &fsz);
 
 	char    gid[MAX_GID_SIZE] = {};
 	memcpy(gid, frame, fsz);
@@ -79,7 +82,10 @@ static int _handle_gid_message(struct comm_message *msg)
 
 	for (int i = 0; i < size; i++) {
 		x_printf(D, "sent msg to fd:%d.", fd_list[i]);
-		set_msg_fd(msg, fd_list[i]);
+		int flags = 0;
+		int ptype = 0;
+		commmsg_gets(msg, NULL, &flags, &ptype);
+		commmsg_sets(msg, fd_list[i], flags, ptype);
 		commapi_send(g_serv_info.commctx, msg);
 	}
 
@@ -89,7 +95,7 @@ static int _handle_gid_message(struct comm_message *msg)
 static int _handle_uid_message(struct comm_message *msg)
 {
 	int     fsz = 0;
-	char    *frame = get_msg_frame(2, msg, &fsz);
+	char    *frame = commmsg_frame_get(msg, 2, &fsz);
 	assert(fsz < MAX_UID_SIZE);
 
 	char    uid[MAX_UID_SIZE] = {};
@@ -98,7 +104,10 @@ static int _handle_uid_message(struct comm_message *msg)
 
 	if (fd != -1) {
 		remove_first_nframe(3, msg);
-		set_msg_fd(msg, fd);
+		int flags = 0;
+		int ptype = 0;
+		commmsg_gets(msg, NULL, &flags, &ptype);
+		commmsg_sets(msg, fd, flags, ptype);
 		commapi_send(g_serv_info.commctx, msg);
 	}
 
@@ -108,7 +117,7 @@ static int _handle_uid_message(struct comm_message *msg)
 static int _handle_uid_map(struct comm_message *msg)
 {
 	int     fsz = 0;
-	char    *frame = get_msg_frame(2, msg, &fsz);
+	char    *frame = commmsg_frame_get(msg, 2, &fsz);
 	char    cid[MAX_CID_SIZE] = {};
 
 	strncpy(cid, frame, fsz);
@@ -122,7 +131,7 @@ static int _handle_uid_map(struct comm_message *msg)
 
 	char    *cfd = strtok(NULL, ":");
 	int     fd = atoi(cfd);
-	char    *uid = get_msg_frame(3, msg, &fsz);
+	char    *uid = commmsg_frame_get(msg, 3, &fsz);
 	assert(fsz < MAX_UID_SIZE);
 
 	char    uid_buf[MAX_UID_SIZE] = {};
@@ -134,7 +143,7 @@ static int _handle_uid_map(struct comm_message *msg)
 static int _handle_gid_map(struct comm_message *msg)
 {
 	int     fsz = 0;
-	char    *frame = get_msg_frame(2, msg, &fsz);
+	char    *frame = commmsg_frame_get(msg, 2, &fsz);
 	char    cid[MAX_CID_SIZE] = {};
 
 	strncpy(cid, frame, fsz);
@@ -165,7 +174,7 @@ static int _handle_gid_map(struct comm_message *msg)
 	}
 #endif
 
-	char    *gid_frame = get_msg_frame(3, msg, &fsz);
+	char    *gid_frame = commmsg_frame_get(msg, 3, &fsz);
 	char    gid[MAX_GID_SIZE] = {};
 	int     gid_index = 0;
 
@@ -189,7 +198,7 @@ static int _handle_gid_map(struct comm_message *msg)
 static void _downstream_msg(struct comm_message *msg)
 {
 	int     fsz;
-	char    *frame = get_msg_frame(1, msg, &fsz);
+	char    *frame = commmsg_frame_get(msg, 1, &fsz);
 
 	if (!frame) {
 		x_printf(E, "wrong frame, frame is NULL.");
@@ -214,7 +223,7 @@ static void _downstream_msg(struct comm_message *msg)
 static void _erased_client(struct comm_message *msg)
 {
 	int     fsz;
-	char    *frame = get_msg_frame(2, msg, &fsz);
+	char    *frame = commmsg_frame_get(msg, 2, &fsz);
 	char    cid[MAX_CID_SIZE] = {};
 
 	strncpy(cid, frame, fsz);
@@ -243,7 +252,7 @@ static void _erased_client(struct comm_message *msg)
 static void _handle_status(struct comm_message *msg)
 {
 	int     fsz = 0;
-	char    *frame = get_msg_frame(3, msg, &fsz);
+	char    *frame = commmsg_frame_get(msg, 3, &fsz);
 
 	if (!frame) {
 		x_printf(E, "wrong frame, frame is NULL or not equal closed.");
@@ -256,7 +265,7 @@ static void _handle_status(struct comm_message *msg)
 static void _classified_message(struct comm_message *msg)
 {
 	int     frame_size;
-	char    *frame = get_msg_frame(0, msg, &frame_size);
+	char    *frame = commmsg_frame_get(msg, 0, &frame_size);
 	if (!frame) {
 		x_printf(E, "wrong frame, and frame is NULL.");
 	}
@@ -276,13 +285,13 @@ static void _setting_map(struct comm_message *msg)
 {
 	x_printf(D, "max msg:%d.", get_max_msg_frame(msg));
 	int     frame_size;
-	char    *frame = get_msg_frame(0, msg, &frame_size);
+	char    *frame = commmsg_frame_get(msg, 0, &frame_size);
 	if (!frame) {
 		x_printf(E, "wrong frame, and frame is NULL.");
 	}
 
 	if (memcmp(frame, "setting", 7) == 0) {
-		char *cmd = get_msg_frame(1, msg, &frame_size);
+		char *cmd = commmsg_frame_get(msg, 1, &frame_size);
 
 		if (memcmp(cmd, "status", 6) == 0) {
 			_handle_status(msg);
@@ -305,7 +314,7 @@ static int _verified(struct comm_message *msg)
 	int i = 0;
 	for (; i < get_max_msg_frame(msg); i++) {
 		int     frame_size = 0;
-		char    *frame = get_msg_frame(i, msg, &frame_size);
+		char    *frame = commmsg_frame_get(msg, i, &frame_size);
 		char    *buf = malloc(sizeof(char) * (frame_size + 1));
 		memcpy(buf, frame, frame_size);
 		buf[frame_size] = '\0';
@@ -333,7 +342,7 @@ static int _verified(struct comm_message *msg)
 void message_dispatch(void)
 {
 	struct comm_message msg = {};
-	init_msg(&msg);
+	commmsg_make(&msg, DEFAULT_MSG_SIZE);
 	
 	x_printf(D, "comm_recv wait.");
 	commapi_recv(g_serv_info.commctx, &msg);
@@ -353,7 +362,10 @@ void message_dispatch(void)
 				
 				set_msg_frame(0, &msg, strlen(cid), cid);
 				set_msg_frame(0, &msg, 8, "upstream");
-				set_msg_fd(&msg, fd);
+				int flags = 0;
+				int ptype = 0;
+				commmsg_gets(&msg, NULL, &flags, &ptype);
+				commmsg_sets(&msg, fd, flags, ptype);
 				commapi_send(g_serv_info.commctx, &msg);
 			}
 		}
@@ -363,6 +375,6 @@ void message_dispatch(void)
 		_setting_map(&msg);
 	}
 
-	destroy_msg(&msg);
+	commmsg_free(&msg);
 }
 
