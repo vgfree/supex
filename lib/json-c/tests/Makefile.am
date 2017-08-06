@@ -1,56 +1,58 @@
 
-include ../Makefile.am.inc
+AM_CPPFLAGS = -I$(top_srcdir) -I$(top_srcdir)/tests
+
+LDADD= $(LIBJSON_LA)
 
 LIBJSON_LA=$(top_builddir)/libjson-c.la
 
-check_PROGRAMS = test1 test1Formatted 
-check_PROGRAMS += test2 test2Formatted
-check_PROGRAMS += test4
-check_PROGRAMS += testReplaceExisting
-check_PROGRAMS += test_parse_int64
-check_PROGRAMS += test_null
-check_PROGRAMS += test_cast
-check_PROGRAMS += test_parse
-check_PROGRAMS += test_locale
-
-test1_LDADD = $(LIBJSON_LA)
-
-test1Formatted_LDADD= $(LIBJSON_LA)
-test1Formatted_SOURCES = test1.c parse_flags.c
-test1Formatted_CPPFLAGS = -DTEST_FORMATTED
-
-test2_LDADD = $(LIBJSON_LA)
-
-test2Formatted_LDADD= $(LIBJSON_LA)
-test2Formatted_SOURCES = test2.c parse_flags.c
-test2Formatted_CPPFLAGS = -DTEST_FORMATTED
-
-test4_LDADD = $(LIBJSON_LA)
-
-testReplaceExisting_LDADD = $(LIBJSON_LA)
-
-test_parse_int64_LDADD = $(LIBJSON_LA)
-
-test_null_LDADD = $(LIBJSON_LA)
-
-test_cast_LDADD = $(LIBJSON_LA)
-
-test_parse_LDADD = $(LIBJSON_LA)
-
-test_locale_LDADD = $(LIBJSON_LA)
-
-TESTS = test1.test test2.test test4.test testReplaceExisting.test parse_int64.test test_null.test test_cast.test test_parse.test test_locale.test
-
+TESTS=
+TESTS+= test_util_file.test
+TESTS+= test_float.test
+TESTS+= test1.test
+TESTS+= test2.test
+TESTS+= test4.test
+TESTS+= testReplaceExisting.test
+TESTS+= test_parse_int64.test
+TESTS+= test_null.test
+TESTS+= test_cast.test
+TESTS+= test_double_serializer.test
+TESTS+= test_parse.test
+TESTS+= test_locale.test
+TESTS+= test_charcase.test
 TESTS+= test_printbuf.test
-check_PROGRAMS+=test_printbuf
-test_printbuf_LDADD = $(LIBJSON_LA)
-
 TESTS+= test_set_serializer.test
-check_PROGRAMS += test_set_serializer
-test_set_serializer_LDADD = $(LIBJSON_LA)
+TESTS+= test_compare.test
+TESTS+= test_set_value.test
+TESTS+= test_visit.test
+TESTS+= test_json_pointer.test
+
+check_PROGRAMS=
+check_PROGRAMS += $(TESTS:.test=)
 
 EXTRA_DIST=
 EXTRA_DIST += $(TESTS)
+EXTRA_DIST += $(TESTS:.test=.expected)
+EXTRA_DIST += test-defs.sh
+EXTRA_DIST += valid.json
+
+
+# Note: handled by test1.test
+check_PROGRAMS += test1Formatted
+test1Formatted_SOURCES = test1.c parse_flags.c parse_flags.h
+test1Formatted_CPPFLAGS = $(AM_CPPFLAGS) -DTEST_FORMATTED
+EXTRA_DIST+= test1Formatted_plain.expected
+EXTRA_DIST+= test1Formatted_pretty.expected
+EXTRA_DIST+= test1Formatted_spaced.expected
+
+# Note: handled by test2.test
+check_PROGRAMS += test2Formatted
+test2Formatted_SOURCES = test2.c parse_flags.c parse_flags.h
+test2Formatted_CPPFLAGS = $(AM_CPPFLAGS) -DTEST_FORMATTED
+EXTRA_DIST+= test2Formatted_plain.expected
+EXTRA_DIST+= test2Formatted_pretty.expected
+EXTRA_DIST+= test2Formatted_spaced.expected
+
+test_util_file_SOURCES = test_util_file.c
 
 testsubdir=testSubDir
 TESTS_ENVIRONMENT       = top_builddir=$(top_builddir)

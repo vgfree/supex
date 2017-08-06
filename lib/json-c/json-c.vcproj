@@ -6,8 +6,7 @@
 	ProjectGUID="{04D8CDBE-FB3E-4362-87E6-07DC3C0083B2}"
 	Keyword="Win32Proj">
 	<Platforms>
-		<Platform
-			Name="Win32"/>
+		<Platform Name="Win32" />
 	</Platforms>
 	<Configurations>
 		<Configuration
@@ -27,8 +26,7 @@
 				WarningLevel="3"
 				Detect64BitPortabilityProblems="TRUE"
 				DebugInformationFormat="4"/>
-			<Tool
-				Name="VCCustomBuildTool"/>
+			<Tool Name="VCCustomBuildTool" />
 			<Tool
 				Name="VCLibrarianTool"
 				OutputFile="$(OutDir)/jsonD.lib"/>
@@ -38,7 +36,8 @@
 				Name="VCPostBuildEventTool"/>
 			<Tool
 				Name="VCPreBuildEventTool"
-				CommandLine="copy config.h.win32 config.h"/>
+				CommandLine="copy config.h.win32 config.h
+copy json_config.h.win32 json_config.h"/>
 			<Tool
 				Name="VCPreLinkEventTool"/>
 			<Tool
@@ -76,7 +75,9 @@
 			<Tool
 				Name="VCPostBuildEventTool"/>
 			<Tool
-				Name="VCPreBuildEventTool"/>
+				Name="VCPreBuildEventTool"
+				CommandLine="copy config.h.win32 config.h
+copy json_config.h.win32 json_config.h"/>
 			<Tool
 				Name="VCPreLinkEventTool"/>
 			<Tool
@@ -106,6 +107,9 @@
 			</File>
 			<File
 				RelativePath=".\json_object.c">
+			</File>
+			<File
+				RelativePath=".\json_pointer.c">
 			</File>
 			<File
 				RelativePath=".\json_tokener.c">
@@ -140,6 +144,9 @@
 				RelativePath=".\json_object_private.h">
 			</File>
 			<File
+				RelativePath=".\json_pointer.h">
+			</File>
+			<File
 				RelativePath=".\json_tokener.h">
 			</File>
 			<File
@@ -164,14 +171,13 @@
 				RelativePath=".\Doxyfile">
 			</File>
 		</Filter>
-		<File
-			RelativePath=".\config.h.win32">
+		<File RelativePath=".\config.h.win32">
 		</File>
-		<File
-			RelativePath=".\README-WIN32.html">
+		<File RelativePath=".\json_config.h.win32">
 		</File>
-		<File
-			RelativePath=".\README.html">
+		<File RelativePath=".\README-WIN32.html">
+		</File>
+		<File RelativePath=".\README.html">
 		</File>
 	</Files>
 	<Globals>

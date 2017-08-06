@@ -1,18 +1,18 @@
-include Makefile.am.inc
+EXTRA_DIST = README.md README.html README-WIN32.html 
+EXTRA_DIST += config.h.win32 json-c.vcproj json-c.vcxproj json-c.vcxproj.filters
+EXTRA_DIST += Doxyfile doc
 
-EXTRA_DIST = README.html README-WIN32.html config.h.win32 doc json-c.vcproj
+dist-hook:
+	test -d "$(distdir)/doc" || mkdir "$(distdir)/doc"
+	chmod -R u+w "$(distdir)/doc"
+	cd "$(distdir)" && doxygen
+
 SUBDIRS = . tests
 
 lib_LTLIBRARIES = libjson-c.la 
-if ENABLE_OLDNAME_COMPAT
-lib_LTLIBRARIES+=libjson.la
-endif
 
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = json-c.pc
-if ENABLE_OLDNAME_COMPAT
-pkgconfig_DATA += json.pc
-endif
 
 libjson_cincludedir = $(includedir)/json-c
 libjson_cinclude_HEADERS = \
@@ -20,31 +20,24 @@ libjson_cinclude_HEADERS = \
 	bits.h \
 	debug.h \
 	json.h \
-	json_config.h \
 	json_c_version.h \
+	json_config.h \
 	json_inttypes.h \
 	json_object.h \
 	json_object_iterator.h \
 	json_object_private.h \
+	json_pointer.h \
 	json_tokener.h \
 	json_util.h \
+	json_visit.h \
 	linkhash.h \
-	printbuf.h
+	math_compat.h \
+	strdup_compat.h \
+	vasprintf_compat.h \
+	printbuf.h \
+	random_seed.h
 
-#libjsonx_includedir = $(libdir)/json-c-@VERSION@
-#
-#libjsonx_include_HEADERS = \
-#	json_config.h
-
-libjson_c_la_LDFLAGS = -version-info 2:0:0 -no-undefined
-
-if ENABLE_OLDNAME_COMPAT
-libjson_la_LDFLAGS = -version-info 1:0:1 -no-undefined -ljson-c
-
-# Temporary libjson library.  This will be removed after one release.
-libjson_la_LIBADD = -ljson-c
-endif
-
+libjson_c_la_LDFLAGS = -version-info 3:0:0 -no-undefined @JSON_BSYMBOLIC_LDFLAGS@
 
 libjson_c_la_SOURCES = \
 	arraylist.c \
@@ -52,35 +45,26 @@ libjson_c_la_SOURCES = \
 	json_c_version.c \
 	json_object.c \
 	json_object_iterator.c \
+	json_pointer.c \
 	json_tokener.c \
 	json_util.c \
+	json_visit.c \
 	linkhash.c \
-	printbuf.c
-
+	printbuf.c \
+	random_seed.c \
+	strerror_override.c
 
 distclean-local:
 	-rm -rf $(testsubdir)
 	-rm -rf config.h.in~ Makefile.in aclocal.m4 autom4te.cache/ config.guess config.sub depcomp install-sh ltmain.sh missing
+	-rm -f INSTALL test-driver tests/Makefile.in compile
 
 maintainer-clean-local:
 	-rm -rf configure
 
-if ENABLE_OLDNAME_COMPAT
-# Remove old headers and create a compatibility link
-install-data-hook:
-	if test -d "$(DESTDIR)@includedir@/json" ; then \
-		(cd "$(DESTDIR)@includedir@/json" && \
-		rm -f $(libjson_cinclude_HEADERS)) ; \
-		rmdir "$(DESTDIR)@includedir@/json" ; \
-	fi
-	test \! -e "$(DESTDIR)@includedir@/json" || rm "$(DESTDIR)@includedir@/json"
-	$(LN_S) json-c "$(DESTDIR)@includedir@/json"
-
 uninstall-local:
-	rm -f "$(DESTDIR)@includedir@/json"
 	rm -rf "$(DESTDIR)@includedir@/json-c"
-
-endif
+	rm -f "$(DESTDIR)@includedir@/json"
 
 ANDROID_CFLAGS = -I$(top_srcdir) -DHAVE_CONFIG_H
 
