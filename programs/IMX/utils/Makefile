@@ -80,7 +80,6 @@ prepare:
 SOBJ = $(addprefix $(SOBJ_DIR)/, \
         config_reader.o \
 	daemon.o \
-	timer.o \
 	comm_message_operator.o \
 	)
 

@@ -1,7 +1,17 @@
-
+libIMX := libutils.a libappsrv.a
 openIMX := IMX_coreExchangeNode IMX_messageGateway IMX_loginServer IMX_settingServer IMX_userInfoApi IMX_appServer
+IMX:$(libIMX) $(openIMX)
 
-IMX:$(openIMX)
+libutils.a:
+	$(MAKE) -C ./IMX/utils lib
+	mv ./IMX/utils/lib/$@ ./IMX/
+
+libappsrv.a:
+	$(MAKE) -C ./IMX/libappsrv lib
+	mv ./IMX/libappsrv/lib/$@ ./IMX/
+
+
+
 
 IMX_coreExchangeNode:
 	$(MAKE) -C ./IMX/CoreExchangeNode MAIN_APP_SERV=coreExchangeNode
@@ -34,6 +44,9 @@ clean:
 	$(MAKE) -C ./IMX/loginServer clean
 	$(MAKE) -C ./IMX/UserInfoApi clean
 	$(MAKE) -C ./IMX/appServer clean
+	$(MAKE) -C ./IMX/utils clean
+	$(MAKE) -C ./IMX/libappsrv clean
+	rm -rf ./IMX/*.a
 
 distclean:
 	$(MAKE) -C ./IMX/CoreExchangeNode distclean
@@ -42,3 +55,6 @@ distclean:
 	$(MAKE) -C ./IMX/loginServer distclean
 	$(MAKE) -C ./IMX/UserInfoApi distclean
 	$(MAKE) -C ./IMX/appServer distclean
+	$(MAKE) -C ./IMX/utils distclean
+	$(MAKE) -C ./IMX/libappsrv distclean
+	rm -rf ./IMX/*.a

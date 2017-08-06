@@ -9,9 +9,9 @@
 void init_msg(struct comm_message *msg)
 {
 	assert(msg);
+	commmsg_make(msg, MAX_MSG_SIZE * sizeof(char));
 	msg->package.packages = 1;
 	msg->ptype = PUSH_METHOD;
-	commmsg_make(msg, MAX_MSG_SIZE * sizeof(char));
 }
 
 void destroy_msg(struct comm_message *msg)
