@@ -90,7 +90,7 @@ all:$(SRV)
 	@echo -e $(foreach bin,$^,$(BLUE)$(bin) $(GREEN)✔)$(RED)"\n-->OVER!\n"$(NONE)
 
 IMX:
-	$(MAKE) -C ./programs/	openIMX
+	$(MAKE) -C ./programs/	IMX
 HLS:$(openHLS)
 PMS:$(openPMS)
 LOG:$(openLOG)

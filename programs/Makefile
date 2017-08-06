@@ -1,6 +1,7 @@
 
 openIMX := IMX_coreExchangeNode IMX_messageGateway IMX_loginServer IMX_settingServer IMX_userInfoApi IMX_appServer
 
+IMX:$(openIMX)
 
 IMX_coreExchangeNode:
 	$(MAKE) -C ./IMX/CoreExchangeNode MAIN_APP_SERV=coreExchangeNode

@@ -1,23 +1,23 @@
 BASE_SRC=./src
 INC_DIR=-I/usr/local/include/luajit-2.0 \
 	-I/usr/local/include/ \
-	-I../../lib/libev \
-	-I../../lib/json-c \
-	-I../../lib/libmini/include \
-	-I../../lib/libkv/release \
-	-I../../lib/libmemhook/src \
-	-I../../lib/libscco \
-	-I../../lib/libcoro \
-	-I../../lib/libevcoro \
-	-I../../lib/libevcs \
-	-I../../lib/utils \
-	-I../../lib/libappsrv \
-	-I../../lib/zeromq-4.2.1/include \
+	-I$(HOME_PATH)/lib/json-c \
+	-I$(HOME_PATH)/lib/libmini/include \
+	-I$(HOME_PATH)/lib/libkv/release \
+	-I$(HOME_PATH)/lib/libmemhook/src \
+	-I$(HOME_PATH)/lib/libscco \
+	-I$(HOME_PATH)/lib/libcoro \
+	-I$(HOME_PATH)/lib/libev \
+	-I$(HOME_PATH)/lib/libevcoro \
+	-I$(HOME_PATH)/lib/libevcs \
+	-I$(HOME_PATH)/lib/utils \
+	-I$(HOME_PATH)/lib/libappsrv \
+	-I$(HOME_PATH)/lib/zeromq-4.2.1/include \
 	-I./src -I../
 
 
 
-LIB_DIR=-L/usr/local/lib -L../../lib
+LIB_DIR=-L/usr/local/lib -L$(HOME_PATH)/lib
 LIBS=-lluajit-5.1 -lpthread -lrt -lm -lstdc++
 LIBA=-ljson-c -lkv -lappsrv -lutils -lzmq
 
