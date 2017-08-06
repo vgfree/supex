@@ -73,7 +73,9 @@ int test_simulate_client(char *ip)
 		struct comm_message msg = {};
 		commmsg_make(&msg, DEFAULT_MSG_SIZE);
 		commmsg_sets(&msg, connectfd, 0, PAIR_METHOD);
-		set_msg_frame(0, &msg, strlen(str), str);
+		commmsg_frame_set(&msg, 0, strlen(str), str);
+		msg.package.frames_of_package[0] = msg.package.frames;
+		msg.package.packages = 1;
 		commapi_send(g_ctx, &msg);
 		commmsg_free(&msg);
 		//		sleep(5);

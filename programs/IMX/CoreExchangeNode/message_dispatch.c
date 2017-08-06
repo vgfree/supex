@@ -78,7 +78,7 @@ static int _handle_gid_message(struct comm_message *msg)
 	}
 
 	remove_first_nframe(3, msg);
-	x_printf(D, "get_max_msg_frame:%d, fd size:%d", get_max_msg_frame(msg), size);
+	x_printf(D, "commmsg_frame_count:%d, fd size:%d", commmsg_frame_count(msg), size);
 
 	for (int i = 0; i < size; i++) {
 		x_printf(D, "sent msg to fd:%d.", fd_list[i]);
@@ -272,7 +272,7 @@ static void _classified_message(struct comm_message *msg)
 
 	char    frame_buf[100] = {};
 	memcpy(frame_buf, frame, frame_size);
-	x_printf(D, "max msg:%d, frame:%s", get_max_msg_frame(msg), frame_buf);
+	x_printf(D, "max msg:%d, frame:%s", commmsg_frame_count(msg), frame_buf);
 
 	if (memcmp(frame, "downstream", 10) == 0) {
 		_downstream_msg(msg);
@@ -283,7 +283,7 @@ static void _classified_message(struct comm_message *msg)
 
 static void _setting_map(struct comm_message *msg)
 {
-	x_printf(D, "max msg:%d.", get_max_msg_frame(msg));
+	x_printf(D, "max msg:%d.", commmsg_frame_count(msg));
 	int     frame_size;
 	char    *frame = commmsg_frame_get(msg, 0, &frame_size);
 	if (!frame) {
@@ -309,10 +309,10 @@ static int _verified(struct comm_message *msg)
 {
 #define debug 1
 #ifdef debug
-	x_printf(D, "client msg frame number:%d", get_max_msg_frame(msg));
+	x_printf(D, "client msg frame number:%d", commmsg_frame_count(msg));
 	
 	int i = 0;
-	for (; i < get_max_msg_frame(msg); i++) {
+	for (; i < commmsg_frame_count(msg); i++) {
 		int     frame_size = 0;
 		char    *frame = commmsg_frame_get(msg, i, &frame_size);
 		char    *buf = malloc(sizeof(char) * (frame_size + 1));
@@ -329,7 +329,9 @@ static int _verified(struct comm_message *msg)
 		remove_first_nframe(1, msg);
 		char buf[21] = {};
 		buf[0] = 0x01;
-		set_msg_frame(0, msg, 21, buf);
+		commmsg_frame_set(msg, 0, 21, buf);
+		msg->package.frames_of_package[0] = msg->package.frames;
+		msg->package.packages = 1;
 
 		x_printf(D, "send message msg type:%d, dsize:%d frame_size:%d frames_of_package:%d frames:%d packages:%d", msg->ptype, msg->package.raw_data.len, msg->package.frame_size[0], msg->package.frames_of_package[0], msg->package.frames, msg->package.packages);
 		commapi_send(g_serv_info.commctx, msg);
@@ -360,8 +362,12 @@ void message_dispatch(void)
 				char cid[MAX_CID_SIZE] = {};
 				get_cid(cid, msg.fd);
 				
-				set_msg_frame(0, &msg, strlen(cid), cid);
-				set_msg_frame(0, &msg, 8, "upstream");
+				commmsg_frame_set(&msg, 0, strlen(cid), cid);
+				msg.package.frames_of_package[0] = msg.package.frames;
+				msg.package.packages = 1;
+				commmsg_frame_set(&msg, 0, 8, "upstream");
+				msg.package.frames_of_package[0] = msg.package.frames;
+				msg.package.packages = 1;
 				int flags = 0;
 				int ptype = 0;
 				commmsg_gets(&msg, NULL, &flags, &ptype);

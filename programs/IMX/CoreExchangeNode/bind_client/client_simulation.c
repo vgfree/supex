@@ -38,9 +38,11 @@ void *client_thread_read(void *usr)
 		printf("\033[1;31m" "recv_data_len:%d\n" "\033[0m", strlen(buf));
 
 		if (memcmp(buf, "bind", 4) == 0) {
-			printf("recv frames : %d\n", get_max_msg_frame(&msg));
-			remove_first_nframe(get_max_msg_frame(&msg), &msg);
-			set_msg_frame(0, &msg, strlen(buf), buf);
+			printf("recv frames : %d\n", commmsg_frame_count(&msg));
+			remove_first_nframe(commmsg_frame_count(&msg), &msg);
+			commmsg_frame_set(&msg, 0, strlen(buf), buf);
+			msg.package.frames_of_package[0] = msg.package.frames;
+			msg.package.packages = 1;
 			struct json_object *my_json = NULL;
 			my_json = json_object_new_object();
 
@@ -57,7 +59,9 @@ void *client_thread_read(void *usr)
 			json_object_object_add(my_json, "uid", json_object_new_string(uuid));
 			memset(buf, 0, sizeof(buf));
 			buf = json_object_to_json_string(my_json);
-			set_msg_frame(1, &msg, strlen(buf), buf);
+			commmsg_frame_set(&msg, 1, strlen(buf), buf);
+			msg.package.frames_of_package[0] = msg.package.frames;
+			msg.package.packages = 1;
 			printf("dsize:%d frame_size1:%d frame_size2:%d\n", msg.package.dsize, msg.package.frame_size[0], msg.package.frame_size[1]);
 
 			if (commapi_send(g_ctx, &msg) > 0) {
@@ -65,7 +69,7 @@ void *client_thread_read(void *usr)
 			}
 
 			free(buf);
-			remove_first_nframe(get_max_msg_frame(&msg), &msg);
+			remove_first_nframe(commmsg_frame_count(&msg), &msg);
 			commmsg_free(&msg);
 		}
 	}
@@ -112,7 +116,9 @@ int test_simulate_client(char *ip)
 		struct comm_message msg = {};
 		commmsg_make(&msg, DEFAULT_MSG_SIZE);
 		commmsg_sets(&msg, connectfd, 0, PUSH_METHOD);
-		set_msg_frame(0, &msg, strlen(str), str);
+		commmsg_frame_set(&msg, 0, strlen(str), str);
+		msg.package.frames_of_package[0] = msg.package.frames;
+		msg.package.packages = 1;
 		printf("\033[1;32;32m" "fgets input frames: %d\n" "\033[0m", msg.package.frames);
 		commapi_send(g_ctx, &msg);
 		commmsg_free(&msg);

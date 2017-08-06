@@ -7,7 +7,7 @@
 int downstream_msg(struct comm_message *msg)
 {
 	x_printf(D, "core exchange node max size:%d.", g_node_ptr->max_size);
-	x_printf(D, "get_max_msg_frame:%d", get_max_msg_frame(msg));
+	x_printf(D, "commmsg_frame_count:%d", commmsg_frame_count(msg));
 
 	/*  int j = 0;
 	 *   for (j = 0; j < msg->package.frames; j++) {
@@ -46,7 +46,9 @@ int pull_msg(struct comm_message *msg)
 		assert(rc != -1);
 
 		x_printf(D, "more_size:%ld.", more_size);
-		set_msg_frame(i, msg, zmq_msg_size(&part), zmq_msg_data(&part));
+		commmsg_frame_set(msg, i, zmq_msg_size(&part), zmq_msg_data(&part));
+		msg.package.frames_of_package[0] = msg.package.frames;
+		msg.package.packages = 1;
 		zmq_io_getsockopt(ZMQ_RCVMORE, &more, &more_size);
 		zmq_msg_close(&part);
 		x_printf(D, "more:%d.", more);

@@ -41,16 +41,24 @@ void send_status_msg(int clientfd, int status)
 	commmsg_make(&msg, DEFAULT_MSG_SIZE);
 	commmsg_sets(&msg, g_serv_info.login_server_fd, 0, PUSH_METHOD);
 
-	set_msg_frame(0, &msg, strlen(cid), cid);
+	commmsg_frame_set(&msg, 0, strlen(cid), cid);
+	msg.package.frames_of_package[0] = msg.package.frames;
+	msg.package.packages = 1;
 	x_printf(D, "send status:%d", status);
 
 	if (status == STEP_INIT) {
-		set_msg_frame(0, &msg, 9, "connected");
+		commmsg_frame_set(&msg, 0, 9, "connected");
+		msg.package.frames_of_package[0] = msg.package.frames;
+		msg.package.packages = 1;
 	} else if (status == STEP_STOP) {
-		set_msg_frame(0, &msg, 6, "closed");
+		commmsg_frame_set(&msg, 0, 6, "closed");
+		msg.package.frames_of_package[0] = msg.package.frames;
+		msg.package.packages = 1;
 	}
 
-	set_msg_frame(0, &msg, 6, "status");
+	commmsg_frame_set(&msg, 0, 6, "status");
+	msg.package.frames_of_package[0] = msg.package.frames;
+	msg.package.packages = 1;
 
 	commapi_send(g_serv_info.commctx, &msg);
 	commmsg_free(&msg);

@@ -128,3 +128,27 @@ char *commmsg_frame_get(struct comm_message *msg, int index, int *size)
         *size = commmsg_frame_size(msg, index);
         return commmsg_frame_addr(msg, index);
 }
+
+int commmsg_frame_set(struct comm_message *msg, int index, int size, char *frame)
+{
+	assert(msg && frame);
+
+	if ((index > msg->package.frames) || (index < 0)) {
+		printf("index:%d > max frames:%d.", index, msg->package.frames);
+		return -1;
+	}
+
+	int off = (index == msg->package.frames) ? msg->package.raw_data.len : msg->package.frame_offset[index];
+	commsds_push_core(&msg->package.raw_data, frame, size, off);
+
+	for (int i = msg->package.frames; i > index; i--) {
+		msg->package.frame_size[i] = msg->package.frame_size[i - 1];
+		msg->package.frame_offset[i] = msg->package.frame_offset[i - 1] + size;
+	}
+
+	msg->package.frame_size[index] = size;
+	msg->package.frame_offset[index] = off;
+	msg->package.frames++;
+
+	return 0;
+}

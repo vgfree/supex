@@ -20,6 +20,11 @@ void commsds_clean(struct comm_sds *sds);
 
 void commsds_expand(struct comm_sds *sds, size_t len);
 
+void commsds_push_core(struct comm_sds *sds, const char *str, int len, int off);
+
+void commsds_pull_core(struct comm_sds *sds, const char *str, int len, int off);
+
+
 void commsds_push_head(struct comm_sds *sds, const char *str, int len);
 
 void commsds_pull_head(struct comm_sds *sds, const char *str, int len);

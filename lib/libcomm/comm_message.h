@@ -40,7 +40,12 @@ void commmsg_sets(struct comm_message *message, int fd, int flags, int ptype);
 
 void commmsg_gets(struct comm_message *message, int *fd, int *flags, int *ptype);
 
+#define commmsg_frame_count(msg)	(msg)->package.frames
+#define commmsg_package_count(msg)	(msg)->package.packages
+
 #define commmsg_frame_size(msg, idx)    (msg)->package.frame_size[idx]
 #define commmsg_frame_addr(msg, idx)    (&(msg)->package.raw_data.str[(msg)->package.frame_offset[idx]])
 
 char *commmsg_frame_get(struct comm_message *msg, int index, int *size);
+
+int commmsg_frame_set(struct comm_message *msg, int index, int size, char *frame);

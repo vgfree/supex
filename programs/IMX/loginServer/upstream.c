@@ -11,9 +11,9 @@ int upstream_msg(void)
 
 	commmsg_make(&msg, DEFAULT_MSG_SIZE);
 	recv_msg(&msg);
-	x_printf(D, "get_max_msg_frame, :%d", get_max_msg_frame(&msg));
+	x_printf(D, "commmsg_frame_count, :%d", commmsg_frame_count(&msg));
 
-	for (i = 0; i < get_max_msg_frame(&msg); i++) {
+	for (i = 0; i < commmsg_frame_count(&msg); i++) {
 		zmq_msg_t       msg_frame;
 		int             fsz = 0;
 		char            *frame = commmsg_frame_get(&msg, i, &fsz);
@@ -21,14 +21,14 @@ int upstream_msg(void)
 		assert(rc == 0);
 		memcpy(zmq_msg_data(&msg_frame), frame, fsz);
 
-		if (i < get_max_msg_frame(&msg) - 1) {
+		if (i < commmsg_frame_count(&msg) - 1) {
 			zmq_io_send_app(&msg_frame, ZMQ_SNDMORE);
 		} else {
 			zmq_io_send_app(&msg_frame, 0);
 		}
 	}
 
-	for (i = 0; i < get_max_msg_frame(&msg); i++) {
+	for (i = 0; i < commmsg_frame_count(&msg); i++) {
 		zmq_msg_t       msg_frame;
 		int             fsz = 0;
 		char            *frame = commmsg_frame_get(&msg, i, &fsz);
@@ -36,7 +36,7 @@ int upstream_msg(void)
 		assert(rc == 0);
 		memcpy(zmq_msg_data(&msg_frame), frame, fsz);
 
-		if (i < get_max_msg_frame(&msg) - 1) {
+		if (i < commmsg_frame_count(&msg) - 1) {
 			zmq_io_send_api(&msg_frame, ZMQ_SNDMORE);
 		} else {
 			zmq_io_send_api(&msg_frame, 0);

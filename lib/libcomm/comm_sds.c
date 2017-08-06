@@ -56,6 +56,29 @@ void commsds_expand(struct comm_sds *sds, size_t len)
 	}
 }
 
+void commsds_push_core(struct comm_sds *sds, const char *str, int len, int off)
+{
+	assert((off >= 0) && (off <= sds->len));
+	commsds_expand(sds, len);
+	memmove(sds->str + off + len, sds->str + off, sds->len - off);
+
+	if (str) {
+		memcpy(sds->str + off, str, len);
+	}
+
+	sds->len += len;
+}
+
+void commsds_pull_core(struct comm_sds *sds, const char *str, int len, int off)
+{
+	assert((off >= 0) && (off <= sds->len));
+	assert(len <= (sds->len - off));
+
+	memcpy((void *)str, (const void *)sds->str + off, len);
+	memmove(sds->str + off, sds->str + off + len, sds->len - off - len);
+	sds->len -= len;
+}
+
 void commsds_push_head(struct comm_sds *sds, const char *str, int len)
 {
 	commsds_expand(sds, len);

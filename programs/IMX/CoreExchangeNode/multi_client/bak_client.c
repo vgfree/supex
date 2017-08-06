@@ -30,7 +30,9 @@ static int send_data(struct comm_context *commctx, int fd)
 	struct comm_message sendmsg = {};
 	commmsg_make(&sendmsg, DEFAULT_MSG_SIZE);
 	commmsg_sets(&sendmsg, fd, 0, PUSH_METHOD);
-	set_msg_frame(0, &sendmsg, strlen(str), str);
+	commmsg_frame_set(&sendmsg, 0, strlen(str), str);
+	sendmsg.package.frames_of_package[0] = sendmsg.package.frames;
+	sendmsg.package.packages = 1;
 	// printf("data(send):%s, data size:%d\n", sendmsg.content, sendmsg.package.dsize);
 	commapi_send(commctx, &sendmsg);
 	commmsg_free(&sendmsg);
@@ -46,7 +48,7 @@ void *read_message(void *arg)
 	while (1) {
 		printf("\x1B[1;32m" "start recv msg.\n" "\x1B[m");
 		commmsg_make(&recvmsg, DEFAULT_MSG_SIZE);
-		remove_first_nframe(get_max_msg_frame(&recvmsg), &recvmsg);
+		remove_first_nframe(commmsg_frame_count(&recvmsg), &recvmsg);
 		commapi_recv(comm_ctx, &recvmsg);
 		size_t  size = 0;
 		char    *frame = commmsg_frame_get(&recvmsg, 0, &size);
