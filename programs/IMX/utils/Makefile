@@ -29,7 +29,7 @@ TOBJ_DIR =		lib
 #######
 BUILD_CFLAGS =		-fPIC -Wall -Wno-unused-function -Wno-unused-variable -g -std=c99
 #BUILD_LIBS =		-lpthread -lm
-BUILD_INC_DIR = 	-I/usr/include -I/usr/local/include -I$(HOME_PATH)/lib/liblog -I$(HOME_PATH)/lib/libcomm -I$(HOME_PATH)/lib/libmini/include
+BUILD_INC_DIR = 	-I/usr/include -I/usr/local/include -I$(HOME_PATH)/lib/libcomm -I$(HOME_PATH)/lib/libmini/include
 BUILD_LIB_DIR =		-L/usr/local/lib -L/usr/lib -L/usr/libexec 
 
 #######

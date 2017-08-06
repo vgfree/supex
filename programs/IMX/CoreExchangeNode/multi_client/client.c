@@ -4,7 +4,6 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
-#include "loger.h"
 
 static struct comm_context *comm_ctx = NULL;
 

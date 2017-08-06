@@ -1,5 +1,4 @@
 #include "config_reader.h"
-// #include "loger.h"
 
 #include <assert.h>
 #include <malloc.h>

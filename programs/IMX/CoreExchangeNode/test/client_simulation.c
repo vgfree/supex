@@ -2,7 +2,6 @@
 #include "comm_message_operator.h"
 #include "core_exchange_node_test.h"
 #include "sys/time.h"
-// #include "loger.h"
 
 #include <pthread.h>
 
