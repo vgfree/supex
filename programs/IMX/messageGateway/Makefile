@@ -1,8 +1,8 @@
 INC_DIR=-I$(HOME_PATH)/lib/libcomm/ \
-	-I$(HOME_PATH)/lib/utils \
+	       -I../utils \
 	-I$(HOME_PATH)/lib/zeromq-4.2.1/include/ \
 	-I$(HOME_PATH)/lib/libmini/include
-LIB_DIR=-L/usr/local/lib -L$(HOME_PATH)/lib
+LIB_DIR=-L/usr/local/lib -L$(HOME_PATH)/lib -L../
 
 INC_LIBS=-lutils -lcomm -lzmq -lmini -lstdc++ -lm
 

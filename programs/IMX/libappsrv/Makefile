@@ -29,8 +29,8 @@ TOBJ_DIR =		lib
 #######
 BUILD_CFLAGS =		-fPIC -Wall -Wno-unused-function -Wno-unused-variable -g -std=c99
 #BUILD_LIBS =		-lpthread -lm
-BUILD_INC_DIR = 	-I/usr/include -I/usr/local/include -I../zeromq-4.2.1/include/ -I../utils/ -I../libmini/include
-BUILD_LIB_DIR =		-L/usr/local/lib -L/usr/lib -L/usr/libexec ../libzmq.a ../libutils.a -L../libmini.a
+BUILD_INC_DIR = 	-I/usr/include -I/usr/local/include -I$(HOME_PATH)/lib/zeromq-4.2.1/include/ -I../utils/ -I$(HOME_PATH)/lib/libmini/include
+BUILD_LIB_DIR =		-L/usr/local/lib -L/usr/lib -L/usr/libexec $(HOME_PATH)/lib/libzmq.a ../libutils.a -L$(HOME_PATH)/lib/libmini.a
 
 #######
 ifeq ($(BUILD_HOST), darwin)
