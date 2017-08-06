@@ -60,14 +60,14 @@ EXPORT_LIBA += -lmemhook -lmini -ldl
 export EXPORT_CFLAGS
 export EXPORT_LIBA
 
-openIMX := IMX_coreExchangeNode IMX_messageGateway IMX_loginServer IMX_settingServer IMX_userInfoApi
+openIMX := IMX_coreExchangeNode IMX_messageGateway IMX_loginServer IMX_settingServer IMX_userInfoApi IMX_appServer
 openHLS := rmsapi hlsapi hlsldb
 openPMS := dtsync pole-M pole-S
 openLOG := loghit loghub
 SRV := $(openIMX) $(openHLS) $(openPMS) $(openLOG) \
 	drisamp drimode goby rtmiles rta drirecord \
 	drisampapi drimodeapi gobyapi rtmilesapi rtaapi drirecordapi \
-	msgsearchapi spxapi dfsapi appServer ptop robais tsearchapi driviewapi \
+	msgsearchapi spxapi dfsapi ptop robais tsearchapi driviewapi \
 	topology crzptX crzptY ACB damS  roadRank \
 	gdgive bdgive gopath gomile ashman adcube_v2\
 	spark releaseServer dfsdb tsdb \
@@ -109,9 +109,6 @@ spxapi:
 	@echo -e $(GREEN)"【"$(YELLOW) $@ $(GREEN)"】"$(RED)"\n-->OK!\n"$(NONE)
 dfsapi:
 	$(MAKE) -C ./programs/RTAP MAIN_APP_SERV=dfsapi
-	@echo -e $(GREEN)"【"$(YELLOW) $@ $(GREEN)"】"$(RED)"\n-->OK!\n"$(NONE)
-appServer:
-	$(MAKE) -C ./programs/appServer MAIN_APP_SERV=appServer
 	@echo -e $(GREEN)"【"$(YELLOW) $@ $(GREEN)"】"$(RED)"\n-->OK!\n"$(NONE)
 rmsapi:
 	$(MAKE) -C ./programs/RTAP MAIN_APP_SERV=rmsapi
@@ -332,6 +329,10 @@ IMX_userInfoApi:
 	$(MAKE) -C ./programs/UserInfoApi MAIN_APP_SERV=UserInfoApi
 	@echo -e $(GREEN)"【"$(YELLOW) $@ $(GREEN)"】"$(RED)"\n-->OK!\n"$(NONE)
 
+IMX_appServer:
+	$(MAKE) -C ./programs/appServer MAIN_APP_SERV=appServer
+	@echo -e $(GREEN)"【"$(YELLOW) $@ $(GREEN)"】"$(RED)"\n-->OK!\n"$(NONE)
+
 
 push:
 	git push origin HEAD:refs/for/devel
@@ -347,8 +348,8 @@ clean:
 	$(MAKE) -C ./programs/flyKite clean
 	$(MAKE) -C ./programs/ashman clean
 	$(MAKE) -C ./programs/weibo-G clean
-	$(MAKE) -C ./programs/BRM clean
-	$(MAKE) -C ./programs/roadRank clean
+	#$(MAKE) -C ./programs/BRM clean
+	#$(MAKE) -C ./programs/roadRank clean
 	$(MAKE) -C ./programs/dtsync clean
 	$(MAKE) -C ./programs/pole-M clean
 	$(MAKE) -C ./programs/pole-S clean
@@ -383,7 +384,7 @@ distclean:
 	$(MAKE) -C ./programs/flyKite distclean
 	$(MAKE) -C ./programs/ashman distclean
 	$(MAKE) -C ./programs/weibo-G distclean
-	$(MAKE) -C ./programs/BRM distclean
+	#$(MAKE) -C ./programs/BRM distclean
 	#$(MAKE) -C ./programs/roadRank distclean
 	$(MAKE) -C ./programs/dtsync distclean
 	$(MAKE) -C ./programs/pole-M distclean

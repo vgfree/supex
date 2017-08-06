@@ -44,6 +44,7 @@ static int work_init(void)
 	/*io init*/
 	struct comm_context *commctx = commapi_ctx_create();
 	assert(commctx);
+	g_serv_info.commctx = commctx;
 
 	/*init client event*/
 	struct comm_cbinfo clientCB = {};
@@ -59,7 +60,7 @@ static int work_init(void)
 	if (MGcliHost) {
 		struct comm_cbinfo MGCB = {};
 		MGCB.fcb = message_gateway_event_notify;
-		msg_fd = commapi_socket(commctx, MGcliHost, MGcliPort, &MGCB, COMM_CONNECT);
+		g_serv_info.message_gateway_fd = msg_fd = commapi_socket(commctx, MGcliHost, MGcliPort, &MGCB, COMM_CONNECT);
 		if (msg_fd <= 0) {
 			x_printf(E, "connect message gateway failed.");
 			return -1;
@@ -82,7 +83,7 @@ static int work_init(void)
 	if (settingServerHost) {
 		struct comm_cbinfo settingServerCB = {};
 		settingServerCB.fcb = setting_server_event_notify;
-		set_fd = commapi_socket(commctx, settingServerHost, settingServerPort, &settingServerCB, COMM_CONNECT);
+		g_serv_info.setting_server_fd = set_fd = commapi_socket(commctx, settingServerHost, settingServerPort, &settingServerCB, COMM_CONNECT);
 		if (set_fd <= 0) {
 			x_printf(E, "connect settingServer failed.");
 			return -1;
@@ -105,7 +106,7 @@ static int work_init(void)
 	if (loginServerHost) {
 		struct comm_cbinfo loginServerCB = {};
 		loginServerCB.fcb = login_server_event_notify;
-		gin_fd = commapi_socket(commctx, loginServerHost, loginServerPort, &loginServerCB, COMM_CONNECT);
+		g_serv_info.login_server_fd = gin_fd = commapi_socket(commctx, loginServerHost, loginServerPort, &loginServerCB, COMM_CONNECT);
 		if (gin_fd <= 0) {
 			x_printf(E, "connect loginServer failed.");
 			return -1;
@@ -128,12 +129,8 @@ static int work_init(void)
 	init_uid_map();
 	init_gid_map();
 	/*fill serv*/
-	g_serv_info.commctx = commctx;
 	strcpy(g_serv_info.host, clientHost);
 	g_serv_info.port = atoi(clientPort);
-	g_serv_info.message_gateway_fd = msg_fd;
-	g_serv_info.setting_server_fd = set_fd;
-	g_serv_info.login_server_fd = gin_fd;
 
 	/*init over*/
 	destroy_config_reader(config);
@@ -142,12 +139,12 @@ static int work_init(void)
 
 int main(void)
 {
-	signal(SIGPIPE, SIG_IGN);
+	//signal(SIGPIPE, SIG_IGN);
 
-	if (daemon_init(SERVER_FILE) == 1) {
-		printf("ERROR:Server is running.");
-		return -1;
-	}
+	//if (daemon_init(SERVER_FILE) == 1) {
+	//	printf("ERROR:Server is running.");
+	//	return -1;
+	//}
 
 	if (work_init() == -1) {
 		printf("ERROR:Server init failed.");

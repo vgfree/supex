@@ -14,12 +14,13 @@ OBJ = libmini.a \
       libzmq.a \
       libxmq.a \
       libcomm.a \
-      libutils.a \
       libnetmod.a \
       libmcache.a \
       libzookeeper_mt.a \
       libsqlite3.a \
       librinoo.a \
+      libutils.a \
+      libappsrv.a \
       libsocket-server.a
 
 all:$(OBJ)
@@ -38,6 +39,10 @@ libcomm.a:
 libutils.a:
 	$(MAKE) -C $(LIB_DIR)/utils lib
 	mv $(LIB_DIR)/utils/lib/$@ $(LIB_DIR)
+
+libappsrv.a:
+	$(MAKE) -C $(LIB_DIR)/libappsrv lib
+	mv $(LIB_DIR)/libappsrv/lib/$@ $(LIB_DIR)
 
 libzmq.a:
 	cd ./zeromq-4.2.1 && sh ./configure --with-pic --enable-shared=no --without-libsodium
@@ -155,6 +160,7 @@ clean:
 	$(MAKE) -C $(LIB_DIR)/libmemhook distclean
 	$(MAKE) -C $(LIB_DIR)/libmini distclean
 	$(MAKE) -C $(LIB_DIR)/libxmq clean
+	$(MAKE) -C $(LIB_DIR)/libcomm distclean
 	$(MAKE) -C $(LIB_DIR)/libnetmod clean
 	$(MAKE) -C $(LIB_DIR)/mcache clean
 	$(MAKE) -C $(LIB_DIR)/socket-server clean

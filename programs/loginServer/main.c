@@ -28,12 +28,12 @@ int message_work(void)
 
 int main(int argc, char *argv[])
 {
-	signal(SIGPIPE, SIG_IGN);
+	//signal(SIGPIPE, SIG_IGN);
 
-	if (daemon_init(SERVER_FILE) == 1) {
-		printf("server is running");
-		return -1;
-	}
+	//if (daemon_init(SERVER_FILE) == 1) {
+	//	printf("server is running");
+	//	return -1;
+	//}
 
 	/*init log*/
 	SLogOpen(MODULE_NAME ".log", SLogIntegerToLevel(1));

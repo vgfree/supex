@@ -3,13 +3,13 @@ module("link")
 OWN_POOL = {
 	redis = {
                 IdKey = {
-                        host = '192.168.1.12',
-                        port = 9002,
+                        host = '127.0.0.1',
+                        port = 6379,
                 },
 
                 GidKey = {
-                        host = '192.168.1.12',
-                        port = 9002,
+                        host = '127.0.0.1',
+                        port = 6379,
                 }
         },
 }

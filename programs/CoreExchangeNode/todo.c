@@ -1,4 +1,6 @@
 
+#define PACKAGE_SIZE                    "PackageSize"
+#PackageSize=1024
 	//  char *MGsrvHost = get_config_name(config, LISTEN_MESSAGEGATEWAY_HOST);
 	//  char *MGsrvPort = get_config_name(config, LISTEN_MESSAGEGATEWAY_PORT);
 	//  char *package_sz = get_config_name(config, PACKAGE_SIZE);

@@ -15,7 +15,6 @@
 #define LISTEN_CLIENT_HOST              "ListenClientHost"
 #define LISTEN_CLIENT_PORT              "ListenClientPort"
 #define SERVER_FILE                     "CoreExchangeNode.pid"
-#define PACKAGE_SIZE                    "PackageSize"
 #define MODULE_NAME                     "CoreExchangeNode"
 #define CONNECT_MESSAGEGATEWAY_HOST     "ConnectMessageGatewayHost"
 #define CONNECT_MESSAGEGATEWAY_PORT     "ConnectMessageGatewayPort"

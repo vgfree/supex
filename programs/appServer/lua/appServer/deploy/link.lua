@@ -6,13 +6,13 @@ OWN_POOL = {
 	mysql = {},
 	zmq   = {
 		downstream = {
-			host = "192.168.71.141",
-			port = 8090,
+			host = "127.0.0.1",
+			port = 6002,
 			mold = "PUSH",
 		},
 		setting = {
-			host = "192.168.71.143",
-			port = 8102,
+			host = "127.0.0.1",
+			port = 9000,
 			mold = "PUSH",
 		},
 	},

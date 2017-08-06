@@ -18,28 +18,14 @@
 #include <lauxlib.h>
 #include <lualib.h>
 
-#include "major/smart_api.h"
+#include "libevcs.h"
 #include "appsrv.h"
 #include "json.h"
 
-#include "core/evcs_module.h"
-#include "core/evcs_events.h"
-#include "core/evcs_kernel.h"
-#include "spx_evcs.h"
-#include "spx_evcs_module.h"
-#include "async_tasks/async_obj.h"
-#include "base/free_queue.h"
-#include "lua_expand/lj_c_coro.h"
-#include "lua_expand/lua_link.h"
-#include "lua_expand/lj_http_info.h"
-#include "lua_expand/lj_cache.h"
 #include "libkv.h"
 
 EVCS_MODULE_SETUP(kernel, kernel_init, kernel_exit, &g_kernel_evts);
-EVCS_MODULE_SETUP(evcs, evcs_init, evcs_exit, &g_evcs_evts);
-#include "_ev_coro.h"
-#include "evcoro_async_tasks.h"
-#include "thread_pool_loop/tlpool.h"
+EVCS_MODULE_SETUP(evcs, spx_evcs_init, spx_evcs_exit, &g_spx_evcs_evts);
 
 
 #define MAX_PTHREAD_COUNT 3
@@ -159,7 +145,7 @@ void task_worker(void *data)
 	EVCS_MODULE_MOUNT(kernel);
 	EVCS_MODULE_ENTRY(kernel, true);
 
-	struct evcs_argv_settings sets = {
+	struct spx_evcs_argv_settings sets = {
 		.num    = MAX_UTHREAD_COUNT     /*协程数*/
 			, .tsz  = sizeof(struct app_msg)
 			, .data = data
@@ -189,7 +175,7 @@ int main(int argc, char **argv)
 	//}
 	create_io(TYPE_UPSTREAM | TYPE_STATUS);
 	// 1. 初始化线程池
-	tlpool_t *tlpool = tlpool_init(MAX_PTHREAD_COUNT, 100, sizeof(struct app_msg), NULL);
+	tlpool_t *tlpool = tlpool_init(MAX_PTHREAD_COUNT, 100, sizeof(struct app_msg), NULL, NULL);
 	int idx;
 	for (idx = 0; idx < MAX_PTHREAD_COUNT; idx++) {
 		tlpool_bind(tlpool, (void (*)(void *))task_worker, tlpool, idx);

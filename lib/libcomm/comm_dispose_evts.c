@@ -3,6 +3,7 @@
 /*********	 Copyright © 2016年 xuli. All rights reserved.	******************************/
 /*********************************************************************************************/
 #include <sys/time.h>
+#include <poll.h>
 #include "comm_confs.h"
 #include "comm_dispose_data.h"
 #include "comm_dispose_evts.h"
@@ -433,14 +434,38 @@ bool commevts_push(struct comm_evts *commevts, struct comm_message *message)
 	return false;
 }
 
+#define POLL_TIMEOUT_MSECS 5000
 bool commevts_pull(struct comm_evts *commevts, struct comm_message *message)
 {
 	int     fd = 0;
 	int     bytes = 0;
 
+	int max = 1;
+	struct pollfd pfds[max];
+	pfds[0].fd = commevts->recvpipe.rfd;
+	pfds[0].events = POLLIN;
+	int ret = 0;
 	do {
-		// TODO:add epoll
-		bytes = read(commevts->recvpipe.rfd, &fd, sizeof(fd));
+again:
+		ret = poll(pfds, max, POLL_TIMEOUT_MSECS);
+		if (ret < 0) {
+			if (errno == EINTR || errno == EAGAIN)
+				goto again;
+			assert(0);
+		} else if (ret == 0) {
+			/*timeout*/
+			goto again;
+		}
+		/* An event on one of the fds has occurred. */
+		for (int i = 0; i < max; i++) {
+			int ev = pfds[i].revents;
+			if (ev & (POLLERR | POLLHUP | POLLNVAL)) {
+				assert(0);
+			}
+			if (ev & POLLIN) {
+				bytes = read(commevts->recvpipe.rfd, &fd, sizeof(fd));
+			}
+		}
 	} while (bytes != sizeof(fd));
 
 	struct comm_message     *commmsg = NULL;

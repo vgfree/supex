@@ -6,15 +6,13 @@ INC_DIR=-I/usr/local/include/luajit-2.0 \
 	-I../../lib/libmini/include \
 	-I../../lib/libkv/release \
 	-I../../lib/libmemhook/src \
-	-I../../lib/libscco/include \
-	-I../../lib/libcoro/include \
-	-I../../lib/libevcoro/include \
-	-I../../lib/libevcs/include \
-	-I../../lib/libevcs/include/engine \
+	-I../../lib/libscco \
+	-I../../lib/libcoro \
+	-I../../lib/libevcoro \
+	-I../../lib/libevcs \
 	-I../../lib/utils \
 	-I../../lib/libappsrv \
 	-I../../lib/zeromq-4.2.1/include \
-	-I../../lib/libevcs/include/frame \
 	-I./src -I../
 
 
