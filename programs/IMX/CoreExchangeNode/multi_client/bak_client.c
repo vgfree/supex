@@ -48,7 +48,8 @@ void *read_message(void *arg)
 	while (1) {
 		printf("\x1B[1;32m" "start recv msg.\n" "\x1B[m");
 		commmsg_make(&recvmsg, DEFAULT_MSG_SIZE);
-		remove_first_nframe(commmsg_frame_count(&recvmsg), &recvmsg);
+		commmsg_frame_del(&recvmsg, 0, commmsg_frame_count(&recvmsg));
+		recvmsg.package.frames_of_package[0] = 0;
 		commapi_recv(comm_ctx, &recvmsg);
 		size_t  size = 0;
 		char    *frame = commmsg_frame_get(&recvmsg, 0, &size);

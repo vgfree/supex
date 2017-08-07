@@ -49,3 +49,5 @@ void commmsg_gets(struct comm_message *message, int *fd, int *flags, int *ptype)
 char *commmsg_frame_get(struct comm_message *msg, int index, int *size);
 
 int commmsg_frame_set(struct comm_message *msg, int index, int size, char *frame);
+
+int commmsg_frame_del(struct comm_message *msg, int index, int nframe);

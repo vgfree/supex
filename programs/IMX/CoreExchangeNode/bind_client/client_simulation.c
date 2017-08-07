@@ -39,7 +39,8 @@ void *client_thread_read(void *usr)
 
 		if (memcmp(buf, "bind", 4) == 0) {
 			printf("recv frames : %d\n", commmsg_frame_count(&msg));
-			remove_first_nframe(commmsg_frame_count(&msg), &msg);
+			commmsg_frame_del(&msg, 0, commmsg_frame_count(&msg));
+			msg.package.frames_of_package[0] = 0;
 			commmsg_frame_set(&msg, 0, strlen(buf), buf);
 			msg.package.frames_of_package[0] = msg.package.frames;
 			msg.package.packages = 1;
@@ -69,7 +70,8 @@ void *client_thread_read(void *usr)
 			}
 
 			free(buf);
-			remove_first_nframe(commmsg_frame_count(&msg), &msg);
+			commmsg_frame_del(&msg, 0, commmsg_frame_count(&msg));
+			msg.package.frames_of_package[0] = 0;
 			commmsg_free(&msg);
 		}
 	}

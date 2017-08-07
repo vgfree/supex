@@ -152,3 +152,24 @@ int commmsg_frame_set(struct comm_message *msg, int index, int size, char *frame
 
 	return 0;
 }
+
+int commmsg_frame_del(struct comm_message *msg, int index, int nframe)
+{
+	if ((index >= msg->package.frames) || (index < 0)
+			|| (index + nframe > msg->package.frames) || (nframe < 0)) {
+		printf("index:%d >= msg->package.frames:%d.", index, msg->package.frames);
+		return -1;
+	}
+
+	int off = msg->package.frame_offset[index];
+	int size = nframe ? msg->package.frame_offset[index + nframe - 1] - off + msg->package.frame_size[ index + nframe - 1]: 0;
+	commsds_pull_core(&msg->package.raw_data, NULL, size, off);
+
+	for (int i = index; (i + nframe) < msg->package.frames; i++) {
+		msg->package.frame_size[i] = msg->package.frame_size[nframe + i];
+		msg->package.frame_offset[i] = msg->package.frame_offset[nframe + i] - size;
+	}
+
+	msg->package.frames -= nframe;
+	return 0;
+}

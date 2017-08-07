@@ -74,7 +74,9 @@ void commsds_pull_core(struct comm_sds *sds, const char *str, int len, int off)
 	assert((off >= 0) && (off <= sds->len));
 	assert(len <= (sds->len - off));
 
-	memcpy((void *)str, (const void *)sds->str + off, len);
+	if (str) {
+		memcpy((void *)str, (const void *)sds->str + off, len);
+	}
 	memmove(sds->str + off, sds->str + off + len, sds->len - off - len);
 	sds->len -= len;
 }
@@ -95,7 +97,9 @@ void commsds_pull_head(struct comm_sds *sds, const char *str, int len)
 {
 	assert(len <= sds->len);
 
-	memcpy((void *)str, (const void *)sds->str, len);
+	if (str) {
+		memcpy((void *)str, (const void *)sds->str, len);
+	}
 	memmove(sds->str, sds->str + len, sds->len - len);
 	sds->len -= len;
 }
@@ -115,7 +119,9 @@ void commsds_pull_tail(struct comm_sds *sds, const char *str, int len)
 {
 	assert(len <= sds->len);
 
-	memcpy((void *)str, (const void *)(sds->str + sds->len - len), len);
+	if (str) {
+		memcpy((void *)str, (const void *)(sds->str + sds->len - len), len);
+	}
 	sds->len -= len;
 }
 

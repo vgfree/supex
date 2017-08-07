@@ -57,7 +57,8 @@ static void _handle_cid_message(struct comm_message *msg)
 		commmsg_gets(msg, NULL, &flags, &ptype);
 		commmsg_sets(msg, fd, flags, ptype);
 		
-		remove_first_nframe(3, msg);
+		commmsg_frame_del(msg, 0, 3);
+		msg->package.frames_of_package[0] -= 3;
 		commapi_send(g_serv_info.commctx, msg);
 	}
 }
@@ -77,7 +78,8 @@ static int _handle_gid_message(struct comm_message *msg)
 		return 0;
 	}
 
-	remove_first_nframe(3, msg);
+	commmsg_frame_del(msg, 0, 3);
+	msg->package.frames_of_package[0] -= 3;
 	x_printf(D, "commmsg_frame_count:%d, fd size:%d", commmsg_frame_count(msg), size);
 
 	for (int i = 0; i < size; i++) {
@@ -103,7 +105,8 @@ static int _handle_uid_message(struct comm_message *msg)
 	int fd = find_fd(uid);
 
 	if (fd != -1) {
-		remove_first_nframe(3, msg);
+		commmsg_frame_del(msg, 0, 3);
+		msg->package.frames_of_package[0] -= 3;
 		int flags = 0;
 		int ptype = 0;
 		commmsg_gets(msg, NULL, &flags, &ptype);
@@ -326,7 +329,8 @@ static int _verified(struct comm_message *msg)
 #endif
 
 	if (msg->ptype == PAIR_METHOD) {
-		remove_first_nframe(1, msg);
+		commmsg_frame_del(msg, 0, 1);
+		msg->package.frames_of_package[0]--;
 		char buf[21] = {};
 		buf[0] = 0x01;
 		commmsg_frame_set(msg, 0, 21, buf);
