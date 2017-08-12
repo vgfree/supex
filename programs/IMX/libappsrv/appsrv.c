@@ -4,7 +4,7 @@
 #include <assert.h>
 #include <string.h>
 #include "appsrv_handle.h"
-#include "config_reader.h"
+#include "iniparser.h"
 
 static void *g_ctx = NULL;
 static AO_SpinLockT *g_send_lock = NULL;

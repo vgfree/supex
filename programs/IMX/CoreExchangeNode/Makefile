@@ -8,7 +8,7 @@ INCLUDE_PATH = -I. \
 	       -I/usr/include \
 	       -I/usr/local/include \
 	       -I$(HOME_PATH)/lib/libcomm \
-	       -I../utils \
+	       -I$(HOME_PATH)/lib/iniparser/src \
 	       -I$(HOME_PATH)/lib/libmini/include \
 	       -I$(HOME_PATH)/lib/libkv/release/
 TARGET = ./core_exchange_node
@@ -20,7 +20,7 @@ $(OBJ): $(SRC)
 	$(CC) $(CFLAG) $(INCLUDE_PATH) -c $(SRC)
 
 $(TARGET) : $(OBJ)
-	$(CC) $(OBJ) -L$(HOME_PATH)/lib -L../ -lcomm -lutils -lpthread -luuid -lkv -lleveldb -lstdc++ -lmini -ldl -o $(TARGET)
+	$(CC) $(OBJ) -L$(HOME_PATH)/lib -L../ -lcomm -liniparser -lpthread -luuid -lkv -lleveldb -lstdc++ -lmini -ldl -o $(TARGET)
 
 clean:
 	rm -f *.o $(TARGET)

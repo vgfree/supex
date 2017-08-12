@@ -1,5 +1,5 @@
 #include "zmq_io_wraper.h"
-#include "config_reader.h"
+#include "iniparser.h"
 #include "libmini.h"
 
 #include <assert.h>

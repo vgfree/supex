@@ -10,7 +10,7 @@ INC_DIR=-I/usr/local/include/luajit-2.0 \
 	-I$(HOME_PATH)/lib/libev \
 	-I$(HOME_PATH)/lib/libevcoro \
 	-I$(HOME_PATH)/lib/libevcs \
-	-I..//utils \
+	-I$(HOME_PATH)/lib/iniparser/src \
 	-I..//libappsrv \
 	-I$(HOME_PATH)/lib/zeromq-4.2.1/include \
 	-I./src -I../
@@ -19,7 +19,7 @@ INC_DIR=-I/usr/local/include/luajit-2.0 \
 
 LIB_DIR=-L/usr/local/lib -L$(HOME_PATH)/lib -L../
 LIBS=-lluajit-5.1 -lpthread -lrt -lm -lstdc++
-LIBA=-ljson-c -lkv -lappsrv -lutils -lzmq
+LIBA=-ljson-c -lkv -lappsrv -liniparser -lzmq
 
 #[=========>MARK<=========]#
 MAIN_APP_SERV ?= ptop

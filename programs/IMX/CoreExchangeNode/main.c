@@ -1,9 +1,8 @@
 #include <signal.h>
 #include <stdlib.h>
 
-#include "config_reader.h"
+#include "iniparser.h"
 #include "comm_api.h"
-#include "daemon.h"
 #include "fd_manager.h"
 #include "message_dispatch.h"
 #include "notify.h"
@@ -139,13 +138,6 @@ static int work_init(void)
 
 int main(void)
 {
-	//signal(SIGPIPE, SIG_IGN);
-
-	//if (daemon_init(SERVER_FILE) == 1) {
-	//	printf("ERROR:Server is running.");
-	//	return -1;
-	//}
-
 	if (work_init() == -1) {
 		printf("ERROR:Server init failed.");
 		return -1;
@@ -160,7 +152,6 @@ int main(void)
 	destroy_uid_map();
 	destroy_gid_map();
 	kv_destroy();
-	daemon_exit(SERVER_FILE);
 	return 0;
 }
 

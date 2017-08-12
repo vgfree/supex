@@ -1,4 +1,3 @@
-#include "daemon.h"
 #include "libmini.h"
 #include "message_concentrator.h"
 
@@ -10,13 +9,6 @@
 
 int main(void)
 {
-	//signal(SIGPIPE, SIG_IGN);
-
-	//if (daemon_init(SERVER_FILE) == 1) {
-	//	printf("server is running");
-	//	return -1;
-	//}
-
 	/*init log*/
 	SLogOpen(MODULE_NAME ".log", SLogIntegerToLevel(1));
 	
@@ -24,7 +16,6 @@ int main(void)
 
 	x_printf(W, "exit main thread.");
 	concentrator_destroy();
-	daemon_exit(SERVER_FILE);
 	return 0;
 }
 

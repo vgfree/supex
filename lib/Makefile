@@ -15,6 +15,7 @@ OBJ = libmini.a \
       libxmq.a \
       libcomm.a \
       libnetmod.a \
+      libiniparser.a \
       libmcache.a \
       libzookeeper_mt.a \
       libsqlite3.a \
@@ -30,6 +31,11 @@ libxmq.a:
 libnetmod.a:
 	$(MAKE) -C $(LIB_DIR)/libnetmod
 	mv $(LIB_DIR)/libnetmod/$@ $(LIB_DIR)
+
+libiniparser.a:
+	$(MAKE) -C $(LIB_DIR)/iniparser
+	mv $(LIB_DIR)/iniparser/$@ $(LIB_DIR)
+
 
 libcomm.a:
 	$(MAKE) -C $(LIB_DIR)/libcomm lib
@@ -153,6 +159,7 @@ clean:
 	$(MAKE) -C $(LIB_DIR)/libxmq clean
 	$(MAKE) -C $(LIB_DIR)/libcomm distclean
 	$(MAKE) -C $(LIB_DIR)/libnetmod clean
+	$(MAKE) -C $(LIB_DIR)/iniparser clean
 	$(MAKE) -C $(LIB_DIR)/mcache clean
 	$(MAKE) -C $(LIB_DIR)/socket-server clean
 	-if [ -d ./zookeeper-3.4.6 ];then rm -rf ./zookeeper-3.4.6; fi

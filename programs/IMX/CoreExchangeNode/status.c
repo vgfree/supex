@@ -1,4 +1,3 @@
-#include "comm_message_operator.h"
 #include "gid_map.h"
 #include "message_dispatch.h"
 #include "status.h"

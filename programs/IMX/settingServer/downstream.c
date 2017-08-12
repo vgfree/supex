@@ -1,7 +1,6 @@
 #include "comm_io_wraper.h"
 #include "downstream.h"
 #include "zmq_io_wraper.h"
-#include "comm_message_operator.h"
 #include "libmini.h"
 
 int downstream_msg(struct comm_message *msg)
@@ -47,8 +46,8 @@ int pull_msg(struct comm_message *msg)
 
 		x_printf(D, "more_size:%ld.", more_size);
 		commmsg_frame_set(msg, i, zmq_msg_size(&part), zmq_msg_data(&part));
-		msg.package.frames_of_package[0] = msg.package.frames;
-		msg.package.packages = 1;
+		msg->package.frames_of_package[0] = msg->package.frames;
+		msg->package.packages = 1;
 		zmq_io_getsockopt(ZMQ_RCVMORE, &more, &more_size);
 		zmq_msg_close(&part);
 		x_printf(D, "more:%d.", more);

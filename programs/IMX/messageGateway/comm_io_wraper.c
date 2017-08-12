@@ -1,5 +1,5 @@
 #include "comm_io_wraper.h"
-#include "config_reader.h"
+#include "iniparser.h"
 #include "libmini.h"
 
 #define CONFIG                  "messageGateway.conf"

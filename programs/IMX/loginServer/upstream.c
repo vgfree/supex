@@ -1,5 +1,4 @@
 #include "comm_io_wraper.h"
-#include "comm_message_operator.h"
 #include "libmini.h"
 #include "upstream.h"
 #include "zmq_io_wraper.h"

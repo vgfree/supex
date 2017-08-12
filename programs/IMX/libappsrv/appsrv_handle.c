@@ -2,7 +2,7 @@
  * author:lanjian
  * date:2016/07/08
  */
-#include "config_reader.h"
+#include "iniparser.h"
 #include "zmq.h"
 #include <assert.h>
 #include <memory.h>

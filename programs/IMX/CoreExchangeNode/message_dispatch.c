@@ -3,7 +3,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "comm_message_operator.h"
 #include "fd_manager.h"
 #include "gid_map.h"
 #include "message_dispatch.h"

@@ -1,6 +1,5 @@
 #include <uuid/uuid.h>
 
-#include "comm_message_operator.h"
 #include "fd_manager.h"
 #include "message_dispatch.h"
 #include "notify.h"

@@ -1,6 +1,4 @@
-#include "daemon.h"
 #include "libmini.h"
-#include "comm_message_operator.h"
 #include "comm_io_wraper.h"
 #include "downstream.h"
 #include "zmq_io_wraper.h"
@@ -30,16 +28,7 @@ void message_work(void)
 
 int main(int argc, char *argv[])
 {
-	//signal(SIGPIPE, SIG_IGN);
-
-	//if (daemon_init(SERVER_FILE) == 1) {
-	//	printf("server is running");
-	//	return -1;
-	//}
-
 	message_work();
-	
-	daemon_exit(SERVER_FILE);
 	return 0;
 }
 

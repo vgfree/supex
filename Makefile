@@ -20,6 +20,7 @@ LIGHT_WHITE     = "\x1B[1;37m"
 
 #export OBJECT_SCENE ?= ONLINE
 
+BUILD_HOST = $(shell uname | tr '[A-Z]' '[a-z]')
 export HOME_PATH = $(shell pwd)
 EXPORT_CFLAGS = -g
 ifeq ($(OBJECT_SCENE), ONLINE)

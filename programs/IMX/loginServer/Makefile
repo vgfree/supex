@@ -1,10 +1,10 @@
 INC_DIR=-I$(HOME_PATH)/lib/libcomm/ \
 	-I$(HOME_PATH)/lib/libmini/include \
-	-I..//utils \
+	-I$(HOME_PATH)/lib/iniparser/src \
 	-I$(HOME_PATH)/lib/zeromq-4.2.1/include/
 LIB_DIR=-L/usr/local/lib -L$(HOME_PATH)/lib -L../
 
-INC_LIBS=-lutils -lcomm -lzmq -lmini -lstdc++ -lm
+INC_LIBS=-liniparser -lcomm -lzmq -lmini -lstdc++ -lm
 
 #[=========>MARK<=========]#
 MAIN_APP_SERV ?= loginServer
