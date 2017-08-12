@@ -19,21 +19,21 @@ static int work_init(void)
 	SLogOpen(MODULE_NAME ".log", SLogIntegerToLevel(1));
 
 	/*get config*/
-	struct config_reader    *config = init_config_reader(CONFIG);
-	char                    *clientHost = get_config_name(config, LISTEN_CLIENT_HOST);
-	char                    *clientPort = get_config_name(config, LISTEN_CLIENT_PORT);
+	dictionary    *config = iniparser_load(CONFIG);
+	char                    *clientHost = iniparser_getstring(config, LISTEN_CLIENT_HOST, NULL);
+	char                    *clientPort = iniparser_getstring(config, LISTEN_CLIENT_PORT, NULL);
 	x_printf(D, "ListenClientHost = %s, ListenClientPort = %s", clientHost, clientPort);
 	
-	char    *MGcliHost = get_config_name(config, CONNECT_MESSAGEGATEWAY_HOST);
-	char    *MGcliPort = get_config_name(config, CONNECT_MESSAGEGATEWAY_PORT);
+	char    *MGcliHost = iniparser_getstring(config, CONNECT_MESSAGEGATEWAY_HOST, NULL);
+	char    *MGcliPort = iniparser_getstring(config, CONNECT_MESSAGEGATEWAY_PORT, NULL);
 	x_printf(D, "MGcliHost:%s, MGcliPort:%s.", MGcliHost, MGcliPort);
 
-	char    *settingServerHost = get_config_name(config, CONNECT_SETTINGSERVER_HOST);
-	char    *settingServerPort = get_config_name(config, CONNECT_SETTINGSERVER_PORT);
+	char    *settingServerHost = iniparser_getstring(config, CONNECT_SETTINGSERVER_HOST, NULL);
+	char    *settingServerPort = iniparser_getstring(config, CONNECT_SETTINGSERVER_PORT, NULL);
 	x_printf(D, "SettingHost:%s, SettingPort:%s.", settingServerHost, settingServerPort);
 	
-	char    *loginServerHost = get_config_name(config, CONNECT_LOGINSERVER_HOST);
-	char    *loginServerPort = get_config_name(config, CONNECT_LOGINSERVER_PORT);
+	char    *loginServerHost = iniparser_getstring(config, CONNECT_LOGINSERVER_HOST, NULL);
+	char    *loginServerPort = iniparser_getstring(config, CONNECT_LOGINSERVER_PORT, NULL);
 	x_printf(D, "loginServerHost:%s, loginServerPort:%s.", loginServerHost, loginServerPort);
 
 
@@ -133,7 +133,7 @@ static int work_init(void)
 	g_serv_info.port = atoi(clientPort);
 
 	/*init over*/
-	destroy_config_reader(config);
+	iniparser_freedict(config);
 	return 0;
 }
 

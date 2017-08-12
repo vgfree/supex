@@ -80,7 +80,6 @@ prepare:
 SOBJ = $(addprefix $(SOBJ_DIR)/, \
         config_reader.o \
 	daemon.o \
-	comm_message_operator.o \
 	)
 
 
@@ -127,8 +126,3 @@ distclean : clean
 
 install : $(TOBJ)
 	$(ECHO) $(COLOR_TXT)"\t\t- INSTALL\t===>\t$<"$(COLOR_NONE)
-ifeq ($(BUILD_HOST), darwin)
-	
-else
-	
-endif

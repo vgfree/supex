@@ -63,9 +63,9 @@ int init_comm_io(void)
 	g_node_ptr = (struct core_exchange_node *)malloc(sizeof(struct core_exchange_node));
 	g_node_ptr->max_size = 0;
 
-	struct config_reader *config = init_config_reader(CONFIG);
-	char    *host = get_config_name(config, NODE_SERVER_HOST);
-	char    *port = get_config_name(config, NODE_SERVER_PORT);
+	dictionary    *config = iniparser_load(CONFIG);
+	char    *host = iniparser_getstring(config, NODE_SERVER_HOST, NULL);
+	char    *port = iniparser_getstring(config, NODE_SERVER_PORT, NULL);
 	x_printf(D, "nodeServer:%s, nodePort:%s.", host, port);
 
 	g_commctx = commapi_ctx_create();
@@ -77,7 +77,7 @@ int init_comm_io(void)
 	callback_info.fcb = core_exchange_node_cb;
 	assert(commapi_socket(g_commctx, host, port, &callback_info, COMM_BIND) != -1);
 
-	destroy_config_reader(config);
+	iniparser_freedict(config);
 	return 0;
 }
 

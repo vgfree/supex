@@ -26,10 +26,10 @@ void init_connect(void *ctx, int types) {
 	g_conn_types = types;
 	assert(g_conn_types > 0);
 	/*init socket*/
-	struct config_reader *config = init_config_reader(SRV_CONFIG);
+	dictionary    *config = iniparser_load(SRV_CONFIG);
 	if((g_conn_types & TYPE_UPSTREAM) == TYPE_UPSTREAM) {
-		host = get_config_name(config, GATEWAY_PUSH_HOST);
-		port = get_config_name(config, GATEWAY_PUSH_PORT);
+		host = iniparser_getstring(config, GATEWAY_PUSH_HOST, NULL);
+		port = iniparser_getstring(config, GATEWAY_PUSH_PORT, NULL);
 		snprintf(addr, 63, "tcp://%s:%s", host, port);
 
 		g_skt_upstream = zmq_socket(ctx, ZMQ_PULL);
@@ -39,8 +39,8 @@ void init_connect(void *ctx, int types) {
 	}
 
 	if((g_conn_types & TYPE_DOWNSTREAM) == TYPE_DOWNSTREAM) {
-		host = get_config_name(config, GATEWAY_PULL_HOST);
-		port = get_config_name(config, GATEWAY_PULL_PORT);
+		host = iniparser_getstring(config, GATEWAY_PULL_HOST, NULL);
+		port = iniparser_getstring(config, GATEWAY_PULL_PORT, NULL);
 		snprintf(addr, 63, "tcp://%s:%s", host, port);
 
 		g_skt_downstream = zmq_socket(ctx, ZMQ_PUSH);
@@ -50,8 +50,8 @@ void init_connect(void *ctx, int types) {
 	}
 
 	if((g_conn_types & TYPE_STATUS) == TYPE_STATUS) {
-		host = get_config_name(config, LOGIN_PUSH_HOST);
-		port = get_config_name(config, LOGIN_PUSH_PORT);
+		host = iniparser_getstring(config, LOGIN_PUSH_HOST, NULL);
+		port = iniparser_getstring(config, LOGIN_PUSH_PORT, NULL);
 		snprintf(addr, 63, "tcp://%s:%s", host, port);
 
 		g_skt_status = zmq_socket(ctx, ZMQ_PULL);
@@ -61,8 +61,8 @@ void init_connect(void *ctx, int types) {
 	}
 
 	if((g_conn_types & TYPE_SETTING) == TYPE_SETTING) {
-		host = get_config_name(config, USERINFOAPI_PULL_HOST);
-		port = get_config_name(config, USERINFOAPI_PULL_PORT);
+		host = iniparser_getstring(config, USERINFOAPI_PULL_HOST, NULL);
+		port = iniparser_getstring(config, USERINFOAPI_PULL_PORT, NULL);
 		snprintf(addr, 63, "tcp://%s:%s", host, port);
 
 		g_skt_setting = zmq_socket(ctx, ZMQ_PUSH);
@@ -71,8 +71,8 @@ void init_connect(void *ctx, int types) {
 		assert(rc == 0);
 	}
 	if((g_conn_types & TYPE_LOOKING) == TYPE_LOOKING) {
-		host = get_config_name(config, USERINFOAPI_REP_HOST);
-		port = get_config_name(config, USERINFOAPI_REP_PORT);
+		host = iniparser_getstring(config, USERINFOAPI_REP_HOST, NULL);
+		port = iniparser_getstring(config, USERINFOAPI_REP_PORT, NULL);
 		snprintf(addr, 63, "tcp://%s:%s", host, port);
 
 		g_skt_looking = zmq_socket(ctx, ZMQ_REQ);
@@ -80,7 +80,7 @@ void init_connect(void *ctx, int types) {
 		printf("connected with userinfoapi to looking\n");
 		assert(rc == 0);
 	}
-	destroy_config_reader(config);
+	iniparser_freedict(config);
 }
 
 void destroy_connect(void)

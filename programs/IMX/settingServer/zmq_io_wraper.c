@@ -73,14 +73,14 @@ int init_zmq_io(void)
 	assert(!g_ctx);
 	g_ctx = zmq_ctx_new();
 	
-	struct config_reader *config = init_config_reader(CONFIG);
-	char    *host = get_config_name(config, CLIENT_HOST);
-	char    *port = get_config_name(config, CLIENT_PORT);
+	dictionary    *config = iniparser_load(CONFIG);
+	char    *host = iniparser_getstring(config, CLIENT_HOST, NULL);
+	char    *port = iniparser_getstring(config, CLIENT_PORT, NULL);
 	x_printf(D, "clientIp:%s, clientPort:%s", host, port);
 
 	zmq_client_init(host, atoi(port));
 
-	destroy_config_reader(config);
+	iniparser_freedict(config);
 	return 0;
 }
 

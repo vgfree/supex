@@ -58,16 +58,16 @@ int init_zmq_io(void)
 	assert(!g_ctx);
 	g_ctx = zmq_ctx_new();
 
-	struct config_reader *config = init_config_reader(CONFIG);
-	char    *host = get_config_name(config, APP_HOST);
-	char    *port = get_config_name(config, APP_PORT);
+	dictionary    *config = iniparser_load(CONFIG);
+	char    *host = iniparser_getstring(config, APP_HOST, NULL);
+	char    *port = iniparser_getstring(config, APP_PORT, NULL);
 	zmq_srv_init(host, atoi(port));
 
-	host = get_config_name(config, API_HOST);
-	port = get_config_name(config, API_PORT);
+	host = iniparser_getstring(config, API_HOST, NULL);
+	port = iniparser_getstring(config, API_PORT, NULL);
 	zmq_cli_init(host, atoi(port));
 
-	destroy_config_reader(config);
+	iniparser_freedict(config);
 	return 0;
 }
 

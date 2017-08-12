@@ -1,9 +1,9 @@
 
 #define PACKAGE_SIZE                    "PackageSize"
 #PackageSize=1024
-	//  char *MGsrvHost = get_config_name(config, LISTEN_MESSAGEGATEWAY_HOST);
-	//  char *MGsrvPort = get_config_name(config, LISTEN_MESSAGEGATEWAY_PORT);
-	//  char *package_sz = get_config_name(config, PACKAGE_SIZE);
+	//  char *MGsrvHost = iniparser_getstring(config, LISTEN_MESSAGEGATEWAY_HOST, NULL);
+	//  char *MGsrvPort = iniparser_getstring(config, LISTEN_MESSAGEGATEWAY_PORT, NULL);
+	//  char *package_sz = iniparser_getstring(config, PACKAGE_SIZE, NULL);
 	//  x_printf(D, "MGsrvIp = %s, MGsrvPort = %s", MGsrvHost, MGsrvPort);
 
 	/*  retval = comm_socket(commctx, MGsrvHost, MGsrvPort, &MGCB, COMM_BIND);

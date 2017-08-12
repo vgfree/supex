@@ -64,9 +64,9 @@ static struct comm_context *g_commctx = NULL;
 
 int init_comm_io(void)
 {
-	struct config_reader *config = init_config_reader(CONFIG);
-	char    *host = get_config_name(config, NODE_CONNECT_HOST);
-	char    *port = get_config_name(config, NODE_CONNECT_PORT);
+	dictionary    *config = iniparser_load(CONFIG);
+	char    *host = iniparser_getstring(config, NODE_CONNECT_HOST, NULL);
+	char    *port = iniparser_getstring(config, NODE_CONNECT_PORT, NULL);
 
 	x_printf(D, "host:%s. port:%s.", host, port);
 	g_commctx = commapi_ctx_create();
@@ -77,11 +77,11 @@ int init_comm_io(void)
 	struct comm_cbinfo callback_info = {};
 	callback_info.fcb = core_exchange_node_cb;
 
-	char    *nodeServer = get_config_name(config, NODE_SERVER_HOST);
-	char    *nodePort = get_config_name(config, NODE_SERVER_PORT);
+	char    *nodeServer = iniparser_getstring(config, NODE_SERVER_HOST, NULL);
+	char    *nodePort = iniparser_getstring(config, NODE_SERVER_PORT, NULL);
 	x_printf(D, "nodeServer:%s, nodePort:%s.", nodeServer, nodePort);
 	commapi_socket(g_commctx, nodeServer, nodePort, &callback_info, COMM_BIND);
-	destroy_config_reader(config);
+	iniparser_freedict(config);
 	return 0;
 }
 
