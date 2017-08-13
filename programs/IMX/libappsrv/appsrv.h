@@ -16,21 +16,21 @@ enum askt_type {
 
 #define SRV_CONFIG                  "libappsrv.conf"
 
-#define GATEWAY_PUSH_HOST		"conn_gateway_push_upstream_host"
-#define GATEWAY_PUSH_PORT		"conn_gateway_push_upstream_port"
+#define GATEWAY_PUSH_HOST		":conn_gateway_push_upstream_host"
+#define GATEWAY_PUSH_PORT		":conn_gateway_push_upstream_port"
 
 
-#define GATEWAY_PULL_HOST		"gateway_pull_downstream_host"
-#define GATEWAY_PULL_PORT		"gateway_pull_downstream_port"
+#define GATEWAY_PULL_HOST		":gateway_pull_downstream_host"
+#define GATEWAY_PULL_PORT		":gateway_pull_downstream_port"
 
-#define LOGIN_PUSH_HOST              	"conn_login_push_status_host"
-#define LOGIN_PUSH_PORT			"conn_login_push_status_port"
+#define LOGIN_PUSH_HOST              	":conn_login_push_status_host"
+#define LOGIN_PUSH_PORT			":conn_login_push_status_port"
 
-#define USERINFOAPI_PULL_HOST		"usrinfoapi_pull_setting_host"
-#define USERINFOAPI_PULL_PORT		"usrinfoapi_pull_setting_port"
+#define USERINFOAPI_PULL_HOST		":usrinfoapi_pull_setting_host"
+#define USERINFOAPI_PULL_PORT		":usrinfoapi_pull_setting_port"
 
-#define USERINFOAPI_REP_HOST		"usrinfoapi_rep_looking_host"
-#define USERINFOAPI_REP_PORT		"usrinfoapi_rep_looking_port"
+#define USERINFOAPI_REP_HOST		":usrinfoapi_rep_looking_host"
+#define USERINFOAPI_REP_PORT		":usrinfoapi_rep_looking_port"
 
 
 #define MAX_SPILL_DEPTH    32

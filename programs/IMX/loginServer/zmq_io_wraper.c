@@ -5,10 +5,10 @@
 #include <assert.h>
 
 #define CONFIG          "loginServer.conf"
-#define APP_HOST          "AppHost"
-#define APP_PORT        "AppPort"
-#define API_HOST          "ApiHost"
-#define API_PORT        "ApiPort"
+#define APP_HOST          ":AppHost"
+#define APP_PORT        ":AppPort"
+#define API_HOST          ":ApiHost"
+#define API_PORT        ":ApiPort"
 
 static void     *g_ctx = NULL;
 static void     *g_server = NULL;

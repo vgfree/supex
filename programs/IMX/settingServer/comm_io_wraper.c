@@ -3,8 +3,8 @@
 #include "libmini.h"
 
 #define CONFIG                  "settingServer.conf"
-#define NODE_SERVER_HOST        "bind_exchage_pull_setting_host"
-#define NODE_SERVER_PORT        "bind_exchage_pull_setting_port"
+#define NODE_SERVER_HOST        ":bind_exchage_pull_setting_host"
+#define NODE_SERVER_PORT        ":bind_exchage_pull_setting_port"
 
 static void core_exchange_node_cb(void *ctx, int socket, enum STEP_CODE step, void *usr)
 {

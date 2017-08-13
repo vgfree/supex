@@ -5,10 +5,10 @@
 #include <assert.h>
 
 #define CONFIG          "messageGateway.conf"
-#define PUSH_HOST         "PushServer"
-#define PUSH_PORT       "PushPort"
-#define PULL_HOST         "PullServer"
-#define PULL_PORT       "PullPort"
+#define PUSH_HOST         ":PushServer"
+#define PUSH_PORT       ":PushPort"
+#define PULL_HOST         ":PullServer"
+#define PULL_PORT       ":PullPort"
 
 static void     *g_ctx = NULL;
 static void     *g_push = NULL;

@@ -5,8 +5,8 @@
 #include <assert.h>
 
 #define CONFIG          "settingServer.conf"
-#define CLIENT_HOST       "APIHost"
-#define CLIENT_PORT     "APIPort"
+#define CLIENT_HOST       ":APIHost"
+#define CLIENT_PORT     ":APIPort"
 
 static void *g_ctx = NULL;
 // static void *g_server[SERVER_SIZE] = {NULL, NULL, NULL, NULL};
