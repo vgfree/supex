@@ -3,10 +3,8 @@
 #include "libmini.h"
 
 #define CONFIG                  "messageGateway.conf"
-#define NODE_CONNECT_HOST         "CoreExchangeNodeHost"
-#define NODE_CONNECT_PORT       "CoreExchangeNodePort"
-#define NODE_SERVER_HOST          "NodeServer"
-#define NODE_SERVER_PORT        "NodePort"
+#define NODE_SERVER_HOST        "bind_exchage_push_upstream_host"
+#define NODE_SERVER_PORT        "bind_exchage_push_upstream_port"
 
 static void core_exchange_node_cb(void *ctx, int socket, enum STEP_CODE step, void *usr)
 {
@@ -16,7 +14,7 @@ static void core_exchange_node_cb(void *ctx, int socket, enum STEP_CODE step, vo
 	switch (step)
 	{
 		case STEP_INIT:
-			printf("server here is connect : %d\n", socket);
+			printf("server here is accept : %d\n", socket);
 			if (g_node_ptr->max_size > NODE_SIZE) {
 				x_printf(E, "core exchange node:%d > max size:%d.", g_node_ptr->max_size, NODE_SIZE);
 			}
@@ -32,7 +30,6 @@ static void core_exchange_node_cb(void *ctx, int socket, enum STEP_CODE step, vo
 		case STEP_WAIT:
 			printf("server here is wait : %d\n", socket);
 			break;
-
 
 		case STEP_STOP:
 			printf("server here is close : %d\n", socket);
@@ -61,14 +58,16 @@ static void core_exchange_node_cb(void *ctx, int socket, enum STEP_CODE step, vo
 }
 
 static struct comm_context *g_commctx = NULL;
-
 int init_comm_io(void)
 {
-	dictionary    *config = iniparser_load(CONFIG);
-	char    *host = iniparser_getstring(config, NODE_CONNECT_HOST, NULL);
-	char    *port = iniparser_getstring(config, NODE_CONNECT_PORT, NULL);
+	g_node_ptr = (struct core_exchange_node *)malloc(sizeof(struct core_exchange_node));
+	g_node_ptr->max_size = 0;
 
-	x_printf(D, "host:%s. port:%s.", host, port);
+	dictionary    *config = iniparser_load(CONFIG);
+	char    *host = iniparser_getstring(config, NODE_SERVER_HOST, NULL);
+	char    *port = iniparser_getstring(config, NODE_SERVER_PORT, NULL);
+	x_printf(D, "nodeServer:%s, nodePort:%s.", host, port);
+
 	g_commctx = commapi_ctx_create();
 	if (!g_commctx) {
 		return -1;
@@ -76,11 +75,8 @@ int init_comm_io(void)
 
 	struct comm_cbinfo callback_info = {};
 	callback_info.fcb = core_exchange_node_cb;
+	assert(commapi_socket(g_commctx, host, port, &callback_info, COMM_BIND) != -1);
 
-	char    *nodeServer = iniparser_getstring(config, NODE_SERVER_HOST, NULL);
-	char    *nodePort = iniparser_getstring(config, NODE_SERVER_PORT, NULL);
-	x_printf(D, "nodeServer:%s, nodePort:%s.", nodeServer, nodePort);
-	commapi_socket(g_commctx, nodeServer, nodePort, &callback_info, COMM_BIND);
 	iniparser_freedict(config);
 	return 0;
 }

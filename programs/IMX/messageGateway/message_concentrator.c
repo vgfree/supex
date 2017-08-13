@@ -116,9 +116,6 @@ static void *_push_thread(void *usr)
 
 void concentrator_work(void)
 {
-	g_node_ptr = (struct core_exchange_node *)malloc(sizeof(struct core_exchange_node));
-	g_node_ptr->max_size = 0;
-
 	assert(init_comm_io() == 0);
 	assert(init_zmq_io() == 0);
 
