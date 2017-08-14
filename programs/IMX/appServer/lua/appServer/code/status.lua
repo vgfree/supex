@@ -1,45 +1,39 @@
 local only = require('only')
 local supex = require('supex')
-local cjson = require('cjson')
-local scan = require('scan')
+local redis_api = require('redis_pool_api')
 
 module('status', package.seeall)
 
-function handle()
-	-- 打印上行数据
-	-- 0 status
-	-- 1 connected
-	-- 2 CID
-	print("调用setting")
+
+function handle( )
+	local dtab = supex["_DATA_"]
+	local ctl = dtab[2]
+	local cid = dtab[3]
+
 	print(supex["_DATA_"][1])
 	print(supex["_DATA_"][2])
 	print(supex["_DATA_"][3])
 
-	local CID = supex["_DATA_"][3]
-
-	local frame = {}
-
-	if supex["_DATA_"][2] == 'connected' then
-		-- 下发数据, 获取uid值
-		print('下发数据, 获取uid值')
-		-- 第一帧 setting
-		frame[1] = 'downstream'
-		-- 第二帧 status/uidmap/gidmap, 暂时写死
-		frame[2] = 'cid'
-		-- 第三帧 CID
-		frame[3] = CID
-		-- 第四帧 bind
-		frame[4] = 'bind'
-
-		print("frame = ", scan.dump(frame))
-
-		local ok = zmq_api.cmd("downstream", "send_table", frame)
-		print('下发完成')
-
+	if ctl == "closed" then
+		-->TODO:通知好友
+		local usr = redis_api.cmd()
+		local msg = string.format('{
+			"action":"fLogin",
+			"chatToken":"%s",
+			"timestamp":"%s",
+			"content":{"offline":["%s"]}}',
+			gettoken,
+			os.time(),
+			usr
+		)
+		local fLogin_tab = {
+			[1] = "downstream",
+			[2] = "uid",
+			[3] = ???,
+			[4] = msg
+		}
+		local ok = zmq_api.cmd("downstream", "send_table", fLogin_tab)
 	end
+	
 end
 
---[[
-1. 在接收到客户端登录时发送的数据时, server需要获取uid
-2. 在获取uid后, 将cid与uid执行绑定操作
---]]
