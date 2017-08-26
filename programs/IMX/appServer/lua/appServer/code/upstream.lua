@@ -1,18 +1,18 @@
 local only = require('only')
 local supex = require('supex')
+local cjson = require('cjson')
 
 module('upstream', package.seeall)
 
 local ACTION_LIST = {
 	login		= require("page_login").handle,
+	join		= require("page_join").handle,
 	heart		= require("page_heart").handle,
 	chat		= require("page_chat").handle,
 	chatRsp		= require("page_chatRsp").handle,
 	chatGroup	= require("page_chatGroup").handle,
 	chatGroupRsp	= require("page_chatGroupRsp").handle,
-	chatCommunion	= require("page_chatCommunion").handle,
-	chatCommunionRet= require("page_chatCommunionRet").handle,
-	frieds		= require("page_frieds").handle,
+	--frieds		= require("page_frieds").handle,
 
 }
 

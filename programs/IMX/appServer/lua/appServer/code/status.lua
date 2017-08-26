@@ -14,25 +14,32 @@ function handle( )
 	print(supex["_DATA_"][2])
 	print(supex["_DATA_"][3])
 
+	if ctl == "connected" then
+	end
 	if ctl == "closed" then
 		-->TODO:通知好友
-		local usr = redis_api.cmd()
-		local msg = string.format('{
-			"action":"fLogin",
-			"chatToken":"%s",
-			"timestamp":"%s",
-			"content":{"offline":["%s"]}}',
-			gettoken,
-			os.time(),
-			usr
-		)
-		local fLogin_tab = {
-			[1] = "downstream",
-			[2] = "uid",
-			[3] = ???,
-			[4] = msg
-		}
-		local ok = zmq_api.cmd("downstream", "send_table", fLogin_tab)
+		local gettoken = "11111111"
+		local uid = "baoxue"--TODO
+		-->通知好友
+		local ok, frds = redis_api.cmd("save_store", '', "smembers", uid .. ":allFriends")
+		if not ok then
+			only.log('E', 'failed get allFriends!')
+		else
+			for _, frd in ipairs(frds or {}) do
+				local gettoken = "1111111"
+				local msg = string.format('{"action":"fLogin","chatToken":"%s","timestamp":"%s","content":{"offline":["%s"]}}',
+					gettoken,
+					os.time(),
+					uid)
+				local fLogin_tab = {
+					[1] = "downstream",
+					[2] = "uid",
+					[3] = frd,
+					[4] = msg
+				}
+				local ok = zmq_api.cmd("downstream", "send_table", fLogin_tab)
+			end
+		end
 	end
 	
 end

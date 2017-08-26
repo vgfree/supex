@@ -187,7 +187,6 @@ int main(int argc, char *argv[])
 	while (1) {
 		for (i = 0; i < bind_times; i++) {
 			commmsg_make(&sendmsg, 1024);
-			sendmsg.fd = port + i;
 			gain_package_data_only(&sendmsg, fds[i]);
 
 			int err = commapi_send(commctx, &sendmsg);

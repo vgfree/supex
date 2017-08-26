@@ -48,7 +48,7 @@ push:
 
 clean:
 	rm -rf $(MAIN_APP_SERV)
-	rm -rf $(CLEANFILES)
+	#rm -rf $(CLEANFILES)
 	rm -rf logs
 
 distclean:

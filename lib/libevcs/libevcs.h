@@ -6,6 +6,7 @@
 #include "engine/mfptp_api/comm_utils.h"
 #include "engine/mfptp_api/mfptp_utils.h"
 #include "engine/netpkg_statistic/netpkg_statistic.h"
+#include "engine/evt_task.h"
 #include "engine/evcoro_sktio.h"
 #include "engine/evcoro_dskio.h"
 #include "engine/evcoro_locks.h"

@@ -41,9 +41,13 @@ int find_fd_list(char *gid, int fd_list[], int *size)
 				abort();
 			}
 
-			char ptr[128] = {0};
-			memcpy(ptr, answer_value_look_addr(value), answer_value_look_size(value));
-			fd_list[idx] = atoi(ptr);
+			if (answer_value_look_type(value) == VALUE_TYPE_STAR) {
+				char ptr[128] = {0};
+				memcpy(ptr, answer_value_look_addr(value), answer_value_look_size(value));
+				fd_list[idx] = atoi(ptr);
+			} else {
+				fd_list[idx] = answer_value_look_int(value);
+			}
 			idx++;
 		}
 

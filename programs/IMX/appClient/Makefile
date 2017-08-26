@@ -1,10 +1,15 @@
 BASE_SRC=./
 INC_DIR=-I/usr/local/include/luajit-2.0 \
 	-I/usr/local/include/ \
-	-I$(HOME_PATH)/lib/libcomm \
 	-I$(HOME_PATH)/lib/json-c \
 	-I$(HOME_PATH)/lib/libmini/include \
 	-I$(HOME_PATH)/lib/libkv/release \
+	-I$(HOME_PATH)/lib/libev \
+	-I$(HOME_PATH)/lib/libscco \
+	-I$(HOME_PATH)/lib/libcoro \
+	-I$(HOME_PATH)/lib/libevcoro \
+	-I$(HOME_PATH)/lib/libevcs \
+	-I$(HOME_PATH)/lib/libcomm \
 	-I$(HOME_PATH)/lib/iniparser/src \
 	-I$(HOME_PATH)/lib/zeromq-4.2.1/include \
 	-I./src

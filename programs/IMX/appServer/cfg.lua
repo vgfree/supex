@@ -1,4 +1,4 @@
 module("cfg")
 
 DEFAULT_LOG_PATH = "./logs"
-LOGLV = 3
+LOGLV = 1

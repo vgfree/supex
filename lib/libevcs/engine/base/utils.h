@@ -224,3 +224,31 @@ static void __attribute__((constructor)) __ ## driver ## __(void)	\
 	printf("auto_call_once-->"#driver"\n"); \
 }
 
+/*
+ * 解析十进制IP 为四字节, 比如: 127.0.0.1 = {0x7f, 0x00, 0x00, 0x01}
+ */
+static inline int ip_string_to_int32(const char *src, char dest[4])
+{
+	assert(src && dest);
+	uint8_t value = 0;
+	int     pos = 0;
+
+	for (int i = 0; i < 3; i++) {
+		while (src[pos] != '.') {
+			value = (src[pos] - '0') + value * 10;
+			pos++;
+		}
+
+		dest[i] = value;
+		value = 0;
+		pos++;
+	}
+
+	while (src[pos] != '\0') {
+		value = (src[pos] - '0') + value * 10;
+		pos++;
+	}
+
+	dest[3] = value;
+	return 0;
+}

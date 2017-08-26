@@ -10,8 +10,9 @@
 int main(void)
 {
 	/*init log*/
-	SLogOpen(MODULE_NAME ".log", SLogIntegerToLevel(1));
-	
+	SLogOpen(MODULE_NAME ".log", SLOG_D_LEVEL);
+	x_printf(E, "--------------\n");
+
 	concentrator_work();
 
 	x_printf(W, "exit main thread.");

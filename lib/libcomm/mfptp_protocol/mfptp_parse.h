@@ -59,6 +59,8 @@ struct mfptp_parser
 	struct mfptp_parser_stat        ms;			/* MFPTP协议数据解析器状态 */
 };
 
+#define mfptp_parse_info	mfptp_parser
+
 /***********************************************************************************
 * 功能：初始化解析结构体
 * @data:待解析数据缓冲区地址  @size:待解析数据大小的地址

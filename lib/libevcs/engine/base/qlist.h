@@ -40,6 +40,10 @@ int qlist_lock(QLIST *list);
 
 int qlist_unlock(QLIST *list);
 
+QITEM *qlist_nolock_pull(QLIST *list);
+
+void qlist_nolock_push(QLIST *list, QITEM *item);
+
 /* ----------------                 */
 
 /* ----------------                 */
