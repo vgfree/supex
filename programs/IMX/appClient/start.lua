@@ -34,7 +34,7 @@ end
 function app_hand_ask()
 	print("login [uid]")
 	print("join [gid]")
-	print("say [fid] [txt]")
+	print("fsay [fid] [txt]")
 	print("gsay [gid] [txt]")
 
 	local uid
@@ -56,12 +56,18 @@ function app_hand_ask()
 				local msg = string.format('{"action":"join","accountID":"%s","chatGroupID":"%s"}', uid, gid)
 				comm_send(msg)
 			end
-			--chatCommunion
-			if opt == "say" then
+			--groups
+			if opt == "groups" then
+				local gid = info[2]
+				local msg = string.format('{"action":"groups","accountID":"%s"}', uid)
+				comm_send(msg)
+			end
+			--chatAmigo
+			if opt == "fsay" then
 				local chatID = cutils.uuid()
 				local fid = info[2]
 				local txt = info[3]
-				local msg = string.format('{"action":"chat","content":{"chatID":"%s","fromAccountID":"%s","toAccountID":"%s","message":"%s"}}', chatID, uid, fid, txt)
+				local msg = string.format('{"action":"chatAmigo","message":{"chatID":"%s","fromAccountID":"%s","toAccountID":"%s","content":"%s"}}', chatID, uid, fid, txt)
 				comm_send(msg)
 			end
 			--chatGroup
@@ -69,15 +75,9 @@ function app_hand_ask()
 				local chatID = cutils.uuid()
 				local gid = info[2]
 				local txt = info[3]
-				local msg = string.format('{"action":"chatGroup","content":{"chatID":"%s","fromAccountID":"%s","chatGroupID":"%s","message":"%s"}}', chatID, uid, gid, txt)
+				local msg = string.format('{"action":"chatGroup","message":{"chatID":"%s","fromAccountID":"%s","chatGroupID":"%s","content":"%s"}}', chatID, uid, gid, txt)
 				comm_send(msg)
 			end
 		end
 	end
-
-
-	--groups
-	--local msg = string.format('{"action":"groups","accountID":"%s"}', uid)
-	--comm_send(msg)
 end
-

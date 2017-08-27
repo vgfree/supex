@@ -13,7 +13,7 @@ function handle( obj )
 	local chat_tab = {
 		[1] = "downstream",
 		[2] = "gid",
-		[3] = obj["content"]["chatGroupID"],
+		[3] = obj["message"]["chatGroupID"],
 		[4] = dtab[3]
 	}
 	local ok = zmq_api.cmd("downstream", "send_table", chat_tab)
@@ -21,15 +21,15 @@ function handle( obj )
 
 
 
-	local msg = string.format('{"action":"chatGroupRsp","content":{"chatID":"%s","fromAccountID":"%s","chatGroupID":"%s"}}',
-		obj["content"]["chatID"],
-		obj["content"]["fromAccountID"],
-		obj["content"]["chatGroupID"])
+	local msg = string.format('{"action":"chatGroupRsp","message":{"chatID":"%s","fromAccountID":"%s","chatGroupID":"%s"}}',
+		obj["message"]["chatID"],
+		obj["message"]["fromAccountID"],
+		obj["message"]["chatGroupID"])
 
 	local resp_tab = {
 		[1] = "downstream",
 		[2] = "uid",
-		[3] = obj["content"]["fromAccountID"],
+		[3] = obj["message"]["fromAccountID"],
 		[4] = msg
 	}
 	local ok = zmq_api.cmd("downstream", "send_table", resp_tab)

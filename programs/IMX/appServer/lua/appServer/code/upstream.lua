@@ -8,10 +8,10 @@ local ACTION_LIST = {
 	login		= require("page_login").handle,
 	join		= require("page_join").handle,
 	heart		= require("page_heart").handle,
-	chat		= require("page_chat").handle,
-	chatRsp		= require("page_chatRsp").handle,
+	chatAmigo	= require("page_chatAmigo").handle,
+	chatAmigoRsp	= require("page_chatAmigoRsp").handle,
 	chatGroup	= require("page_chatGroup").handle,
-	chatGroupRsp	= require("page_chatGroupRsp").handle,
+	groups		= require("page_groups").handle,
 	--frieds		= require("page_frieds").handle,
 
 }

@@ -37,7 +37,7 @@ function handle( obj )
 
 
 	-->返回结果
-	local msg = '{"ERRORCODE":"0","RESULT":"success"}'
+	local msg = '{"action":"loginRsp","ERRORCODE":"0","RESULT":"success"}'
 	local back_tab = {
 		[1] = "downstream",
 		[2] = "cid",
