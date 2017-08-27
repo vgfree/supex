@@ -6,14 +6,17 @@ module('upstream', package.seeall)
 
 local ACTION_LIST = {
 	login		= require("page_login").handle,
-	join		= require("page_join").handle,
 	heart		= require("page_heart").handle,
+
+	amigos		= require("page_amigos").handle,
+	groups		= require("page_groups").handle,
+
+	amigoJoin	= require("page_amigoJoin").handle,
+	groupJoin	= require("page_groupJoin").handle,
+
 	chatAmigo	= require("page_chatAmigo").handle,
 	chatAmigoRsp	= require("page_chatAmigoRsp").handle,
 	chatGroup	= require("page_chatGroup").handle,
-	groups		= require("page_groups").handle,
-	--frieds		= require("page_frieds").handle,
-
 }
 
 function handle()

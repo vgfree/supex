@@ -2,7 +2,7 @@ local only = require('only')
 local supex = require('supex')
 local redis_api = require('redis_pool_api')
 
-module('page_join', package.seeall)
+module('page_groupJoin', package.seeall)
 
 
 function handle( obj )
@@ -27,7 +27,7 @@ function handle( obj )
 
 
 	-->返回结果
-	local msg = '{"action":"joinRsp","ERRORCODE":"0","RESULT":"success"}'
+	local msg = '{"action":"groupJoinRsp","ERRORCODE":"0","RESULT":"success"}'
 	local back_tab = {
 		[1] = "downstream",
 		[2] = "cid",

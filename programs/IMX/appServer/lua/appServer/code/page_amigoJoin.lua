@@ -2,21 +2,21 @@ local only = require('only')
 local supex = require('supex')
 local redis_api = require('redis_pool_api')
 
-module('page_chatAmigo', package.seeall)
+module('page_amigoJoin', package.seeall)
 
 
 function handle( obj )
 	local dtab = supex["_DATA_"]
 	local cid = dtab[2]
-
-
-	local chat_tab = {
+	local uid = obj["accountID"]
+	local aid = obj["chatAmigoID"]
+	
+	local join_tab = {
 		[1] = "downstream",
 		[2] = "uid",
-		[3] = obj["message"]["chatAmigoID"],
+		[3] = aid,
 		[4] = dtab[3]
 	}
-	local ok = zmq_api.cmd("downstream", "send_table", chat_tab)
-
+	local ok = zmq_api.cmd("downstream", "send_table", join_tab)
 end
 

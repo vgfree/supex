@@ -2,7 +2,7 @@ local only = require('only')
 local supex = require('supex')
 local redis_api = require('redis_pool_api')
 
-module('page_groups', package.seeall)
+module('page_amigos', package.seeall)
 
 
 function handle( obj )
@@ -10,16 +10,16 @@ function handle( obj )
 	local cid = dtab[2]
 	local uid = obj["accountID"]
 
-        local ok, grps = redis_api.cmd("save_store", '', "smembers", uid .. ":allChatGroup")
+        local ok, frds = redis_api.cmd("save_store", '', "smembers", uid .. ":allFriends")
         if not ok then
                 only.log('E', 'failed get allFriends!')
 	else
 		-->返回结果
-		local groups = table.concat(grps or {}, '","')
-		if #groups == 0 then
-			groups = '"' .. groups .. '"'
+		local amigos = table.concat(frds or {}, '","')
+		if #amigos == 0 then
+			amigos = '"' .. amigos .. '"'
 		end
-		local msg = string.format('{"action":"groupsRsp","groups":[%s]}', groups)
+		local msg = string.format('{"action":"amigosRsp","amigos":[%s]}', amigos)
 		local back_tab = {
 			[1] = "downstream",
 			[2] = "uid",
