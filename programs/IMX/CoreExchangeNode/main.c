@@ -15,7 +15,7 @@
 static int work_init(void)
 {
 	/*init log*/
-	SLogOpen(MODULE_NAME ".log", SLogIntegerToLevel(1));
+	SLogOpen(LOGGER_FILE, SLogIntegerToLevel(1));
 
 	/*get config*/
 	dictionary    *config = iniparser_load(CONFIG);

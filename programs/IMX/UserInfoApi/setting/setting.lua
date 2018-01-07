@@ -7,7 +7,7 @@ local libhttps  = require("libhttps")
 local zmq	= require("zmq")
 local api_redis_save = require("api_redis_save")
 
-module("api_dk", package.seeall)
+module("setting", package.seeall)
 
 local ctx = zmq.init(1)
 local s = ctx:socket(zmq.PUSH)

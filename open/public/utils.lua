@@ -97,6 +97,43 @@ function str_split(s, c)
 	return t
 end
 
+function split_cmdstr_to_table(cmdstr)
+	local result = {}
+	while #cmdstr > 0 do
+		local split = " "
+		local first = string.sub(cmdstr, 1, 1)
+		if first == " " then
+			cmdstr = string.sub(cmdstr, 2, -1)
+		else
+			if first == "'" then
+				split = "'"
+				cmdstr = string.sub(cmdstr, 2, -1)
+			end
+			if first == '"' then
+				split = '"'
+				cmdstr = string.sub(cmdstr, 2, -1)
+			end
+			local point = string.find(cmdstr, split)
+			if point then
+				local context = string.sub(cmdstr, 1, point - 1)
+				--print(context)
+				table.insert(result, context)
+				cmdstr = string.sub(cmdstr, point + 1, -1)
+			else
+				if split == " " then
+					local context = string.sub(cmdstr, 1, -1)
+					--print(context)
+					table.insert(result, context)
+					break
+				else
+					return nil, "args not ok"
+				end
+			end
+		end
+	end
+	return result
+end
+
 function safe_sort( L, F )
 	local isF = true
 	for m=#L-1,1,-1 do

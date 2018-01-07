@@ -2,15 +2,11 @@ module("link")
 
 OWN_POOL = {
 	redis = {
-                IdKey = {
+                IMX = {
                         host = '192.168.1.12',
                         port = 9002,
                 },
 
-                GidKey = {
-                        host = '192.168.1.12',
-                        port = 9002,
-                }
         },
 }
 

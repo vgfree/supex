@@ -69,8 +69,8 @@ int app_lua_recv_message(lua_State *L)
 
 	int i = 0;
 	for (; i < recvmsg.package.frames_of_package[0]; i++) {
-		printf("frame %d data :%s\n", i + 1, commmsg_frame_addr(&recvmsg, i));
-		printf("frame %d size :%d\n", i + 1, commmsg_frame_size(&recvmsg, i));
+		//printf("frame %d data :%s\n", i + 1, commmsg_frame_addr(&recvmsg, i));
+		//printf("frame %d size :%d\n", i + 1, commmsg_frame_size(&recvmsg, i));
 
 		lua_pushnumber(L, i + 1);
 		lua_pushlstring(L, commmsg_frame_addr(&recvmsg, i), commmsg_frame_size(&recvmsg, i));

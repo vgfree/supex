@@ -1,0 +1,13 @@
+1.在线状态
+CID_Status:$CID		connected
+2.CID对应的UID
+CID_UID:$CID	$UID
+3.UID对应的CID
+UID_CID:$UID	$CID
+4.CID对应的GID
+CID_GID:$CID	$GID
+5.GID对应的CID
+GID_CID:$GID	$CID
+
+
+2.下线清除所有key

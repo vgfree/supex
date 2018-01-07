@@ -3,6 +3,8 @@ local lualog		= require('lualog')
 local only		= require('only')
 local cutils		= require('cutils')
 local utils		= require('utils')
+local cjson		= require('cjson')
+local luakv_api		= require('luakv_pool_api')
 
 
 
@@ -20,12 +22,28 @@ function app_init()
 	lualog.setlevel( CFG_LIST["LOGLV"] )
 
 	lualog.open('access')
+
+	luakv_api.init()
 end
+
 
 function app_hand_msg()
 	while true do
 		local msg = comm_recv()
-		print("--------------", msg)
+		local obj = cjson.decode(msg)
+		local ok, uid = luakv_api.cmd("", "" , 'get', "LOGIN:UID")
+		if obj["action"] == "chatAmigoRsp" or obj["action"] == "chatAmigo" or obj["action"] == "chatGroup" then
+			local fd = io.open(string.format("/tmp/%s_message.imx", uid), "a+")
+			fd:write(msg .. "\n")
+			fd:close()
+			os.execute("clear")
+			os.execute(string.format("tail -n 30 /tmp/%s_message.imx", uid))
+			os.execute("printf '==> '")
+		else
+			os.execute("printf '\r'")
+			os.execute(string.format("printf '%s\n'", msg))
+			os.execute("printf '==> '")
+		end
 	end
 end
 
@@ -42,14 +60,18 @@ function app_hand_ask()
 
 	local uid
 	while true do
-		io.output():write("> ")
+		io.output():write("==> ")
 		local cmds = io.input():read("*l")
-		local info = utils.str_split(cmds, ' ')
+		local info, err = utils.split_cmdstr_to_table(cmds)
+		if not info then
+			print(err)
+		end
 		if info or #info > 0 then
 			local opt = info[1]
 			--login
 			if opt == "login" then
 				uid = info[2]
+				luakv_api.cmd("", "" , 'set', "LOGIN:UID", uid)
 				local msg = string.format('{"action":"login","accountID":"%s"}', uid)
 				comm_send(msg)
 			end

@@ -16,7 +16,7 @@ function handle( obj )
 	else
 		-->返回结果
 		local amigos = table.concat(frds or {}, '","')
-		if #amigos == 0 then
+		if #amigos ~= 0 then
 			amigos = '"' .. amigos .. '"'
 		end
 		local msg = string.format('{"action":"amigosRsp","amigos":[%s]}', amigos)

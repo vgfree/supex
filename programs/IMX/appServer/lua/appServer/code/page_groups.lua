@@ -16,7 +16,7 @@ function handle( obj )
 	else
 		-->返回结果
 		local groups = table.concat(grps or {}, '","')
-		if #groups == 0 then
+		if #groups ~= 0 then
 			groups = '"' .. groups .. '"'
 		end
 		local msg = string.format('{"action":"groupsRsp","groups":[%s]}', groups)
