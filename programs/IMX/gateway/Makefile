@@ -7,7 +7,7 @@ LIB_DIR=-L/usr/local/lib -L$(HOME_PATH)/lib -L../
 INC_LIBS=-liniparser -lcomm -lzmq -lmini -lstdc++ -lm
 
 #[=========>MARK<=========]#
-MAIN_APP_SERV ?= messageGateway
+MAIN_APP_SERV ?= gateway
 
 HANDLE_MODEL = EVCORO
 
@@ -25,11 +25,14 @@ JOB += $(SRV)
 CFLAGS += -g -std=c99
 
 MAIN_OBJ = main.c \
-	   zmq_wraper.c \
 	   message/message_zmq_io.c \
 	   message/message_comm_io.c \
 	   message/message_gateway.c \
-	   message/message_sockfd_manage.c
+	   message/message_sockfd_manage.c \
+	   login/login_zmq_io.c \
+	   login/login_comm_io.c \
+	   login/login_gateway.c \
+	   login/login_sockfd_manage.c
 
 all:$(JOB)
 	@echo -e $(foreach bin,$^,$(BLUE)$(bin) $(GREEN)✔)$(RED)"\n-->OVER!\n"$(NONE)

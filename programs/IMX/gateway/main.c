@@ -1,20 +1,21 @@
 #include "libmini.h"
-#include "message_concentrator.h"
+#include "message_gateway.h"
+#include "login_gateway.h"
 
-#include <pthread.h>
-#include <signal.h>
 
-#define SERVER_FILE     "messageGateway.pid"
-#define MODULE_NAME     "messageGateway"
-
-int main(void)
+int main(int argc, char *argv[])
 {
 	/*init log*/
-	SLogOpen(MODULE_NAME ".log", SLOG_D_LEVEL);
+	SLogOpen("gateway.log", SLogIntegerToLevel(1));
 
 	message_gateway_work();
+	login_gateway_work();
+
 	message_gateway_wait();
+	login_gateway_wait();
+
 	message_gateway_stop();
+	login_gateway_stop();
 	return 0;
 }
 
