@@ -11,12 +11,10 @@ int main(void)
 {
 	/*init log*/
 	SLogOpen(MODULE_NAME ".log", SLOG_D_LEVEL);
-	x_printf(E, "--------------\n");
 
-	concentrator_work();
-
-	x_printf(W, "exit main thread.");
-	concentrator_destroy();
+	message_gateway_work();
+	message_gateway_wait();
+	message_gateway_stop();
 	return 0;
 }
 

@@ -1,10 +1,15 @@
-#include "comm_io_wraper.h"
 #include "iniparser.h"
 #include "libmini.h"
+#include "message_sockfd_manage.h"
+
+#include "message_comm_io.h"
 
 #define CONFIG                  "messageGateway.conf"
 #define NODE_SERVER_HOST        ":bind_exchage_push_upstream_host"
 #define NODE_SERVER_PORT        ":bind_exchage_push_upstream_port"
+
+static struct comm_context *g_commctx = NULL;
+
 
 static void core_exchange_node_cb(void *ctx, int socket, enum STEP_CODE step, void *usr)
 {
@@ -15,11 +20,7 @@ static void core_exchange_node_cb(void *ctx, int socket, enum STEP_CODE step, vo
 	{
 		case STEP_INIT:
 			printf("server here is accept : %d\n", socket);
-			if (g_node_ptr->max_size > NODE_SIZE) {
-				x_printf(E, "core exchange node:%d > max size:%d.", g_node_ptr->max_size, NODE_SIZE);
-			}
-
-			g_node_ptr->fd_array[g_node_ptr->max_size++] = socket;
+			message_sockfd_manage_add(socket);
 			break;
 
 		case STEP_ERRO:
@@ -33,22 +34,7 @@ static void core_exchange_node_cb(void *ctx, int socket, enum STEP_CODE step, vo
 
 		case STEP_STOP:
 			printf("server here is close : %d\n", socket);
-			int i = 0;
-			for (; i < g_node_ptr->max_size; i++) {
-				if (g_node_ptr->fd_array[i] == socket) {
-					break;
-				}
-			}
-
-			for (; i < g_node_ptr->max_size - 1; i++) {
-				g_node_ptr->fd_array[i] = g_node_ptr->fd_array[i + 1];
-			}
-
-			if (g_node_ptr->max_size == i) {
-				x_printf(E, "not g_node fd_array no include this fd:%d.", socket);
-			} else {
-				g_node_ptr->max_size--;
-			}
+			message_sockfd_manage_del(socket);
 			break;
 
 		default:
@@ -57,12 +43,8 @@ static void core_exchange_node_cb(void *ctx, int socket, enum STEP_CODE step, vo
 	}
 }
 
-static struct comm_context *g_commctx = NULL;
-int init_comm_io(void)
+int message_comm_io_init(void)
 {
-	g_node_ptr = (struct core_exchange_node *)malloc(sizeof(struct core_exchange_node));
-	g_node_ptr->max_size = 0;
-
 	dictionary    *config = iniparser_load(CONFIG);
 	char    *host = iniparser_getstring(config, NODE_SERVER_HOST, NULL);
 	char    *port = iniparser_getstring(config, NODE_SERVER_PORT, NULL);
@@ -81,18 +63,19 @@ int init_comm_io(void)
 	return 0;
 }
 
-void exit_comm_io(void)
+
+void message_comm_io_exit(void)
 {
-	free(g_node_ptr);
+	commapi_ctx_destroy(g_commctx);
 }
 
-int recv_msg(struct comm_message *msg)
+int message_comm_io_recv(struct comm_message *msg)
 {
 	assert(msg);
 	return commapi_recv(g_commctx, msg);
 }
 
-int send_msg(struct comm_message *msg)
+int message_comm_io_send(struct comm_message *msg)
 {
 	assert(msg);
 	return commapi_send(g_commctx, msg);

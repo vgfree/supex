@@ -25,8 +25,9 @@ JOB += $(SRV)
 CFLAGS += -g -std=c99
 
 MAIN_OBJ = comm_io_wraper.c \
-	   zmq_io_wraper.c \
-	   message_concentrator.c \
+	   zmq_wraper.c \
+	   message_zmq_io.c \
+	   message_gateway.c \
 	   main.c
 
 all:$(JOB)
