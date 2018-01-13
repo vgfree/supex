@@ -24,11 +24,12 @@ SRV := $(MAIN_APP_SERV)
 JOB += $(SRV)
 CFLAGS += -g -std=c99
 
-MAIN_OBJ = comm_io_wraper.c \
+MAIN_OBJ = main.c \
 	   zmq_wraper.c \
-	   message_zmq_io.c \
-	   message_gateway.c \
-	   main.c
+	   message/message_zmq_io.c \
+	   message/message_comm_io.c \
+	   message/message_gateway.c \
+	   message/message_sockfd_manage.c
 
 all:$(JOB)
 	@echo -e $(foreach bin,$^,$(BLUE)$(bin) $(GREEN)✔)$(RED)"\n-->OVER!\n"$(NONE)
