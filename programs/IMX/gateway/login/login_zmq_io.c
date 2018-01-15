@@ -3,9 +3,10 @@
 #include "zmq.h"
 #include "iniparser.h"
 #include "libmini.h"
+#include "login_zmq_io.h"
 
 
-#define CONFIG          "loginServer.conf"
+#define CONFIG          "loginGateway.conf"
 #define APP_HOST          ":AppHost"
 #define APP_PORT        ":AppPort"
 #define API_HOST          ":ApiHost"

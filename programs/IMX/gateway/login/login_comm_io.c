@@ -4,7 +4,7 @@
 
 #include "login_comm_io.h"
 
-#define CONFIG                  "loginServer.conf"
+#define CONFIG                  "loginGateway.conf"
 #define NODE_SERVER_HOST        ":bind_exchage_push_login_host"
 #define NODE_SERVER_PORT        ":bind_exchage_push_login_port"
 

@@ -1,6 +1,7 @@
 #include "zmq.h"
 #include "iniparser.h"
 #include "libmini.h"
+#include "message_zmq_io.h"
 
 #define CONFIG          "messageGateway.conf"
 #define PUSH_HOST         ":PushServer"

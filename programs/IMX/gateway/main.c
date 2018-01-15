@@ -1,6 +1,7 @@
 #include "libmini.h"
-#include "message_gateway.h"
-#include "login_gateway.h"
+#include "message/message_gateway.h"
+#include "login/login_gateway.h"
+#include "control/control_gateway.h"
 
 
 int main(int argc, char *argv[])
@@ -10,12 +11,15 @@ int main(int argc, char *argv[])
 
 	message_gateway_work();
 	login_gateway_work();
+	control_gateway_work();
 
 	message_gateway_wait();
 	login_gateway_wait();
+	control_gateway_wait();
 
 	message_gateway_stop();
 	login_gateway_stop();
+	control_gateway_stop();
 	return 0;
 }
 
