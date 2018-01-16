@@ -5,11 +5,11 @@
 
 #include "libmini.h"
 #include "comm_api.h"
-#include "comm_io_wraper.h"
-#include "zmq_io_wraper.h"
+#include "message_comm_io.h"
+#include "message_zmq_io.h"
 #include "message_sockfd_manage.h"
 
-static void do_msg_for_each_fcb(int sockfd, void *usr)
+static void do_msg_for_each_fcb(int sockfd, int idx, void *usr)
 {
 	struct comm_message *msg = usr;
 	commmsg_sets(msg, sockfd, 0, PUSH_METHOD);
@@ -18,14 +18,14 @@ static void do_msg_for_each_fcb(int sockfd, void *usr)
 	}
 }
 
-int downstream_msg(struct comm_message *msg)
+static int downstream_msg(struct comm_message *msg)
 {
 	int cnt = message_sockfd_manage_travel(do_msg_for_each_fcb, NULL, msg);
 	x_printf(D, "core exchange node travel count:%d.", cnt);
 	return 0;
 }
 
-int pull_msg(struct comm_message *msg)
+static int pull_msg(struct comm_message *msg)
 {
 	assert(msg);
 	int     more = 0;
@@ -77,7 +77,7 @@ static void *_pull_thread(void *usr)
 	return NULL;
 }
 
-int upstream_msg(struct comm_message *msg)
+static int upstream_msg(struct comm_message *msg)
 {
 	int i = 0;
 	for (i = 0; i < commmsg_frame_count(msg); i++) {

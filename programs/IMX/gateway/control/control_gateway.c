@@ -5,11 +5,11 @@
 
 #include "libmini.h"
 #include "comm_api.h"
-#include "comm_io_wraper.h"
-#include "zmq_io_wraper.h"
+#include "control_comm_io.h"
+#include "control_zmq_io.h"
 #include "control_sockfd_manage.h"
 
-static void do_msg_for_each_fcb(int sockfd, void *usr)
+static void do_msg_for_each_fcb(int sockfd, int idx, void *usr)
 {
 	struct comm_message *msg = usr;
 	commmsg_sets(msg, sockfd, 0, PUSH_METHOD);
@@ -18,14 +18,14 @@ static void do_msg_for_each_fcb(int sockfd, void *usr)
 	}
 }
 
-int downstream_msg(struct comm_message *msg)
+static int downstream_msg(struct comm_message *msg)
 {
 	int cnt = message_sockfd_manage_travel(do_msg_for_each_fcb, NULL, msg);
 	x_printf(D, "core exchange node travel count:%d.", cnt);
 	return 0;
 }
 
-int pull_msg(struct comm_message *msg)
+static int pull_msg(struct comm_message *msg)
 {
 	assert(msg);
 	int     more = 0;
@@ -86,7 +86,7 @@ void control_gateway_work(void)
 	assert(control_zmq_io_init() == 0);
 
 	/*work push*/
-	err = pthread_create(&tid1, NULL, _pull_thread, NULL);
+	int err = pthread_create(&tid1, NULL, _pull_thread, NULL);
 	if (err != 0) {
 		x_printf(E, "can't create pull thread:%s.", strerror(err));
 	}

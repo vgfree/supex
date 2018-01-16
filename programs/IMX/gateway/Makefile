@@ -32,7 +32,11 @@ MAIN_OBJ = main.c \
 	   login/login_zmq_io.c \
 	   login/login_comm_io.c \
 	   login/login_gateway.c \
-	   login/login_sockfd_manage.c
+	   login/login_sockfd_manage.c \
+	   control/control_zmq_io.c \
+	   control/control_comm_io.c \
+	   control/control_gateway.c \
+	   control/control_sockfd_manage.c
 
 all:$(JOB)
 	@echo -e $(foreach bin,$^,$(BLUE)$(bin) $(GREEN)✔)$(RED)"\n-->OVER!\n"$(NONE)

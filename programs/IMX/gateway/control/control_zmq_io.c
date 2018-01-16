@@ -19,7 +19,7 @@ static void *zmq_cli_init(char *host, int port)
 	char addr[64] = {};
 	sprintf(addr, "tcp://%s:%d", host, port);
 	x_printf(D, "addr:%s.", addr);
-	int rc = zmq_connect(g_client, addr);
+	int rc = zmq_connect(sock, addr);
 	assert(rc == 0);
 	return sock;
 }
@@ -53,6 +53,6 @@ int control_zmq_io_recv(zmq_msg_t *msg, int flags)
 
 int control_zmq_io_getsockopt(enum zio_rw_type rwopt, int option_name, void *option_value, size_t *option_len)
 {
-	return zmq_getsockopt((zio_rw_type == ZIO_RECV_TYPE) ? g_cli : g_cli, option_name, option_value, option_len);
+	return zmq_getsockopt((rwopt == ZIO_RECV_TYPE) ? g_cli : g_cli, option_name, option_value, option_len);
 }
 

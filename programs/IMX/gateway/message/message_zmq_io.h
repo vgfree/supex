@@ -1,4 +1,5 @@
 #pragma once
+#include "zmq.h"
 
 int message_zmq_io_init(void);
 

@@ -5,11 +5,11 @@
 
 #include "libmini.h"
 #include "comm_api.h"
-#include "comm_io_wraper.h"
-#include "zmq_io_wraper.h"
+#include "login_comm_io.h"
+#include "login_zmq_io.h"
 #include "login_sockfd_manage.h"
 
-int upstream_msg(struct comm_message *msg)
+static int upstream_msg(struct comm_message *msg)
 {
 	int i = 0;
 	for (i = 0; i < commmsg_frame_count(msg); i++) {
@@ -70,7 +70,7 @@ void login_gateway_work(void)
 	assert(login_zmq_io_init() == 0);
 
 	/*work push*/
-	err = pthread_create(&tid1, NULL, _push_thread, NULL);
+	int err = pthread_create(&tid1, NULL, _push_thread, NULL);
 	if (err != 0) {
 		x_printf(E, "can't create pull thread:%s.", strerror(err));
 	}
