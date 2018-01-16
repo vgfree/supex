@@ -1,0 +1,393 @@
+!_TAG_FILE_FORMAT	2	/extended format; --format=1 will not append ;" to lines/
+!_TAG_FILE_SORTED	1	/0=unsorted, 1=sorted, 2=foldcase/
+!_TAG_PROGRAM_AUTHOR	Darren Hiebert	/dhiebert@users.sourceforge.net/
+!_TAG_PROGRAM_NAME	Exuberant Ctags	//
+!_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
+!_TAG_PROGRAM_VERSION	5.8	//
+API_HOST	../gateway/login/login_zmq_io.c	12;"	d	file:
+API_PORT	../gateway/login/login_zmq_io.c	13;"	d	file:
+APP_HOST	../gateway/login/login_zmq_io.c	10;"	d	file:
+APP_PORT	../gateway/login/login_zmq_io.c	11;"	d	file:
+AR	../exchange/bind_client/Makefile	/^AR = ar$/;"	m
+AR	../exchange/gid_client/Makefile	/^AR = ar$/;"	m
+AR	../exchange/multi_client/Makefile	/^AR = ar$/;"	m
+AR	../exchange/test/Makefile	/^AR = ar$/;"	m
+BIN	../Makefile	/^BIN=.\/bin_$(MAIN_APP_SERV)$/;"	m
+CC	../exchange/bind_client/Makefile	/^CC = gcc$/;"	m
+CC	../exchange/gid_client/Makefile	/^CC = gcc$/;"	m
+CC	../exchange/multi_client/Makefile	/^CC = gcc$/;"	m
+CC	../exchange/test/Makefile	/^CC = gcc$/;"	m
+CFLAG	../exchange/bind_client/Makefile	/^CFLAG = -O2 -W -Wall -std=c99$/;"	m
+CFLAG	../exchange/gid_client/Makefile	/^CFLAG = -O2 -W -Wall -std=c99$/;"	m
+CFLAG	../exchange/multi_client/Makefile	/^CFLAG = -g -O2 -W -Wall -std=c99$/;"	m
+CFLAG	../exchange/test/Makefile	/^CFLAG = -O2 -W -Wall$/;"	m
+CID_MAX_LENTH	../gateway/message/test/cidmap.h	5;"	d
+CLIENT	../exchange/fd_manager.h	/^        CLIENT = 1,$/;"	e	enum:router_object
+CLIENT_HOST	../gateway/control/control_zmq_io.c	9;"	d	file:
+CLIENT_PORT	../gateway/control/control_zmq_io.c	10;"	d	file:
+CONFIG	../exchange/comm_def.h	11;"	d
+CONFIG	../gateway/control/control_comm_io.c	7;"	d	file:
+CONFIG	../gateway/control/control_zmq_io.c	8;"	d	file:
+CONFIG	../gateway/login/login_comm_io.c	7;"	d	file:
+CONFIG	../gateway/login/login_zmq_io.c	9;"	d	file:
+CONFIG	../gateway/message/message_comm_io.c	7;"	d	file:
+CONFIG	../gateway/message/message_zmq_io.c	6;"	d	file:
+CONNECT_LOGINSERVER_HOST	../exchange/comm_def.h	21;"	d
+CONNECT_LOGINSERVER_PORT	../exchange/comm_def.h	22;"	d
+CONNECT_MESSAGEGATEWAY_HOST	../exchange/comm_def.h	17;"	d
+CONNECT_MESSAGEGATEWAY_PORT	../exchange/comm_def.h	18;"	d
+CONNECT_SETTINGSERVER_HOST	../exchange/comm_def.h	19;"	d
+CONNECT_SETTINGSERVER_PORT	../exchange/comm_def.h	20;"	d
+FD_CAPACITY	../exchange/comm_def.h	3;"	d
+FD_MAX_CLASSIFICATION	../exchange/fd_manager.h	7;"	d
+HANDLE_MODEL	../Makefile	/^HANDLE_MODEL = EVCORO$/;"	m
+INC	../gateway/control/test/Makefile	/^INC =  -I..\/..\/..\/lib\/zeromq-4.2.1\/include\/$/;"	m
+INC	../gateway/login/test/Makefile	/^INC =  -I..\/..\/..\/lib\/zeromq-4.2.1\/include\/$/;"	m
+INC	../gateway/message/test/Makefile	/^INC =  -I..\/..\/..\/lib\/zeromq-4.2.1\/include\/$/;"	m
+INCLUDE_PATH	../exchange/bind_client/Makefile	/^INCLUDE_PATH = -I. -I..\/ -I\/usr\/include\/ \\$/;"	m
+INCLUDE_PATH	../exchange/gid_client/Makefile	/^INCLUDE_PATH = -I. -I..\/ -I\/usr\/include\/ \\$/;"	m
+INCLUDE_PATH	../exchange/multi_client/Makefile	/^INCLUDE_PATH = -I. -I..\/ -I\/usr\/include\/ \\$/;"	m
+INCLUDE_PATH	../exchange/test/Makefile	/^INCLUDE_PATH = -I. -I..\/ -I..\/..\/..\/lib\/libcomm -I..\/..\/..\/lib\/utils  -I..\/..\/..\/lib\/libkv\/src$/;"	m
+INC_DIR	../Makefile	/^INC_DIR=-I$(HOME_PATH)\/lib\/libcomm\/ \\$/;"	m
+INC_LIBS	../Makefile	/^INC_LIBS=-liniparser -lcomm -lzmq -lmini -lkv -lleveldb -lstdc++ -luuid -lpthread -ldl -lm$/;"	m
+LIB	../gateway/control/test/Makefile	/^LIB =  -L..\/..\/..\/lib -L\/usr\/local\/lib$/;"	m
+LIB	../gateway/login/test/Makefile	/^LIB =  -L..\/..\/..\/lib -L\/usr\/local\/lib$/;"	m
+LIB	../gateway/message/test/Makefile	/^LIB =  -L..\/..\/..\/lib -L\/usr\/local\/lib$/;"	m
+LIBA	../exchange/bind_client/Makefile	/^LIBA = -lm -ldl -lpthread -luuid  -lcomm -lutils -lkv -ljson-c -lslog $/;"	m
+LIBA	../exchange/gid_client/Makefile	/^LIBA = -lm -ldl -lpthread -luuid  -lcomm -lutils -lkv -ljson-c -lslog $/;"	m
+LIBA	../exchange/multi_client/Makefile	/^LIBA = -lm -ldl -lpthread -luuid  -lcomm -lutils -lkv -ljson-c -lslog $/;"	m
+LIBA_PATH	../exchange/bind_client/Makefile	/^LIBA_PATH = -L..\/..\/..\/lib\/libkv\/src \\$/;"	m
+LIBA_PATH	../exchange/gid_client/Makefile	/^LIBA_PATH = -L..\/..\/..\/lib\/libkv\/src \\$/;"	m
+LIBA_PATH	../exchange/multi_client/Makefile	/^LIBA_PATH = -L..\/..\/..\/lib\/libkv\/src \\$/;"	m
+LIB_DIR	../Makefile	/^LIB_DIR=-L\/usr\/local\/lib -L$(HOME_PATH)\/lib -L..\/$/;"	m
+LISTEN_CLIENT_HOST	../exchange/comm_def.h	15;"	d
+LISTEN_CLIENT_PORT	../exchange/comm_def.h	16;"	d
+LISTEN_MESSAGEGATEWAY_HOST	../exchange/comm_def.h	13;"	d
+LISTEN_MESSAGEGATEWAY_PORT	../exchange/comm_def.h	14;"	d
+LOGIN_SERVER	../exchange/fd_manager.h	/^        LOGIN_SERVER$/;"	e	enum:router_object
+MAIN_APP_SERV	../Makefile	/^MAIN_APP_SERV ?= openChat$/;"	m
+MANAGE_TRAVEL_FOR_DELETE_FCB	../gateway/control/control_sockfd_manage.c	/^typedef bool (*MANAGE_TRAVEL_FOR_DELETE_FCB)(int sockfd, int idx, void *usr);$/;"	t	file:
+MANAGE_TRAVEL_FOR_DELETE_FCB	../gateway/control/control_sockfd_manage.h	/^typedef bool (*MANAGE_TRAVEL_FOR_DELETE_FCB)(int sockfd, int idx, void *usr);$/;"	t
+MANAGE_TRAVEL_FOR_DELETE_FCB	../gateway/login/login_sockfd_manage.c	/^typedef bool (*MANAGE_TRAVEL_FOR_DELETE_FCB)(int sockfd, int idx, void *usr);$/;"	t	file:
+MANAGE_TRAVEL_FOR_DELETE_FCB	../gateway/login/login_sockfd_manage.h	/^typedef bool (*MANAGE_TRAVEL_FOR_DELETE_FCB)(int sockfd, int idx, void *usr);$/;"	t
+MANAGE_TRAVEL_FOR_DELETE_FCB	../gateway/message/message_sockfd_manage.c	/^typedef bool (*MANAGE_TRAVEL_FOR_DELETE_FCB)(int sockfd, int idx, void *usr);$/;"	t	file:
+MANAGE_TRAVEL_FOR_DELETE_FCB	../gateway/message/message_sockfd_manage.h	/^typedef bool (*MANAGE_TRAVEL_FOR_DELETE_FCB)(int sockfd, int idx, void *usr);$/;"	t
+MANAGE_TRAVEL_FOR_LOOKUP_FCB	../gateway/control/control_sockfd_manage.c	/^typedef void (*MANAGE_TRAVEL_FOR_LOOKUP_FCB)(int sockfd, int idx, void *usr);$/;"	t	file:
+MANAGE_TRAVEL_FOR_LOOKUP_FCB	../gateway/control/control_sockfd_manage.h	/^typedef void (*MANAGE_TRAVEL_FOR_LOOKUP_FCB)(int sockfd, int idx, void *usr);$/;"	t
+MANAGE_TRAVEL_FOR_LOOKUP_FCB	../gateway/login/login_sockfd_manage.c	/^typedef void (*MANAGE_TRAVEL_FOR_LOOKUP_FCB)(int sockfd, int idx, void *usr);$/;"	t	file:
+MANAGE_TRAVEL_FOR_LOOKUP_FCB	../gateway/login/login_sockfd_manage.h	/^typedef void (*MANAGE_TRAVEL_FOR_LOOKUP_FCB)(int sockfd, int idx, void *usr);$/;"	t
+MANAGE_TRAVEL_FOR_LOOKUP_FCB	../gateway/message/message_sockfd_manage.c	/^typedef void (*MANAGE_TRAVEL_FOR_LOOKUP_FCB)(int sockfd, int idx, void *usr);$/;"	t	file:
+MANAGE_TRAVEL_FOR_LOOKUP_FCB	../gateway/message/message_sockfd_manage.h	/^typedef void (*MANAGE_TRAVEL_FOR_LOOKUP_FCB)(int sockfd, int idx, void *usr);$/;"	t
+MAX_CID_SIZE	../exchange/comm_def.h	6;"	d
+MAX_GID_SIZE	../exchange/comm_def.h	8;"	d
+MAX_LINE_LEN	../exchange/bind_client/test_main.c	8;"	d	file:
+MAX_LINE_LEN	../exchange/test/test_main.c	8;"	d	file:
+MAX_ONE_CID_HAVE_GID	../exchange/comm_def.h	4;"	d
+MAX_ONE_GID_HAVE_CID	../exchange/comm_def.h	5;"	d
+MAX_SIZE	../gateway/message/test/cidmap.h	4;"	d
+MAX_UID_SIZE	../exchange/comm_def.h	7;"	d
+MESSAGE_GATEWAY	../exchange/fd_manager.h	/^        MESSAGE_GATEWAY,$/;"	e	enum:router_object
+NODE_SERVER_HOST	../gateway/control/control_comm_io.c	8;"	d	file:
+NODE_SERVER_HOST	../gateway/login/login_comm_io.c	8;"	d	file:
+NODE_SERVER_HOST	../gateway/message/message_comm_io.c	8;"	d	file:
+NODE_SERVER_PORT	../gateway/control/control_comm_io.c	9;"	d	file:
+NODE_SERVER_PORT	../gateway/login/login_comm_io.c	9;"	d	file:
+NODE_SERVER_PORT	../gateway/message/message_comm_io.c	9;"	d	file:
+NODE_SIZE	../gateway/control/control_sockfd_manage.c	4;"	d	file:
+NODE_SIZE	../gateway/login/login_sockfd_manage.c	4;"	d	file:
+NODE_SIZE	../gateway/message/message_sockfd_manage.c	4;"	d	file:
+OBJ	../Makefile	/^OBJ = $(addprefix $(BIN)\/, \\$/;"	m
+OBJ	../exchange/test/Makefile	/^OBJ = client_simulation.o test_main.o$/;"	m
+PACKAGE_SIZE	../exchange/todo.c	2;"	d	file:
+PULL_HOST	../gateway/message/message_zmq_io.c	9;"	d	file:
+PULL_PORT	../gateway/message/message_zmq_io.c	10;"	d	file:
+PUSH_HOST	../gateway/message/message_zmq_io.c	7;"	d	file:
+PUSH_PORT	../gateway/message/message_zmq_io.c	8;"	d	file:
+ROUTER_SERVER	../exchange/fd_manager.h	/^        ROUTER_SERVER,$/;"	e	enum:router_object
+SETTING_SERVER	../exchange/fd_manager.h	/^        SETTING_SERVER,$/;"	e	enum:router_object
+SRC	../Makefile	/^SRC = main.c \\$/;"	m
+SRC	../exchange/bind_client/Makefile	/^SRC = client_simulation.c test_main.c$/;"	m
+SRC	../exchange/gid_client/Makefile	/^SRC = client.c$/;"	m
+SRC	../exchange/multi_client/Makefile	/^SRC = client.c$/;"	m
+SRC	../exchange/test/Makefile	/^SRC = client_simulation.c test_main.c$/;"	m
+SRV	../Makefile	/^SRV := $(MAIN_APP_SERV)$/;"	m
+TARGET	../exchange/bind_client/Makefile	/^TARGET = test$/;"	m
+TARGET	../exchange/gid_client/Makefile	/^TARGET = test$/;"	m
+TARGET	../exchange/multi_client/Makefile	/^TARGET = test$/;"	m
+TARGET	../exchange/test/Makefile	/^TARGET = test$/;"	m
+TARGET	../gateway/control/test/Makefile	/^TARGET = test$/;"	m
+TARGET	../gateway/login/test/Makefile	/^TARGET = test$/;"	m
+TARGET	../gateway/message/test/Makefile	/^TARGET = AppSrvTest$/;"	m
+TEST	../exchange/bind_client/client_simulation.c	5;"	d	file:
+ZIO_RECV_TYPE	../gateway/control/control_zmq_io.h	/^	ZIO_RECV_TYPE,$/;"	e	enum:zio_rw_type
+ZIO_RECV_TYPE	../gateway/message/message_zmq_io.h	/^	ZIO_RECV_TYPE,$/;"	e	enum:zio_rw_type
+ZIO_SEND_TYPE	../gateway/control/control_zmq_io.h	/^	ZIO_SEND_TYPE = 0,$/;"	e	enum:zio_rw_type
+ZIO_SEND_TYPE	../gateway/message/message_zmq_io.h	/^	ZIO_SEND_TYPE = 0,$/;"	e	enum:zio_rw_type
+_CID_MAP_H_	../gateway/message/test/cidmap.h	2;"	d
+_CORE_EXCHANGE_NODE_TEST_H	../exchange/bind_client/core_exchange_node_test.h	2;"	d
+_CORE_EXCHANGE_NODE_TEST_H	../exchange/test/core_exchange_node_test.h	2;"	d
+_FD_MANAGER_H_	../exchange/fd_manager.h	2;"	d
+_GID_MAP_H_	../exchange/gid_map.h	2;"	d
+_MESSAGE_DISPATCH_H_	../exchange/message_dispatch.h	2;"	d
+_NOTIFY_H_	../exchange/notify.h	2;"	d
+_SIMULATE_H_	../gateway/message/test/simulate.h	2;"	d
+_STATUS_H_	../exchange/status.h	2;"	d
+_UID_MAP_H_	../exchange/uid_map.h	2;"	d
+_cid	../gateway/message/test/cidmap.h	/^	struct _cid$/;"	s	struct:cidmap
+_classified_message	../exchange/message_dispatch.c	/^static void _classified_message(struct comm_message *msg)$/;"	f	file:
+_downstream_msg	../exchange/message_dispatch.c	/^static void _downstream_msg(struct comm_message *msg)$/;"	f	file:
+_end	../gateway/message/test/cidmap.h	/^		int     _end;$/;"	m	struct:cidmap::_cid
+_erased_client	../exchange/message_dispatch.c	/^static void _erased_client(struct comm_message *msg)$/;"	f	file:
+_front	../gateway/message/test/cidmap.h	/^		int     _front;$/;"	m	struct:cidmap::_cid
+_handle_cid_message	../exchange/message_dispatch.c	/^static void _handle_cid_message(struct comm_message *msg)$/;"	f	file:
+_handle_gid_map	../exchange/message_dispatch.c	/^static int _handle_gid_map(struct comm_message *msg)$/;"	f	file:
+_handle_gid_message	../exchange/message_dispatch.c	/^static int _handle_gid_message(struct comm_message *msg)$/;"	f	file:
+_handle_status	../exchange/message_dispatch.c	/^static void _handle_status(struct comm_message *msg)$/;"	f	file:
+_handle_uid_map	../exchange/message_dispatch.c	/^static int _handle_uid_map(struct comm_message *msg)$/;"	f	file:
+_handle_uid_message	../exchange/message_dispatch.c	/^static int _handle_uid_message(struct comm_message *msg)$/;"	f	file:
+_pull_thread	../gateway/control/control_gateway.c	/^static void *_pull_thread(void *usr)$/;"	f	file:
+_pull_thread	../gateway/message/message_gateway.c	/^static void *_pull_thread(void *usr)$/;"	f	file:
+_push_thread	../gateway/login/login_gateway.c	/^static void *_push_thread(void *usr)$/;"	f	file:
+_push_thread	../gateway/message/message_gateway.c	/^static void *_push_thread(void *usr)$/;"	f	file:
+_setting_map	../exchange/message_dispatch.c	/^static void _setting_map(struct comm_message *msg)$/;"	f	file:
+_verified	../exchange/message_dispatch.c	/^static int _verified(struct comm_message *msg)$/;"	f	file:
+accept_fun	../exchange/multi_client/client.c	/^void accept_fun(void *usr)$/;"	f
+api_server	../gateway/message/test/UserInfoApi.c	/^static void *api_server = NULL;$/;"	v	file:
+append_cid	../gateway/message/test/cidmap.c	/^int append_cid(char *cid, int size)$/;"	f
+buf	../gateway/message/test/cidmap.h	/^	char    *buf;$/;"	m	struct:cidmap
+cap	../exchange/fd_manager.h	/^	int                     cap;$/;"	m	struct:fd_array
+cid	../gateway/message/test/cidmap.h	/^	}       cid[MAX_SIZE];$/;"	m	struct:cidmap	typeref:struct:cidmap::_cid
+cid_number	../gateway/message/test/cidmap.h	/^	int     cid_number;$/;"	m	struct:cidmap
+cidmap	../gateway/message/test/cidmap.h	/^struct cidmap$/;"	s
+client	../exchange/test/test.lua	/^function client()$/;"	f
+client_event_notify	../exchange/notify.c	/^void client_event_notify(void *ctx, int socket, enum STEP_CODE step, void *usr)$/;"	f
+client_thread_read	../exchange/bind_client/client_simulation.c	/^void *client_thread_read(void *usr)$/;"	f
+client_thread_read	../exchange/test/client_simulation.c	/^void *client_thread_read(void *usr)$/;"	f
+close_fun	../exchange/multi_client/client.c	/^void close_fun(void *usr)$/;"	f
+comm_ctx	../exchange/gid_client/client.c	/^static struct comm_context *comm_ctx = NULL;$/;"	v	typeref:struct:comm_context	file:
+comm_ctx	../exchange/multi_client/bak_client.c	/^static struct comm_context *comm_ctx = NULL;$/;"	v	typeref:struct:comm_context	file:
+comm_ctx	../exchange/multi_client/client.c	/^static struct comm_context *comm_ctx = NULL;$/;"	v	typeref:struct:comm_context	file:
+commctx	../exchange/message_dispatch.h	/^	struct comm_context     *commctx;$/;"	m	struct:server_info	typeref:struct:server_info::comm_context
+connectfd	../exchange/bind_client/client_simulation.c	/^static int              connectfd = 0;$/;"	v	file:
+connectfd	../exchange/test/client_simulation.c	/^static int              connectfd = 0;$/;"	v	file:
+control_comm_io_exit	../gateway/control/control_comm_io.c	/^void control_comm_io_exit(void)$/;"	f
+control_comm_io_init	../gateway/control/control_comm_io.c	/^int control_comm_io_init(void)$/;"	f
+control_comm_io_recv	../gateway/control/control_comm_io.c	/^int control_comm_io_recv(struct comm_message *msg)$/;"	f
+control_comm_io_send	../gateway/control/control_comm_io.c	/^int control_comm_io_send(struct comm_message *msg)$/;"	f
+control_gateway_stop	../gateway/control/control_gateway.c	/^void control_gateway_stop(void)$/;"	f
+control_gateway_wait	../gateway/control/control_gateway.c	/^void control_gateway_wait(void)$/;"	f
+control_gateway_work	../gateway/control/control_gateway.c	/^void control_gateway_work(void)$/;"	f
+control_sockfd_manage_add	../gateway/control/control_sockfd_manage.c	/^void control_sockfd_manage_add(int sockfd)$/;"	f
+control_sockfd_manage_del	../gateway/control/control_sockfd_manage.c	/^void control_sockfd_manage_del(int sockfd)$/;"	f
+control_sockfd_manage_travel	../gateway/control/control_sockfd_manage.c	/^int control_sockfd_manage_travel(MANAGE_TRAVEL_FOR_LOOKUP_FCB lfcb, MANAGE_TRAVEL_FOR_DELETE_FCB dfcb, void *usr)$/;"	f
+control_zmq_io_exit	../gateway/control/control_zmq_io.c	/^void control_zmq_io_exit(void)$/;"	f
+control_zmq_io_getsockopt	../gateway/control/control_zmq_io.c	/^int control_zmq_io_getsockopt(enum zio_rw_type rwopt, int option_name, void *option_value, size_t *option_len)$/;"	f
+control_zmq_io_init	../gateway/control/control_zmq_io.c	/^int control_zmq_io_init(void)$/;"	f
+control_zmq_io_recv	../gateway/control/control_zmq_io.c	/^int control_zmq_io_recv(zmq_msg_t *msg, int flags)$/;"	f
+core_exchange_node	../gateway/control/control_sockfd_manage.c	/^struct core_exchange_node$/;"	s	file:
+core_exchange_node	../gateway/login/login_sockfd_manage.c	/^struct core_exchange_node$/;"	s	file:
+core_exchange_node	../gateway/message/message_sockfd_manage.c	/^struct core_exchange_node$/;"	s	file:
+core_exchange_node_cb	../gateway/control/control_comm_io.c	/^static void core_exchange_node_cb(void *ctx, int socket, enum STEP_CODE step, void *usr)$/;"	f	file:
+core_exchange_node_cb	../gateway/login/login_comm_io.c	/^static void core_exchange_node_cb(void *ctx, int socket, enum STEP_CODE step, void *usr)$/;"	f	file:
+core_exchange_node_cb	../gateway/message/message_comm_io.c	/^static void core_exchange_node_cb(void *ctx, int socket, enum STEP_CODE step, void *usr)$/;"	f	file:
+current_offset	../gateway/message/test/cidmap.h	/^	int     current_offset;$/;"	m	struct:cidmap
+debug	../exchange/message_dispatch.c	312;"	d	file:
+destroy_api_server	../gateway/message/test/UserInfoApi.c	/^void destroy_api_server()$/;"	f
+destroy_cidmap	../gateway/message/test/cidmap.c	/^void destroy_cidmap()$/;"	f
+destroy_gid_map	../exchange/gid_map.c	/^void destroy_gid_map()$/;"	f
+destroy_push_server	../gateway/message/test/message_server.c	/^void destroy_push_server()$/;"	f
+destroy_uid_map	../exchange/uid_map.c	/^void destroy_uid_map()$/;"	f
+do_msg_for_each_fcb	../gateway/control/control_gateway.c	/^static void do_msg_for_each_fcb(int sockfd, int idx, void *usr)$/;"	f	file:
+do_msg_for_each_fcb	../gateway/message/message_gateway.c	/^static void do_msg_for_each_fcb(int sockfd, int idx, void *usr)$/;"	f	file:
+downstream_msg	../gateway/control/control_gateway.c	/^static int downstream_msg(struct comm_message *msg)$/;"	f	file:
+downstream_msg	../gateway/message/message_gateway.c	/^static int downstream_msg(struct comm_message *msg)$/;"	f	file:
+dsp_array	../exchange/fd_manager.h	/^	struct fd_descriptor    *dsp_array;$/;"	m	struct:fd_array	typeref:struct:fd_array::fd_descriptor
+erase_client	../exchange/status.c	/^int erase_client(int fd)$/;"	f
+event_fun	../exchange/multi_client/client.c	/^static void event_fun(struct comm_context *commctx, struct comm_tcp *commtcp, void *usr)$/;"	f	file:
+expect_value	../exchange/test/gateway_simulation.c	/^static char expect_value[25] = { 0x04, 0x17, 0x52, 0x4f, 0x55, 0x54, 0x49, 0x0d, 0x0a,$/;"	v	file:
+fd	../exchange/fd_manager.h	/^	int             fd;$/;"	m	struct:fd_node
+fd_array	../exchange/fd_manager.h	/^struct fd_array$/;"	s
+fd_array	../gateway/control/control_sockfd_manage.c	/^	int     fd_array[NODE_SIZE];$/;"	m	struct:core_exchange_node	file:
+fd_array	../gateway/login/login_sockfd_manage.c	/^	int     fd_array[NODE_SIZE];$/;"	m	struct:core_exchange_node	file:
+fd_array	../gateway/message/message_sockfd_manage.c	/^	int     fd_array[NODE_SIZE];$/;"	m	struct:core_exchange_node	file:
+fd_descriptor	../exchange/fd_manager.h	/^struct fd_descriptor$/;"	s
+fd_head	../exchange/fd_manager.h	/^struct fd_head$/;"	s
+fd_list	../exchange/fd_manager.h	/^struct fd_list$/;"	s
+fd_node	../exchange/fd_manager.h	/^struct fd_node$/;"	s
+fdman_array_at_fd	../exchange/fd_manager.c	/^int fdman_array_at_fd(const int fd, struct fd_descriptor *des)$/;"	f
+fdman_array_destroy	../exchange/fd_manager.c	/^int fdman_array_destroy()$/;"	f
+fdman_array_fill_fd	../exchange/fd_manager.c	/^int fdman_array_fill_fd(const int fd, const struct fd_descriptor *des)$/;"	f
+fdman_array_init	../exchange/fd_manager.c	/^int fdman_array_init(void)$/;"	f
+fdman_array_remove_fd	../exchange/fd_manager.c	/^int fdman_array_remove_fd(const int fd, struct fd_descriptor *des)$/;"	f
+fdman_list_destroy	../exchange/fd_manager.c	/^int fdman_list_destroy(void)$/;"	f
+fdman_list_front	../exchange/fd_manager.c	/^int fdman_list_front(const enum router_object obj,$/;"	f
+fdman_list_init	../exchange/fd_manager.c	/^int fdman_list_init(void)$/;"	f
+fdman_list_push_back	../exchange/fd_manager.c	/^int fdman_list_push_back(const enum router_object obj, const struct fd_node *node)$/;"	f
+fdman_list_remove	../exchange/fd_manager.c	/^int fdman_list_remove(const enum router_object        obj,$/;"	f
+fdman_poll_client_fd	../exchange/fd_manager.c	/^uint32_t fdman_poll_client_fd(int *arr[], uint32_t *size)$/;"	f
+fdman_statistic_object	../exchange/fd_manager.c	/^uint32_t fdman_statistic_object(const enum router_object obj)$/;"	f
+find_best_gateway	../exchange/message_dispatch.c	/^void find_best_gateway(int *fd)$/;"	f
+find_fd	../exchange/uid_map.c	/^int find_fd(char *uid)$/;"	f
+find_fd_list	../exchange/gid_map.c	/^int find_fd_list(char *gid, int fd_list[], int *size)$/;"	f
+find_gid_list	../exchange/gid_map.c	/^int find_gid_list(int fd, char *gid_list[], int *size)$/;"	f
+find_uid	../exchange/uid_map.c	/^int find_uid(char *uid, int *size, int fd)$/;"	f
+g_api	../gateway/login/login_zmq_io.c	/^static void     *g_api = NULL;$/;"	v	file:
+g_app	../gateway/login/login_zmq_io.c	/^static void     *g_app = NULL;$/;"	v	file:
+g_array	../exchange/fd_manager.c	/^static struct fd_array  g_array;$/;"	v	typeref:struct:fd_array	file:
+g_cid_map	../gateway/message/test/cidmap.c	/^static struct cidmap g_cid_map;$/;"	v	typeref:struct:cidmap	file:
+g_cli	../gateway/control/control_zmq_io.c	/^static void *g_cli;$/;"	v	file:
+g_commctx	../gateway/control/control_comm_io.c	/^static struct comm_context *g_commctx = NULL;$/;"	v	typeref:struct:comm_context	file:
+g_commctx	../gateway/login/login_comm_io.c	/^static struct comm_context *g_commctx = NULL;$/;"	v	typeref:struct:comm_context	file:
+g_commctx	../gateway/message/message_comm_io.c	/^static struct comm_context *g_commctx = NULL;$/;"	v	typeref:struct:comm_context	file:
+g_ctx	../exchange/bind_client/client_simulation.c	/^struct comm_context     *g_ctx = NULL;$/;"	v	typeref:struct:comm_context
+g_ctx	../exchange/test/client_simulation.c	/^struct comm_context     *g_ctx = NULL;$/;"	v	typeref:struct:comm_context
+g_ctx	../gateway/control/control_zmq_io.c	/^static void *g_ctx = NULL;$/;"	v	file:
+g_ctx	../gateway/login/login_zmq_io.c	/^static void     *g_ctx = NULL;$/;"	v	file:
+g_ctx	../gateway/message/message_zmq_io.c	/^static void     *g_ctx = NULL;$/;"	v	file:
+g_ctx	../gateway/message/test/simulate.h	/^void            *g_ctx;$/;"	v
+g_gid_map	../exchange/gid_map.c	/^static int g_gid_map = 0;$/;"	v	file:
+g_imlog	../exchange/multi_client/client.c	/^struct CSLog *g_imlog = NULL;$/;"	v	typeref:struct:CSLog
+g_index	../gateway/message/test/cidmap.c	/^static int g_index = 0;$/;"	v	file:
+g_list	../exchange/fd_manager.c	/^static struct fd_list   g_list;$/;"	v	typeref:struct:fd_list	file:
+g_pull	../gateway/message/message_zmq_io.c	/^static void     *g_pull = NULL;$/;"	v	file:
+g_push	../gateway/message/message_zmq_io.c	/^static void     *g_push = NULL;$/;"	v	file:
+g_serv_info	../exchange/message_dispatch.c	/^struct server_info g_serv_info = {};$/;"	v	typeref:struct:server_info
+g_sockfd_manage	../gateway/control/control_sockfd_manage.c	/^static struct core_exchange_node g_sockfd_manage = {.rwlock = PTHREAD_RWLOCK_INITIALIZER};$/;"	v	typeref:struct:core_exchange_node	file:
+g_sockfd_manage	../gateway/login/login_sockfd_manage.c	/^static struct core_exchange_node g_sockfd_manage = {.rwlock = PTHREAD_RWLOCK_INITIALIZER};$/;"	v	typeref:struct:core_exchange_node	file:
+g_sockfd_manage	../gateway/message/message_sockfd_manage.c	/^static struct core_exchange_node g_sockfd_manage = {.rwlock = PTHREAD_RWLOCK_INITIALIZER};$/;"	v	typeref:struct:core_exchange_node	file:
+g_uid_map	../exchange/uid_map.c	/^static int g_uid_map = 0;$/;"	v	file:
+gen_uuid	../exchange/test/test_uuid.c	/^void gen_uuid(char *dst)$/;"	f
+get_cid	../exchange/message_dispatch.c	/^void get_cid(char cid[MAX_CID_SIZE], const int fd)$/;"	f
+get_first_cid	../gateway/message/test/cidmap.c	/^char *get_first_cid()$/;"	f
+get_next_cid	../gateway/message/test/cidmap.c	/^char *get_next_cid()$/;"	f
+get_numbers	../gateway/message/test/cidmap.c	/^int get_numbers()$/;"	f
+head	../exchange/fd_manager.h	/^	struct fd_head head[FD_MAX_CLASSIFICATION];$/;"	m	struct:fd_list	typeref:struct:fd_list::fd_head
+host	../exchange/fd_manager.h	/^	uint32_t                host;$/;"	m	struct:fd_descriptor
+host	../exchange/message_dispatch.h	/^	char                    host[20];	\/\/ 客户端绑定ip.$/;"	m	struct:server_info
+init_api_server	../gateway/message/test/UserInfoApi.c	/^void init_api_server()$/;"	f
+init_cidmap	../gateway/message/test/cidmap.c	/^void init_cidmap()$/;"	f
+init_gid_map	../exchange/gid_map.c	/^void init_gid_map()$/;"	f
+init_push_server	../gateway/message/test/message_server.c	/^void init_push_server()$/;"	f
+init_uid_map	../exchange/uid_map.c	/^void init_uid_map()$/;"	f
+insert_fd	../exchange/uid_map.c	/^int insert_fd(char *uid, int fd)$/;"	f
+insert_fd_list	../exchange/gid_map.c	/^int insert_fd_list(char *gid, int fd_list[], int size)$/;"	f
+insert_gid_list	../exchange/gid_map.c	/^int insert_gid_list(int fd, char *gid)$/;"	f
+login_authentication_package	../exchange/test/gateway_simulation.c	/^static char login_authentication_package[17] = { 0x00, 0x11, 0x52, 0x4f, 0x55, 0x54, 0x49, 0x0d, 0x0a,$/;"	v	file:
+login_comm_io_exit	../gateway/login/login_comm_io.c	/^void login_comm_io_exit(void)$/;"	f
+login_comm_io_init	../gateway/login/login_comm_io.c	/^int login_comm_io_init(void)$/;"	f
+login_comm_io_recv	../gateway/login/login_comm_io.c	/^int login_comm_io_recv(struct comm_message *msg)$/;"	f
+login_comm_io_send	../gateway/login/login_comm_io.c	/^int login_comm_io_send(struct comm_message *msg)$/;"	f
+login_gateway_stop	../gateway/login/login_gateway.c	/^void login_gateway_stop(void)$/;"	f
+login_gateway_wait	../gateway/login/login_gateway.c	/^void login_gateway_wait(void)$/;"	f
+login_gateway_work	../gateway/login/login_gateway.c	/^void login_gateway_work(void)$/;"	f
+login_server_event_notify	../exchange/notify.c	/^void login_server_event_notify(void *ctx, int socket, enum STEP_CODE step, void *usr)$/;"	f
+login_server_fd	../exchange/message_dispatch.h	/^	int                     login_server_fd;$/;"	m	struct:server_info
+login_sockfd_manage_add	../gateway/login/login_sockfd_manage.c	/^void login_sockfd_manage_add(int sockfd)$/;"	f
+login_sockfd_manage_del	../gateway/login/login_sockfd_manage.c	/^void login_sockfd_manage_del(int sockfd)$/;"	f
+login_sockfd_manage_travel	../gateway/login/login_sockfd_manage.c	/^int login_sockfd_manage_travel(MANAGE_TRAVEL_FOR_LOOKUP_FCB lfcb, MANAGE_TRAVEL_FOR_DELETE_FCB dfcb, void *usr)$/;"	f
+login_thread	../gateway/message/test/login_server.c	/^void *login_thread(void *usr)$/;"	f
+login_zmq_io_exit	../gateway/login/login_zmq_io.c	/^void login_zmq_io_exit(void)$/;"	f
+login_zmq_io_init	../gateway/login/login_zmq_io.c	/^int login_zmq_io_init(void)$/;"	f
+login_zmq_io_send_to_api	../gateway/login/login_zmq_io.c	/^int login_zmq_io_send_to_api(zmq_msg_t *msg, int flags)$/;"	f
+login_zmq_io_send_to_app	../gateway/login/login_zmq_io.c	/^int login_zmq_io_send_to_app(zmq_msg_t *msg, int flags)$/;"	f
+main	../exchange/bind_client/test_main.c	/^int main(int argc, char *argv[])$/;"	f
+main	../exchange/exchange.c	/^int main(void)$/;"	f
+main	../exchange/gid_client/client.c	/^int main(int argc, char *argv[])$/;"	f
+main	../exchange/multi_client/bak_client.c	/^int main(int argc, char *argv[])$/;"	f
+main	../exchange/multi_client/client.c	/^int main(int argc, char *argv[])$/;"	f
+main	../exchange/test/test_main.c	/^int main(int argc, char *argv[])$/;"	f
+main	../exchange/test/test_strtok.c	/^int main(void)$/;"	f
+main	../exchange/test/test_uuid.c	/^void main(void)$/;"	f
+main	../gateway/control/test/zmq_server_simulator.c	/^int main(int argc, char *argv[])$/;"	f
+main	../gateway/login/test/zmq_sub.c	/^int main(int argc, char *argv[])$/;"	f
+main	../gateway/message/test/main.c	/^int main(int argc, char *argv[])$/;"	f
+main	../main.c	/^int main(int argc, char *argv[])$/;"	f
+make_uuid	../exchange/notify.c	/^void make_uuid(char *dst)$/;"	f
+max_fd	../exchange/fd_manager.h	/^	int                     max_fd;$/;"	m	struct:fd_array
+max_size	../gateway/control/control_sockfd_manage.c	/^	int     max_size;$/;"	m	struct:core_exchange_node	file:
+max_size	../gateway/login/login_sockfd_manage.c	/^	int     max_size;$/;"	m	struct:core_exchange_node	file:
+max_size	../gateway/message/message_sockfd_manage.c	/^	int     max_size;$/;"	m	struct:core_exchange_node	file:
+message_comm_io_exit	../gateway/message/message_comm_io.c	/^void message_comm_io_exit(void)$/;"	f
+message_comm_io_init	../gateway/message/message_comm_io.c	/^int message_comm_io_init(void)$/;"	f
+message_comm_io_recv	../gateway/message/message_comm_io.c	/^int message_comm_io_recv(struct comm_message *msg)$/;"	f
+message_comm_io_send	../gateway/message/message_comm_io.c	/^int message_comm_io_send(struct comm_message *msg)$/;"	f
+message_dispatch	../exchange/message_dispatch.c	/^void message_dispatch(void)$/;"	f
+message_gateway_event_notify	../exchange/notify.c	/^void message_gateway_event_notify(void *ctx, int socket, enum STEP_CODE step, void *usr)$/;"	f
+message_gateway_fd	../exchange/message_dispatch.h	/^	int                     message_gateway_fd;	\/\/ message gateway 的fd.$/;"	m	struct:server_info
+message_gateway_stop	../gateway/message/message_gateway.c	/^void message_gateway_stop(void)$/;"	f
+message_gateway_wait	../gateway/message/message_gateway.c	/^void message_gateway_wait(void)$/;"	f
+message_gateway_work	../gateway/message/message_gateway.c	/^void message_gateway_work(void)$/;"	f
+message_sockfd_manage_add	../gateway/message/message_sockfd_manage.c	/^void message_sockfd_manage_add(int sockfd)$/;"	f
+message_sockfd_manage_del	../gateway/message/message_sockfd_manage.c	/^void message_sockfd_manage_del(int sockfd)$/;"	f
+message_sockfd_manage_travel	../gateway/message/message_sockfd_manage.c	/^int message_sockfd_manage_travel(MANAGE_TRAVEL_FOR_LOOKUP_FCB lfcb, MANAGE_TRAVEL_FOR_DELETE_FCB dfcb, void *usr)$/;"	f
+message_zmq_io_exit	../gateway/message/message_zmq_io.c	/^void message_zmq_io_exit(void)$/;"	f
+message_zmq_io_getsockopt	../gateway/message/message_zmq_io.c	/^int message_zmq_io_getsockopt(enum zio_rw_type rwopt, int option_name, void *option_value, size_t *option_len)$/;"	f
+message_zmq_io_init	../gateway/message/message_zmq_io.c	/^int message_zmq_io_init(void)$/;"	f
+message_zmq_io_recv	../gateway/message/message_zmq_io.c	/^int message_zmq_io_recv(zmq_msg_t *msg, int flags)$/;"	f
+message_zmq_io_send	../gateway/message/message_zmq_io.c	/^int message_zmq_io_send(zmq_msg_t *msg, int flags)$/;"	f
+multi_client	../exchange/bind_client/test_main.c	/^void *multi_client(void *usr)$/;"	f
+multi_client	../exchange/test/test_main.c	/^void *multi_client(void *usr)$/;"	f
+next	../exchange/fd_manager.h	/^	struct fd_node          *next;$/;"	m	struct:fd_head	typeref:struct:fd_head::fd_node
+next	../exchange/fd_manager.h	/^	struct fd_node  *next;$/;"	m	struct:fd_node	typeref:struct:fd_node::fd_node
+obj	../exchange/fd_manager.h	/^	enum router_object      obj;$/;"	m	struct:fd_descriptor	typeref:enum:fd_descriptor::router_object
+obj	../exchange/fd_manager.h	/^	enum router_object      obj;$/;"	m	struct:fd_head	typeref:enum:fd_head::router_object
+package_size	../exchange/message_dispatch.h	/^	uint32_t                package_size;$/;"	m	struct:server_info
+port	../exchange/fd_manager.h	/^	uint16_t                port;$/;"	m	struct:fd_descriptor
+port	../exchange/message_dispatch.h	/^	uint16_t                port;	\/\/ 客户端绑定port$/;"	m	struct:server_info
+print_current_time	../exchange/bind_client/client_simulation.c	/^void print_current_time()$/;"	f
+print_current_time	../exchange/gid_client/client.c	/^void print_current_time()$/;"	f
+print_current_time	../exchange/multi_client/bak_client.c	/^void print_current_time()$/;"	f
+print_current_time	../exchange/multi_client/client.c	/^void print_current_time()$/;"	f
+print_current_time	../exchange/test/client_simulation.c	/^void print_current_time()$/;"	f
+pull_msg	../gateway/control/control_gateway.c	/^static int pull_msg(struct comm_message *msg)$/;"	f	file:
+pull_msg	../gateway/message/message_gateway.c	/^static int pull_msg(struct comm_message *msg)$/;"	f	file:
+pull_thread	../gateway/message/test/message_server.c	/^void *pull_thread(void *usr)$/;"	f
+push_server	../gateway/message/test/message_server.c	/^static void *push_server = NULL;$/;"	v	file:
+read_fun	../exchange/multi_client/client.c	/^void read_fun(void *usr)$/;"	f
+read_message	../exchange/gid_client/client.c	/^void *read_message(void *arg)$/;"	f
+read_message	../exchange/multi_client/bak_client.c	/^void *read_message(void *arg)$/;"	f
+read_message	../exchange/multi_client/client.c	/^void *read_message(void *arg)$/;"	f
+remove_cid	../gateway/message/test/cidmap.c	/^int remove_cid(char *cid, int size)$/;"	f
+remove_fd	../exchange/uid_map.c	/^int remove_fd(char *uid)$/;"	f
+remove_fd_list	../exchange/gid_map.c	/^int remove_fd_list(char *gid, int fd_list[], int size)$/;"	f
+remove_gid_list	../exchange/gid_map.c	/^int remove_gid_list(int fd, char *gid[], int size)$/;"	f
+remove_uid	../exchange/uid_map.c	/^int remove_uid(int fd)$/;"	f
+router_object	../exchange/fd_manager.h	/^enum router_object$/;"	g
+rwlock	../gateway/control/control_sockfd_manage.c	/^	pthread_rwlock_t rwlock;$/;"	m	struct:core_exchange_node	file:
+rwlock	../gateway/login/login_sockfd_manage.c	/^	pthread_rwlock_t rwlock;$/;"	m	struct:core_exchange_node	file:
+rwlock	../gateway/message/message_sockfd_manage.c	/^	pthread_rwlock_t rwlock;$/;"	m	struct:core_exchange_node	file:
+send_data	../exchange/gid_client/client.c	/^static int send_data(struct comm_context *commctx, int fd)$/;"	f	file:
+send_data	../exchange/multi_client/bak_client.c	/^static int send_data(struct comm_context *commctx, int fd)$/;"	f	file:
+send_data	../exchange/multi_client/client.c	/^static int send_data(struct comm_context *commctx, int fd)$/;"	f	file:
+send_message	../gateway/message/test/message_server.c	/^void send_message(char *str, int flag)$/;"	f
+send_status_msg	../exchange/status.c	/^void send_status_msg(int clientfd, int status)$/;"	f
+send_to_api	../gateway/message/test/UserInfoApi.c	/^void send_to_api(char *str, int flag)$/;"	f
+server_info	../exchange/message_dispatch.h	/^struct server_info$/;"	s
+setting_server_event_notify	../exchange/notify.c	/^void setting_server_event_notify(void *ctx, int socket, enum STEP_CODE step, void *usr)$/;"	f
+setting_server_fd	../exchange/message_dispatch.h	/^	int                     setting_server_fd;$/;"	m	struct:server_info
+size	../exchange/fd_manager.h	/^	uint32_t                size;$/;"	m	struct:fd_head
+status	../exchange/fd_manager.h	/^	uint8_t                 status;	\/\/ 0 未使用， 1 连接正常， 2 已经closed掉。$/;"	m	struct:fd_descriptor
+status	../exchange/fd_manager.h	/^	uint8_t         status;	\/\/ Descriptor fd connect status.$/;"	m	struct:fd_node
+test_gid_map	../exchange/test/test_gid_map.c	/^int test_gid_map()$/;"	f
+test_simulate_client	../exchange/bind_client/client_simulation.c	/^int test_simulate_client(char *ip)$/;"	f
+test_simulate_client	../exchange/test/client_simulation.c	/^int test_simulate_client(char *ip)$/;"	f
+test_simulate_gateway	../exchange/test/gateway_simulation.c	/^int test_simulate_gateway()$/;"	f
+test_uid_map	../exchange/test/test_uid_map.c	/^int test_uid_map()$/;"	f
+thread_status	../gateway/message/test/simulate.h	/^pthread_t       *thread_status;	\/\/ 0:push, 1:pull, 2:login, 3:API$/;"	v
+tid1	../gateway/control/control_gateway.c	/^static pthread_t tid1;$/;"	v	file:
+tid1	../gateway/login/login_gateway.c	/^static pthread_t tid1;$/;"	v	file:
+tid1	../gateway/message/message_gateway.c	/^static pthread_t tid1;$/;"	v	file:
+tid2	../gateway/message/message_gateway.c	/^static pthread_t tid2;$/;"	v	file:
+timeout_fun	../exchange/multi_client/client.c	/^void timeout_fun(void *usr)$/;"	f
+upstream_msg	../gateway/login/login_gateway.c	/^static int upstream_msg(struct comm_message *msg)$/;"	f	file:
+upstream_msg	../gateway/message/message_gateway.c	/^static int upstream_msg(struct comm_message *msg)$/;"	f	file:
+uuid	../exchange/fd_manager.h	/^	char    		uuid[37];$/;"	m	struct:fd_descriptor
+work_init	../exchange/exchange.c	/^static int work_init(void)$/;"	f	file:
+write_fun	../exchange/multi_client/client.c	/^void write_fun(void *usr)$/;"	f
+zio_rw_type	../gateway/control/control_zmq_io.h	/^enum zio_rw_type {$/;"	g
+zio_rw_type	../gateway/message/message_zmq_io.h	/^enum zio_rw_type {$/;"	g
+zmq_cli_init	../gateway/control/control_zmq_io.c	/^static void *zmq_cli_init(char *host, int port)$/;"	f	file:
+zmq_cli_init	../gateway/login/login_zmq_io.c	/^static void *zmq_cli_init(char *host, int port)$/;"	f	file:
+zmq_pull_init	../gateway/message/message_zmq_io.c	/^static void *zmq_pull_init(void *ctx, char *host, int port)$/;"	f	file:
+zmq_push_init	../gateway/message/message_zmq_io.c	/^static void *zmq_push_init(void *ctx, char *host, int port)$/;"	f	file:
+zmq_srv_init	../gateway/login/login_zmq_io.c	/^static void *zmq_srv_init(char *host, int port)$/;"	f	file:

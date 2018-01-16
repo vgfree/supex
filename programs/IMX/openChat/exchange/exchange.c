@@ -12,11 +12,8 @@
 #include "comm_def.h"
 
 
-static int work_init(void)
+static int _do_init(void)
 {
-	/*init log*/
-	SLogOpen(LOGGER_FILE, SLogIntegerToLevel(1));
-
 	/*get config*/
 	dictionary    *config = iniparser_load(CONFIG);
 	char                    *clientHost = iniparser_getstring(config, LISTEN_CLIENT_HOST, NULL);
@@ -136,22 +133,47 @@ static int work_init(void)
 	return 0;
 }
 
-int main(void)
+static void *_do_work(void *usr)
 {
-	if (work_init() == -1) {
-		printf("ERROR:Server init failed.");
-		return -1;
-	}
-
 	while (1) {
 		message_dispatch();
 	}
+
+	return NULL;
+}
+
+static pthread_t tid1;
+void exchange_work(void)
+{
+	if (_do_init() == -1) {
+		printf("ERROR:Server init failed.");
+		exit(-1);
+	}
+
+	/*work push*/
+	int err = pthread_create(&tid1, NULL, _do_work, NULL);
+	if (err != 0) {
+		x_printf(E, "can't create exchange thread:%s.", strerror(err));
+	}
+	x_printf(I, "exchange work!\n");
+	return;
+}
+
+void exchange_wait(void)
+{
+	/*over*/
+	void *status = NULL;
+	pthread_join(tid1, status);
+}
+
+
+void exchange_stop(void)
+{
+	x_printf(W, "exchange stop!\n");
 
 	fdman_array_destroy();
 	fdman_list_destroy();
 	destroy_uid_map();
 	destroy_gid_map();
 	kv_destroy();
-	return 0;
 }
-

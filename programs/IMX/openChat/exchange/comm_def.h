@@ -8,9 +8,7 @@
 #define MAX_GID_SIZE		128
 
 
-#define SERVER_FILE                     "CoreExchangeNode.pid"
-#define LOGGER_FILE                     "CoreExchangeNode.log"
-#define CONFIG                          "core_exchange_node.conf"
+#define CONFIG                          "exchange.conf"
 
 #define LISTEN_MESSAGEGATEWAY_HOST      ":ListenMessageGatewayHost"
 #define LISTEN_MESSAGEGATEWAY_PORT      ":ListenMessageGatewayPort"
