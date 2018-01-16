@@ -1,13 +1,13 @@
 #include "libmini.h"
-#include "message/message_gateway.h"
-#include "login/login_gateway.h"
-#include "control/control_gateway.h"
+#include "gateway/message/message_gateway.h"
+#include "gateway/login/login_gateway.h"
+#include "gateway/control/control_gateway.h"
 
 
 int main(int argc, char *argv[])
 {
 	/*init log*/
-	SLogOpen("gateway.log", SLogIntegerToLevel(1));
+	SLogOpen("openChat.log", SLogIntegerToLevel(1));
 
 	message_gateway_work();
 	login_gateway_work();

@@ -7,7 +7,7 @@ LIB_DIR=-L/usr/local/lib -L$(HOME_PATH)/lib -L../
 INC_LIBS=-liniparser -lcomm -lzmq -lmini -lstdc++ -lm
 
 #[=========>MARK<=========]#
-MAIN_APP_SERV ?= gateway
+MAIN_APP_SERV ?= openChat
 
 HANDLE_MODEL = EVCORO
 
@@ -25,18 +25,18 @@ JOB += $(SRV)
 CFLAGS += -g -std=c99
 
 MAIN_OBJ = main.c \
-	   message/message_zmq_io.c \
-	   message/message_comm_io.c \
-	   message/message_gateway.c \
-	   message/message_sockfd_manage.c \
-	   login/login_zmq_io.c \
-	   login/login_comm_io.c \
-	   login/login_gateway.c \
-	   login/login_sockfd_manage.c \
-	   control/control_zmq_io.c \
-	   control/control_comm_io.c \
-	   control/control_gateway.c \
-	   control/control_sockfd_manage.c
+	   gateway/message/message_zmq_io.c \
+	   gateway/message/message_comm_io.c \
+	   gateway/message/message_gateway.c \
+	   gateway/message/message_sockfd_manage.c \
+	   gateway/login/login_zmq_io.c \
+	   gateway/login/login_comm_io.c \
+	   gateway/login/login_gateway.c \
+	   gateway/login/login_sockfd_manage.c \
+	   gateway/control/control_zmq_io.c \
+	   gateway/control/control_comm_io.c \
+	   gateway/control/control_gateway.c \
+	   gateway/control/control_sockfd_manage.c
 
 all:$(JOB)
 	@echo -e $(foreach bin,$^,$(BLUE)$(bin) $(GREEN)✔)$(RED)"\n-->OVER!\n"$(NONE)

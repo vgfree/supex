@@ -1,5 +1,5 @@
 libIMX := libappsrv.a
-openIMX := IMX_coreExchangeNode IMX_gateway IMX_userInfoApi IMX_appServer IMX_appClient
+openIMX := IMX_openChat IMX_userInfoApi IMX_appServer IMX_appClient
 IMX:$(libIMX) $(openIMX)
 
 libappsrv.a:
@@ -9,12 +9,8 @@ libappsrv.a:
 
 
 
-IMX_coreExchangeNode:
-	$(MAKE) -C ./IMX/CoreExchangeNode MAIN_APP_SERV=coreExchangeNode
-	@echo -e $(GREEN)"【"$(YELLOW) $@ $(GREEN)"】"$(RED)"\n-->OK!\n"$(NONE)
-
-IMX_gateway:
-	$(MAKE) -C ./IMX/gateway MAIN_APP_SERV=gateway
+IMX_openChat:
+	$(MAKE) -C ./IMX/openChat MAIN_APP_SERV=openChat
 	@echo -e $(GREEN)"【"$(YELLOW) $@ $(GREEN)"】"$(RED)"\n-->OK!\n"$(NONE)
 
 IMX_userInfoApi:
@@ -31,8 +27,7 @@ IMX_appClient:
 
 
 clean:
-	$(MAKE) -C ./IMX/CoreExchangeNode clean
-	$(MAKE) -C ./IMX/gateway clean
+	$(MAKE) -C ./IMX/openChat clean
 	$(MAKE) -C ./IMX/UserInfoApi clean
 	$(MAKE) -C ./IMX/appServer clean
 	$(MAKE) -C ./IMX/appClient clean
@@ -40,8 +35,7 @@ clean:
 	rm -rf ./IMX/*.a
 
 distclean:
-	$(MAKE) -C ./IMX/CoreExchangeNode distclean
-	$(MAKE) -C ./IMX/gateway distclean
+	$(MAKE) -C ./IMX/openChat distclean
 	$(MAKE) -C ./IMX/UserInfoApi distclean
 	$(MAKE) -C ./IMX/appServer distclean
 	$(MAKE) -C ./IMX/appClient distclean
