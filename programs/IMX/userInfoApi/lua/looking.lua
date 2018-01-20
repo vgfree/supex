@@ -1,8 +1,9 @@
+local utils     = require('utils')
 local only      = require('only')
 local redis_api = require('redis_pool_api')
+local http_api  = require('http_short_api')
 
-module("api_redis_looking", package.seeall)
-
+module("looking", package.seeall)
 
 local function get_status_from_redis(tab)
 	if tab[3] == "cid" then
@@ -33,7 +34,7 @@ local function get_cid_with_group(tab)
 	end
 end
 
-function get_data(table)
+function appServerInfoLoad(table)
 	if table[2] == "status" then
 		return get_status_from_redis(table)
 	end

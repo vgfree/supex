@@ -241,7 +241,7 @@ static void _erased_client(struct comm_message *msg)
 	erase_client(fd);/*TODO:和close回调死循环?*/
 	x_printf(D, "errase client fd:%d.", fd);
 
-	send_status_msg(fd, STEP_STOP);
+	//send_status_msg(fd, STEP_STOP);
 
 	commapi_close(g_serv_info.commctx, fd);
 }

@@ -14,7 +14,7 @@ IMX_openChat:
 	@echo -e $(GREEN)"【"$(YELLOW) $@ $(GREEN)"】"$(RED)"\n-->OK!\n"$(NONE)
 
 IMX_userInfoApi:
-	$(MAKE) -C ./IMX/UserInfoApi MAIN_APP_SERV=UserInfoApi
+	$(MAKE) -C ./IMX/userInfoApi MAIN_APP_SERV=userInfoApi
 	@echo -e $(GREEN)"【"$(YELLOW) $@ $(GREEN)"】"$(RED)"\n-->OK!\n"$(NONE)
 
 IMX_appServer:
@@ -28,7 +28,7 @@ IMX_appClient:
 
 clean:
 	$(MAKE) -C ./IMX/openChat clean
-	$(MAKE) -C ./IMX/UserInfoApi clean
+	$(MAKE) -C ./IMX/userInfoApi clean
 	$(MAKE) -C ./IMX/appServer clean
 	$(MAKE) -C ./IMX/appClient clean
 	$(MAKE) -C ./IMX/libappsrv clean
@@ -36,7 +36,7 @@ clean:
 
 distclean:
 	$(MAKE) -C ./IMX/openChat distclean
-	$(MAKE) -C ./IMX/UserInfoApi distclean
+	$(MAKE) -C ./IMX/userInfoApi distclean
 	$(MAKE) -C ./IMX/appServer distclean
 	$(MAKE) -C ./IMX/appClient distclean
 	$(MAKE) -C ./IMX/libappsrv distclean

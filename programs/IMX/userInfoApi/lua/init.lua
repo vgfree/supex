@@ -1,6 +1,5 @@
 local path_list ={
-	"lua/core/?.lua;",
-	"lua/code/?.lua;",
+	"lua/?.lua;",
 
 
 	"../../../open/lib/?.lua;",

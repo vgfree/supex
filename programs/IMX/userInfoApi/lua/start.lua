@@ -3,9 +3,8 @@ local lualog		= require('lualog')
 local only		= require('only')
 local cutils		= require('cutils')
 local redis_api		= require('redis_pool_api')
+local setting		= require("setting")
 local looking		= require("looking")
-
-module("start", package.seeall)
 
 function app_init()
 	--> init first
@@ -18,11 +17,22 @@ function app_init()
 	redis_api.init( )
 end
 
+local ctx = zmq.init(1)
+
 function app_call(tab)
-	local ret = nil
-	if #tab > 2 then
-		ret = looking.handle(tab)
+	if tab[1] == 'status' then	
+		setting.loginServerInfoSave(tab)
 	end
-	--only.log('E', 'In app_call the ret = %s', scan.dump(ret))
-	return ret
+	if tab[1] == 'setting' then
+		setting.appServerInfoSave(tab)
+		local s = ctx:socket(zmq.PUSH)
+		s:connect("tcp://127.0.0.1:10000")
+		s:send_table(tab)
+		s:close()
+	end
+	if tab[1] == 'looking' then
+		looking.appServerInfoLoad(tab)		
+	else
+		only.log('E', 'First frame is invalid !')
+	end
 end

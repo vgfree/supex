@@ -31,7 +31,7 @@ static lua_State *lua_vm_init(void)
 
 		lua_register(L, "app_lua_get_serv_name", app_lua_get_serv_name);
 
-		error = luaL_dofile(L, "init.lua");
+		error = luaL_dofile(L, "lua/init.lua");
 
 		if (error) {
 			fprintf(stderr, "%s\n", lua_tostring(L, -1));
@@ -40,7 +40,7 @@ static lua_State *lua_vm_init(void)
 		}
 	}
 	/*app init*/
-	error = luaL_dofile(L, "start.lua");
+	error = luaL_dofile(L, "lua/start.lua");
 
 	if (error) {
 		fprintf(stderr, "%s\n", lua_tostring(L, -1));

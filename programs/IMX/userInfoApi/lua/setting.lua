@@ -6,7 +6,7 @@ local http_api  = require('http_short_api')
 local libhttps  = require("libhttps")
 local zmq	= require("zmq")
 
-module("api_redis_save", package.seeall)
+module("setting", package.seeall)
 
 local function status_process(status, cid)
 	if status == nil or cid == nil then
@@ -73,8 +73,8 @@ end
 function loginServerInfoSave(table)
 	local status = table[2]
 	local cid = table[3]
-	status_process(status, cid)
 
+	status_process(status, cid)
 end
 
 function appServerInfoSave(table)
@@ -113,4 +113,5 @@ function appServerInfoSave(table)
 	--	status_process(status, cid)
 	--end
 end
+
 
