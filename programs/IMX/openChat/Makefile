@@ -2,8 +2,9 @@ INC_DIR=-I$(HOME_PATH)/lib/libcomm/ \
 	-I$(HOME_PATH)/lib/iniparser/src \
 	-I$(HOME_PATH)/lib/zeromq-4.2.1/include/ \
 	-I$(HOME_PATH)/lib/libmini/include \
-	-I$(HOME_PATH)/lib/libkv/release/
-LIB_DIR=-L/usr/local/lib -L$(HOME_PATH)/lib -L../
+	-I$(HOME_PATH)/lib/libkv/release/ \
+	-I./
+LIB_DIR=-L/usr/local/lib -L$(HOME_PATH)/lib
 
 INC_LIBS=-liniparser -lcomm -lzmq -lkv -lleveldb -lmini -lstdc++ -luuid -lpthread -ldl -lm
 
@@ -42,12 +43,13 @@ OBJ = $(addprefix $(BIN)/, \
       control_sockfd_manage.o \
       \
       exchange.o \
-      fd_manager.o \
-      message_dispatch.o \
-      status.o \
-      uid_map.o \
-      gid_map.o \
-      notify.o \
+      exc_cid_map.o \
+      exc_gid_map.o \
+      exc_message_dispatch.o \
+      exc_status.o \
+      exc_event_notify.o \
+      exc_sockfd_manager.o \
+      exc_uid_map.o \
       )
 
 
@@ -82,7 +84,7 @@ push:
 	git push origin HEAD:refs/for/master
 
 clean:
-	rm -rf $(MAIN_APP_SERV)
+	rm -rf $(MAIN_APP_SERV) $(BIN)
 
 distclean:
 	make clean

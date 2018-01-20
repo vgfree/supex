@@ -5,6 +5,7 @@
 
 #include "libmini.h"
 #include "comm_api.h"
+#include "comm_print.h"
 #include "login_comm_io.h"
 #include "login_zmq_io.h"
 #include "login_sockfd_manage.h"
@@ -52,7 +53,12 @@ static void *_push_thread(void *usr)
 
 		commmsg_make(&msg, DEFAULT_MSG_SIZE);
 		login_comm_io_recv(&msg);
-		x_printf(D, "commmsg_frame_count, :%d", commmsg_frame_count(&msg));
+#define debug 1
+#ifdef debug
+		x_printf(D, ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
+		commmsg_print(&msg);
+		x_printf(D, ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
+#endif
 
 		upstream_msg(&msg);
 

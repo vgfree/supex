@@ -5,25 +5,29 @@
 
 int test_uid_map()
 {
-	init_uid_map();
-	char    *uid = "123456789";
-	int     fd = 1;
-	insert_fd(uid, fd);
+	exc_uidmap_init();
+	char uid[MAX_UID_SIZE] = "123456789";
+	char cid[MAX_CID_SIZE] = "1";
+	exc_uidmap_set_cid(uid, cid);
+	exc_cidmap_set_uid(cid, uid);
 
-	int result_fd = find_fd(uid);
+	int fd = 1;
+	int ok = exc_uidmap_get_cid(uid, cid);
+	int result_fd = atoi(cid);
 	printf("uid:%s, find fd:%d.\n", uid, result_fd);
 
 	char    test_uid[20] = {};
 	int     size = 0;
-	find_uid(test_uid, &size, fd);
+	exc_cidmap_get_uid(cid, test_uid)
 	printf("fd:%d, find uid:%s.\n", fd, test_uid);
 
-	remove_fd(uid);
-	find_fd(uid);
-	remove_uid(fd);
-	find_uid(test_uid, &size, fd);
+	exc_uidmap_del_cid(uid);
+	ok = exc_uidmap_get_cid(uid, cid);
+	result_fd = atoi(cid);
+	exc_cidmap_del_uid(cid);
+	exc_cidmap_get_uid(cid, test_uid)
 
-	destroy_uid_map();
+	exc_uidmap_free();
 	return 0;
 }
 

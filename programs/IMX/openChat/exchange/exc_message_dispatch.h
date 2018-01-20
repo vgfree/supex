@@ -1,27 +1,22 @@
-#ifndef _MESSAGE_DISPATCH_H_
-#define _MESSAGE_DISPATCH_H_
+#pragma once
 
 #include "comm_api.h"
-#include "comm_def.h"
+#include "exc_comm_def.h"
 
 struct server_info
 {
 	char                    host[20];	// 客户端绑定ip.
 	uint16_t                port;	// 客户端绑定port
 	struct comm_context     *commctx;
-	uint32_t                package_size;
+
 	int                     message_gateway_fd;	// message gateway 的fd.
-	int                     setting_server_fd;
-	int                     login_server_fd;
+	int                     control_gateway_fd;
+	int                     login_gateway_fd;
 };
 
 extern struct server_info g_serv_info;
 
-void find_best_gateway(int *fd);
-
-void message_dispatch(void);
-
 void get_cid(char cid[MAX_CID_SIZE], const int fd);
 
-#endif	/* ifndef _MESSAGE_DISPATCH_H_ */
+void exc_message_dispatch(void);
 

@@ -7,7 +7,7 @@
 int main(int argc, char *argv[])
 {
 	/*init log*/
-	SLogOpen("openChat.log", SLogIntegerToLevel(1));
+	SLogOpen("openChat.log", SLogIntegerToLevel(0));
 
 	exchange_work();
 	message_gateway_work();

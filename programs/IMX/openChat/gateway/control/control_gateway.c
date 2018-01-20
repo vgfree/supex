@@ -5,6 +5,7 @@
 
 #include "libmini.h"
 #include "comm_api.h"
+#include "comm_print.h"
 #include "control_comm_io.h"
 #include "control_zmq_io.h"
 #include "control_sockfd_manage.h"
@@ -45,12 +46,12 @@ static int pull_msg(struct comm_message *msg)
 		zmq_msg_close(&part);
 
 		message_zmq_io_getsockopt(ZIO_RECV_TYPE, ZMQ_RCVMORE, &more, &more_size);
-		x_printf(D, "more:%d more_size %ld.", more, more_size);
+		//x_printf(D, "more:%d more_size %ld.", more, more_size);
 		i++;
 	} while (more);
 
-	x_printf(D, "commmsg_frame_count:%d", commmsg_frame_count(msg));
 #if 0
+	x_printf(D, "commmsg_frame_count:%d", commmsg_frame_count(msg));
 	int j = 0;
 	for (j = 0; j < msg->package.frames; j++) {
 		x_printf(D, "frame[%d]:frame_size:%d, frame_offset:%d\n", j, msg->package.frame_size[j], msg->package.frame_offset[j]);
@@ -69,6 +70,12 @@ static void *_pull_thread(void *usr)
 		commmsg_make(&msg, DEFAULT_MSG_SIZE);
 		pull_msg(&msg);
 
+#define debug 1
+#ifdef debug
+		x_printf(D, "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<");
+		commmsg_print(&msg);
+		x_printf(D, "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<");
+#endif
 		downstream_msg(&msg);
 
 		commmsg_free(&msg);

@@ -1,8 +1,6 @@
 #pragma once
 
 #define FD_CAPACITY             1024 * 100
-#define MAX_ONE_CID_HAVE_GID	100
-#define MAX_ONE_GID_HAVE_CID	100
 #define MAX_CID_SIZE		128
 #define MAX_UID_SIZE		128
 #define MAX_GID_SIZE		128

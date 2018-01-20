@@ -1,10 +1,10 @@
 #include <uuid/uuid.h>
 
-#include "fd_manager.h"
-#include "message_dispatch.h"
-#include "notify.h"
-#include "status.h"
 #include "libmini.h"
+#include "exc_sockfd_manager.h"
+#include "exc_message_dispatch.h"
+#include "exc_status.h"
+#include "exc_event_notify.h"
 
 void make_uuid(char *dst)
 {
@@ -13,21 +13,21 @@ void make_uuid(char *dst)
 	uuid_unparse(uuid, dst);
 }
 
-void client_event_notify(void *ctx, int socket, enum STEP_CODE step, void *usr)
+void exc_event_notify_from_client(void *ctx, int socket, enum STEP_CODE step, void *usr)
 {
 	struct comm_context *commctx = (struct comm_context *)ctx;
 	assert(g_serv_info.commctx == commctx);
-	x_printf(D, "callback, fd:%d, status:%d.", socket, step);
+	x_printf(D, "commapi_socket callback, fd:%d, status:%d.", socket, step);
 	switch (step)
 	{
 		case STEP_INIT:
 			{
 				printf("server here is accept : %d\n", socket);
-				struct fd_descriptor des = {};
+				struct fd_info des = {};
 				des.status = 1;
-				des.obj = CLIENT;
+				des.type = CLIENT_ROUTER;
 				make_uuid(des.uuid);
-				fdman_array_fill_fd(socket, &des);
+				fdman_slot_set(socket, &des);
 
 				send_status_msg(socket, STEP_INIT);
 			}
@@ -45,8 +45,7 @@ void client_event_notify(void *ctx, int socket, enum STEP_CODE step, void *usr)
 		case STEP_STOP:
 			{
 				printf("server here is close : %d\n", socket);
-				struct fd_descriptor des = {};
-				fdman_array_remove_fd(socket, &des);
+				fdman_slot_del(socket);
 
 				erase_client(socket);
 				x_printf(D, "errase client fd:%d.", socket);
@@ -62,29 +61,27 @@ void client_event_notify(void *ctx, int socket, enum STEP_CODE step, void *usr)
 	}
 }
 
-void message_gateway_event_notify(void *ctx, int socket, enum STEP_CODE step, void *usr)
+void exc_event_notify_from_message(void *ctx, int socket, enum STEP_CODE step, void *usr)
 {
 	struct comm_context *commctx = (struct comm_context *)ctx;
-	if (g_serv_info.commctx != commctx) {
-		x_printf(E, "callback commctx not equal. g_serv_info.commctx:%p, commctx:%p", g_serv_info.commctx, commctx);
-	}
-	x_printf(D, "callback, fd:%d, status:%d.", socket, step);
+	assert(g_serv_info.commctx == commctx);
+	x_printf(D, "commapi_socket callback, fd:%d, status:%d.", socket, step);
 	switch (step)
 	{
 		case STEP_INIT:
 			// connected.
 			{
 				printf("client here is connect : %d\n", socket);
-				struct fd_descriptor des = {};
+				struct fd_info des = {};
 				des.status = 1;
-				des.obj = MESSAGE_GATEWAY;
+				des.type = MESSAGE_ROUTER;
 				make_uuid(des.uuid);
-				fdman_array_fill_fd(socket, &des);
+				fdman_slot_set(socket, &des);
 
 				struct fd_node node = {};
 				node.fd = socket;
 				node.status = 1;
-				fdman_list_push_back(MESSAGE_GATEWAY, &node);
+				fdman_list_add(MESSAGE_ROUTER, &node);
 
 				g_serv_info.message_gateway_fd = socket;
 			}
@@ -103,16 +100,14 @@ void message_gateway_event_notify(void *ctx, int socket, enum STEP_CODE step, vo
 			// closed.
 			{
 				printf("client here is close : %d\n", socket);
-				struct fd_descriptor des;
-				fdman_array_remove_fd(socket, &des);
-				assert(des.status == 1);
+				fdman_slot_del(socket);
 
 				if (g_serv_info.message_gateway_fd == socket) {
 					x_printf(E, "message_server failed.");
 					g_serv_info.message_gateway_fd = 0;
-					fdman_list_remove(MESSAGE_GATEWAY, socket);
+					fdman_list_del(MESSAGE_ROUTER, socket);
 				} else {
-					x_printf(S, "this fd:%d is not belong to MESSAGE_GATEWAY.", socket);
+					x_printf(S, "this fd:%d is not belong to MESSAGE_ROUTER.", socket);
 				}
 				break;
 			}
@@ -123,13 +118,11 @@ void message_gateway_event_notify(void *ctx, int socket, enum STEP_CODE step, vo
 	}
 }
 
-void setting_server_event_notify(void *ctx, int socket, enum STEP_CODE step, void *usr)
+void exc_event_notify_from_control(void *ctx, int socket, enum STEP_CODE step, void *usr)
 {
 	struct comm_context *commctx = (struct comm_context *)ctx;
-	if (g_serv_info.commctx != commctx) {
-		x_printf(E, "callback commctx not equal. g_serv_info.commctx:%p, commctx:%p", g_serv_info.commctx, commctx);
-	}
-	x_printf(D, "callback, fd:%d, status:%d.", socket, step);
+	assert(g_serv_info.commctx == commctx);
+	x_printf(D, "commapi_socket callback, fd:%d, status:%d.", socket, step);
 
 	switch (step)
 	{
@@ -137,18 +130,18 @@ void setting_server_event_notify(void *ctx, int socket, enum STEP_CODE step, voi
 			// connected.
 			{
 				printf("client here is connect : %d\n", socket);
-				struct fd_descriptor des = {};
+				struct fd_info des = {};
 				des.status = 1;
-				des.obj = SETTING_SERVER;
+				des.type = CONTROL_ROUTER;
 				make_uuid(des.uuid);
-				fdman_array_fill_fd(socket, &des);
+				fdman_slot_set(socket, &des);
 
 				struct fd_node node = {};
 				node.fd = socket;
 				node.status = 1;
-				fdman_list_push_back(SETTING_SERVER, &node);
+				fdman_list_add(CONTROL_ROUTER, &node);
 
-				g_serv_info.setting_server_fd = socket;
+				g_serv_info.control_gateway_fd = socket;
 			}
 			break;
 
@@ -165,16 +158,14 @@ void setting_server_event_notify(void *ctx, int socket, enum STEP_CODE step, voi
 			// closed.
 			{
 				printf("client here is close : %d\n", socket);
-				struct fd_descriptor des;
-				fdman_array_remove_fd(socket, &des);
-				assert(des.status == 1);
+				fdman_slot_del(socket);
 
-				if (g_serv_info.setting_server_fd == socket) {
+				if (g_serv_info.control_gateway_fd == socket) {
 					x_printf(E, "setting_server failed.");
-					g_serv_info.setting_server_fd = 0;
-					fdman_list_remove(SETTING_SERVER, socket);
+					g_serv_info.control_gateway_fd = 0;
+					fdman_list_del(CONTROL_ROUTER, socket);
 				} else {
-					x_printf(S, "this fd:%d is not belong to SETTING_SERVER.", socket);
+					x_printf(S, "this fd:%d is not belong to CONTROL_ROUTER.", socket);
 				}
 				break;
 			}
@@ -185,13 +176,11 @@ void setting_server_event_notify(void *ctx, int socket, enum STEP_CODE step, voi
 	}
 }
 
-void login_server_event_notify(void *ctx, int socket, enum STEP_CODE step, void *usr)
+void exc_event_notify_from_login(void *ctx, int socket, enum STEP_CODE step, void *usr)
 {
 	struct comm_context *commctx = (struct comm_context *)ctx;
-	if (g_serv_info.commctx != commctx) {
-		x_printf(E, "callback commctx not equal. g_serv_info.commctx:%p, commctx:%p", g_serv_info.commctx, commctx);
-	}
-	x_printf(D, "callback, fd:%d, status:%d.", socket, step);
+	assert(g_serv_info.commctx == commctx);
+	x_printf(D, "commapi_socket callback, fd:%d, status:%d.", socket, step);
 
 	switch (step)
 	{
@@ -199,18 +188,18 @@ void login_server_event_notify(void *ctx, int socket, enum STEP_CODE step, void 
 			// connected.
 			{
 				printf("client here is connect : %d\n", socket);
-				struct fd_descriptor des = {};
+				struct fd_info des = {};
 				des.status = 1;
-				des.obj = LOGIN_SERVER;
+				des.type = LOGIN_ROUTER;
 				make_uuid(des.uuid);
-				fdman_array_fill_fd(socket, &des);
+				fdman_slot_set(socket, &des);
 
 				struct fd_node node = {};
 				node.fd = socket;
 				node.status = 1;
-				fdman_list_push_back(LOGIN_SERVER, &node);
+				fdman_list_add(LOGIN_ROUTER, &node);
 
-				g_serv_info.login_server_fd = socket;
+				g_serv_info.login_gateway_fd = socket;
 			}
 			break;
 
@@ -227,16 +216,14 @@ void login_server_event_notify(void *ctx, int socket, enum STEP_CODE step, void 
 			// closed.
 			{
 				printf("client here is close : %d\n", socket);
-				struct fd_descriptor des;
-				fdman_array_remove_fd(socket, &des);
-				assert(des.status == 1);
+				fdman_slot_del(socket);
 
-				if (g_serv_info.login_server_fd == socket) {
+				if (g_serv_info.login_gateway_fd == socket) {
 					x_printf(E, "login_server failed.");
-					g_serv_info.login_server_fd = 0;
-					fdman_list_remove(LOGIN_SERVER, socket);
+					g_serv_info.login_gateway_fd = 0;
+					fdman_list_del(LOGIN_ROUTER, socket);
 				} else {
-					x_printf(S, "this fd:%d is not belong to LOGIN_SERVER.", socket);
+					x_printf(S, "this fd:%d is not belong to LOGIN_ROUTER.", socket);
 				}
 				break;
 			}

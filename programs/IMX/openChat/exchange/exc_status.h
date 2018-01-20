@@ -1,9 +1,6 @@
-#ifndef _STATUS_H_
-#define _STATUS_H_
+#pragma once
 
 int erase_client(int fd);
 
 void send_status_msg(int clientfd, int status);
-
-#endif
 

@@ -8,6 +8,7 @@
 #include "message_comm_io.h"
 #include "message_zmq_io.h"
 #include "message_sockfd_manage.h"
+#include "comm_print.h"
 
 static void do_msg_for_each_fcb(int sockfd, int idx, void *usr)
 {
@@ -45,12 +46,12 @@ static int pull_msg(struct comm_message *msg)
 		zmq_msg_close(&part);
 
 		message_zmq_io_getsockopt(ZIO_RECV_TYPE, ZMQ_RCVMORE, &more, &more_size);
-		x_printf(D, "more:%d more_size %ld.", more, more_size);
+		//x_printf(D, "more:%d more_size %ld.", more, more_size);
 		i++;
 	} while (more);
 
-	x_printf(D, "commmsg_frame_count:%d", commmsg_frame_count(msg));
 #if 0
+	x_printf(D, "commmsg_frame_count:%d", commmsg_frame_count(msg));
 	int j = 0;
 	for (j = 0; j < msg->package.frames; j++) {
 		x_printf(D, "frame[%d]:frame_size:%d, frame_offset:%d\n", j, msg->package.frame_size[j], msg->package.frame_offset[j]);
@@ -68,6 +69,12 @@ static void *_pull_thread(void *usr)
 		struct comm_message msg = {};
 		commmsg_make(&msg, DEFAULT_MSG_SIZE);
 		pull_msg(&msg);
+#define debug 1
+#ifdef debug
+		x_printf(D, "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<");
+		commmsg_print(&msg);
+		x_printf(D, "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<");
+#endif
 
 		downstream_msg(&msg);
 
@@ -104,7 +111,12 @@ static void *_push_thread(void *usr)
 
 		commmsg_make(&msg, DEFAULT_MSG_SIZE);
 		message_comm_io_recv(&msg);
-		x_printf(D, "commmsg_frame_count, :%d", commmsg_frame_count(&msg));
+#define debug 1
+#ifdef debug
+		x_printf(D, ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
+		commmsg_print(&msg);
+		x_printf(D, ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
+#endif
 
 		upstream_msg(&msg);
 

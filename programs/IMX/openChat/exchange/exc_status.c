@@ -1,34 +1,32 @@
-#include "gid_map.h"
-#include "message_dispatch.h"
-#include "status.h"
-#include "uid_map.h"
 #include "libmini.h"
-#include "comm_def.h"
 
+#include "exc_comm_def.h"
+#include "exc_gid_map.h"
+#include "exc_uid_map.h"
+#include "exc_message_dispatch.h"
+#include "exc_status.h"
+#include "comm_print.h"
+
+static void each_gid_fcb(char gid[MAX_GID_SIZE], size_t idx, void *usr)
+{
+	char *cid = usr;
+	exc_cidmap_rem_gid(cid, gid);
+	exc_gidmap_rem_cid(gid, cid);
+}
 
 int erase_client(int fd)
 {
+	char cid[MAX_CID_SIZE] = {};
+	snprintf(cid, sizeof(cid), "%d", fd);
+
 	char    uid[MAX_UID_SIZE] = {};
-	int     size = 0;
+	exc_cidmap_get_uid(cid, uid);
 
-	find_uid(uid, &size, fd);
-	remove_fd(uid);
-	remove_uid(fd);
+	exc_uidmap_del_cid(uid);
+	exc_cidmap_del_uid(cid);
 
-	char *gid_list[MAX_ONE_CID_HAVE_GID] = {};
-	size = MAX_ONE_CID_HAVE_GID;
-	if (find_gid_list(fd, gid_list, &size) == 0) {
-		remove_gid_list(fd, gid_list, size);
-
-		for (int i = 0; i < size; i++) {
-			remove_fd_list(gid_list[i], &fd, 1);
-			free(gid_list[i]);
-		}
-	} else {
-		x_printf(E, "no fd:%d map , is impossible?", fd);
-	}
-
-	return size;
+	exc_cidmap_get_gid(cid, each_gid_fcb, cid);
+	return 0;
 }
 
 void send_status_msg(int clientfd, int status)
@@ -38,8 +36,9 @@ void send_status_msg(int clientfd, int status)
 
 	struct comm_message msg = {};
 	commmsg_make(&msg, DEFAULT_MSG_SIZE);
-	commmsg_sets(&msg, g_serv_info.login_server_fd, 0, PUSH_METHOD);
+	commmsg_sets(&msg, g_serv_info.login_gateway_fd, 0, PUSH_METHOD);
 
+	/*[status] | [closed/connected] | [cid]*/
 	commmsg_frame_set(&msg, 0, strlen(cid), cid);
 	msg.package.frames_of_package[0] = msg.package.frames;
 	msg.package.packages = 1;
@@ -58,6 +57,13 @@ void send_status_msg(int clientfd, int status)
 	commmsg_frame_set(&msg, 0, 6, "status");
 	msg.package.frames_of_package[0] = msg.package.frames;
 	msg.package.packages = 1;
+
+#define debug 1
+#ifdef debug
+	x_printf(D, "-------------------------------");
+	commmsg_print(&msg);
+	x_printf(D, "-------------------------------");
+#endif
 
 	commapi_send(g_serv_info.commctx, &msg);
 	commmsg_free(&msg);

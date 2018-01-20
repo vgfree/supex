@@ -3,46 +3,44 @@
 
 #include <stdio.h>
 
+void each_cid_print(char cid[MAX_CID_SIZE], size_t idx, void *usr)
+{
+	printf("find gid:%s, cid:%s.\n", usr, cid);
+}
+
+void each_gid_print(char gid[MAX_GID_SIZE], size_t idx, void *usr)
+{
+	printf("find cid:%s, gid:%s.\n", usr, gid);
+}
+
 int test_gid_map()
 {
 	init_gid_map();
 	char    *gid1 = "12345";
 	char    *gid2 = "23456";
 	int     fd = 2;
-	insert_gid_list(fd, gid1);
-	insert_gid_list(fd, gid2);
-	insert_fd_list(gid1, &fd, 1);
-	insert_fd_list(gid2, &fd, 1);
+	char *cid = "2";
+	exc_cidmap_add_gid(cid, gid1);
+	exc_cidmap_add_gid(cid, gid2);
+	exc_gidmap_add_cid(gid1, cid);
+	exc_gidmap_add_cid(gid2, cid);
 
-	int     size = 20;
-	char    *tested_gid[20] = {};
-	find_gid_list(fd, tested_gid, &size);
-	int i;
+	exc_cidmap_get_gid(cid, each_gid_print, cid);
 
-	for (i = 0; i < size; i++) {
-		printf("find_gid_list fd:%d, gid:%s.\n", fd, tested_gid[i]);
-	}
+	exc_gidmap_get_cid(gid1, each_cid_print, gid1);
 
-	int tested_fd_list[10] = {};
-	size = find_fd_list(gid1, tested_fd_list);
-
-	for (i = 0; i < size; i++) {
-		printf("find_fd_list gid:%s, fd:%d.\n", gid1, tested_fd_list[i]);
-	}
-
-	size = find_fd_list(gid2, tested_fd_list);
-
-	for (i = 0; i < size; i++) {
-		printf("find_fd_list gid:%s, fd:%d.\n", gid2, tested_fd_list[i]);
-	}
+	exc_gidmap_get_cid(gid2, each_cid_print, gid2);
 
 	printf("remove fd:%d.\n", fd);
 
+		char cid[MAX_CID_SIZE] = {};
+		snprintf(cid, sizeof(cid), "%d", fd);
 	for (i = 0; i < 2; i++) {
-		remove_fd_list(tested_gid[i], &fd, 1);
+		exc_gidmap_rem_cid(tested_gid[i], cid);
 	}
 
-	remove_gid_list(fd, tested_gid, 2);
+		exc_cidmap_rem_gid(cid, tested_gid[0]);
+		exc_cidmap_rem_gid(cid, tested_gid[1]);
 
 	for (i = 0; i < 2; i++) {
 		free(tested_gid[i]);
@@ -50,24 +48,9 @@ int test_gid_map()
 	}
 
 	size = 20;
-	find_gid_list(fd, tested_gid, &size);
-
-	for (i = 0; i < size; i++) {
-		printf("find_gid_list fd:%d, gid:%s.\n", fd, tested_gid[i]);
-		free(tested_gid[i]);
-	}
-
-	size = find_fd_list(gid1, tested_fd_list);
-
-	for (i = 0; i < size; i++) {
-		printf("find_fd_list gid:%s, fd:%d.\n", gid1, tested_fd_list[i]);
-	}
-
-	size = find_fd_list(gid2, tested_fd_list);
-
-	for (i = 0; i < size; i++) {
-		printf("find_fd_list gid:%s, fd:%d.\n", gid2, tested_fd_list[i]);
-	}
+	exc_cidmap_get_gid(cid, each_gid_print, cid);
+	exc_gidmap_get_cid(gid1, each_cid_print, gid1);
+	exc_gidmap_get_cid(gid2, each_cid_print, gid2);
 
 	destroy_gid_map();
 	return 0;
