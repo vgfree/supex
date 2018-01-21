@@ -107,3 +107,28 @@ void zmq_srv_exit(void)
 	zmq_ctx_destroy(g_ctx);
 }
 
+/*===============================================================================*/
+
+void    *g_notify = NULL;
+void zmq_cli_init(char *host, int port)
+{
+	assert(g_ctx);
+	void *sock = zmq_socket(g_ctx, ZMQ_PUSH);
+	char addr[64] = {};
+	sprintf(addr, "tcp://%s:%d", host, port);
+	//x_printf(D, "addr:%s.", addr);
+	int rc = zmq_connect(sock, addr);
+	assert(rc == 0);
+	g_notify = sock;
+	return;
+}
+
+void zmq_cli_exit(void)
+{
+	zmq_close(g_notify);
+}
+
+int zmq_cli_notify(zmq_msg_t *msg, int flags)
+{
+	return zmq_sendmsg(g_notify, msg, flags);
+}

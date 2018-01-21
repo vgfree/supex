@@ -30,3 +30,8 @@ void zmq_srv_start(void);
 
 void zmq_srv_exit(void);
 
+void zmq_cli_init(char *host, int port);
+
+void zmq_cli_exit(void);
+
+int zmq_cli_notify(zmq_msg_t *msg, int flags);

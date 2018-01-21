@@ -14,14 +14,14 @@ static void do_msg_for_each_fcb(int sockfd, int idx, void *usr)
 {
 	struct comm_message *msg = usr;
 	commmsg_sets(msg, sockfd, 0, PUSH_METHOD);
-	if (message_comm_io_send(msg) == -1) {
+	if (control_comm_io_send(msg) == -1) {
 		x_printf(E, "wrong msg, msg fd:%d.", msg->fd);
 	}
 }
 
 static int downstream_msg(struct comm_message *msg)
 {
-	int cnt = message_sockfd_manage_travel(do_msg_for_each_fcb, NULL, msg);
+	int cnt = control_sockfd_manage_travel(do_msg_for_each_fcb, NULL, msg);
 	x_printf(D, "core exchange node travel count:%d.", cnt);
 	return 0;
 }
@@ -36,7 +36,7 @@ static int pull_msg(struct comm_message *msg)
 		zmq_msg_t       part;
 		int             rc = zmq_msg_init(&part);
 		assert(rc == 0);
-		rc = message_zmq_io_recv(&part, 0);
+		rc = control_zmq_io_recv(&part, 0);
 		assert(rc != -1);
 
 		commmsg_frame_set(msg, i, zmq_msg_size(&part), zmq_msg_data(&part));
@@ -45,7 +45,7 @@ static int pull_msg(struct comm_message *msg)
 
 		zmq_msg_close(&part);
 
-		message_zmq_io_getsockopt(ZIO_RECV_TYPE, ZMQ_RCVMORE, &more, &more_size);
+		control_zmq_io_getsockopt(ZIO_RECV_TYPE, ZMQ_RCVMORE, &more, &more_size);
 		//x_printf(D, "more:%d more_size %ld.", more, more_size);
 		i++;
 	} while (more);

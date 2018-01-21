@@ -125,7 +125,11 @@ static int _handle_uid_message(struct comm_message *msg)
 	x_printf(D, "uid:%s.", uid);
 
 	char cid[MAX_CID_SIZE] = {};
-	int ok = exc_uidmap_get_cid(uid, cid);
+	int err = exc_uidmap_get_cid(uid, cid);
+	if (err) {
+		x_printf(E, "send uid message failed!");
+		return -1;
+	}
 
 	int cfd = atoi(cid);
 	if (cfd != -1) {
@@ -285,7 +289,7 @@ static int _handle_uid_map(struct comm_message *msg)
 	memcpy(uid, frame, fsz);
 
 	int     fd = atoi(cfd);
-	snprintf(cid, sizeof(cid), "%s", fd);
+	snprintf(cid, sizeof(cid), "%d", fd);
 	exc_uidmap_set_cid(uid, cid);
 	exc_cidmap_set_uid(cid, uid);
 	return 0;

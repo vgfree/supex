@@ -17,18 +17,16 @@ function app_init()
 	redis_api.init( )
 end
 
-local ctx = zmq.init(1)
-
 function app_call(tab)
+	only.log('I', "%s", tab[1])
 	if tab[1] == 'status' then	
 		setting.loginServerInfoSave(tab)
+		return
 	end
 	if tab[1] == 'setting' then
 		setting.appServerInfoSave(tab)
-		local s = ctx:socket(zmq.PUSH)
-		s:connect("tcp://127.0.0.1:10000")
-		s:send_table(tab)
-		s:close()
+		app_lua_send_message(tab)
+		return
 	end
 	if tab[1] == 'looking' then
 		looking.appServerInfoLoad(tab)		
