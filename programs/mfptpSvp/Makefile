@@ -9,7 +9,7 @@ INC_DIR=-I/usr/local/include/luajit-2.0 -I../../lib/libev -I../../lib/json-c \
 	-I../../lib/libevcs/include \
 	-I../../lib/libevcs/include/engine \
 	-I../../lib/libevcs/include/frame \
-	-I../../lib/leveldb-1.20/include \
+	-I../../lib/leveldb/include \
 	-I../../lib/libcomm \
 	-I./src -I../
 

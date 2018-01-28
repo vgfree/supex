@@ -65,7 +65,7 @@ CfgFile=defaultstyle.cfg #the default style for your adjustion formatting
 
 declare -a UnchangeFile UnchangeDir
 UnchangeFile=($CfgFile adjustformat.sh)
-UnchangeDir=(cJSON http-parser libzdb hiredis graphlabapi json-c FLIF sqlite-autoconf-3090200 leveldb-1.20  libev libkv zeromq-4.2.1 luasocket lua-cjson-2.1.0 Lua-bit32 lua-zlib libconhash luafilesystem luasql-master)
+UnchangeDir=(cJSON http-parser libzdb hiredis graphlabapi json-c FLIF sqlite-autoconf-3090200 leveldb  libev libkv zeromq-4.2.1 luasocket lua-cjson-2.1.0 Lua-bit32 lua-zlib libconhash luafilesystem luasql-master)
 
 
 StartAdjust()

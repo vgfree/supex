@@ -10,7 +10,7 @@ INC_DIR=-I/usr/local/include/luajit-2.0 -I../../lib/libev -I../../lib/json-c \
 	-I../../lib/hiredis \
 	-I../../lib/zookeeper-3.4.6/src/c/include \
 	-I../../lib/zookeeper-3.4.6/src/c/generated \
-	-I../../lib/leveldb-1.20/include \
+	-I../../lib/leveldb/include \
 	-I../../lib/libkv/src
 
 LIB_DIR=-L/usr/local/lib -L../../lib

@@ -91,8 +91,8 @@ libsnappy.a:
 	mv $(LIB_DIR)/snappy-1.1.1/.libs/$@ $(LIB_DIR)
 
 libleveldb.a:
-	$(MAKE) -j8 -C $(LIB_DIR)/leveldb-1.20
-	mv $(LIB_DIR)/leveldb-1.20/out-static/$@ $(LIB_DIR)
+	$(MAKE) -j8 -C $(LIB_DIR)/leveldb
+	mv $(LIB_DIR)/leveldb/out-static/$@ $(LIB_DIR)
 
 libucmq.a:
 	$(MAKE) -C $(LIB_DIR)/libucmq
@@ -147,7 +147,7 @@ clean:
 	-if [ -f json-c/Makefile ];then cd ./json-c && make distclean; fi
 	-if [ -d ./snappy-1.1.1 ];then rm -rf ./snappy-1.1.1; fi
 	-if [ -f sqlite-autoconf-3090200/Makefile ];then cd ./sqlite-autoconf-3090200 && make distclean; fi
-	$(MAKE) -C $(LIB_DIR)/leveldb-1.20 clean
+	$(MAKE) -C $(LIB_DIR)/leveldb clean
 	$(MAKE) -C $(LIB_DIR)/cJSON clean
 	$(MAKE) -C $(LIB_DIR)/libucmq clean
 	$(MAKE) -C $(LIB_DIR)/libtopo clean
