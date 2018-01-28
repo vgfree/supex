@@ -1,5 +1,6 @@
 #pragma once
 #include <stdint.h>
+#include "exc_comm_def.h"
 
 void exc_cidmap_init(void);
 
@@ -18,3 +19,4 @@ int exc_cidmap_get_gid(char cid[MAX_CID_SIZE], CID_FOR_EACH_GID fcb, void *usr);
 int exc_cidmap_add_gid(char cid[MAX_CID_SIZE], char gid[MAX_GID_SIZE]);
 
 int exc_cidmap_rem_gid(char cid[MAX_CID_SIZE], char gid[MAX_GID_SIZE]);
+

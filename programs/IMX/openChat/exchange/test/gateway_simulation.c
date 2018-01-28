@@ -22,7 +22,7 @@ int test_simulate_gateway()
 	int                     socket_fd = socket(AF_INET, SOCK_STREAM, 0);
 
 	if (socket_fd < 0) {
-		printf("message_gateway: create socket error\n");
+		printf("stream_gateway: create socket error\n");
 		return -1;
 	}
 
@@ -33,7 +33,7 @@ int test_simulate_gateway()
 	err = connect(socket_fd, (struct sockaddr *)&server_addr, sizeof(struct sockaddr));
 
 	if (err == 0) {
-		printf("message_gateway: connect to server success.\n start to send login login_authentication_package------------\n");
+		printf("stream_gateway: connect to server success.\n start to send login login_authentication_package------------\n");
 		write(socket_fd, login_authentication_package, 17);
 		sleep(10);
 		printf("start to send data. \n");

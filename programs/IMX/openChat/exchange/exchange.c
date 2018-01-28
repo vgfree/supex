@@ -1,6 +1,7 @@
 #include <signal.h>
 #include <stdlib.h>
 
+#include "libkv.h"
 #include "libmini.h"
 #include "iniparser.h"
 #include "comm_api.h"
@@ -13,27 +14,26 @@
 #include "exc_uid_map.h"
 #include "exc_gid_map.h"
 
-
 static int _do_init(void)
 {
 	/*get config*/
-	dictionary    *config = iniparser_load(CONFIG);
-	char                    *clientHost = iniparser_getstring(config, LISTEN_CLIENT_HOST, NULL);
-	char                    *clientPort = iniparser_getstring(config, LISTEN_CLIENT_PORT, NULL);
-	x_printf(D, "ListenClientHost = %s, ListenClientPort = %s", clientHost, clientPort);
-	
-	char    *messageHost = iniparser_getstring(config, CONNECT_MESSAGEGATEWAY_HOST, NULL);
-	char    *messagePort = iniparser_getstring(config, CONNECT_MESSAGEGATEWAY_PORT, NULL);
-	x_printf(D, "messageHost:%s, messagePort:%s.", messageHost, messagePort);
+	dictionary      *config = iniparser_load(CONFIG);
+	const char            *clientHost = iniparser_getstring(config, BIND_CLIENT_STREAM_HOST, NULL);
+	const char            *clientPort = iniparser_getstring(config, BIND_CLIENT_STREAM_PORT, NULL);
 
-	char    *controlHost = iniparser_getstring(config, CONNECT_SETTINGSERVER_HOST, NULL);
-	char    *controlPort = iniparser_getstring(config, CONNECT_SETTINGSERVER_PORT, NULL);
-	x_printf(D, "SettingHost:%s, SettingPort:%s.", controlHost, controlPort);
-	
-	char    *loginHost = iniparser_getstring(config, CONNECT_LOGINSERVER_HOST, NULL);
-	char    *loginPort = iniparser_getstring(config, CONNECT_LOGINSERVER_PORT, NULL);
-	x_printf(D, "loginHost:%s, loginPort:%s.", loginHost, loginPort);
+	x_printf(D, "BindClientStreamHost:%s, BindClientStreamPort:%s", clientHost, clientPort);
 
+	const char    *statusHost = iniparser_getstring(config, CONN_GATEWAY_STATUS_HOST, NULL);
+	const char    *statusPort = iniparser_getstring(config, CONN_GATEWAY_STATUS_PORT, NULL);
+	x_printf(D, "ConnGatewayStatusHost:%s, ConnGatewayStatusPort:%s.", statusHost, statusPort);
+
+	const char    *streamHost = iniparser_getstring(config, CONN_GATEWAY_STREAM_HOST, NULL);
+	const char    *streamPort = iniparser_getstring(config, CONN_GATEWAY_STREAM_PORT, NULL);
+	x_printf(D, "ConnGatewayStreamHost:%s, ConnGatewayStreamPort:%s.", streamHost, streamPort);
+
+	const char    *manageHost = iniparser_getstring(config, CONN_GATEWAY_MANAGE_HOST, NULL);
+	const char    *managePort = iniparser_getstring(config, CONN_GATEWAY_MANAGE_PORT, NULL);
+	x_printf(D, "ConnGatewayManageHost:%s, ConnGatewayManagePort:%s.", manageHost, managePort);
 
 	kv_init();
 	/*space init*/
@@ -53,82 +53,43 @@ static int _do_init(void)
 	assert(commctx);
 	g_serv_info.commctx = commctx;
 
-	/*init client event*/
-	struct comm_cbinfo clientCB = {};
-	clientCB.fcb = exc_event_notify_from_client;
-	int retval = commapi_socket(commctx, clientHost, clientPort, &clientCB, COMM_BIND);
-	if (retval == -1) {
-		x_printf(E, "can't bind client socket, ip:%s, port:%s.", clientHost, clientPort);
+	int                     sktfd = 0;
+	struct comm_cbinfo      cbinfo = {};
+	/*init streamGetway event*/
+	cbinfo.fcb = exc_event_notify_from_stream;
+	g_serv_info.stream_gateway_fd = sktfd = commapi_socket(commctx, streamHost, streamPort, &cbinfo, COMM_CONNECT);
+
+	if (sktfd <= 0) {
+		x_printf(E, "connect streamGateway %s:%s failed.", streamHost, streamPort);
 		return -1;
 	}
 
-	/*init messageGetway event*/
-	int msg_fd = 0;
-	if (messageHost) {
-		struct comm_cbinfo MGCB = {};
-		MGCB.fcb = exc_event_notify_from_message;
-		g_serv_info.message_gateway_fd = msg_fd = commapi_socket(commctx, messageHost, messagePort, &MGCB, COMM_CONNECT);
-		if (msg_fd <= 0) {
-			x_printf(E, "connect message gateway failed.");
-			return -1;
-		}
+	/*init manageGateway event*/
+	cbinfo.fcb = exc_event_notify_from_manage;
+	g_serv_info.manage_gateway_fd = sktfd = commapi_socket(commctx, manageHost, managePort, &cbinfo, COMM_CONNECT);
 
-		struct fd_info des = {};
-		des.status = 1;
-		des.type = MESSAGE_ROUTER;
-		make_uuid(des.uuid);
-		fdman_slot_set(msg_fd, &des);
-
-		struct fd_node node = {};
-		node.fd = msg_fd;
-		node.status = 1;
-		fdman_list_add(MESSAGE_ROUTER, &node);
+	if (sktfd <= 0) {
+		x_printf(E, "connect manageGateway %s:%s failed.", manageHost, managePort);
+		return -1;
 	}
 
-	/*init controlGateway event*/
-	int ctl_fd = 0;
-	if (controlHost) {
-		struct comm_cbinfo controlCB = {};
-		controlCB.fcb = exc_event_notify_from_control;
-		g_serv_info.control_gateway_fd = ctl_fd = commapi_socket(commctx, controlHost, controlPort, &controlCB, COMM_CONNECT);
-		if (ctl_fd <= 0) {
-			x_printf(E, "connect control gateway failed.");
-			return -1;
-		}
+	/*init statusGateway event*/
+	cbinfo.fcb = exc_event_notify_from_status;
+	g_serv_info.status_gateway_fd = sktfd = commapi_socket(commctx, statusHost, statusPort, &cbinfo, COMM_CONNECT);
 
-		struct fd_info des = {};
-		des.status = 1;
-		des.type = CONTROL_ROUTER;
-		make_uuid(des.uuid);
-		fdman_slot_set(ctl_fd, &des);
-
-		struct fd_node node = {};
-		node.fd = ctl_fd;
-		node.status = 1;
-		fdman_list_add(CONTROL_ROUTER, &node);
+	if (sktfd <= 0) {
+		x_printf(E, "connect statusGateway %s:%s failed.", statusHost, statusPort);
+		return -1;
 	}
 
-	/*init loginGateway event*/
-	int gin_fd = 0;
-	if (loginHost) {
-		struct comm_cbinfo loginCB = {};
-		loginCB.fcb = exc_event_notify_from_login;
-		g_serv_info.login_gateway_fd = gin_fd = commapi_socket(commctx, loginHost, loginPort, &loginCB, COMM_CONNECT);
-		if (gin_fd <= 0) {
-			x_printf(E, "connect login gateway failed.");
-			return -1;
-		}
-		
-		struct fd_info des = {};
-		des.status = 1;
-		des.type = LOGIN_ROUTER;
-		make_uuid(des.uuid);
-		fdman_slot_set(gin_fd, &des);
+	/*init client event*/
+	/*注意:所有gateway启动完毕后再启动exchange*/
+	cbinfo.fcb = exc_event_notify_from_client;
+	int retval = commapi_socket(commctx, clientHost, clientPort, &cbinfo, COMM_BIND);
 
-		struct fd_node node = {};
-		node.fd = gin_fd;
-		node.status = 1;
-		fdman_list_add(LOGIN_ROUTER, &node);
+	if (retval == -1) {
+		x_printf(E, "can't bind client socket, ip:%s, port:%s.", clientHost, clientPort);
+		return -1;
 	}
 
 	/*init over*/
@@ -155,20 +116,21 @@ void exchange_work(void)
 
 	/*work push*/
 	int err = pthread_create(&tid1, NULL, _do_work, NULL);
+
 	if (err != 0) {
 		x_printf(E, "can't create exchange thread:%s.", strerror(err));
 	}
+
 	x_printf(I, "exchange work!\n");
-	return;
 }
 
 void exchange_wait(void)
 {
 	/*over*/
 	void *status = NULL;
+
 	pthread_join(tid1, status);
 }
-
 
 void exchange_stop(void)
 {
@@ -181,3 +143,4 @@ void exchange_stop(void)
 	exc_gidmap_free();
 	kv_destroy();
 }
+

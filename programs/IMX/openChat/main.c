@@ -1,7 +1,7 @@
 #include "libmini.h"
-#include "gateway/message/message_gateway.h"
-#include "gateway/login/login_gateway.h"
-#include "gateway/control/control_gateway.h"
+#include "gateway/stream/stream_gateway.h"
+#include "gateway/status/status_gateway.h"
+#include "gateway/manage/manage_gateway.h"
 #include "exchange/exchange.h"
 
 int main(int argc, char *argv[])
@@ -9,20 +9,20 @@ int main(int argc, char *argv[])
 	/*init log*/
 	SLogOpen("openChat.log", SLogIntegerToLevel(0));
 
+	status_gateway_work();
+	stream_gateway_work();
+	manage_gateway_work();
 	exchange_work();
-	message_gateway_work();
-	login_gateway_work();
-	control_gateway_work();
 
 	exchange_wait();
-	message_gateway_wait();
-	login_gateway_wait();
-	control_gateway_wait();
+	stream_gateway_wait();
+	status_gateway_wait();
+	manage_gateway_wait();
 
 	exchange_stop();
-	message_gateway_stop();
-	login_gateway_stop();
-	control_gateway_stop();
+	stream_gateway_stop();
+	status_gateway_stop();
+	manage_gateway_stop();
 	return 0;
 }
 

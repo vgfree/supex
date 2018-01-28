@@ -3,11 +3,11 @@
 #include "libmini.h"
 #include "exc_sockfd_manager.h"
 
-static struct fd_list   g_list;
+static struct fd_list g_list;
 
 int fdman_list_init(void)
 {
-	for (int i = 0; i < MAX_CLASSIFICATION; i++) {
+	for (int i = 0; i < MAX_ROUTER_KIND; i++) {
 		g_list.head[i].size = 0;
 		g_list.head[i].next = NULL;
 	}
@@ -17,7 +17,7 @@ int fdman_list_init(void)
 
 int fdman_list_free(void)
 {
-	for (int i = 0; i < MAX_CLASSIFICATION; i++) {
+	for (int i = 0; i < MAX_ROUTER_KIND; i++) {
 		struct fd_node  *curr;
 		struct fd_node  *next;
 		curr = g_list.head[i].next;
@@ -55,8 +55,9 @@ int fdman_list_del(const enum router_type type, const int fd)
 
 int fdman_list_add(const enum router_type type, const struct fd_node *node)
 {
-	struct fd_node *curr = g_list.head[type].next;
-	struct fd_node *news = (struct fd_node *)malloc(sizeof(struct fd_node));
+	struct fd_node  *curr = g_list.head[type].next;
+	struct fd_node  *news = (struct fd_node *)malloc(sizeof(struct fd_node));
+
 	news->next = NULL;
 	news->fd = node->fd;
 	news->status = node->status;
@@ -67,26 +68,29 @@ int fdman_list_add(const enum router_type type, const struct fd_node *node)
 		while (curr->next) {
 			curr = curr->next;
 		}
+
 		curr->next = news;
 	}
+
 	return 0;
 }
 
 int fdman_list_top(const enum router_type type, struct fd_node *node)
 {
 	struct fd_node *curr = g_list.head[type].next;
+
 	if (curr) {
 		*node = *curr;
 		return 0;
 	}
+
 	return -1;
 }
-
 
 /*==========================================================*/
 
 #include "exc_comm_def.h"
-static struct fd_slot  g_slot;
+static struct fd_slot g_slot;
 
 int fdman_slot_init(void)
 {
@@ -130,6 +134,7 @@ int fdman_slot_set(const int fd, const struct fd_info *des)
 int fdman_slot_del(const int fd)
 {
 	struct fd_info *des = &(g_slot.info[fd]);
+
 	assert(des->status == 1);
 
 	memset(des, 0, sizeof(struct fd_info));
@@ -142,3 +147,4 @@ int fdman_slot_get(const int fd, struct fd_info *des)
 	memcpy(des, &(g_slot.info[fd]), sizeof(struct fd_info));
 	return 0;
 }
+

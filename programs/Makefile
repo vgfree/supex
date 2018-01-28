@@ -1,6 +1,6 @@
 libIMX := libappsrv.a
-openIMX := IMX_openChat IMX_userInfoApi IMX_appServer IMX_appClient
-IMX:$(libIMX) $(openIMX)
+openIMX := IMX_openChat IMX_usrApi IMX_appSrv IMX_appCli
+IMX:$(openIMX)
 
 libappsrv.a:
 	$(MAKE) -C ./IMX/libappsrv lib
@@ -13,31 +13,27 @@ IMX_openChat:
 	$(MAKE) -C ./IMX/openChat MAIN_APP_SERV=openChat
 	@echo -e $(GREEN)"【"$(YELLOW) $@ $(GREEN)"】"$(RED)"\n-->OK!\n"$(NONE)
 
-IMX_userInfoApi:
-	$(MAKE) -C ./IMX/userInfoApi MAIN_APP_SERV=userInfoApi
+IMX_usrApi:
+	$(MAKE) -C ./IMX/usrApi MAIN_APP_SERV=usrApi
 	@echo -e $(GREEN)"【"$(YELLOW) $@ $(GREEN)"】"$(RED)"\n-->OK!\n"$(NONE)
 
-IMX_appServer:
-	$(MAKE) -C ./IMX/appServer MAIN_APP_SERV=appServer
+IMX_appSrv:
+	$(MAKE) -C ./IMX/appSrv MAIN_APP_SERV=appSrv
 	@echo -e $(GREEN)"【"$(YELLOW) $@ $(GREEN)"】"$(RED)"\n-->OK!\n"$(NONE)
 
-IMX_appClient:
-	$(MAKE) -C ./IMX/appClient MAIN_APP_SERV=appClient
+IMX_appCli:
+	$(MAKE) -C ./IMX/appCli MAIN_APP_SERV=appCli
 	@echo -e $(GREEN)"【"$(YELLOW) $@ $(GREEN)"】"$(RED)"\n-->OK!\n"$(NONE)
 
 
 clean:
 	$(MAKE) -C ./IMX/openChat clean
-	$(MAKE) -C ./IMX/userInfoApi clean
-	$(MAKE) -C ./IMX/appServer clean
-	$(MAKE) -C ./IMX/appClient clean
-	$(MAKE) -C ./IMX/libappsrv clean
-	rm -rf ./IMX/*.a
+	$(MAKE) -C ./IMX/usrApi clean
+	$(MAKE) -C ./IMX/appSrv clean
+	$(MAKE) -C ./IMX/appCli clean
 
 distclean:
 	$(MAKE) -C ./IMX/openChat distclean
-	$(MAKE) -C ./IMX/userInfoApi distclean
-	$(MAKE) -C ./IMX/appServer distclean
-	$(MAKE) -C ./IMX/appClient distclean
-	$(MAKE) -C ./IMX/libappsrv distclean
-	rm -rf ./IMX/*.a
+	$(MAKE) -C ./IMX/usrApi distclean
+	$(MAKE) -C ./IMX/appSrv distclean
+	$(MAKE) -C ./IMX/appCli distclean

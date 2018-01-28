@@ -19,7 +19,7 @@ int test_gid_map()
 	char    *gid1 = "12345";
 	char    *gid2 = "23456";
 	int     fd = 2;
-	char *cid = "2";
+	char    *cid = "2";
 	exc_cidmap_add_gid(cid, gid1);
 	exc_cidmap_add_gid(cid, gid2);
 	exc_gidmap_add_cid(gid1, cid);
@@ -33,14 +33,15 @@ int test_gid_map()
 
 	printf("remove fd:%d.\n", fd);
 
-		char cid[MAX_CID_SIZE] = {};
-		snprintf(cid, sizeof(cid), "%d", fd);
+	char cid[MAX_CID_SIZE] = {};
+	snprintf(cid, sizeof(cid), "%d", fd);
+
 	for (i = 0; i < 2; i++) {
 		exc_gidmap_rem_cid(tested_gid[i], cid);
 	}
 
-		exc_cidmap_rem_gid(cid, tested_gid[0]);
-		exc_cidmap_rem_gid(cid, tested_gid[1]);
+	exc_cidmap_rem_gid(cid, tested_gid[0]);
+	exc_cidmap_rem_gid(cid, tested_gid[1]);
 
 	for (i = 0; i < 2; i++) {
 		free(tested_gid[i]);

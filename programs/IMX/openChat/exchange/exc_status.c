@@ -1,15 +1,16 @@
 #include "libmini.h"
 
 #include "exc_comm_def.h"
+#include "exc_cid_map.h"
 #include "exc_gid_map.h"
 #include "exc_uid_map.h"
 #include "exc_message_dispatch.h"
 #include "exc_status.h"
-#include "comm_print.h"
 
 static void each_gid_fcb(char gid[MAX_GID_SIZE], size_t idx, void *usr)
 {
 	char *cid = usr;
+
 	exc_cidmap_rem_gid(cid, gid);
 	exc_gidmap_rem_cid(gid, cid);
 }
@@ -17,9 +18,10 @@ static void each_gid_fcb(char gid[MAX_GID_SIZE], size_t idx, void *usr)
 int erase_client(int fd)
 {
 	char cid[MAX_CID_SIZE] = {};
+
 	snprintf(cid, sizeof(cid), "%d", fd);
 
-	char    uid[MAX_UID_SIZE] = {};
+	char uid[MAX_UID_SIZE] = {};
 	exc_cidmap_get_uid(cid, uid);
 
 	exc_uidmap_del_cid(uid);
@@ -32,11 +34,12 @@ int erase_client(int fd)
 void send_status_msg(int clientfd, int status)
 {
 	char cid[MAX_CID_SIZE] = {};
+
 	get_cid(cid, clientfd);
 
 	struct comm_message msg = {};
 	commmsg_make(&msg, DEFAULT_MSG_SIZE);
-	commmsg_sets(&msg, g_serv_info.login_gateway_fd, 0, PUSH_METHOD);
+	commmsg_sets(&msg, g_serv_info.status_gateway_fd, 0, PUSH_METHOD);
 
 	/*[status] | [closed/connected] | [cid]*/
 	commmsg_frame_set(&msg, 0, strlen(cid), cid);
@@ -65,7 +68,12 @@ void send_status_msg(int clientfd, int status)
 	x_printf(D, "-------------------------------");
 #endif
 
-	commapi_send(g_serv_info.commctx, &msg);
+	if (g_serv_info.status_gateway_fd > 0) {
+		commapi_send(g_serv_info.commctx, &msg);
+	} else {
+		x_printf(E, "g_serv_info.status_gateway_fd = %d", g_serv_info.status_gateway_fd);
+	}
+
 	commmsg_free(&msg);
 }
 

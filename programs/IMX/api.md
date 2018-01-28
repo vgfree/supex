@@ -1,4 +1,4 @@
-##appServer:
+##appSrv:
 #登入接口
 	请求==>'{"action":"login","accountID":"??????"}'
 	返回==>'{"action":"loginRsp","ERRORCODE":"0","RESULT":"success"}'

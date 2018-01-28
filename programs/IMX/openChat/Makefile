@@ -1,12 +1,11 @@
 INC_DIR=-I$(HOME_PATH)/lib/libcomm/ \
 	-I$(HOME_PATH)/lib/iniparser/src \
-	-I$(HOME_PATH)/lib/zeromq-4.2.1/include/ \
 	-I$(HOME_PATH)/lib/libmini/include \
 	-I$(HOME_PATH)/lib/libkv/release/ \
 	-I./
 LIB_DIR=-L/usr/local/lib -L$(HOME_PATH)/lib
 
-INC_LIBS=-liniparser -lcomm -lzmq -lkv -lleveldb -lmini -lstdc++ -luuid -lpthread -ldl -lm
+INC_LIBS=-liniparser -lcomm -lkv -lleveldb -lmini -lstdc++ -luuid -lpthread -ldl -lm
 
 #[=========>MARK<=========]#
 MAIN_APP_SERV ?= openChat
@@ -29,18 +28,15 @@ JOB += $(SRV)
 OBJ = $(addprefix $(BIN)/, \
       main.o \
       \
-      message_zmq_io.o \
-      message_comm_io.o \
-      message_gateway.o \
-      message_sockfd_manage.o \
-      login_zmq_io.o \
-      login_comm_io.o \
-      login_gateway.o \
-      login_sockfd_manage.o \
-      control_zmq_io.o \
-      control_comm_io.o \
-      control_gateway.o \
-      control_sockfd_manage.o \
+      stream_gateway.o \
+      stream_i_wrap.o \
+      stream_o_wrap.o \
+      status_gateway.o \
+      status_i_wrap.o \
+      status_o_wrap.o \
+      manage_gateway.o \
+      manage_i_wrap.o \
+      manage_o_wrap.o \
       \
       exchange.o \
       exc_cid_map.o \
@@ -69,13 +65,13 @@ $(BIN)/main.o : main.c
 $(BIN)/%.o : exchange/%.c
 	@-if [ ! -d $(BIN) ];then mkdir $(BIN); fi
 	gcc $(CFLAGS) $(INC_DIR) $(LIB_DIR) $(LIBS) -c $< -o $@
-$(BIN)/%.o : gateway/message/%.c
+$(BIN)/%.o : gateway/stream/%.c
 	@-if [ ! -d $(BIN) ];then mkdir $(BIN); fi
 	gcc $(CFLAGS) $(INC_DIR) $(LIB_DIR) $(LIBS) -c $< -o $@
-$(BIN)/%.o : gateway/login/%.c
+$(BIN)/%.o : gateway/status/%.c
 	@-if [ ! -d $(BIN) ];then mkdir $(BIN); fi
 	gcc $(CFLAGS) $(INC_DIR) $(LIB_DIR) $(LIBS) -c $< -o $@
-$(BIN)/%.o : gateway/control/%.c
+$(BIN)/%.o : gateway/manage/%.c
 	@-if [ ! -d $(BIN) ];then mkdir $(BIN); fi
 	gcc $(CFLAGS) $(INC_DIR) $(LIB_DIR) $(LIBS) -c $< -o $@
 
