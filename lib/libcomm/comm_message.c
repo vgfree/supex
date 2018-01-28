@@ -173,3 +173,22 @@ int commmsg_frame_del(struct comm_message *msg, int index, int nframe)
 	msg->package.frames -= nframe;
 	return 0;
 }
+
+void commmsg_print(struct comm_message *message)
+{
+	int i = 0;
+
+	for (; i < commmsg_frame_count(message); i++) {
+		int     fsize = 0;
+		char    *frame = commmsg_frame_get(message, i, &fsize);
+
+		char *tmp = malloc(sizeof(char) * (fsize + 1));
+		memcpy(tmp, frame, fsize);
+		tmp[fsize] = '\0';
+		printf("%d frame, data:%s\n", i, tmp);
+		free(tmp);
+	}
+
+	printf("message type:%d.\n", message->ptype);
+}
+

@@ -11,19 +11,16 @@ static void *_start_main_loop(void *usr)
 
 	assert(commctx);
 
-	/* 等待主线程将状态设置为COMM_STAT_RUN，才被唤醒继续执行以下代码 */
-	commlock_wait(&commctx->statlock, false, -1);
-	assert(commctx->stat == COMM_STAT_RUN || commctx->stat == COMM_STAT_STOP);
+	/* 状态设置为COMM_STAT_RUN，唤醒等待线程 */
+	commlock_lock(&commctx->statlock);
+	commctx->stat = COMM_STAT_RUN;
+	commlock_wake(&commctx->statlock);
+	commlock_unlock(&commctx->statlock);
 
 	do {
 		/* 线程状态为STOP的时候则将状态设置为NONE，返回真，则代表设置成功，退出循环 */
 		if (unlikely(commctx->stat == COMM_STAT_STOP)) {
-			int old = ATOMIC_SWAP(&commctx->stat, COMM_STAT_NONE);
-
-			if (likely(old != COMM_STAT_NONE)) {
-				commlock_wake(&commctx->statlock, false);
-			}
-
+			ATOMIC_SET(&commctx->stat, COMM_STAT_NONE);
 			break;
 		}
 
@@ -60,6 +57,15 @@ struct comm_context *commapi_ctx_create(void)
 		goto error;
 	}
 
+	commlock_lock(&commctx->statlock);
+	do {
+		if (commctx->stat == COMM_STAT_RUN) {
+			break;
+		}
+		commlock_wait(&commctx->statlock, -1);
+	} while (1);
+	commlock_unlock(&commctx->statlock);
+
 	return commctx;
 
 error:
@@ -77,15 +83,6 @@ error:
 void commapi_ctx_destroy(struct comm_context *commctx)
 {
 	if (commctx) {
-		/* 在子线程还没被唤醒的时候就调用销毁函数则需要先唤醒子线程 */
-		if (unlikely(commctx->stat == COMM_STAT_INIT)) {
-			int old = ATOMIC_SWAP(&commctx->stat, COMM_STAT_RUN);
-
-			if (likely(old != COMM_STAT_RUN)) {
-				commlock_wake(&commctx->statlock, false);
-			}
-		}
-
 		ATOMIC_SET(&commctx->stat, COMM_STAT_STOP);
 
 		/* 等待子线程退出然后再继续销毁数据 */
@@ -142,15 +139,6 @@ int commapi_socket(struct comm_context *commctx, const char *host, const char *p
 		rsocket_close(&commtcp.rsocket);
 		loger("add socket fd to monitor failed\n");
 		return -1;
-	}
-
-	/* 将状态值设置为COMM_STAT_RUN并唤醒等待的线程 */
-	if (commctx->stat == COMM_STAT_INIT) {
-		int old = ATOMIC_SWAP(&commctx->stat, COMM_STAT_RUN);
-
-		if (likely(old != COMM_STAT_RUN)) {
-			commlock_wake(&commctx->statlock, false);
-		}
 	}
 
 	return commtcp.rsocket.sktfd;

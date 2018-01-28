@@ -8,10 +8,10 @@ void commtcp_set_portinfo(struct comm_tcp *commtcp, bool local, const char *host
 {
 	if (local) {
 		memcpy(commtcp->localport, port, strlen(port));
-		memcpy(commtcp->localaddr, host, strlen(host));
+		memcpy(commtcp->localhost, host, strlen(host));
 	} else {
 		memcpy(commtcp->peerport, port, strlen(port));
-		memcpy(commtcp->peeraddr, host, strlen(host));
+		memcpy(commtcp->peerhost, host, strlen(host));
 	}
 }
 
@@ -22,7 +22,7 @@ bool commtcp_get_portinfo(struct comm_tcp *commtcp, bool local, char *host, char
 
 	struct sockaddr sockaddr = {};
 	socklen_t       len = sizeof(sockaddr);
-	size_t          plen = sizeof(commtcp->localaddr);
+	size_t          plen = sizeof(commtcp->localhost);
 
 	if (local) {
 		if (getsockname(commtcp->rsocket.sktfd, &sockaddr, &len) != 0) {

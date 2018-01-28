@@ -28,6 +28,8 @@ JOB += $(SRV)
 OBJ = $(addprefix $(BIN)/, \
       main.o \
       \
+      manage_skts.o \
+      \
       stream_gateway.o \
       stream_i_wrap.o \
       stream_o_wrap.o \
@@ -60,6 +62,9 @@ $(SRV):$(OBJ)
 
 
 $(BIN)/main.o : main.c
+	@-if [ ! -d $(BIN) ];then mkdir $(BIN); fi
+	gcc $(CFLAGS) $(INC_DIR) $(LIB_DIR) $(LIBS) -c $< -o $@
+$(BIN)/manage_skts.o : gateway/manage_skts.c
 	@-if [ ! -d $(BIN) ];then mkdir $(BIN); fi
 	gcc $(CFLAGS) $(INC_DIR) $(LIB_DIR) $(LIBS) -c $< -o $@
 $(BIN)/%.o : exchange/%.c

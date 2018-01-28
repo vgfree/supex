@@ -546,8 +546,8 @@ static int commevts_accept(struct comm_evts *commevts, struct bindfd_info *bindf
 			commtcp.rsocket.sktstat = RSOCKET_JARLESS;/*如果不设,读写操作会失败.*/
 			commtcp.type = COMM_ACCEPT;
 
-			assert(commtcp_get_portinfo(&commtcp, true, commtcp.localaddr, commtcp.localport));
-			assert(commtcp_get_portinfo(&commtcp, false, commtcp.peeraddr, commtcp.peerport));
+			assert(commtcp_get_portinfo(&commtcp, true, commtcp.localhost, commtcp.localport));
+			assert(commtcp_get_portinfo(&commtcp, false, commtcp.peerhost, commtcp.peerport));
 
 			bool ok = commevts_socket(commevts, &commtcp, &bindfd->cbinfo);
 
@@ -647,7 +647,7 @@ static void do_work_step(struct comm_evts *commevts, int fd)
 			int workstep = bindfd->workstep;
 
 			if (bindfd->cbinfo.fcb) {
-				bindfd->cbinfo.fcb(commevts->commctx, bindfd->commtcp.rsocket.sktfd, bindfd->workstep, bindfd->cbinfo.usr);
+				//bindfd->cbinfo.fcb(commevts->commctx, bindfd->commtcp.rsocket.sktfd, bindfd->workstep, bindfd->cbinfo.usr);
 			}
 			switch (workstep) {
 				case STEP_INIT:
@@ -728,17 +728,18 @@ void commevts_once(struct comm_evts *commevts)
 
 				if (fhand == commevts->cmdspipe.rfd) {
 					struct connfd_info *connfd = commevts->connfd[fd];
-					if (connfd && (connfd->commtcp.type == COMM_CONNECT)
-							&& (connfd->workstep == STEP_INIT)) {
-						if (unlikely(rsocket_connect(&connfd->commtcp.rsocket))) {
-							loger("connect socket failed\n");
-							connfd->workstep = STEP_WAIT;
-						} else {
-							connfd->workstep = STEP_INIT;
+					if (connfd) {
+						if ((connfd->commtcp.type == COMM_CONNECT)
+								&& (connfd->workstep == STEP_INIT)) {
+							if (unlikely(rsocket_connect(&connfd->commtcp.rsocket))) {
+								loger("connect socket failed\n");
+								connfd->workstep = STEP_WAIT;
+							} else {
+								connfd->workstep = STEP_INIT;
+							}
+							assert(commtcp_get_portinfo(&connfd->commtcp, true, connfd->commtcp.localhost, connfd->commtcp.localport));
 						}
-						assert(commtcp_get_portinfo(&connfd->commtcp, true, connfd->commtcp.localaddr, connfd->commtcp.localport));
 					}
-
 					do_work_step(commevts, fd);
 				}
 

@@ -64,16 +64,9 @@ static void _fill_absolute_time(struct timespec *tmspec, long value)
 	tmspec->tv_nsec = (long)((value % 1000) * 1000000);
 }
 
-bool commlock_wait(struct comm_lock *commlock, bool locked, int timeout)
+bool commlock_wait(struct comm_lock *commlock, int timeout)
 {
 	assert(commlock && commlock->init);
-
-	if (!locked) {
-		/* 调用此函数之前此锁未被调用该函数的函数锁住 */
-		if (pthread_mutex_lock(&commlock->mutex) == -1) {
-			return false;
-		}
-	}
 
 	pthread_cleanup_push(__pthread_exit_todo, &commlock->mutex);
 
@@ -88,30 +81,15 @@ bool commlock_wait(struct comm_lock *commlock, bool locked, int timeout)
 
 	pthread_cleanup_pop(0);
 
-	if (!locked) {
-		pthread_mutex_unlock(&commlock->mutex);
-	}
-
 	return true;
 }
 
-bool commlock_wake(struct comm_lock *commlock, bool locked)
+bool commlock_wake(struct comm_lock *commlock)
 {
 	assert(commlock && commlock->init);
 
-	if (!locked) {
-		/* 调用此函数之前此锁未被调用该函数的函数锁住 */
-		if (pthread_mutex_lock(&commlock->mutex) == -1) {
-			return false;
-		}
-	}
-
 	/* 返回的值为@addr地址上的旧值，说明设置成功,唤醒等待线程 */
 	pthread_cond_broadcast(&commlock->cond);
-
-	if (!locked) {
-		pthread_mutex_unlock(&commlock->mutex);
-	}
 
 	return true;
 }
