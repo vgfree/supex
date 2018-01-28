@@ -306,9 +306,12 @@ void kv_init(void);
 
 typedef struct kv_config
 {
-	bool    open_on_disk;
-	bool    data_is_pure;
-	long    time_to_stay;
+	enum {
+		open_on_memy,
+		open_on_disk,
+		open_on_both,
+	} kind_of_open;
+	long    time_to_stay;	/*only when open_on_both*/
 } kv_config_t;
 
 int kv_load(kv_config_t *cfg, char *ident);
