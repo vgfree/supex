@@ -12,7 +12,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include "ev.h"
-#include "_evcoro_common.h"
+#include "evcoro_common.h"
 
 #if __cplusplus
 extern "C" {
@@ -77,7 +77,7 @@ typedef void (*evcoro_taskcb)(struct evcoro_scheduler *scheduler, void *usr);
  */
 typedef void (*evcoro_destroycb)(void *usr);
 
-struct evcoro_notify
+struct _ev_notify
 {
 	int			pipe2[2];	/** notify -> pipe2 */
 	struct ev_io		watch;		/** notify -> watch */
@@ -105,8 +105,8 @@ struct evcoro_scheduler
 	struct ev_loop          *listener;	/**<就绪协程侦听器*/
 	unsigned                loops;		/**< 循环了多少次，每次启动前清零*/
 
-	struct evcoro_notify	deep;
-	struct evcoro_notify	swap;
+	struct _ev_notify	deep;
+	struct _ev_notify	swap;
 	/*public:write and read*/
 	void                    *user;		/**<用户层数据*/
 };

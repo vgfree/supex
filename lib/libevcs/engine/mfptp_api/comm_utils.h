@@ -13,6 +13,7 @@
 #include <stdbool.h>
 #include <string.h>
 #include <assert.h>
+#include <pthread.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -23,7 +24,8 @@ extern "C" {
 #if GOOGLE_LOG
   #include "loger.h"
 #else
-  #define loger(fmt, ...) fprintf(stdout, "FILENAME:%s | LINE:%d | FUNCTION:%s | MASSAGE: "  fmt, __FILE__, __LINE__, __FUNCTION__, ##__VA_ARGS__)
+  #define loger(fmt, ...)
+  //#define loger(fmt, ...) fprintf(stdout, "FILENAME:%s | LINE:%d | FUNCTION:%s | MASSAGE: "  fmt, __FILE__, __LINE__, __FUNCTION__, ##__VA_ARGS__)
 #endif
 
 /* 编译器版本 */
@@ -108,6 +110,9 @@ printf("%d", GCC_VERSION);
 #define ATOMIC_ADD(ptr, val)    ((void)ATOMIC_ADD_F((ptr), (val)))
 #define ATOMIC_SUB(ptr, val)    ((void)ATOMIC_SUB_F((ptr), (val)))
 
+#define MIN(a, b)               ((a) < (b) ? (a) : (b))
+#define MAX(a, b)               ((a) > (b) ? (a) : (b))
+
 /* 设置指定描述符的标志 */
 static inline bool fd_setopt(int fd, int flag)
 {
@@ -128,6 +133,24 @@ static inline bool fd_setopt(int fd, int flag)
 
 	return true;
 }
+
+enum STEP_CODE
+{
+	STEP_INIT = 0,
+	STEP_HAND,	/*进入正常状态*/
+	STEP_ERRO,	/*进入异常状态*/
+	STEP_WAIT,
+	STEP_STOP,
+};
+
+/* 回调函数的相关信息 */
+typedef void (*COMM_WORK_STEP_FCB)(void *commctx, int socket, enum STEP_CODE step, void *usr);
+struct comm_cbinfo
+{
+	int             timeout;
+	COMM_WORK_STEP_FCB        fcb;		/* 相关的回调函数 */
+	void            *usr;			/* 用户的参数 */
+};
 
 #ifdef __cplusplus
 }

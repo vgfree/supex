@@ -5,9 +5,8 @@
 //  Created by 周凯 on 15/12/1.
 //  Copyright © 2015年 zk. All rights reserved.
 //
+#pragma once
 
-#ifndef _ev_coro_h
-#define _ev_coro_h
 #include <stdbool.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -36,7 +35,7 @@ extern "C" {
 	};
 
 #define coro_transfer(p, n)   swapcontext(&((p)->uc), &((n)->uc))
-#define coro_destroy(ctx)     (void *)(ctx)
+#define coro_destroy(ctx)     (void )(ctx)
 
 	static inline
 		void coro_stack_free(struct coro_stack *stack)
@@ -74,10 +73,10 @@ extern "C" {
 	bool (*fcb)(void *, ...) = (bool (*)(void *, ...))f;   \
 	volatile int once = 0;   \
 	getcontext(&((p)->uc));	\
-	printf("coro_saveswap---- %d \n", once);      \
+	/* printf("coro_saveswap---- %d \n", once); */	\
 	if (0 == once++) {      \
 		if (fcb) { \
-			printf("do fcb ... .. .\n");	\
+			/* printf("do fcb ... .. .\n");	*/	\
 			(*fcb)(d, ##__VA_ARGS__);        \
 		}       \
 		/* printf("test coredump point 1\n"); sleep(2); printf("test coredump point 2\n"); */ \
@@ -303,5 +302,3 @@ struct ev_coro *evcoro_list_pull(struct ev_coro_t *list)
 #if __cplusplus
 }
 #endif
-#endif	/* _ev_coro_h */
-

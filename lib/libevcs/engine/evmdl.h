@@ -1,8 +1,8 @@
 #pragma once
 #include <ev.h>
-#include "base/qlist.h"
 #include "cache/cache.h"
 #include "proto_comm.h"
+#include "libevcoro.h"
 
 struct pipe_module
 {

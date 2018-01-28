@@ -3,7 +3,7 @@
 #include <utime.h>
 #include <sys/statvfs.h>
 
-#include "evcoro_scheduler.h"
+#include "libevcoro.h"
 
 #ifndef off64_t
 typedef __off64_t off64_t;
