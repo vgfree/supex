@@ -1,5 +1,5 @@
-#ifndef _NET_LIST_H_
-#define _NET_LIST_H_
+#ifndef __LIST_H__
+#define __LIST_H__
 
 #include <unistd.h>
 
@@ -163,5 +163,5 @@ static inline void list_del_head(xlist_t **_des, xlist_t *head)
 		}					       \
 	} while (0)
 #endif
-#endif	// _NET_LIST_H_
+#endif	// __LIST_H__
 

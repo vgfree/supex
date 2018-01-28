@@ -18,10 +18,10 @@ typedef void (*TRAVEL_FCB)(const void *data, size_t size, size_t idx, void *usr)
 #endif
 
 /* 链表节点结构点 */
-struct list_node
+struct comm_node
 {
-	struct list_node        *next;		/* 后置节点 */
-	struct list_node        *prev;		/* 前置节点 */
+	struct comm_node        *next;		/* 后置节点 */
+	struct comm_node        *prev;		/* 前置节点 */
 	size_t                  size;
 	char                    data[0];	/* 节点所保存的数据 */
 };
@@ -30,8 +30,8 @@ struct list_node
 struct comm_list
 {
 	bool                    init;
-	struct list_node        *head;		/* 链表的头节点 */
-	struct list_node        *tail;		/* 链表的尾节点 */
+	struct comm_node        *head;		/* 链表的头节点 */
+	struct comm_node        *tail;		/* 链表的尾节点 */
 	unsigned long           nodes;		/* 链表中节点总数 */
 	pthread_spinlock_t      lock;		/* 压入锁 */
 };

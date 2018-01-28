@@ -19,7 +19,7 @@ void commlist_destroy(struct comm_list *list, TRAVEL_FCB fcb, void *usr)
 		pthread_spin_lock(&list->lock);
 
 		while (list->head) {
-			struct list_node *node = list->head;
+			struct comm_node *node = list->head;
 			list->head = list->head->next;
 
 			if (fcb) {
@@ -40,7 +40,7 @@ bool commlist_push(struct comm_list *list, void *data, size_t size)
 {
 	assert(list && data);
 
-	struct list_node *node = calloc(1, sizeof(struct list_node) + size);
+	struct comm_node *node = calloc(1, sizeof(struct comm_node) + size);
 
 	if (!node) {
 		return false;
@@ -74,7 +74,7 @@ bool commlist_pull(struct comm_list *list, void *data, size_t size)
 	pthread_spin_lock(&list->lock);
 
 	if (list->nodes > 0) {
-		struct list_node *node = list->head;
+		struct comm_node *node = list->head;
 
 		if (list->head == list->tail) {
 			/* 取的是最后一个节点数据 */

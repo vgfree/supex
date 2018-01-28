@@ -1,6 +1,6 @@
 #include "iniparser.h"
 #include "libmini.h"
-#include "manage_skts.h"
+#include "../manage_skts.h"
 
 #include "manage_i_wrap.h"
 

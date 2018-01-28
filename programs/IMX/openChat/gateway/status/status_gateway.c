@@ -5,7 +5,7 @@
 
 #include "libmini.h"
 #include "comm_api.h"
-#include "manage_skts.h"
+#include "../manage_skts.h"
 #include "status_i_wrap.h"
 #include "status_o_wrap.h"
 

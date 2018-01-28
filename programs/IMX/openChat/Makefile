@@ -5,7 +5,7 @@ INC_DIR=-I$(HOME_PATH)/lib/libcomm/ \
 	-I./
 LIB_DIR=-L/usr/local/lib -L$(HOME_PATH)/lib
 
-INC_LIBS=-liniparser -lcomm -lkv -lleveldb -lmini -lstdc++ -luuid -lpthread -ldl -lm
+INC_LIBS=-liniparser -lcomm -lkv -lleveldb -lsnappy -lmini -lstdc++ -luuid -lpthread -ldl -lm
 
 #[=========>MARK<=========]#
 MAIN_APP_SERV ?= openChat

@@ -6,7 +6,7 @@
 #include "libmini.h"
 #include "comm_utils.h"
 #include "comm_api.h"
-#include "manage_skts.h"
+#include "../manage_skts.h"
 #include "manage_i_wrap.h"
 #include "manage_o_wrap.h"
 
