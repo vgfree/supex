@@ -4,3 +4,6 @@
 [submodule "lib/libmini"]
 	path = lib/libmini
 	url = ssh://baoxue@localhost:29418/libmini.git
+[submodule "lib/libcomm"]
+	path = lib/libcomm
+	url = http://52.8.102.37/network/libcomm.git
