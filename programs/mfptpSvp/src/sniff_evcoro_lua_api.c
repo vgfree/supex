@@ -1,7 +1,6 @@
 #include <assert.h>
 
-#include "minor/sniff_api.h"
-#include "spx_evcs.h"
+#include "libevcs.h"
 #include "lua_expand/lj_c_coro.h"
 #include "lua_expand/lua_link.h"
 #include "sniff_evcoro_lua_api.h"

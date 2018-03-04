@@ -5,7 +5,7 @@
 #include <assert.h>
 
 
-#include "major/alive_api.h"
+#include "libevcs.h"
 #include "alive_cpp_api.h"
 #include "load_alive_cfg.h"
 

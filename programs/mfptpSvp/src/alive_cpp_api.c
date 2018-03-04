@@ -2,7 +2,7 @@
 #include <stdlib.h>
 
 #include "base/utils.h"
-#include "major/alive_api.h"
+#include "libevcs.h"
 #include "minor/sniff_api.h"
 #include "alive_cpp_api.h"
 #include "keyval.h"
@@ -10,8 +10,7 @@
 #include "sniff_evcoro_lua_api.h"
 
 #include "mfptp_protocol/mfptp_package.h"
-#include "comm_structure.h"
-#include "comm_disposedata.h"
+#include "comm_api.h"
 
 
 extern struct sniff_cfg_list g_sniff_cfg_list;
@@ -34,8 +33,8 @@ bool pair_packager(char **pckbuff, int *pckbuff_size, int pair_size)
 	assert(size == 0);
 	
 	*pckbuff_size = 0;	/* 从此刻起代表的就是缓冲区已有数据的大小 */
-	mfptp_fill_package(&packager, frame_offset, frame_size, frames, packages);
-	size = mfptp_package(&packager, data, NO_ENCRYPTION|NO_COMPRESSION, PAIR_METHOD);
+	size = mfptp_package(&packager, data, NO_ENCRYPTION|NO_COMPRESSION, PAIR_METHOD,
+			packages, frame_offset, frame_size, frames);
 	if ((size > 0) && (packager.ms.error == MFPTP_OK)) {
 		printf("packager successed\n");
 		return true;

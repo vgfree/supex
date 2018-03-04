@@ -3,12 +3,12 @@ INC_DIR=-I/usr/local/include/luajit-2.0 -I../../lib/libev -I../../lib/json-c \
 	-I../../lib/libkv/release \
 	-I../../lib/hiredis \
 	-I../../lib/libmemhook/src \
-	-I../../lib/libscco/include \
+	-I../../lib/libscco \
 	-I../../lib/libcoro/include \
-	-I../../lib/libevcoro/include \
-	-I../../lib/libevcs/include \
-	-I../../lib/libevcs/include/engine \
-	-I../../lib/libevcs/include/frame \
+	-I../../lib/libevcoro \
+	-I../../lib/libevcs/ \
+	-I../../lib/libevcs/engine \
+	-I../../lib/libevcs/frame \
 	-I../../lib/leveldb/include \
 	-I../../lib/libcomm \
 	-I./src -I../

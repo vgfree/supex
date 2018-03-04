@@ -113,6 +113,20 @@ printf("%d", GCC_VERSION);
 #define MIN(a, b)               ((a) < (b) ? (a) : (b))
 #define MAX(a, b)               ((a) > (b) ? (a) : (b))
 
+/*
+ * 返回以osize / bsize 的最大倍数
+ */
+#undef  CEIL_TIMES
+#define CEIL_TIMES(osize, bsize) \
+	(((osize) + (bsize)-1) / (bsize))
+
+/*
+ * 返回以bsize为单位对齐的osize
+ */
+#undef  ADJUST_SIZE
+#define ADJUST_SIZE(osize, bsize) \
+	(CEIL_TIMES((osize), (bsize)) * (bsize))
+
 /* 设置指定描述符的标志 */
 static inline bool fd_setopt(int fd, int flag)
 {
@@ -136,6 +150,7 @@ static inline bool fd_setopt(int fd, int flag)
 
 enum STEP_CODE
 {
+	STEP_SWAP = -1,
 	STEP_INIT = 0,
 	STEP_HAND,	/*进入正常状态*/
 	STEP_ERRO,	/*进入异常状态*/
@@ -147,9 +162,10 @@ enum STEP_CODE
 typedef void (*COMM_WORK_STEP_FCB)(void *commctx, int socket, enum STEP_CODE step, void *usr);
 struct comm_cbinfo
 {
-	int             timeout;
-	COMM_WORK_STEP_FCB        fcb;		/* 相关的回调函数 */
-	void            *usr;			/* 用户的参数 */
+	int                     timeout;
+	bool			separate;	/* accept的连接是否需要脱离本上下文 */
+	COMM_WORK_STEP_FCB      fcb;		/* 相关的回调函数 */
+	void                    *usr;		/* 用户的参数 */
 };
 
 #ifdef __cplusplus
