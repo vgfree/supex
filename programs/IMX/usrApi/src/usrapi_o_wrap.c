@@ -52,9 +52,10 @@ int usrapi_o_wrap_init(void)
 	const char            *host = iniparser_getstring(config, BIND_APPSRV_SETTING_LOOKING_HOST, NULL);
 	const char            *port = iniparser_getstring(config, BIND_APPSRV_SETTING_LOOKING_PORT, NULL);
 
-	struct comm_cbinfo callback_info = {};
-	callback_info.fcb = usrapi_o_cb;
-	assert(commapi_socket(g_commctx, host, port, &callback_info, COMM_BIND) != -1);
+	struct comm_cbinfo cbinfo = {};
+	cbinfo.monitor = true;
+	cbinfo.fcb = usrapi_o_cb;
+	assert(commapi_socket(g_commctx, host, port, &cbinfo, COMM_BIND) != -1);
 
 	iniparser_freedict(config);
 	return 0;

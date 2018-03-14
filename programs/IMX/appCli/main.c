@@ -247,6 +247,7 @@ int main(int argc, char *argv[])
 
 	/* 设置回调函数的相关信息 */
 	struct comm_cbinfo cbinfo = { 0 };
+	cbinfo.monitor = true;
 	cbinfo.fcb = event_fun;
 	cbinfo.usr = NULL;
 

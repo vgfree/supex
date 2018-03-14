@@ -56,14 +56,15 @@ int appsrv_o_wrap_init(void)
 		return -1;
 	}
 
-	struct comm_cbinfo APICB = {};
-	APICB.fcb = appsrv_cb;
+	struct comm_cbinfo cbinfo = {};
+	cbinfo.monitor = true;
+	cbinfo.fcb = appsrv_cb;
 
 	dictionary *config = iniparser_load(CONFIG);
 
 	const char    *host = iniparser_getstring(config, CONN_GATEWAY_STATUS_HOST, NULL);
 	const char    *port = iniparser_getstring(config, CONN_GATEWAY_STATUS_PORT, NULL);
-	g_status_sfd = commapi_socket(g_commctx, host, port, &APICB, COMM_CONNECT);
+	g_status_sfd = commapi_socket(g_commctx, host, port, &cbinfo, COMM_CONNECT);
 
 	if (g_status_sfd <= 0) {
 		x_printf(E, "connect usrinfoapi failed.");
@@ -72,7 +73,7 @@ int appsrv_o_wrap_init(void)
 
 	host = iniparser_getstring(config, CONN_GATEWAY_STREAM_HOST, NULL);
 	port = iniparser_getstring(config, CONN_GATEWAY_STREAM_PORT, NULL);
-	g_stream_sfd = commapi_socket(g_commctx, host, port, &APICB, COMM_CONNECT);
+	g_stream_sfd = commapi_socket(g_commctx, host, port, &cbinfo, COMM_CONNECT);
 
 	if (g_stream_sfd <= 0) {
 		x_printf(E, "connect usrinfoapi failed.");
@@ -81,7 +82,7 @@ int appsrv_o_wrap_init(void)
 
 	host = iniparser_getstring(config, CONN_USRAPI_SETTING_LOOKING_HOST, NULL);
 	port = iniparser_getstring(config, CONN_USRAPI_SETTING_LOOKING_PORT, NULL);
-	g_usrapi_sfd = commapi_socket(g_commctx, host, port, &APICB, COMM_CONNECT);
+	g_usrapi_sfd = commapi_socket(g_commctx, host, port, &cbinfo, COMM_CONNECT);
 
 	if (g_usrapi_sfd <= 0) {
 		x_printf(E, "connect usrinfoapi failed.");

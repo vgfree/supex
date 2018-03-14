@@ -56,9 +56,10 @@ int usrapi_i_wrap_init(void)
 		return -1;
 	}
 
-	struct comm_cbinfo callback_info = {};
-	callback_info.fcb = usrapi_i_cb;
-	g_manage_sfd = commapi_socket(g_commctx, host, port, &callback_info, COMM_CONNECT);
+	struct comm_cbinfo cbinfo = {};
+	cbinfo.monitor = true;
+	cbinfo.fcb = usrapi_i_cb;
+	g_manage_sfd = commapi_socket(g_commctx, host, port, &cbinfo, COMM_CONNECT);
 
 	if (g_manage_sfd <= 0) {
 		x_printf(E, "connect manageGateway failed.");

@@ -55,6 +55,7 @@ int status_i_wrap_init(void)
 	}
 
 	struct comm_cbinfo cbinfo = {};
+	cbinfo.monitor = true;
 	cbinfo.fcb = event_notify_from_exchange;
 	assert(commapi_socket(g_commctx, host, port, &cbinfo, COMM_BIND) != -1);
 

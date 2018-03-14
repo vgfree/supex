@@ -58,9 +58,10 @@ int manage_i_wrap_init(void)
 		return -1;
 	}
 
-	struct comm_cbinfo callback_info = {};
-	callback_info.fcb = exchange_node_cb;
-	assert(commapi_socket(g_commctx, host, port, &callback_info, COMM_BIND) != -1);
+	struct comm_cbinfo cbinfo = {};
+	cbinfo.monitor = true;
+	cbinfo.fcb = exchange_node_cb;
+	assert(commapi_socket(g_commctx, host, port, &cbinfo, COMM_BIND) != -1);
 
 	iniparser_freedict(config);
 	return 0;

@@ -95,16 +95,17 @@ int status_o_wrap_init(void)
 	const char            *host = iniparser_getstring(config, BIND_APPSRV_STATUS_HOST, NULL);
 	const char            *port = iniparser_getstring(config, BIND_APPSRV_STATUS_PORT, NULL);
 
-	struct comm_cbinfo callback_info = {};
-	callback_info.fcb = status_gateway_cb;
-	assert(commapi_socket(g_commctx, host, port, &callback_info, COMM_BIND) != -1);
+	struct comm_cbinfo cbinfo = {};
+	cbinfo.monitor = true;
+	cbinfo.fcb = status_gateway_cb;
+	assert(commapi_socket(g_commctx, host, port, &cbinfo, COMM_BIND) != -1);
 
 	host = iniparser_getstring(config, CONN_USRAPI_STATUS_HOST, NULL);
 	port = iniparser_getstring(config, CONN_USRAPI_STATUS_PORT, NULL);
 
-	struct comm_cbinfo APICB = {};
-	APICB.fcb = notify_usrinfoapi_cb;
-	g_api_sfd = commapi_socket(g_commctx, host, port, &APICB, COMM_CONNECT);
+	cbinfo.monitor = true;
+	cbinfo.fcb = notify_usrinfoapi_cb;
+	g_api_sfd = commapi_socket(g_commctx, host, port, &cbinfo, COMM_CONNECT);
 
 	if (g_api_sfd <= 0) {
 		x_printf(E, "connect usrinfoapi failed.");

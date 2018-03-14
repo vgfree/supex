@@ -56,6 +56,7 @@ static int _do_init(void)
 	int                     sktfd = 0;
 	struct comm_cbinfo      cbinfo = {};
 	/*init streamGetway event*/
+	cbinfo.monitor = true;
 	cbinfo.fcb = exc_event_notify_from_stream;
 	g_serv_info.stream_gateway_fd = sktfd = commapi_socket(commctx, streamHost, streamPort, &cbinfo, COMM_CONNECT);
 
@@ -65,6 +66,7 @@ static int _do_init(void)
 	}
 
 	/*init manageGateway event*/
+	cbinfo.monitor = true;
 	cbinfo.fcb = exc_event_notify_from_manage;
 	g_serv_info.manage_gateway_fd = sktfd = commapi_socket(commctx, manageHost, managePort, &cbinfo, COMM_CONNECT);
 
@@ -74,6 +76,7 @@ static int _do_init(void)
 	}
 
 	/*init statusGateway event*/
+	cbinfo.monitor = true;
 	cbinfo.fcb = exc_event_notify_from_status;
 	g_serv_info.status_gateway_fd = sktfd = commapi_socket(commctx, statusHost, statusPort, &cbinfo, COMM_CONNECT);
 
@@ -84,6 +87,7 @@ static int _do_init(void)
 
 	/*init client event*/
 	/*注意:所有gateway启动完毕后再启动exchange*/
+	cbinfo.monitor = true;
 	cbinfo.fcb = exc_event_notify_from_client;
 	int retval = commapi_socket(commctx, clientHost, clientPort, &cbinfo, COMM_BIND);
 
