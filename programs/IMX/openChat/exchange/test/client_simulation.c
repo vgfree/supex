@@ -72,7 +72,7 @@ int test_simulate_client(char *ip)
 		printf("\n");
 		struct comm_message msg = {};
 		commmsg_make(&msg, DEFAULT_MSG_SIZE);
-		commmsg_sets(&msg, connectfd, 0, PAIR_METHOD);
+		commmsg_sets(&msg, connectfd, 0, QPAIR_METHOD);
 		commmsg_frame_set(&msg, 0, strlen(str), str);
 		msg.package.frames_of_package[0] = msg.package.frames;
 		msg.package.packages = 1;

@@ -33,7 +33,7 @@ bool pair_packager(char **pckbuff, int *pckbuff_size, int pair_size)
 	assert(size == 0);
 	
 	*pckbuff_size = 0;	/* 从此刻起代表的就是缓冲区已有数据的大小 */
-	size = mfptp_package(&packager, data, NO_ENCRYPTION|NO_COMPRESSION, PAIR_METHOD,
+	size = mfptp_package(&packager, data, NO_ENCRYPTION|NO_COMPRESSION, QPAIR_METHOD,
 			packages, frame_offset, frame_size, frames);
 	if ((size > 0) && (packager.ms.error == MFPTP_OK)) {
 		printf("packager successed\n");
@@ -81,7 +81,7 @@ int alive_vms_call(void *user, union virtual_system **VMS, struct adopt_task_nod
 #endif
 
 	struct mfptp_parse_info *mfptp_info = task->parse.mfptp_info;
-	if (mfptp_info->header.socket_type == PAIR_METHOD) {
+	if (mfptp_info->header.socket_type == QPAIR_METHOD) {
 		// 从客户端接收的数据提取key.
 		char *key = task->data + mfptp_info->bodyer.package[0].frame[0].frame_offset;
 		int len = mfptp_info->bodyer.package[0].frame[0].frame_size;

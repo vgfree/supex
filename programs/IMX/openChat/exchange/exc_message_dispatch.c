@@ -41,26 +41,6 @@ static void find_best_gateway(int *fd)
 
 static int _dispatch_client(struct comm_message *msg)
 {
-	/*心跳*/
-	if (msg->ptype == PAIR_METHOD) {
-		commmsg_frame_del(msg, 0, 1);
-		msg->package.frames_of_package[0]--;
-
-		char buf[21] = {};
-		buf[0] = 0x01;
-		commmsg_frame_set(msg, 0, 21, buf);
-		msg->package.frames_of_package[0] = msg->package.frames;
-		msg->package.packages = 1;
-
-#if 0
-		x_printf(D, "send message msg type:%d, dsize:%d frame_size:%d frames_of_package:%d frames:%d packages:%d",
-			msg->ptype, msg->package.raw_data.len, msg->package.frame_size[0],
-			msg->package.frames_of_package[0], msg->package.frames, msg->package.packages);
-#endif
-		commapi_send(g_serv_info.commctx, msg);
-		return 1;
-	}
-
 	/*上传*/
 	int fd = 0;
 	find_best_gateway(&fd);
