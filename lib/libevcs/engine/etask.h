@@ -2,7 +2,7 @@
 
 #include "base/utils.h"
 
-#ifdef __LINUX__
+#if defined(__LINUX__) || defined(__linux__)
 #include <sys/eventfd.h>
 #else
 #define EFD_SEMAPHORE	(1)
@@ -34,16 +34,18 @@ static inline int eventfd(unsigned int initval, int flags)
  */
 int eventfd_xrecv(int efd, eventfd_t *value);
 int eventfd_xsend(int efd, eventfd_t value);
-int eventfd_xwait(int efd, int timeout);
+int eventfd_xwait(int efds[], int nums, int timeout);
 
 
 
-struct evt_task {
+struct etask {
 	int efd;
+	bool freeable;
 };
 
-struct evt_task *evt_task_init(void);
-void evt_task_free(struct evt_task *etask);
-void evt_task_awake(struct evt_task *etask);
-void evt_task_sleep(struct evt_task *etask);
-bool evt_task_twait(struct evt_task *etask, int msec);
+struct etask *etask_make(struct etask *etask);
+void etask_free(struct etask *etask);
+void etask_awake(struct etask *etask);
+void etask_sleep(struct etask *etask);
+/*msec小于0为无限等待*/
+bool etask_twait(struct etask *etask, int msec);
