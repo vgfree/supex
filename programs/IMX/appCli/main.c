@@ -236,7 +236,7 @@ int main(int argc, char *argv[])
 
 	x_printf(D, "nodeServer:%s, nodePort:%s.", host, port);
 
-	g_etask = etask_init();
+	g_etask = etask_make(NULL);
 	/*create ctx*/
 	g_commctx = commapi_ctx_create();
 
