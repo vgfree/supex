@@ -28,17 +28,17 @@
 
 int                     g_sfd = 0;
 struct comm_context     *g_commctx = NULL;
-struct evt_task         *g_etask = NULL;
+struct etask         *g_etask = NULL;
 
 int app_lua_task_awake(lua_State *L)
 {
-	evt_task_awake(g_etask);
+	etask_awake(g_etask);
 	return 0;
 }
 
 int app_lua_task_sleep(lua_State *L)
 {
-	evt_task_sleep(g_etask);
+	etask_sleep(g_etask);
 	return 0;
 }
 
@@ -236,7 +236,7 @@ int main(int argc, char *argv[])
 
 	x_printf(D, "nodeServer:%s, nodePort:%s.", host, port);
 
-	g_etask = evt_task_init();
+	g_etask = etask_init();
 	/*create ctx*/
 	g_commctx = commapi_ctx_create();
 
@@ -274,7 +274,7 @@ int main(int argc, char *argv[])
 	loger("goint to detroy everything here\n");
 	commapi_ctx_destroy(g_commctx);
 
-	evt_task_free(g_etask);
+	etask_free(g_etask);
 	return -1;
 }
 
