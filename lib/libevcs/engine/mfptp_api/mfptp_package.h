@@ -14,9 +14,9 @@ extern "C" {
 /* MFPTP打包器的状态 */
 struct mfptp_pack_stat
 {
-	char                    **buff;	/* 已打包的数据缓冲区首地址 */
-	int                     *size;	/* 已打包的数据大小的地址 */
-	int                     dosize;	/* 目前已打包数据的字节数 */
+	char                    **pdata;	/* 已打包的数据缓冲区首地址 */
+	size_t                  *psize;	/* 已打包的数据大小的地址 */
+	size_t                  dosize;	/* 目前已打包数据的字节数 */
 	enum mfptp_error        error;	/* MFPTP打包出错的信息 */
 };
 
@@ -31,9 +31,15 @@ struct mfptp_packager
 
 /***********************************************************************************
  * 功能：初始化打包器结构体
- * @buff:保存打包好的数据缓冲区的地址  @size：保存打包好的数据大小的地址
+ * @pdata:保存打包好的数据缓冲区的地址  @psize：保存打包好的数据大小的地址
  ************************************************************************************/
-void mfptp_package_init(struct mfptp_packager *packager, char **buff, int *size);
+void mfptp_package_init(struct mfptp_packager *packager, char **pdata, size_t *psize);
+
+/***********************************************************************************
+ * 功能：更正打包器结构体
+ * @pdata:保存打包好的数据缓冲区的地址  @psize：保存打包好的数据大小的地址
+ ************************************************************************************/
+void mfptp_package_adjust(struct mfptp_packager *packager, char **pdata, size_t *psize);
 
 /***********************************************************************************
  * 功能：销毁打包器结构体
@@ -45,7 +51,7 @@ void mfptp_package_destroy(struct mfptp_packager *packager);
  * @frames:待打包数据的总帧数  @dsize:待打包数据的总大小
  * @返回值：>0 打包最大需要的内存大小
  ***********************************************************************************/
-int mfptp_package_reckon(int frames, int dsize);
+size_t mfptp_package_reckon(size_t frames, size_t dsize);
 
 /***********************************************************************************
  * 功能：开始打包数据
@@ -58,8 +64,9 @@ int mfptp_package_reckon(int frames, int dsize);
  * @frames_of_pack:待打包数据每个单包中帧的总数
  * @返回值: -1:失败, 否则代表打包之后的数据的大小
  ***********************************************************************************/
-int mfptp_package(struct mfptp_packager *packager, const char *data,
+ssize_t mfptp_package(struct mfptp_packager *packager, const char *data,
 		unsigned char flags, unsigned char stype,
+		uint32_t serial_number,
 		int packages,
 		const int frame_offset[], const int frame_size[], const int frames_of_pack[]);
 

@@ -25,27 +25,30 @@ enum mfptp_status
 	MFPTP_VERSION,			/*  8 MFPTP协议的版本号 */
 	MFPTP_CONFIG,			/*  9 MFPTP协议的压缩解密格式 */
 	MFPTP_SOCKET_TYPE,		/* 10 MFPTP协议socket的类型 */
-	MFPTP_PACKAGES,			/* 11 MFPTP协议携带的包数 */
-	MFPTP_FP_CONTROL,		/* 12 MFPTP协议的FP_control字段 */
-	MFPTP_F_SIZE_1,			/* 13 MFPTP协议F_size字段的第一位 */
-	MFPTP_F_SIZE_2,			/* 14 MFPTP协议F_size字段的第二位 */
-	MFPTP_F_SIZE_3,			/* 15 MFPTP协议F_size字段的第三位 */
-	MFPTP_F_SIZE_4,			/* 16 MFPTP协议F_size字段的第四位 */
-	MFPTP_FRAME_START,		/* 17 MFPTP协议的帧 */
-	MFPTP_FRAME_SETTING,		/* 20 MFPTP协议设置帧的大小,偏移，帧数计数 */
-	MFPTP_FRAME_OVER,		/* 21 MFPTP协议解析完一包的数据 */
-	MFPTP_PARSE_OVER		/* 22 MFPTP协议解析完*/
+	MFPTP_SERIAL_NO_1,		/* 11 MFPTP协议serial_number字段的第一字节 */
+	MFPTP_SERIAL_NO_2,		/* 12 MFPTP协议serial_number字段的第二字节 */
+	MFPTP_SERIAL_NO_3,		/* 13 MFPTP协议serial_number字段的第三字节 */
+	MFPTP_SERIAL_NO_4,		/* 14 MFPTP协议serial_number字段的第四字节 */
+	MFPTP_PACKAGES,			/* 15 MFPTP协议携带的包数 */
+
+	MFPTP_FP_CONTROL,		/* 16 MFPTP协议的FP_control字段 */
+	MFPTP_F_SIZE_1,			/* 17 MFPTP协议F_size字段的第一字节 */
+	MFPTP_F_SIZE_2,			/* 18 MFPTP协议F_size字段的第二字节 */
+	MFPTP_F_SIZE_3,			/* 19 MFPTP协议F_size字段的第三字节 */
+	MFPTP_F_SIZE_4,			/* 20 MFPTP协议F_size字段的第四字节 */
+	MFPTP_FRAME_START,		/* 21 MFPTP协议的帧 */
+	MFPTP_FRAME_OVER,		/* 22 MFPTP协议设置帧的大小,偏移，帧数计数 */
+	MFPTP_PACKAGE_OVER,		/* 23 MFPTP协议解析完一包的数据 */
+	MFPTP_PARSE_OVER		/* 24 MFPTP协议解析完*/
 };
 
 /* MFPTP解析器的状态 */
 struct mfptp_parser_stat
 {
 	bool                    over;		/* 是否完成解析*/
-	bool                    resume;		/* 是否断点续传 */
-	int                     dosize;		/* 当前已解析的长度 */
-//	int			frame_offset;	/* 记录目前最后解析的帧偏移[已解析数据在cache里面的偏移]*/
-	char *const             *data;		/* 待解析数据起始地址指针*/
-	int const               *dsize;		/* 待解析数据的总长度地址*/
+	size_t                  dosize;		/* 当前已解析的长度 */
+	char *const             *pdata;		/* 待解析数据起始地址指针*/
+	size_t const            *psize;		/* 待解析数据的总长度地址*/
 	enum mfptp_status       step;		/* 当前解析的步进 */
 	enum mfptp_error        error;		/* MFPTP解析错误码 */
 };
@@ -63,9 +66,15 @@ struct mfptp_parser
 
 /***********************************************************************************
 * 功能：初始化解析结构体
-* @data:待解析数据缓冲区地址  @size:待解析数据大小的地址
+* @pdata:待解析数据缓冲区地址  @psize:待解析数据大小的地址
 ***********************************************************************************/
-void mfptp_parse_init(struct mfptp_parser *parser, char *const *data, const int *size);
+void mfptp_parse_init(struct mfptp_parser *parser, char *const *pdata, size_t const *psize);
+
+/***********************************************************************************
+* 功能：更正解析结构体
+* @pdata:待解析数据缓冲区地址  @psize:待解析数据大小的地址
+***********************************************************************************/
+void mfptp_parse_adjust(struct mfptp_parser *parser, char *const *pdata, size_t const *psize);
 
 /***********************************************************************************
 * 功能：销毁一个解析结构体
@@ -74,9 +83,13 @@ void mfptp_parse_destroy(struct mfptp_parser *parser);
 
 /***********************************************************************************
 * 功能：开始解析数据
-* 返回值：已解析数据的字节数
+* 返回值：数据协议解析完成的字节数
+* 	= 0代表解析未完成
+* 	> 0代表解析已完成
+* 		error == MFPTP_OK代表解析一条协议
+* 		error != MFPTP_OK代表协议解析出错
 ***********************************************************************************/
-int mfptp_parse(struct mfptp_parser *parser);
+ssize_t mfptp_parse(struct mfptp_parser *parser);
 
 #ifdef __cplusplus
 }

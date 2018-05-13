@@ -17,7 +17,7 @@ extern "C" {
 #define MFPTP_MAX_FRAMESIZE	(1 << 27)	/* MFPTP协议一个帧携带数据的最大值 */
 #define MFPTP_MAX_PACKAGES		8	/* MFPTP协议支持携带的最大包数 */
 
-#define MFPTP_HEADER_LEN		10	/* MFPTP协议头的所占的字节数 */
+#define MFPTP_HEADER_LEN		14	/* MFPTP协议头的所占的字节数 */
 #define MFPTP_FP_CONTROL_LEN		1	/* MFPTP协议FP_control的所占的字节数 */
 #define MFPTP_F_SIZE_MINLEN		1	/* MFPTP协议F_size所占的最小字节数 */
 #define MFPTP_F_SIZE_MAXLEN		4	/* MFPTP协议F_size所占的最大字节数 */
@@ -36,12 +36,12 @@ extern "C" {
 
 /* 检测MFPTP协议socket type是否正确*/
 #define CHECK_SOCKTYPE(parser)				   \
-	(parser->header.socket_type <= HEARTBEAT_METHOD && \
-	parser->header.socket_type >= PAIR_METHOD)
+	(parser->header.socket_type < UNKNOWN_METHOD && \
+	parser->header.socket_type >= EMPTY_METHOD)
 
 /* 检测MFPTP协议包数是否是在范围之内 */
 #define CHECK_PACKAGES(parser)		\
-	(parser->header.packages > 0 &&	\
+	(parser->header.packages >= 0 &&	\
 	parser->header.packages <= MFPTP_MAX_PACKAGES)
 
 /* 检测MFPTP协议单帧大小是否是在范围之内 */
@@ -54,18 +54,8 @@ extern "C" {
 	((pkinfo)->frames > 0 &&	\
 	(pkinfo)->frames <= MFPTP_MAX_FRAMES_OF_PACK)
 
-
-
-/* 检测MFPTP协议头的6个字节是否正确 */
-#define CHECK_HEADER(parser) (!strncmp(&(((*parser->ms.data)[parser->ms.dosize])), "#MFPTP", 6))
-
-/* 检测MFPTP协议F_SIZE所占的字节数是否是在1-4范围内 */
-#define CHECK_F_SIZE(parser)		   \
-	(parser->header.size_f_size > 0 && \
-	parser->header.size_f_size <= 4)
-
-/* 检测MFPTP协议帧携带的数据大小是否正确 */
-#define CHECK_DATASIZE(parser) (*parser->ms.dsize - parser->ms.dosize >= parser->header.f_size)
+#define IS_SYS_SOCKTYPE(stype)	((stype >= QPAIR_METHOD) && (stype <= PSERIAL_METHOD))
+#define IS_USR_SOCKTYPE(stype)	((stype >= PUSH_METHOD) && (stype <= CONSUME_METHOD))
 
 /* MFPTP协议压缩加密值 */
 enum mfptp_config
@@ -81,17 +71,26 @@ enum mfptp_config
 /* MFPTP协议的socket的type值 */
 enum mfptp_socket_type
 {
-	PAIR_METHOD		= 0x00,
-	PUB_METHOD		= 0x01,
-	SUB_METHOD		= 0x02,
-	REQ_METHOD		= 0x03,
-	REP_METHOD		= 0x04,
-	DEALER_METHOD		= 0x05,
-	ROUTER_METHOD		= 0x06,
-	PULL_METHOD		= 0x07,
-	PUSH_METHOD		= 0x08,
-	HEARTBEAT_METHOD	= 0x09,
-	INVALID_METHOD		= 0x10
+	/*top*/
+	EMPTY_METHOD		= 0x00,
+	/*sys*/
+	QPAIR_METHOD		= 0x01,
+	PPAIR_METHOD		= 0x02,
+	QHEART_METHOD		= 0x03,
+	PHEART_METHOD		= 0x04,
+	QSERIAL_METHOD		= 0x05,
+	PSERIAL_METHOD		= 0x06,
+	/*usr*/
+	PUSH_METHOD		= 0x07,
+	PULL_METHOD		= 0x08,
+	REQ_METHOD		= 0x09,
+	RSP_METHOD		= 0x0a,
+	SUB_METHOD		= 0x0b,
+	PUB_METHOD		= 0x0c,
+	PRODUCE_METHOD		= 0x0d,
+	CONSUME_METHOD		= 0x0e,
+	/*out*/
+	UNKNOWN_METHOD		= 0x0f
 };
 
 /* MFPTP协议错误码 */
@@ -129,6 +128,11 @@ struct mfptp_package_info
 /* MFPTP协议消息的相关信息 */
 struct mfptp_bodyer_info
 {
+	unsigned int    f_size;				/* F_size字段的值[帧所携带数据大小] */
+	unsigned char   not_end;			/* 当前帧是否是最后一帧 */
+	unsigned char   size_f_size;			/* F_size字段所占字节数 */
+
+
 	int                             dsize;				/* 消息的总大小 */
 	int                             packages;			/* 包的总数 */
 	struct mfptp_package_info       package[MFPTP_MAX_PACKAGES];	/* 每个包的相关信息 */
@@ -142,12 +146,8 @@ struct mfptp_header_info
 	unsigned char   compression;			/* 压缩格式 */
 	unsigned char   socket_type;			/* socket的类型 */
 	unsigned char   major_version;			/* 主版本号 */
-	unsigned char   minor_version;			/* 副版本号*/
-
-
-	unsigned int    f_size;				/* F_size字段的值[帧所携带数据大小] */
-	unsigned char   not_end;			/* 当前帧是否是最后一帧 */
-	unsigned char   size_f_size;			/* F_size字段所占字节数 */
+	unsigned char   minor_version;			/* 副版本号 */
+	uint32_t	serial_number;			/* 序列号 */
 };
 
 #ifdef __cplusplus

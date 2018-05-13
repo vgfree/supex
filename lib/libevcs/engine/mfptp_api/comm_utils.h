@@ -6,6 +6,7 @@
 #define __COMM_UTILS_H__
 
 #include <stdio.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <fcntl.h>
@@ -19,14 +20,18 @@
 extern "C" {
 #endif
 
+
 #define GOOGLE_LOG 0
 
 #if GOOGLE_LOG
   #include "loger.h"
 #else
   #define loger(fmt, ...)
-  //#define loger(fmt, ...) fprintf(stdout, "FILENAME:%s | LINE:%d | FUNCTION:%s | MASSAGE: "  fmt, __FILE__, __LINE__, __FUNCTION__, ##__VA_ARGS__)
+// #define loger(fmt, ...) fprintf(stdout, "FILENAME:%s | LINE:%d | FUNCTION:%s | MASSAGE: "  fmt, __FILE__, __LINE__, __FUNCTION__, ##__VA_ARGS__)
 #endif
+
+
+#define BUILD_BUG_ON(condition) ((void)sizeof(struct { int: -!!(condition); }))
 
 /* 编译器版本 */
 #define GCC_VERSION (__GNUC__ * 10000 + __GNUC_MINOR__ * 100 + __GNUC_PATCHLEVEL__)
@@ -159,13 +164,31 @@ enum STEP_CODE
 };
 
 /* 回调函数的相关信息 */
+typedef void (*COMM_INIT_TRIGGER_FCB)(void *commctx, int socket, void *tg_usr);
+typedef void (*COMM_STOP_TRIGGER_FCB)(void *commctx, int socket, void *tg_usr);
 typedef void (*COMM_WORK_STEP_FCB)(void *commctx, int socket, enum STEP_CODE step, void *usr);
+typedef bool (*COMM_SEND_FILTER_FCB)(void *commctx, int socket, void *msg, void *dtx);
+typedef bool (*COMM_RECV_FILTER_FCB)(void *commctx, int socket, void *msg, void *drx);
+
 struct comm_cbinfo
 {
+	/* sys */
 	int                     timeout;
+	bool			monitor;	/* ownself模式为通知各自,monitor模式为通知监管 */
 	bool			separate;	/* accept的连接是否需要脱离本上下文 */
+	COMM_INIT_TRIGGER_FCB	tg_init;
+	COMM_STOP_TRIGGER_FCB	tg_stop;
+	void			*tg_usr;
+
+	/* usr */
 	COMM_WORK_STEP_FCB      fcb;		/* 相关的回调函数 */
 	void                    *usr;		/* 用户的参数 */
+
+	COMM_SEND_FILTER_FCB	ftx;
+	void			*dtx;
+
+	COMM_RECV_FILTER_FCB	frx;
+	void			*drx;
 };
 
 #ifdef __cplusplus
