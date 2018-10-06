@@ -7,3 +7,9 @@
 [submodule "lib/libcomm"]
 	path = lib/libcomm
 	url = http://52.8.102.37/network/libcomm.git
+[submodule "lib/tpl"]
+	path = lib/tpl
+	url = https://github.com/troydhanson/tpl.git
+[submodule "lib/msgpack-c"]
+	path = lib/msgpack-c
+	url = https://github.com/msgpack/msgpack-c.git
