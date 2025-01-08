@@ -190,8 +190,8 @@ struct safe_init_step
 
 #define SAFE_PTHREAD_INIT_OVER(step)		   \
 	(step)->base->count++;			   \
-	pthread_mutex_unlock(&(step)->base->lock); \
 	pthread_cond_signal(&(step)->base->cond);  \
+	pthread_mutex_unlock(&(step)->base->lock); \
 	STMT_END
 
 void safe_start_pthread(void *func, int num, void *addr, void *data);
